@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+  <channel>
+    <title>Chandler's AI Productivity Notes</title>
+    <link>https://chandlerbbt.github.io</link>
+    <description>记录我在工作与学习中，围绕 AI 提升效率的探索、实践与复盘。</description>
+    
+    <item>
+      <title>从 AI 提效研究开始：把阶段性沉淀变成可分享资产</title>
+      <link>https://chandlerbbt.github.io/posts/ai-productivity-research-start/</link>
+      <guid>https://chandlerbbt.github.io/posts/ai-productivity-research-start/</guid>
+      <pubDate>Sat, 30 May 2026 00:00:00 +0800</pubDate>
+      <description>我为什么要把 AI 提效研究整理成公开博客，以及后续每篇阶段性沉淀会遵循什么结构。</description>
+    </item>
+  </channel>
+</rss>
