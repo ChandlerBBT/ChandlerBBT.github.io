@@ -460,6 +460,83 @@ img {
   font-size: 18px;
 }
 
+.article-body h2,
+.article-body h3 {
+  scroll-margin-top: 96px;
+}
+
+.article-toc {
+  position: fixed;
+  top: 96px;
+  right: clamp(16px, calc((100vw - 1180px) / 2), 32px);
+  z-index: 4;
+  width: 216px;
+  max-height: calc(100vh - 128px);
+  overflow: auto;
+  padding: 14px;
+  border: 1px solid rgba(223, 228, 221, 0.92);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.93);
+  box-shadow: 0 18px 42px rgba(24, 33, 28, 0.11);
+  backdrop-filter: blur(16px);
+}
+
+.article-toc-title {
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.article-toc-switcher {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--green-soft);
+}
+
+.article-toc-switcher button {
+  min-height: 34px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--green);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.article-toc-switcher button.active {
+  color: white;
+  background: var(--green);
+}
+
+.article-toc-links {
+  display: grid;
+  gap: 6px;
+}
+
+.article-toc-links a {
+  display: block;
+  padding: 7px 9px;
+  border-radius: 6px;
+  color: #44524a;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.article-toc-links a:hover,
+.article-toc-links a.active {
+  color: var(--green);
+  background: var(--green-soft);
+}
+
 .article-body h2 {
   margin: 38px 0 12px;
   font-size: 28px;
@@ -528,6 +605,29 @@ img {
   padding: 0;
   background: transparent;
   color: inherit;
+}
+
+@media (min-width: 1181px) {
+  .has-floating-toc .article-header,
+  .has-floating-toc .article-cover {
+    max-width: 760px;
+    margin-right: auto;
+    margin-left: auto;
+  }
+}
+
+@media (max-width: 1180px) {
+  .article-toc {
+    position: sticky;
+    top: 92px;
+    width: 100%;
+    max-height: 48vh;
+    margin-bottom: 22px;
+  }
+
+  .article-toc-links {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .site-footer {
@@ -624,6 +724,7 @@ img {
   .post-card-media {
     aspect-ratio: 16 / 9;
   }
+
 }
 
 @media (max-width: 640px) {
@@ -678,5 +779,15 @@ img {
 
   .article-body {
     font-size: 16px;
+  }
+
+  .article-toc {
+    top: 122px;
+    padding: 12px;
+    max-height: 44vh;
+  }
+
+  .article-toc-links {
+    grid-template-columns: 1fr;
   }
 }

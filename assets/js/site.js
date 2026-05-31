@@ -63,3 +63,115 @@ for (const image of document.querySelectorAll(".article-shell img")) {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closeLightbox();
 });
+
+function buildArticleToc() {
+  const articleShell = document.querySelector(".article-shell");
+  const articleBody = document.querySelector(".article-body");
+  if (!articleShell || !articleBody) return;
+
+  const headings = Array.from(articleBody.querySelectorAll("h2"));
+  if (headings.length < 3) return;
+
+  const records = headings.map((heading, index) => {
+    if (!heading.id) heading.id = `section-${index + 1}`;
+    const text = heading.textContent.trim();
+    const role = /用户|具体事情/.test(text) ? "user" : "deployer";
+    return { heading, id: heading.id, text, role };
+  });
+
+  const roleLabels = {
+    deployer: "部署者",
+    user: "用户",
+  };
+  let activeRole = "deployer";
+
+  const toc = document.createElement("aside");
+  toc.className = "article-toc";
+  toc.setAttribute("aria-label", "文章目录");
+
+  const title = document.createElement("div");
+  title.className = "article-toc-title";
+  title.textContent = "阅读路径";
+
+  const switcher = document.createElement("div");
+  switcher.className = "article-toc-switcher";
+
+  const nav = document.createElement("nav");
+  nav.className = "article-toc-links";
+
+  function jumpToHeading(heading) {
+    const previousBehavior = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = "auto";
+    const offset = window.innerWidth <= 640 ? 132 : 96;
+    const jump = () => {
+      const top = heading.getBoundingClientRect().top + window.scrollY - offset;
+      window.scrollTo(0, Math.max(0, top));
+      updateActiveLink();
+    };
+    jump();
+    window.setTimeout(jump, 450);
+    window.setTimeout(() => {
+      jump();
+      document.documentElement.style.scrollBehavior = previousBehavior;
+    }, 1200);
+  }
+
+  function renderLinks() {
+    nav.replaceChildren();
+    for (const record of records.filter((item) => item.role === activeRole)) {
+      const link = document.createElement("a");
+      link.href = `#${record.id}`;
+      link.textContent = record.text;
+      link.dataset.target = record.id;
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        activeRole = record.role;
+        renderControls();
+        jumpToHeading(record.heading);
+        history.replaceState(null, "", `#${record.id}`);
+      });
+      nav.append(link);
+    }
+  }
+
+  function renderControls() {
+    switcher.replaceChildren();
+    for (const [role, label] of Object.entries(roleLabels)) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = label;
+      button.className = role === activeRole ? "active" : "";
+      button.addEventListener("click", () => {
+        activeRole = role;
+        renderControls();
+        const first = records.find((record) => record.role === role);
+        if (first) jumpToHeading(first.heading);
+      });
+      switcher.append(button);
+    }
+    renderLinks();
+  }
+
+  function updateActiveLink() {
+    const current = [...records]
+      .reverse()
+      .find((record) => record.heading.getBoundingClientRect().top <= 112);
+    for (const link of nav.querySelectorAll("a")) {
+      link.classList.toggle("active", link.dataset.target === current?.id);
+    }
+  }
+
+  toc.append(title, switcher, nav);
+  const cover = articleShell.querySelector(".article-cover");
+  if (cover) {
+    cover.after(toc);
+  } else {
+    articleShell.prepend(toc);
+  }
+  document.body.classList.add("has-floating-toc");
+  renderControls();
+  updateActiveLink();
+  window.addEventListener("scroll", updateActiveLink, { passive: true });
+}
+
+buildArticleToc();
