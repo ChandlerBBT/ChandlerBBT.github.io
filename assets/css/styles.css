@@ -451,6 +451,7 @@ img {
   object-fit: cover;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  cursor: zoom-in;
 }
 
 .article-body {
@@ -490,6 +491,7 @@ img {
   border-radius: var(--radius);
   background: var(--paper-strong);
   box-shadow: 0 12px 32px rgba(24, 33, 28, 0.1);
+  cursor: zoom-in;
 }
 
 .article-figure figcaption {
@@ -551,6 +553,34 @@ img {
 
 .is-hidden {
   display: none;
+}
+
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: clamp(16px, 4vw, 48px);
+  border: 0;
+  background: rgba(9, 14, 12, 0.86);
+  cursor: zoom-out;
+}
+
+.has-lightbox {
+  overflow: hidden;
+}
+
+.image-lightbox img {
+  max-width: min(1200px, 96vw);
+  max-height: 92vh;
+  object-fit: contain;
+  border-radius: var(--radius);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+}
+
+.image-lightbox:focus {
+  outline: none;
 }
 
 @media (max-width: 920px) {

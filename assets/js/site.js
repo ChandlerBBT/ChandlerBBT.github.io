@@ -24,3 +24,42 @@ for (const button of filterButtons) {
     applyFilters();
   });
 }
+
+function closeLightbox() {
+  document.querySelector(".image-lightbox")?.remove();
+  document.body.classList.remove("has-lightbox");
+}
+
+function openLightbox(image) {
+  closeLightbox();
+  const overlay = document.createElement("button");
+  overlay.type = "button";
+  overlay.className = "image-lightbox";
+  overlay.setAttribute("aria-label", "关闭放大图片");
+
+  const enlarged = document.createElement("img");
+  enlarged.src = image.currentSrc || image.src;
+  enlarged.alt = image.alt || "";
+  overlay.append(enlarged);
+
+  overlay.addEventListener("click", closeLightbox);
+  document.body.append(overlay);
+  document.body.classList.add("has-lightbox");
+  overlay.focus();
+}
+
+for (const image of document.querySelectorAll(".article-shell img")) {
+  image.tabIndex = 0;
+  image.setAttribute("role", "button");
+  image.addEventListener("click", () => openLightbox(image));
+  image.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openLightbox(image);
+    }
+  });
+}
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeLightbox();
+});

@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="面向 30 人部门的 AI 助理部署方案：以飞书作为员工入口，后端为每个人分配独立 Hermes profile/gateway，统一经 DeepSeek Proxy 调用 DeepSeek V4，并配套自动化开通、权限隔离、token 统计、默认 skills、培训和运维机制。">
-  <meta property="og:title" content="30 人部门 AI 助理部署方案：飞书入口、一人一实例、Mac Studio 承载 · Chandler&#x27;s AI Productivity Notes">
-  <meta property="og:description" content="面向 30 人部门的 AI 助理部署方案：以飞书作为员工入口，后端为每个人分配独立 Hermes profile/gateway，统一经 DeepSeek Proxy 调用 DeepSeek V4，并配套自动化开通、权限隔离、token 统计、默认 skills、培训和运维机制。">
+  <meta name="description" content="一份面向部署人员和普通员工的部门 AI 助理手册：机器采购建议、Hermes 安装、30 人批量开通、飞书机器人接入、权限隔离、token 统计、业务截图案例和用户上手流程。">
+  <meta property="og:title" content="30 人部门 AI 助理部署手册：飞书入口、Hermes 实例、Mac Studio 承载 · Chandler&#x27;s AI Productivity Notes">
+  <meta property="og:description" content="一份面向部署人员和普通员工的部门 AI 助理手册：机器采购建议、Hermes 安装、30 人批量开通、飞书机器人接入、权限隔离、token 统计、业务截图案例和用户上手流程。">
   <meta property="og:type" content="website">
   <meta property="og:image" content="/assets/img/hero-workspace.png">
-  <title>30 人部门 AI 助理部署方案：飞书入口、一人一实例、Mac Studio 承载 · Chandler&#x27;s AI Productivity Notes</title>
+  <title>30 人部门 AI 助理部署手册：飞书入口、Hermes 实例、Mac Studio 承载 · Chandler&#x27;s AI Productivity Notes</title>
   <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/css/styles.css">
   <link rel="alternate" type="application/rss+xml" title="Chandler&#x27;s AI Productivity Notes" href="/feed.xml">
@@ -32,59 +32,49 @@
 <article class="article-shell">
   <header class="article-header">
     <div class="article-kicker"><a class="tag" href="/tags/公司端-ai/">公司端 AI</a><a class="tag" href="/tags/飞书/">飞书</a><a class="tag" href="/tags/小龙虾/">小龙虾</a><a class="tag" href="/tags/hermes/">Hermes</a><a class="tag" href="/tags/deepseek/">DeepSeek</a><a class="tag" href="/tags/mac-studio/">Mac Studio</a></div>
-    <h1>30 人部门 AI 助理部署方案：飞书入口、一人一实例、Mac Studio 承载</h1>
+    <h1>30 人部门 AI 助理部署手册：飞书入口、Hermes 实例、Mac Studio 承载</h1>
     <div class="post-meta">
       <time datetime="2026-05-31">2026.05.31</time>
-      <span class="version-badge">v0.2.0</span>
-      <span>11 分钟读完</span>
+      <span class="version-badge">v0.3.0</span>
+      <span>9 分钟读完</span>
     </div>
   </header>
-  <img class="article-cover" src="/assets/img/posts/feishu-lobster-deployment/feishu-message-api.png" alt="">
+  <img class="article-cover" src="/assets/img/posts/feishu-lobster-deployment/case-start.png" alt="">
   <div class="article-body">
-    <h2>目标和边界</h2>
-<p>目标是在 30 人左右的部门内提供一套可治理的个人 AI 助理服务。员工不需要接触 CLI，不需要理解 agent、gateway、profile、API key 等概念，只需要在飞书里像联系同事一样使用自己的 AI 助理。</p>
-<p>服务形态可以概括为：</p>
-<pre><code>飞书里的一个部门 AI 助理
-  每位员工对应一个独立后端实例
-  每位员工有独立记忆、知识库、任务队列、文件空间和 token 统计
-  所有模型请求统一经过部门 DeepSeek Proxy
-  管理员可以开通、停用、限额、审计和维护</code></pre>
-<p>这套系统不处理涉密资料。客户、合同、财务、人事、密钥、日志、未公开战略、未批准内部代码等内容，默认不进入外部模型。第一版以非敏感资料整理、公开信息追踪、个人知识沉淀、会议纪要、写作辅助、流程模板化为主要场景。</p>
-<h2>员工实际拿到什么</h2>
-<p>上线后，每位员工会在飞书里看到一个名为“部门小龙虾”的机器人或联系人。员工无需安装本地软件，也不用登录 Mac Studio。个人服务包包括六部分：</p>
+    <h2>交付目标</h2>
+<p>这套方案面向 30 人左右的部门。最终交付物不是一台装了 agent 的机器，而是一套员工可以直接在飞书里使用、管理员可以持续维护的个人 AI 助理服务。</p>
+<p>部署完成后，每位员工会获得：</p>
 <ol>
-<li>私聊入口：员工可以在飞书私聊里提问、发送非敏感材料、查看个人任务。</li>
-<li>群聊入口：在部门群里 <code>@部门小龙虾</code>，机器人只处理被明确提及的消息。</li>
-<li>个人知识库：员工可以把一次有效回答保存成个人知识条目，后续通过 <code>/kb search</code> 查询。</li>
-<li>信息追踪：员工可以订阅公开网页、公开 RSS、公开 GitHub 仓库或指定关键词，系统按日生成 briefing。</li>
-<li>用量面板：员工可以用 <code>/tokens me</code> 查看当天、本周、本月 token 和任务数。</li>
-<li>默认 skills：系统预装低权限 skills，用于摘要、纪要、复盘、写作、知识沉淀和成本提醒。</li>
+<li>一个飞书里的“部门小龙虾”机器人入口。</li>
+<li>一个独立 Hermes profile/gateway。</li>
+<li>20GB 左右个人文件与知识库空间。</li>
+<li>独立会话历史、个人知识库、信息追踪任务和 token 用量统计。</li>
+<li>一组低权限默认 skills，用于摘要、纪要、briefing、知识沉淀、写作审阅和任务复盘。</li>
 </ol>
-<p>从用户视角看，这不是“给每个人一套命令行工具”，而是给每个人一个飞书里的个人 AI 助理账号。后端的 profile、gateway、端口、日志、目录和模型 key 都由管理员维护。</p>
-<h2>选型结论</h2>
-<p>第一版建议以 Hermes 作为个人 agent 底座，OpenClaw 作为后续扩展候选。</p>
-<p>Hermes 的 profile 机制更符合“一人一实例”的部署模型。官方文档里，profile 是独立 home directory，每个 profile 有自己的 <code>config.yaml</code>、<code>.env</code>、memory、sessions、skills、cron jobs 和 state database。这一点对 30 人部署很关键，因为个人记忆、任务历史和技能配置不能混在同一个状态目录里。</p>
+<p>部署人员照着本文应能完成第一版环境搭建；普通员工照着本文应能完成第一次登录、第一次提问、第一次保存知识、第一次查看 token 用量。</p>
+<h2>采购配置</h2>
+<p>第一版机器推荐：</p>
+<pre><code>Mac Studio
+芯片：M4 Max，14 核中央处理器，32 核图形处理器
+内存：36GB 统一内存
+硬盘：2TB SSD
+官方价格：RMB 20,999</code></pre>
 <figure class="article-figure">
-  <img src="/assets/img/posts/feishu-lobster-deployment/hermes-github.png" alt="Hermes Agent GitHub 仓库截图：第一版底座围绕 Hermes 的 profile 与 gateway 能力设计。" loading="lazy">
-  <figcaption>Hermes Agent GitHub 仓库截图：第一版底座围绕 Hermes 的 profile 与 gateway 能力设计。</figcaption>
+  <img src="/assets/img/posts/feishu-lobster-deployment/mac-studio-buy-m4max-36gb-2tb.png" alt="Apple 中国 Mac Studio 购买页截图：M4 Max、36GB 统一内存、2TB SSD，页面显示 RMB 20,999。" loading="lazy">
+  <figcaption>Apple 中国 Mac Studio 购买页截图：M4 Max、36GB 统一内存、2TB SSD，页面显示 RMB 20,999。</figcaption>
 </figure>
-<figure class="article-figure">
-  <img src="/assets/img/posts/feishu-lobster-deployment/hermes-profiles.png" alt="Hermes profile 文档截图：每个 profile 有独立 config、API keys、memory、sessions、skills 和 gateway state。" loading="lazy">
-  <figcaption>Hermes profile 文档截图：每个 profile 有独立 config、API keys、memory、sessions、skills 和 gateway state。</figcaption>
-</figure>
-<p>OpenClaw 的 Control UI、WebChat 和 gateway 能力更丰富，但它不适合作为“30 人共用一个 gateway”的第一版方案。OpenClaw 的安全文档明确提醒，gateway 不应被当作互不信任多用户之间的安全边界。因此第一版不把普通员工流量混进同一个 OpenClaw gateway；如果后续要使用 OpenClaw，建议为特定高权限场景单独部署、单独审批、单独审计。</p>
-<figure class="article-figure">
-  <img src="/assets/img/posts/feishu-lobster-deployment/openclaw-security.png" alt="OpenClaw security 文档截图：第一版应避免把一个 gateway 当作跨用户安全边界。" loading="lazy">
-  <figcaption>OpenClaw security 文档截图：第一版应避免把一个 gateway 当作跨用户安全边界。</figcaption>
-</figure>
-<figure class="article-figure">
-  <img src="/assets/img/posts/feishu-lobster-deployment/openclaw-control-ui.png" alt="OpenClaw Control UI 文档截图：控制台适合管理员和受控试点，不适合作为普通员工主入口。" loading="lazy">
-  <figcaption>OpenClaw Control UI 文档截图：控制台适合管理员和受控试点，不适合作为普通员工主入口。</figcaption>
-</figure>
+<p>这个配置的依据是：DeepSeek V4 在云端推理，Mac Studio 主要承担飞书接入、Hermes gateway、任务队列、文件索引、知识库、日志、token 统计和备份，不承担 30 人同时本地跑大模型的负载。</p>
+<p>第一版资源策略：</p>
+<pre><code>全局对话并发：6 到 8 个活跃任务
+后台任务并发：2 到 3 个索引或信息追踪任务
+单人并发：1 个对话任务 + 1 个后台任务
+单人空间：20GB
+机器内置 SSD：2TB
+外置备份盘：建议 4TB 到 8TB，单独采购</code></pre>
+<p>如果后续要在本机跑 embedding、大批量 OCR、本地模型或更高并发，再评估 64GB 以上内存和更高容量 SSD。</p>
 <h2>总体架构</h2>
-<p>推荐架构如下：</p>
-<pre><code>飞书用户
-  -&gt; 飞书 Bot / 消息事件 / 交互卡片
+<pre><code>员工飞书客户端
+  -&gt; 飞书自建应用 Bot
   -&gt; Lobster Router
   -&gt; Identity &amp; Policy Service
   -&gt; Job Queue
@@ -99,139 +89,50 @@
   Metrics Store
   Audit Log
   Admin Console</code></pre>
-<p>各组件职责如下：</p>
+<p>关键原则：</p>
 <ol>
-<li>飞书 Bot：接收私聊、群聊 <code>@</code>、文件转发、卡片按钮点击，向用户发送结果。</li>
-<li>Lobster Router：解析飞书事件，根据 <code>open_id</code> 找到员工 profile，生成任务并写入队列。</li>
-<li>Identity &amp; Policy Service：判断员工身份、角色、部门、配额、允许的 skills 和数据边界。</li>
-<li>Job Queue：把对话任务、文件摘要、信息追踪、知识库索引分成不同队列，避免一个长任务阻塞所有人。</li>
-<li>Hermes Gateway Pool：每个员工一个 profile/gateway，端口只绑定 localhost。</li>
-<li>DeepSeek Proxy：统一持有 DeepSeek key，记录 token 和费用，不把 key 下发给个人 profile。</li>
-<li>Metrics Store：记录 token、任务数、模型、错误、延迟、员工活跃度。</li>
-<li>Admin Console：管理员查看健康状态、异常任务、配额、员工启停和 skills 审批。</li>
+<li>飞书是员工入口，不承载长期状态。</li>
+<li>Hermes 是个人 agent 底座，每个员工一个独立 profile。</li>
+<li>DeepSeek key 只放在 DeepSeek Proxy，不写进个人 profile。</li>
+<li>Hermes gateway 只绑定 <code>127.0.0.1</code>，不暴露给员工和公网。</li>
+<li>普通员工只使用飞书；管理员使用命令行和管理后台。</li>
 </ol>
-<p>第一版不需要 Kubernetes。Mac Studio 单机加 <code>launchd</code> 或 <code>supervisord</code> 就可以完成 30 人规模的稳定运行。关键不是容器编排，而是身份、目录、端口、配额、日志和备份设计清楚。</p>
-<h2>飞书端怎么操作</h2>
-<p>飞书端要尽量产品化。普通员工不应该看到 gateway、profile、API key、模型参数和命令行日志。</p>
-<h3>第一次启用</h3>
-<p>员工在飞书里搜索“部门小龙虾”，发送：</p>
-<pre><code>/start</code></pre>
-<p>系统返回一张初始化卡片：</p>
-<pre><code>部门小龙虾已开通
-
-姓名：张三
-个人空间：20GB
-本周 token 预算：1,000,000
-默认模型：自动选择
-可用能力：资料摘要、会议纪要、个人知识库、信息追踪、写作审阅
-
-[查看使用边界] [创建每日 briefing] [查看我的用量]</code></pre>
-<p>如果用户不在白名单内，系统返回：</p>
-<pre><code>当前飞书账号未开通部门小龙虾服务。请联系管理员加入 users.csv 后再启用。</code></pre>
-<h3>日常提问</h3>
-<p>员工可以直接在私聊里输入：</p>
-<pre><code>帮我把这段公开资料整理成 5 条结论、3 个待办和 2 个风险点。</code></pre>
-<p>返回内容应包含结构化结果和操作按钮：</p>
-<pre><code>摘要
-...
-
-行动项
-1. ...
-2. ...
-3. ...
-
-风险点
-1. ...
-2. ...
-
-[保存到知识库] [生成待办] [改写成周报] [继续追问]</code></pre>
-<p>按钮动作必须写入员工自己的 profile，不写入公共空间。</p>
-<h3>文件处理</h3>
-<p>员工转发文件给机器人后，机器人先做数据分类确认，不直接处理：</p>
-<pre><code>请确认这份文件的数据类型
-
-[公开资料]
-[公司内部但允许 AI 处理]
-[包含客户/合同/财务/员工/密钥等敏感信息]</code></pre>
-<p>选择“公开资料”或“公司内部但允许 AI 处理”后，系统才进入摘要流程。选择敏感信息后，系统不调用模型，只返回脱敏建议：</p>
-<pre><code>该文件不进入模型处理。可先提取不含客户、合同金额、员工信息和密钥的结构化摘要，再提交给小龙虾处理。</code></pre>
-<h3>信息追踪</h3>
-<p>员工可以创建公开信息追踪任务：</p>
-<pre><code>/watch add https://example.com/rss 每天 09:00 生成 5 条摘要</code></pre>
-<p>系统返回：</p>
-<pre><code>已创建追踪任务
-来源：https://example.com/rss
-频率：每天 09:00
-输出：5 条摘要 + 影响判断 + 建议行动
-
-[暂停] [修改频率] [查看所有追踪]</code></pre>
-<h3>个人知识库</h3>
-<p>员工保存一条回答后，可以用：</p>
-<pre><code>/kb search DeepSeek V4</code></pre>
-<p>系统只搜索该员工自己的知识库，返回来源、摘要和可继续追问的按钮：</p>
-<pre><code>找到 3 条相关记录
-
-1. DeepSeek V4 模型接入策略
-来源：2026-05-31 部署规划
-摘要：日常任务走 flash，复杂任务走 pro，全部经 DeepSeek Proxy 记录 token。
-
-[展开] [继续追问] [生成 SOP]</code></pre>
-<h3>用量查看</h3>
-<p>员工查看个人用量：</p>
-<pre><code>/tokens me</code></pre>
-<p>返回：</p>
-<pre><code>本周用量
-总 token：386,420 / 1,000,000
-任务数：27
-高成本任务：3
-最常用能力：资料摘要、写作审阅、知识库查询
-
-[查看明细] [导出周报]</code></pre>
-<p>部门群里每周可以发布汇总，但不建议只按 token 排名。更合理的是同时展示任务数、沉淀条目数和可复用产物数。</p>
+<p>Hermes 的 profile 机制适合“一人一实例”。官方文档里，每个 profile 都有自己的 config、API keys、memory、sessions、skills、cron jobs 和 state database。</p>
 <figure class="article-figure">
-  <img src="/assets/img/posts/feishu-lobster-deployment/feishu-message-api.png" alt="飞书开放平台发送消息 API 截图：第一版用机器人消息、事件回调和交互卡片承接员工入口。" loading="lazy">
-  <figcaption>飞书开放平台发送消息 API 截图：第一版用机器人消息、事件回调和交互卡片承接员工入口。</figcaption>
+  <img src="/assets/img/posts/feishu-lobster-deployment/hermes-github.png" alt="Hermes Agent GitHub 仓库截图：第一版底座围绕 Hermes 的 profile 与 gateway 能力设计。" loading="lazy">
+  <figcaption>Hermes Agent GitHub 仓库截图：第一版底座围绕 Hermes 的 profile 与 gateway 能力设计。</figcaption>
 </figure>
-<h2>Mac Studio 配置建议</h2>
-<p>DeepSeek V4 在云端运行，Mac Studio 不承担大模型推理主负载。它主要负责飞书接入、任务调度、Hermes gateway、文件索引、知识库、日志、token 统计和备份。因此不应按“每人固定几颗 CPU 核、几 GB 内存”来切分机器。</p>
-<p>更合理的资源策略是：</p>
-<ol>
-<li>全局并发池：同时最多 12 到 16 个对话任务。</li>
-<li>后台任务池：同时最多 4 个信息追踪或文件索引任务。</li>
-<li>单人并发限制：每人最多 2 个对话任务、1 个后台长任务。</li>
-<li>任务优先级：人工对话优先于定时追踪，摘要优先于批量索引。</li>
-<li>预算限制：按人设置日预算、周预算和单次高成本确认。</li>
-</ol>
-<p>截至 2026-05-31，Apple Mac Studio 官方规格页展示 M4 Max 和 M3 Ultra 两条配置线。30 人部门生产环境建议优先选 M3 Ultra 档位，原因是 CPU/GPU、统一内存上限、内存带宽和 SSD 扩展余量更适合常驻服务。</p>
 <figure class="article-figure">
-  <img src="/assets/img/posts/feishu-lobster-deployment/mac-studio-specs.png" alt="Apple Mac Studio 技术规格截图：30 人部门生产环境建议优先考虑 M3 Ultra 档位。" loading="lazy">
-  <figcaption>Apple Mac Studio 技术规格截图：30 人部门生产环境建议优先考虑 M3 Ultra 档位。</figcaption>
+  <img src="/assets/img/posts/feishu-lobster-deployment/hermes-profiles.png" alt="Hermes profile 文档截图：每个 profile 有独立 config、API keys、memory、sessions、skills 和 gateway state。" loading="lazy">
+  <figcaption>Hermes profile 文档截图：每个 profile 有独立 config、API keys、memory、sessions、skills 和 gateway state。</figcaption>
 </figure>
-<p>推荐采购：</p>
-<ol>
-<li>试点环境，5 到 10 人：M4 Max，64GB 或 128GB 统一内存，2TB SSD。</li>
-<li>30 人第一版生产环境：M3 Ultra，256GB 统一内存，4TB SSD。</li>
-<li>两年周期更稳的配置：M3 Ultra，512GB 统一内存，8TB SSD。</li>
-</ol>
-<p>存储空间估算：</p>
-<pre><code>个人空间：30 人 x 20GB = 600GB
-索引和缓存：约 300GB 到 600GB
-会话与任务日志：约 100GB 到 300GB/年
-截图、培训材料、公开资料缓存：约 100GB 到 300GB
-系统、依赖、备份缓冲：至少保留 30% 到 40% 空闲空间</code></pre>
-<p>因此不建议 1TB SSD 作为生产起步配置。4TB 是比较稳妥的下限，8TB 会显著降低后续清理和迁移压力。另配一块 8TB 以上外置备份盘或网络备份空间，用于 nightly backup。</p>
-<h2>部署拓扑和端口规划</h2>
-<p>Mac Studio 上建议创建一个专用系统用户：</p>
-<pre><code>user: lobster
-home: /Users/lobster
-data root: /Users/Shared/lobster</code></pre>
-<p>目录结构：</p>
+<p>OpenClaw 保留为后续扩展，不作为第一版 30 人共用主底座。原因是 OpenClaw gateway 不适合直接当作跨用户安全边界。</p>
+<figure class="article-figure">
+  <img src="/assets/img/posts/feishu-lobster-deployment/openclaw-security.png" alt="OpenClaw security 文档截图：第一版应避免把一个 gateway 当作跨用户安全边界。" loading="lazy">
+  <figcaption>OpenClaw security 文档截图：第一版应避免把一个 gateway 当作跨用户安全边界。</figcaption>
+</figure>
+<h2>部署人员手册</h2>
+<p>以下步骤以 macOS、zsh、专用系统用户 <code>lobster</code> 为例。真实部署前请先完成公司 IT、安全和外部模型使用审批。</p>
+<h3>1. 初始化 Mac Studio</h3>
+<p>创建专用账号和数据目录：</p>
+<pre><code>sudo dscl . -create /Users/lobster
+sudo dscl . -create /Users/lobster UserShell /bin/zsh
+sudo dscl . -create /Users/lobster RealName &quot;Lobster Service&quot;
+sudo dscl . -create /Users/lobster UniqueID 510
+sudo dscl . -create /Users/lobster PrimaryGroupID 20
+sudo dscl . -create /Users/lobster NFSHomeDirectory /Users/lobster
+sudo createhomedir -c -u lobster
+
+sudo mkdir -p /Users/Shared/lobster/{config,profiles,services,backups,run}
+sudo chown -R lobster:staff /Users/Shared/lobster</code></pre>
+<p>建议目录结构：</p>
 <pre><code>/Users/Shared/lobster/
   config/
     users.csv
     policy.yml
     skills-allowlist.yml
     model-routing.yml
+    feishu.yml
   profiles/
     u001/
       hermes-home/
@@ -249,85 +150,325 @@ data root: /Users/Shared/lobster</code></pre>
     admin/
   backups/
   run/</code></pre>
-<p>端口规划：</p>
-<pre><code>8080  Lobster Router，对飞书事件回调开放，经 HTTPS 反向代理暴露
-8081  DeepSeek Proxy，仅内网访问
-8082  Metrics API，仅管理员访问
-8090  Admin Console，仅管理员访问
-31001-31030  Hermes user gateways，只绑定 127.0.0.1</code></pre>
-<p>外部只暴露一个 HTTPS 域名：</p>
-<pre><code>https://lobster.company.com/feishu/events</code></pre>
-<p>Hermes gateway 端口不对员工、不对公网、不对飞书开放。飞书只访问 Router，Router 再在本机调用对应员工的 gateway。</p>
-<h2>飞书应用配置</h2>
-<p>飞书侧需要创建一个企业自建应用，并启用机器人能力。</p>
-<p>最低配置包括：</p>
+<h3>2. 安装系统依赖</h3>
+<p>安装 Homebrew、Python、Node.js 和常用运行依赖：</p>
+<pre><code>/bin/bash -c &quot;$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)&quot;
+brew install python@3.12 node sqlite git jq ripgrep
+python3.12 -m pip install --upgrade pip uv
+node --version
+python3.12 --version</code></pre>
+<p>如公司已有统一软件源，按公司源安装，不直接走公网脚本。</p>
+<h3>3. 安装 Hermes</h3>
+<p>建议先在 <code>lobster</code> 用户下安装和验证：</p>
+<pre><code>sudo -iu lobster
+mkdir -p ~/apps
+cd ~/apps
+git clone https://github.com/NousResearch/hermes-agent.git
+cd hermes-agent</code></pre>
+<p>按 Hermes 当前仓库说明安装依赖。第一版可以采用仓库自带的 Python/Node 安装方式；如果官方安装命令更新，以仓库 README 为准。安装后验证：</p>
+<pre><code>hermes --help
+hermes profile --help
+hermes gateway --help</code></pre>
+<p>如果 <code>hermes</code> 命令未进入 PATH，把 Hermes 可执行文件或启动脚本加入 <code>~/.zprofile</code>：</p>
+<pre><code>echo &#x27;export PATH=&quot;$HOME/apps/hermes-agent/bin:$PATH&quot;&#x27; &gt;&gt; ~/.zprofile
+source ~/.zprofile</code></pre>
+<h3>4. 创建 DeepSeek Proxy</h3>
+<p>DeepSeek Proxy 是部门内部模型入口。它负责三件事：</p>
 <ol>
-<li>开启机器人能力。</li>
-<li>配置事件订阅 URL：<code>https://lobster.company.com/feishu/events</code>。</li>
-<li>订阅私聊消息、群聊 <code>@</code> 消息、文件消息和卡片回调事件。</li>
-<li>申请发送消息、读取机器人可见消息、获取用户 open_id 等必要权限。</li>
-<li>保存 App ID、App Secret、Verification Token、Encrypt Key 到 Mac Studio 的 secret store。</li>
+<li>保存 DeepSeek API key。</li>
+<li>兼容 OpenAI 风格 <code>/v1/chat/completions</code>。</li>
+<li>记录员工、profile、任务、模型、token、费用和错误。</li>
 </ol>
-<p>建议配置文件：</p>
+<p>配置示例：</p>
+<pre><code>server:
+  host: 127.0.0.1
+  port: 8081
+
+deepseek:
+  api_base: https://api.deepseek.com
+  api_key_env: DEEPSEEK_API_KEY
+
+routes:
+  default: deepseek-v4-flash
+  long_reasoning: deepseek-v4-pro
+  weekly_report: deepseek-v4-pro
+
+limits:
+  require_confirm_above_tokens: 100000
+  weekly_default_budget_tokens: 1000000</code></pre>
+<p>模型名、价格、上下文长度上线前复核 DeepSeek 官方文档。</p>
+<figure class="article-figure">
+  <img src="/assets/img/posts/feishu-lobster-deployment/deepseek-models.png" alt="DeepSeek 模型列表文档截图：模型名、价格、上下文等信息上线前必须复核。" loading="lazy">
+  <figcaption>DeepSeek 模型列表文档截图：模型名、价格、上下文等信息上线前必须复核。</figcaption>
+</figure>
+<h3>5. 准备员工名单</h3>
+<p><code>/Users/Shared/lobster/config/users.csv</code>：</p>
+<pre><code>employee_id,feishu_open_id,name,department,role,quota_gb,weekly_token_budget,gateway_port
+u001,ou_xxx,张三,研究部,user,20,1000000,31001
+u002,ou_yyy,李四,研究部,pilot,20,1500000,31002
+u003,ou_zzz,王五,研究部,admin,20,2000000,31003</code></pre>
+<p><code>feishu_open_id</code> 由飞书开放平台事件或通讯录接口获得。不要用员工姓名做权限判断，姓名只能作为展示字段。</p>
+<h3>6. 批量创建员工 Hermes profile</h3>
+<p>部署脚本 <code>lobsterctl bootstrap</code> 的目标是让管理员不需要手动创建 30 次。脚本逻辑如下：</p>
+<pre><code>读取 users.csv
+为每位员工创建 profile 目录
+创建 Hermes profile：lobster-{employee_id}
+写入 config.yaml，只指向 DeepSeek Proxy
+写入 skills allowlist
+分配 gateway_port
+生成 launchd plist
+启动 gateway
+运行 health check
+写入 profile_registry.sqlite</code></pre>
+<p>单个员工的等价手工流程：</p>
+<pre><code>export EMPLOYEE_ID=u001
+export PROFILE=lobster-u001
+export PORT=31001
+export ROOT=/Users/Shared/lobster/profiles/$EMPLOYEE_ID
+
+mkdir -p &quot;$ROOT&quot;/{hermes-home,memory,sessions,uploads,knowledge,logs}
+hermes profile create &quot;$PROFILE&quot;
+
+cat &gt; &quot;$ROOT/hermes-home/config.yaml&quot; &lt;&lt;EOF
+profile: $PROFILE
+home: $ROOT/hermes-home
+model:
+  provider: openai-compatible
+  base_url: http://127.0.0.1:8081/v1
+  default_model: auto
+storage:
+  memory_dir: $ROOT/memory
+  sessions_dir: $ROOT/sessions
+  uploads_dir: $ROOT/uploads
+  knowledge_dir: $ROOT/knowledge
+permissions:
+  filesystem_root: $ROOT
+  shell: false
+  browser_cookies: false
+EOF
+
+hermes gateway start \
+  --profile &quot;$PROFILE&quot; \
+  --host 127.0.0.1 \
+  --port &quot;$PORT&quot;</code></pre>
+<p>批量部署时不要让 gateway 监听 <code>0.0.0.0</code>。所有员工 gateway 只允许 Router 在本机调用。</p>
+<h3>7. 用 launchd 托管 gateway</h3>
+<p>每位员工一个 <code>plist</code>：</p>
+<pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot;
+ &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;
+&lt;plist version=&quot;1.0&quot;&gt;
+&lt;dict&gt;
+  &lt;key&gt;Label&lt;/key&gt;
+  &lt;string&gt;com.company.lobster.u001&lt;/string&gt;
+  &lt;key&gt;ProgramArguments&lt;/key&gt;
+  &lt;array&gt;
+    &lt;string&gt;/Users/lobster/apps/hermes-agent/bin/hermes&lt;/string&gt;
+    &lt;string&gt;gateway&lt;/string&gt;
+    &lt;string&gt;start&lt;/string&gt;
+    &lt;string&gt;--profile&lt;/string&gt;
+    &lt;string&gt;lobster-u001&lt;/string&gt;
+    &lt;string&gt;--host&lt;/string&gt;
+    &lt;string&gt;127.0.0.1&lt;/string&gt;
+    &lt;string&gt;--port&lt;/string&gt;
+    &lt;string&gt;31001&lt;/string&gt;
+  &lt;/array&gt;
+  &lt;key&gt;RunAtLoad&lt;/key&gt;
+  &lt;true/&gt;
+  &lt;key&gt;KeepAlive&lt;/key&gt;
+  &lt;true/&gt;
+  &lt;key&gt;StandardOutPath&lt;/key&gt;
+  &lt;string&gt;/Users/Shared/lobster/profiles/u001/logs/gateway.out.log&lt;/string&gt;
+  &lt;key&gt;StandardErrorPath&lt;/key&gt;
+  &lt;string&gt;/Users/Shared/lobster/profiles/u001/logs/gateway.err.log&lt;/string&gt;
+&lt;/dict&gt;
+&lt;/plist&gt;</code></pre>
+<p>加载服务：</p>
+<pre><code>launchctl bootstrap gui/$(id -u lobster) /Users/Shared/lobster/run/com.company.lobster.u001.plist
+launchctl print gui/$(id -u lobster)/com.company.lobster.u001
+curl http://127.0.0.1:31001/health</code></pre>
+<h3>8. 接入飞书自建应用</h3>
+<p>飞书侧创建企业自建应用，启用机器人能力，配置事件订阅：</p>
+<pre><code>事件回调地址：https://lobster.company.com/feishu/events
+接收事件：私聊消息、群聊 @ 消息、文件消息、卡片按钮回调
+发送能力：机器人发送文本、富文本、交互卡片
+权限：获取 open_id、发送消息、读取机器人可见消息</code></pre>
+<figure class="article-figure">
+  <img src="/assets/img/posts/feishu-lobster-deployment/feishu-message-api.png" alt="飞书开放平台发送消息 API 截图：第一版用机器人消息、事件回调和交互卡片承接员工入口。" loading="lazy">
+  <figcaption>飞书开放平台发送消息 API 截图：第一版用机器人消息、事件回调和交互卡片承接员工入口。</figcaption>
+</figure>
+<p>Router 配置：</p>
 <pre><code>feishu:
   app_id: ${FEISHU_APP_ID}
   app_secret: ${FEISHU_APP_SECRET}
   verification_token: ${FEISHU_VERIFICATION_TOKEN}
   encrypt_key: ${FEISHU_ENCRYPT_KEY}
   event_path: /feishu/events
-  bot_name: 部门小龙虾</code></pre>
-<p>App Secret 不写入任何员工 profile，也不放进 Git 仓库。生产环境可放 macOS Keychain、1Password CLI、Vault，或只允许 <code>lobster</code> 用户读取的 <code>.env</code> 文件。</p>
-<h2>自动化开通 30 个员工实例</h2>
-<p>员工名单是部署入口。示例：</p>
-<pre><code>employee_id,feishu_open_id,name,department,role,quota_gb,weekly_token_budget
-u001,ou_xxx,张三,研究部,user,20,1000000
-u002,ou_yyy,李四,研究部,pilot,20,1500000
-u003,ou_zzz,王五,研究部,admin,20,2000000</code></pre>
-<p>内部维护一个 <code>lobsterctl</code> 脚本，负责把员工名单变成可运行实例：</p>
-<pre><code>./lobsterctl bootstrap \
-  --users /Users/Shared/lobster/config/users.csv \
-  --policy /Users/Shared/lobster/config/policy.yml \
-  --skills /Users/Shared/lobster/config/skills-allowlist.yml</code></pre>
-<p>每个员工执行的动作：</p>
-<pre><code>1. 创建 /Users/Shared/lobster/profiles/{employee_id}
-2. 创建 Hermes profile：lobster-{employee_id}
-3. 写入 profile 专用 config.yaml
-4. 写入只指向 DeepSeek Proxy 的模型配置
-5. 安装默认 skills allowlist
-6. 分配 localhost gateway 端口
-7. 登记 feishu_open_id -&gt; profile_name -&gt; gateway_port
-8. 创建 launchd service
-9. 运行 health check
-10. 向管理员飞书群发送开通报告</code></pre>
-<p>Hermes profile 创建可以使用类似流程：</p>
-<pre><code>hermes profile create lobster-u001
-lobster-u001 setup
-lobster-u001 gateway start --host 127.0.0.1 --port 31001</code></pre>
-<p>最终需要由 <code>lobsterctl</code> 包装这些命令，避免管理员手工执行 30 次。员工新增、离职、调岗也通过同一套脚本处理：</p>
-<pre><code>./lobsterctl add-user --employee-id u031
-./lobsterctl suspend-user --employee-id u009
-./lobsterctl rotate-profile --employee-id u014
-./lobsterctl quota set --employee-id u017 --gb 30</code></pre>
-<h2>DeepSeek Proxy 和 token 统计</h2>
-<p>所有模型调用统一走 DeepSeek Proxy：</p>
-<pre><code>Hermes gateway
-  -&gt; http://127.0.0.1:8081/v1/chat/completions
-  -&gt; DeepSeek Proxy 记录用量
-  -&gt; DeepSeek API</code></pre>
-<p>Proxy 要兼容 OpenAI 风格接口，这样 Hermes/OpenClaw 之类的 agent 不需要知道真实 provider 细节。模型路由由 Proxy 决定：</p>
-<pre><code>routes:
-  default: deepseek-v4-flash
-  long_reasoning: deepseek-v4-pro
-  writing_review: deepseek-v4-flash
-  weekly_report: deepseek-v4-pro
-limits:
-  single_request_soft_limit_tokens: 60000
-  require_confirm_above_tokens: 100000</code></pre>
+
+router:
+  host: 127.0.0.1
+  port: 8080
+  profile_registry: /Users/Shared/lobster/services/router/profile_registry.sqlite</code></pre>
+<h3>9. Router 如何把消息路由给个人 Hermes</h3>
+<p>飞书消息进入 Router 后执行：</p>
+<pre><code>读取 feishu_open_id
+查询 users.csv/profile_registry.sqlite
+确认员工状态是 active
+读取该员工 gateway_port
+检查 token 和并发配额
+把消息转发到 http://127.0.0.1:{gateway_port}
+拿到 Hermes 返回结果
+生成飞书文本或交互卡片
+写入审计日志和 token 统计</code></pre>
+<p>未开通员工返回：</p>
+<pre><code>当前账号未开通部门小龙虾服务。请联系管理员开通。</code></pre>
+<p>敏感文件返回：</p>
+<pre><code>该文件不进入模型处理。请先提交脱敏摘要或结构化字段。</code></pre>
+<h3>10. 健康检查</h3>
+<p>部署后运行：</p>
+<pre><code>lobsterctl doctor</code></pre>
+<p>检查项：</p>
+<pre><code>30/30 gateway 是否运行
+Router 是否能收到飞书 challenge
+DeepSeek Proxy 是否可用
+每个 gateway 是否能完成最小对话
+每个 profile 是否只能写入自己的目录
+token 日志是否入库
+uploads 是否受 20GB 配额限制
+backup 是否完成一次 dry-run</code></pre>
+<p>管理员每日会收到类似健康检查卡片：</p>
 <figure class="article-figure">
-  <img src="/assets/img/posts/feishu-lobster-deployment/deepseek-models.png" alt="DeepSeek 模型列表文档截图：模型名、价格、上下文等信息上线前必须复核。" loading="lazy">
-  <figcaption>DeepSeek 模型列表文档截图：模型名、价格、上下文等信息上线前必须复核。</figcaption>
+  <img src="/assets/img/posts/feishu-lobster-deployment/case-admin.png" alt="管理员健康检查业务截图：展示实例、队列、磁盘和异常任务，示例数据用于培训演示。" loading="lazy">
+  <figcaption>管理员健康检查业务截图：展示实例、队列、磁盘和异常任务，示例数据用于培训演示。</figcaption>
 </figure>
-<p>用量表建议从第一天就建：</p>
+<h2>用户上手手册</h2>
+<p>普通员工只需要使用飞书。可选入口有两个：</p>
+<ol>
+<li>飞书桌面端或移动端。</li>
+<li>飞书 Web 端：<code>https://www.feishu.cn/messenger/</code></li>
+</ol>
+<p>进入后搜索“部门小龙虾”，打开私聊窗口。</p>
+<h3>第一次登录</h3>
+<p>输入：</p>
+<pre><code>/start</code></pre>
+<p>系统返回开通卡片，展示个人空间、token 预算、默认 skills 和使用边界。</p>
+<figure class="article-figure">
+  <img src="/assets/img/posts/feishu-lobster-deployment/case-start.png" alt="首次开通业务截图：员工在飞书私聊里发送 /start 后收到个人 AI 助理服务包。" loading="lazy">
+  <figcaption>首次开通业务截图：员工在飞书私聊里发送 /start 后收到个人 AI 助理服务包。</figcaption>
+</figure>
+<p>如果没有开通权限，系统会提示联系管理员。员工不需要知道 Hermes profile 或 gateway 端口。</p>
+<h3>第一次处理文件</h3>
+<p>把公开资料或允许处理的非敏感文件转发给“部门小龙虾”，再输入：</p>
+<pre><code>请整理成 5 条结论、3 个行动项和 2 个风险点。</code></pre>
+<p>机器人会先要求确认数据类型。选择“公开资料”或“公司内部但允许 AI 处理”后，才会进入摘要流程。</p>
+<figure class="article-figure">
+  <img src="/assets/img/posts/feishu-lobster-deployment/case-summary.png" alt="文件摘要业务截图：上传前先确认数据类型，确认后返回结论、行动项和保存按钮。" loading="lazy">
+  <figcaption>文件摘要业务截图：上传前先确认数据类型，确认后返回结论、行动项和保存按钮。</figcaption>
+</figure>
+<p>输出结果里常用按钮：</p>
+<ol>
+<li>保存到知识库：把结果写入个人知识库。</li>
+<li>生成待办：把行动项转为飞书待办或任务草稿。</li>
+<li>改写成周报：把摘要改写成部门周报风格。</li>
+<li>继续追问：基于当前上下文继续问。</li>
+</ol>
+<h3>创建每日信息追踪</h3>
+<p>输入：</p>
+<pre><code>/watch add https://example.com/rss 每天 09:00 生成 5 条摘要</code></pre>
+<p>机器人会创建一个只针对公开来源的定时任务。每天到点后，自动推送 briefing。</p>
+<figure class="article-figure">
+  <img src="/assets/img/posts/feishu-lobster-deployment/case-watch.png" alt="信息追踪业务截图：员工创建公开来源追踪任务后，每天收到 briefing。" loading="lazy">
+  <figcaption>信息追踪业务截图：员工创建公开来源追踪任务后，每天收到 briefing。</figcaption>
+</figure>
+<p>常用命令：</p>
+<pre><code>/watch list
+/watch pause 任务名
+/watch resume 任务名
+/watch delete 任务名</code></pre>
+<h3>使用个人知识库</h3>
+<p>当某次回答有复用价值，点击“保存到知识库”。后续可以搜索：</p>
+<pre><code>/kb search DeepSeek V4 部署</code></pre>
+<p>机器人只搜索该员工自己的知识库，不搜索其他员工内容。</p>
+<figure class="article-figure">
+  <img src="/assets/img/posts/feishu-lobster-deployment/case-kb.png" alt="个人知识库业务截图：员工通过 /kb search 查询自己沉淀过的记录，并继续追问或生成 SOP。" loading="lazy">
+  <figcaption>个人知识库业务截图：员工通过 /kb search 查询自己沉淀过的记录，并继续追问或生成 SOP。</figcaption>
+</figure>
+<p>常用命令：</p>
+<pre><code>/kb search 关键词
+/kb save 当前回答
+/kb list recent
+/kb delete 条目ID</code></pre>
+<h3>查看个人 token 用量</h3>
+<p>输入：</p>
+<pre><code>/tokens me</code></pre>
+<p>系统返回本周 token、任务数、高成本任务和知识沉淀数量。</p>
+<figure class="article-figure">
+  <img src="/assets/img/posts/feishu-lobster-deployment/case-tokens.png" alt="用量统计业务截图：员工通过 /tokens me 查看个人 token、任务数、高成本任务和知识条目数。" loading="lazy">
+  <figcaption>用量统计业务截图：员工通过 /tokens me 查看个人 token、任务数、高成本任务和知识条目数。</figcaption>
+</figure>
+<p>token 多不等于效率高。部门复盘更关注：是否减少重复劳动、是否形成可复用知识条目、是否产出了 SOP、周报、纪要和 briefing。</p>
+<h2>用户可以做的具体事情</h2>
+<h3>资料摘要</h3>
+<p>适合输入：</p>
+<pre><code>请基于这份公开资料输出：
+1. 5 条结论
+2. 3 个行动项
+3. 2 个风险点
+4. 可以写入周报的一段话</code></pre>
+<h3>会议纪要</h3>
+<p>适合输入：</p>
+<pre><code>请把这段会议记录整理成：
+1. 决策事项
+2. 待办事项
+3. 负责人
+4. 截止时间
+5. 需要复核的问题</code></pre>
+<h3>周报草稿</h3>
+<p>适合输入：</p>
+<pre><code>请把以下本周事项整理成部门周报：
+风格：简洁、事实优先、少形容词
+结构：本周进展 / 风险问题 / 下周计划</code></pre>
+<h3>个人知识沉淀</h3>
+<p>适合输入：</p>
+<pre><code>请把这次回答沉淀成知识库条目：
+标题：
+适用场景：
+步骤：
+注意事项：
+下次复用提示词：</code></pre>
+<h3>不适合输入</h3>
+<p>不要输入：</p>
+<ol>
+<li>客户名单、合同金额、财务数据。</li>
+<li>员工个人信息、人事资料。</li>
+<li>API key、token、Cookie、登录态。</li>
+<li>未公开战略、未批准内部代码。</li>
+<li>无法确认授权范围的文档原文。</li>
+</ol>
+<h2>权限和用量治理</h2>
+<p>权限分四层：</p>
+<pre><code>飞书身份：确认消息来自哪个 open_id
+员工映射：open_id -&gt; employee_id -&gt; Hermes profile
+策略控制：skills、模型、预算、文件类型、并发数
+系统隔离：目录、端口、secret、日志和备份</code></pre>
+<p>角色配置：</p>
+<pre><code>roles:
+  user:
+    skills: default
+    max_chat_jobs: 1
+    max_background_jobs: 1
+  pilot:
+    skills: default_plus_beta
+    max_chat_jobs: 2
+    max_background_jobs: 2
+  maintainer:
+    can_view_health: true
+    can_view_content: false
+  admin:
+    can_manage_users: true
+    can_manage_quotas: true
+    can_publish_skills: true</code></pre>
+<p>模型调用日志：</p>
 <pre><code>create table model_calls (
   id text primary key,
   created_at timestamp not null,
@@ -344,62 +485,8 @@ limits:
   status text not null,
   error_code text
 );</code></pre>
-<p>每天生成三类报表：</p>
-<ol>
-<li>个人用量：员工通过 <code>/tokens me</code> 查看。</li>
-<li>管理用量：管理员查看部门总量、异常任务、预算接近上限的员工。</li>
-<li>部门周报：在部门群发布聚合数据，不展示敏感 prompt 和完整会话内容。</li>
-</ol>
-<p>部门榜单建议使用综合指标：</p>
-<pre><code>使用活跃度 = 活跃天数 + 任务数
-知识沉淀 = 保存到知识库的条目数
-产出复用 = 被转为 SOP、周报、纪要、briefing 的数量
-成本意识 = 高成本任务确认率和无效重试率</code></pre>
-<p>这样可以避免把 token 消耗误读成效率提升。</p>
-<h2>权限和数据隔离</h2>
-<p>权限模型分为四层：</p>
-<ol>
-<li>飞书身份层：确认消息来自哪个 <code>open_id</code>。</li>
-<li>员工映射层：<code>open_id</code> 映射到 <code>employee_id</code> 和 profile。</li>
-<li>策略层：决定该员工能用哪些 skills、模型、预算、文件类型。</li>
-<li>系统层：目录、端口、进程、secret 和日志隔离。</li>
-</ol>
-<p>角色建议：</p>
-<pre><code>roles:
-  user:
-    skills: default
-    max_background_jobs: 1
-    can_view_admin: false
-  pilot:
-    skills: default_plus_beta
-    max_background_jobs: 2
-    can_view_admin: false
-  maintainer:
-    skills: default_plus_ops
-    can_view_health: true
-    can_view_content: false
-  admin:
-    can_manage_users: true
-    can_manage_quotas: true
-    can_publish_skills: true</code></pre>
-<p>默认禁止：</p>
-<ol>
-<li>一个 profile 读取另一个 profile 的目录。</li>
-<li>普通员工直接访问 gateway 端口。</li>
-<li>skills 默认执行 shell。</li>
-<li>skills 默认读取全盘文件。</li>
-<li>复制浏览器 Cookie、token、个人账号登录态。</li>
-<li>把 DeepSeek key 写进员工 profile。</li>
-<li>将敏感资料发给未批准模型或外部服务。</li>
-</ol>
-<p>文件上传策略：</p>
-<pre><code>公开资料：允许处理，保留来源。
-公司内部但允许 AI 处理：允许处理，记录员工确认。
-敏感资料：拒绝处理，返回脱敏模板。
-不确定：按敏感资料处理。</code></pre>
 <h2>默认 skills</h2>
-<p>第一版默认 skills 应该低权限、可复核、能沉淀，不追求全能。</p>
-<p>建议默认启用：</p>
+<p>默认启用低权限 skills：</p>
 <ol>
 <li>Personal Briefing Builder：公开信息追踪和每日 briefing。</li>
 <li>Source Distiller：网页、文章、会议材料摘要。</li>
@@ -420,69 +507,36 @@ limits:
 <li>全盘文件读取。</li>
 <li>未审批外部 MCP server。</li>
 </ol>
-<p>高权限 skills 采用申请制。申请记录进入管理员飞书群，由管理员批准后只对特定员工或试点组开放。</p>
-<h2>员工培训</h2>
-<p>培训目标是让员工掌握三件事：适合交给 AI 的任务、不能提交的数据、如何把一次回答沉淀成可复用资产。</p>
-<p>建议分四个阶段：</p>
-<p>第一阶段，5 人试点，周期 5 个工作日。每位试点员工完成三个固定任务：一次公开资料摘要、一次会议纪要整理、一次个人知识库沉淀。管理员记录失败案例、权限误判、token 异常和飞书交互问题。</p>
-<p>第二阶段，部门启动培训，60 分钟。培训结构：</p>
-<pre><code>10 分钟：服务边界和数据规则
-15 分钟：飞书私聊、群聊、文件、卡片按钮演示
-15 分钟：资料摘要、briefing、知识库三个案例
-10 分钟：/tokens me、/kb search、/watch add 等常用命令
-10 分钟：问题收集和试点安排</code></pre>
-<p>第三阶段，岗位模板训练。研究、运营、管理、行政、工程分别沉淀自己的 5 个高频任务模板。例如研究组重点做资料摘要和观点对比，管理组重点做会议纪要和周报，运营组重点做公开信息追踪和内容改写。</p>
-<p>第四阶段，月度复盘。复盘不只看使用量，还看可复用成果：新增 SOP、知识库条目、briefing 质量、重复任务减少情况、人工复核发现的问题。</p>
-<p>培训材料建议固定为三份：</p>
+<h2>运维节奏</h2>
+<p>每日：</p>
 <ol>
-<li>《飞书里如何使用部门小龙虾》</li>
-<li>《哪些资料不能提交给 AI》</li>
-<li>《高质量请求模板和岗位案例》</li>
+<li>检查飞书回调成功率。</li>
+<li>检查 Router、DeepSeek Proxy、Hermes gateways 存活状态。</li>
+<li>检查 token 异常峰值。</li>
+<li>检查磁盘剩余和单人 quota。</li>
+<li>处理失败任务。</li>
 </ol>
-<h2>运维和维护节奏</h2>
-<p>每日检查：</p>
+<p>每周：</p>
 <ol>
-<li>飞书事件回调成功率。</li>
-<li>Router、Proxy、Hermes gateways 存活状态。</li>
-<li>DeepSeek Proxy 错误率和平均延迟。</li>
-<li>token 异常峰值。</li>
-<li>磁盘剩余空间和单人 quota。</li>
-</ol>
-<p>每周检查：</p>
-<ol>
-<li>生成部门用量周报。</li>
-<li>抽查 5 条输出是否符合数据规则。</li>
-<li>清理失败任务和过期上传文件。</li>
+<li>发布部门用量和案例周报。</li>
 <li>审核新增 skills 申请。</li>
+<li>清理过期上传文件。</li>
+<li>抽查输出是否符合数据规则。</li>
 <li>更新岗位模板。</li>
 </ol>
-<p>每月检查：</p>
+<p>每月：</p>
 <ol>
-<li>复核 DeepSeek 模型名、价格、上下文限制和弃用公告。</li>
+<li>复核 DeepSeek 模型、价格、上下文限制和弃用公告。</li>
 <li>复核 Hermes/OpenClaw 版本变化。</li>
-<li>检查备份恢复流程。</li>
+<li>做一次备份恢复演练。</li>
 <li>复盘 token 成本和实际产出。</li>
-<li>更新本文版本记录和生产截图。</li>
+<li>更新本文版本和生产截图。</li>
 </ol>
-<p>Hermes 的 Web Dashboard 可作为维护者排错界面，但普通员工不需要使用。</p>
+<p>Hermes Web Dashboard 可作为维护者排错入口，不作为普通员工入口。</p>
 <figure class="article-figure">
   <img src="/assets/img/posts/feishu-lobster-deployment/hermes-dashboard.png" alt="Hermes dashboard 文档截图：适合作为维护者排错界面，普通员工仍以飞书为主入口。" loading="lazy">
   <figcaption>Hermes dashboard 文档截图：适合作为维护者排错界面，普通员工仍以飞书为主入口。</figcaption>
 </figure>
-<h2>上线顺序</h2>
-<p>建议按 10 步上线：</p>
-<ol>
-<li>采购并初始化 Mac Studio，创建 <code>lobster</code> 系统用户和数据目录。</li>
-<li>配置 HTTPS 域名、反向代理、飞书事件回调地址。</li>
-<li>部署 DeepSeek Proxy，完成 token 记录和模型路由。</li>
-<li>部署 Hermes，创建 2 个测试 profile。</li>
-<li>部署 Lobster Router，实现飞书消息收发。</li>
-<li>接入 <code>users.csv</code>，完成飞书 <code>open_id</code> 到 profile 的映射。</li>
-<li>实现 <code>/start</code>、<code>/tokens me</code>、<code>/kb search</code>、<code>/watch add</code> 四个基础命令。</li>
-<li>接入默认 skills allowlist。</li>
-<li>5 人试点 5 个工作日，补齐真实飞书截图和失败案例。</li>
-<li>扩展到 30 人，开始周报和月度复盘。</li>
-</ol>
 <h2>参考资料</h2>
 <ol>
 <li><a href="https://github.com/NousResearch/hermes-agent">Hermes Agent GitHub</a></li>
@@ -490,14 +544,14 @@ limits:
 <li><a href="https://hermes-agent.nousresearch.com/docs/user-guide/features/web-dashboard">Hermes Web Dashboard</a></li>
 <li><a href="https://github.com/openclaw/openclaw">OpenClaw GitHub</a></li>
 <li><a href="https://docs.openclaw.ai/gateway/security">OpenClaw Gateway Security</a></li>
-<li><a href="https://docs.openclaw.ai/web/control-ui">OpenClaw Control UI</a></li>
-<li><a href="https://www.apple.com/mac-studio/specs/">Apple Mac Studio Specs</a></li>
+<li><a href="https://www.apple.com.cn/shop/buy-mac/mac-studio/m4-max-chip-14-core-cpu-32-core-gpu-36gb-memory-2tb-storage">Apple 中国 Mac Studio 购买页</a></li>
 <li><a href="https://api-docs.deepseek.com/">DeepSeek API Docs</a></li>
 <li><a href="https://open.feishu.cn/document/server-docs/im-v1/message/create">飞书开放平台发送消息 API</a></li>
 </ol>
 <h2>修订记录</h2>
-<p><code>v0.2.0</code>，2026-05-31：重写为正式部署规划，删除自指草稿话术，把版本号移到文章头部标签；补充员工实际服务包、飞书端操作流程、服务拓扑、端口/目录规划、飞书应用配置、自动化开通、DeepSeek Proxy、权限策略、培训和运维细节。</p>
-<p><code>v0.1.0</code>，2026-05-31：第一版。将主入口改为飞书，保留“一人一 Hermes profile/gateway”，加入 Mac Studio 采购建议、自动部署、权限治理、token 排行、默认 skills、培训计划和公开截图。</p>
+<p><code>v0.3.0</code>，2026-05-31：扩展为部署手册和用户手册合一版本，加入机器配置费用、Hermes 部署流程、批量开通、飞书使用案例和图片放大交互。</p>
+<p><code>v0.2.0</code>，2026-05-31：调整为正式部署规划，补充员工服务包、飞书端流程、服务拓扑、权限策略和运维机制。</p>
+<p><code>v0.1.0</code>，2026-05-31：确定飞书主入口和一人一 Hermes profile/gateway 的方案方向。</p>
   </div>
 </article>
 
