@@ -468,6 +468,25 @@ img {
   border-bottom: 1px solid rgba(31, 95, 63, 0.35);
 }
 
+.article-figure {
+  margin: 28px 0;
+}
+
+.article-figure img {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-strong);
+  box-shadow: 0 12px 32px rgba(24, 33, 28, 0.1);
+}
+
+.article-figure figcaption {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .article-body blockquote {
   margin: 26px 0;
   padding: 18px 22px;

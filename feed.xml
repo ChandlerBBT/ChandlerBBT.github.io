@@ -4,7 +4,14 @@
     <title>Chandler's AI Productivity Notes</title>
     <link>https://chandlerbbt.github.io</link>
     <description>记录我在工作与学习中，围绕 AI 提升效率的探索、实践与复盘。</description>
-    
+
+    <item>
+      <title>部门小龙虾第一版部署规划：飞书入口、一人一只、统一跑在 Mac Studio 上</title>
+      <link>https://chandlerbbt.github.io/posts/feishu-lobster-deployment-guide/</link>
+      <guid>https://chandlerbbt.github.io/posts/feishu-lobster-deployment-guide/</guid>
+      <pubDate>Sun, 31 May 2026 00:00:00 +0800</pubDate>
+      <description>把 30 人部门的 AI agent 部署方案先压成一版可讨论的规划：飞书作为主入口，后端一人一 Hermes profile/gateway，DeepSeek V4 作为模型层，并配套权限、token 统计、skills、培训和版本管理。</description>
+    </item>
     <item>
       <title>从 AI 提效研究开始：把阶段性沉淀变成可分享资产</title>
       <link>https://chandlerbbt.github.io/posts/ai-productivity-research-start/</link>

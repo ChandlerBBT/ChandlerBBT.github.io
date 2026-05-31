@@ -126,6 +126,18 @@ def markdown_to_html(markdown: str) -> str:
             list_type = None
             continue
 
+        image = re.match(r"^!\[([^\]]*)\]\(([^)]+)\)$", line)
+        if image:
+            flush_paragraph(out, paragraph)
+            close_list(out, list_type)
+            list_type = None
+            alt = html.escape(image.group(1), quote=True)
+            src = html.escape(image.group(2), quote=True)
+            caption = html.escape(image.group(1))
+            figcaption = f"\n  <figcaption>{caption}</figcaption>" if caption else ""
+            out.append(f'<figure class="article-figure">\n  <img src="{src}" alt="{alt}" loading="lazy">{figcaption}\n</figure>')
+            continue
+
         heading = re.match(r"^(#{2,4})\s+(.+)$", line)
         if heading:
             flush_paragraph(out, paragraph)
@@ -419,7 +431,8 @@ def render_post(post: dict) -> str:
 
 def write(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8")
+    normalized = "\n".join(line.rstrip() for line in content.splitlines()) + "\n"
+    path.write_text(normalized, encoding="utf-8")
 
 
 def render_feed(posts: list[dict]) -> str:
