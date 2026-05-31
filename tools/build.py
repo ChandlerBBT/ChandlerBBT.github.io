@@ -62,6 +62,7 @@ def parse_post(path: Path) -> dict:
         "title": str(meta.get("title", path.stem)),
         "date": date_value,
         "summary": str(meta.get("summary", "")),
+        "version": str(meta.get("version", "")),
         "tags": [str(tag) for tag in tags],
         "cover": str(meta.get("cover", "/assets/img/hero-workspace.png")),
         "draft": str(meta.get("draft", "false")).lower() == "true",
@@ -198,6 +199,14 @@ def render_tags(tags: list[str]) -> str:
     return "".join(f'<a class="tag" href="/tags/{slugify(tag)}/">{html.escape(tag)}</a>' for tag in tags)
 
 
+def render_version_badge(version: str) -> str:
+    version = version.strip()
+    if not version:
+        return ""
+    label = version if version.lower().startswith("v") else f"v{version}"
+    return f'<span class="version-badge">{html.escape(label)}</span>'
+
+
 def nav(active: str) -> str:
     items = [
         ("home", "/", "首页"),
@@ -270,6 +279,7 @@ def post_card(post: dict, featured: bool = False) -> str:
   <div class="post-card-body">
     <div class="post-meta">
       <time datetime="{html.escape(str(post['date']))}">{date_label(str(post['date']))}</time>
+      {render_version_badge(str(post.get('version', '')))}
       <span>{reading_minutes(str(post['body']))} 分钟读完</span>
     </div>
     <h2><a href="{post_url(post)}">{html.escape(str(post['title']))}</a></h2>
@@ -417,6 +427,7 @@ def render_post(post: dict) -> str:
     <h1>{html.escape(str(post['title']))}</h1>
     <div class="post-meta">
       <time datetime="{html.escape(str(post['date']))}">{date_label(str(post['date']))}</time>
+      {render_version_badge(str(post.get('version', '')))}
       <span>{reading_minutes(str(post['body']))} 分钟读完</span>
     </div>
   </header>

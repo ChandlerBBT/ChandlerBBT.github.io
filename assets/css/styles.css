@@ -317,6 +317,18 @@ img {
   font-size: 14px;
 }
 
+.version-badge {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 8px;
+  border: 1px solid rgba(31, 95, 63, 0.22);
+  border-radius: 7px;
+  background: var(--green-soft);
+  color: var(--green);
+  font-weight: 800;
+}
+
 .post-card h2 {
   margin: 10px 0 8px;
   font-size: 22px;
@@ -508,6 +520,12 @@ img {
   border-radius: var(--radius);
   background: var(--graphite);
   color: white;
+}
+
+.article-body pre code {
+  padding: 0;
+  background: transparent;
+  color: inherit;
 }
 
 .site-footer {
