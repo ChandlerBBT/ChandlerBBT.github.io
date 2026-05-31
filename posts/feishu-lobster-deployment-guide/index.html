@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="一份面向部署人员和普通员工的部门 AI 助理手册：机器采购建议、Hermes 安装、Excel 批量开通、飞书接入联调、部门知识库素材上传、权限隔离、token 统计、业务截图案例和用户上手流程。">
+  <meta name="description" content="一份面向部署人员和普通员工的部门 AI 助理手册：机器采购建议、Hermes 安装、飞书部署工作台、Excel 批量开通、部门知识库素材上传、权限隔离、token 统计、业务截图案例和用户上手流程。">
   <meta property="og:title" content="30 人部门 AI 助理部署手册：飞书入口、Hermes 实例、Mac Studio 承载 · Chandler&#x27;s AI Productivity Notes">
-  <meta property="og:description" content="一份面向部署人员和普通员工的部门 AI 助理手册：机器采购建议、Hermes 安装、Excel 批量开通、飞书接入联调、部门知识库素材上传、权限隔离、token 统计、业务截图案例和用户上手流程。">
+  <meta property="og:description" content="一份面向部署人员和普通员工的部门 AI 助理手册：机器采购建议、Hermes 安装、飞书部署工作台、Excel 批量开通、部门知识库素材上传、权限隔离、token 统计、业务截图案例和用户上手流程。">
   <meta property="og:type" content="website">
   <meta property="og:image" content="/assets/img/hero-workspace.png">
   <title>30 人部门 AI 助理部署手册：飞书入口、Hermes 实例、Mac Studio 承载 · Chandler&#x27;s AI Productivity Notes</title>
@@ -35,15 +35,16 @@
     <h1>30 人部门 AI 助理部署手册：飞书入口、Hermes 实例、Mac Studio 承载</h1>
     <div class="post-meta">
       <time datetime="2026-05-31">2026.05.31</time>
-      <span class="version-badge">v0.5.0</span>
-      <span>20 分钟读完</span>
+      <span class="version-badge">v0.6.0</span>
+      <span>23 分钟读完</span>
     </div>
   </header>
   <img class="article-cover" src="/assets/img/posts/feishu-lobster-deployment/case-user-home-actions.png" alt="">
   <div class="article-body">
     <h2>交付目标</h2>
 <p>这套方案面向 30 人左右的部门。最终交付物不是一台装了 agent 的机器，而是一套员工可以直接在飞书里使用、管理员可以持续维护的个人 AI 助理服务。</p>
-<p>部署完成后，每位员工会获得：</p>
+<p>部署完成后，系统只有一个统一入口：飞书。普通员工看到的是“部门小龙虾”私聊、群聊和交互卡片；部署人员看到的是飞书里的部署工作台，包括管理员群、应用主页、表单、多维表格和任务状态卡片。</p>
+<p>每位员工会获得：</p>
 <ol>
 <li>一个飞书里的“部门小龙虾”机器人入口。</li>
 <li>一个独立 Hermes profile/gateway。</li>
@@ -189,13 +190,21 @@ Mac Studio
 <li>内网 API 短期无法落地，且桌面研究报告是高频场景：预算提高到 RMB 35,999 到 RMB 40,499，选 M3 Ultra 96GB，常驻 Qwen3-30B-A3B，DeepSeek-R1-Distill-Qwen-32B 只跑后台报告合成。</li>
 </ol>
 <h2>总体架构</h2>
-<pre><code>员工飞书客户端
-  -&gt; 飞书自建应用 Bot
+<pre><code>员工飞书前台
+  -&gt; 部门小龙虾 Bot
+  -&gt; 私聊 / 群聊 @ / 交互卡片
   -&gt; Lobster Router
   -&gt; Identity &amp; Policy Service
   -&gt; Job Queue
   -&gt; Hermes Gateway Pool
   -&gt; Model Gateway
+
+部署者飞书工作台
+  -&gt; 管理员群 / 应用主页 / 表单 / 多维表格 / 文件上传 / 状态卡片
+  -&gt; Admin Event Handler
+  -&gt; Provisioning Worker
+  -&gt; Knowledge Import Worker
+  -&gt; Model Gateway Config Worker
 
 Model Gateway：
   非涉密个人助理任务 -&gt; DeepSeek Proxy 或其他审批通过的外部模型
@@ -211,15 +220,16 @@ Model Gateway：
   Reranker
   Metrics Store
   Audit Log
-  Admin Console</code></pre>
+  Feishu Admin Tables</code></pre>
 <p>关键原则：</p>
 <ol>
-<li>飞书是员工入口，不承载长期状态。</li>
+<li>飞书同时是员工前台和部署者工作台，提供登录、身份、消息、表单、多维表格、文件上传和卡片交互。</li>
 <li>Hermes 是个人 agent 底座，每个员工一个独立 profile。</li>
 <li>外部模型 key 只放在 Model Gateway，不写进个人 profile。</li>
 <li>Hermes gateway 只绑定 <code>127.0.0.1</code>，不暴露给员工和公网。</li>
 <li>部门知识库和个人知识库物理目录、索引、权限、审计日志分开。</li>
-<li>普通员工只使用飞书；部署者使用管理台完成开通、联调、知识库上传，命令行只作为底层排障手段。</li>
+<li>飞书不承载长期业务状态；长期状态仍在 Mac Studio 上的数据库、索引、文件目录和审计日志里。</li>
+<li>普通员工只使用飞书；部署者使用飞书部署工作台完成开通、联调、知识库上传，命令行只作为底层排障手段。</li>
 </ol>
 <p>Hermes 的 profile 机制适合“一人一实例”。官方文档里，每个 profile 都有自己的 config、API keys、memory、sessions、skills、cron jobs 和 state database。</p>
 <figure class="article-figure">
@@ -237,7 +247,9 @@ Model Gateway：
 </figure>
 <h2>部署人员手册</h2>
 <p>以下步骤以 macOS、zsh、专用系统用户 <code>lobster</code> 为例。真实部署前请先完成公司 IT、安全和外部模型使用审批。</p>
-<p>第一版建议给部署者提供一个本机管理台，地址只允许内网访问，例如 <code>https://lobster.company.com/admin</code>。部署者日常只需要走五个向导：</p>
+<p>这一版不再建议单独做一个完整网页后台。部署者的日常后台放在飞书自建应用里：管理员在飞书看到“飞书部署工作台”，通过表单、多维表格、文件附件和交互卡片完成开通、配置、导入和联调；Mac Studio 上只跑事件接收、任务执行、数据库和索引服务。</p>
+<p>这不是飞书原生一键生成的后台，也不需要从零写一套完整 Web 管理系统。需要开发和部署的是一个轻量后端 <code>lobster-admin-backend</code>：接收飞书事件、校验操作者权限、读取表单/多维表格/附件、执行开通和导入任务，再把状态写回飞书卡片和多维表格。</p>
+<p>部署者日常只需要走五个飞书向导：</p>
 <ol>
 <li>飞书接入：填 App ID、App Secret、Encrypt Key、Verification Token，并复制事件回调地址到飞书开放平台。</li>
 <li>员工开通：上传 Excel，字段为工号、姓名、存储空间容量、每月Token容量额度。</li>
@@ -245,7 +257,7 @@ Model Gateway：
 <li>知识库上传：上传原始 PPT、PDF、Word、Excel、图片、录音等素材。</li>
 <li>联调检查：验证飞书 challenge、消息接收、卡片按钮、个人 profile 路由和 token 统计。</li>
 </ol>
-<p>这条路径的目标是让部署人员尽量少碰底层命令。下面的命令和配置用于首次安装、自动化脚本开发和排障；正式上线后，开通员工、接入飞书和导入知识库都应该在管理台里完成。</p>
+<p>这条路径的目标是让部署人员尽量少碰底层命令。下面的命令和配置用于首次安装、自动化脚本开发和排障；正式上线后，开通员工、接入飞书和导入知识库都应该在飞书部署工作台里完成。</p>
 <h3>1. 初始化 Mac Studio</h3>
 <p>创建专用账号和数据目录：</p>
 <pre><code>sudo dscl . -create /Users/lobster
@@ -346,13 +358,13 @@ limits:
   <img src="/assets/img/posts/feishu-lobster-deployment/deepseek-models.png" alt="DeepSeek 模型列表文档截图：模型名、价格、上下文等信息上线前必须复核。" loading="lazy">
   <figcaption>DeepSeek 模型列表文档截图：模型名、价格、上下文等信息上线前必须复核。</figcaption>
 </figure>
-<p>部署者在管理台里看到的是模型配置向导。选择“公司内网大模型 API”后，只需要填写 API Base、API Key、默认模型名和最大上下文；选择“本机离线模型”后，只需要选择已下载模型和上下文长度。保存前必须点“测试连接”，测试通过后才允许导入部门知识库素材。</p>
+<p>部署者在飞书部署工作台里看到的是模型配置卡片。选择“公司内网大模型 API”后，只需要填写 API Base、API Key、默认模型名和最大上下文；选择“本机离线模型”后，只需要选择已下载模型和上下文长度。后端会把密钥加密保存到 Mac Studio，不写入飞书多维表格明文字段。保存前必须点“测试连接”，测试通过后才允许导入部门知识库素材。</p>
 <figure class="article-figure">
   <img src="/assets/img/posts/feishu-lobster-deployment/admin-model-config.png" alt="模型配置向导截图：部署者选择公司内网 API 或本机模型，测试通过后保存为知识库默认模型。" loading="lazy">
   <figcaption>模型配置向导截图：部署者选择公司内网 API 或本机模型，测试通过后保存为知识库默认模型。</figcaption>
 </figure>
 <h3>5. 用 Excel 准备员工开通表</h3>
-<p>部署者只准备一份 Excel，不需要填写端口、open_id、profile 名称或系统路径。第一版必填四列：</p>
+<p>部署者只准备一份 Excel，并在飞书部署工作台的“员工开通”卡片里上传。部署者不需要填写端口、open_id、profile 名称或系统路径。第一版必填四列：</p>
 <pre><code>工号
 姓名
 存储空间容量
@@ -362,7 +374,7 @@ limits:
 U001    张三    20GB            100万
 U002    李四    20GB            150万
 U003    王五    30GB            200万</code></pre>
-<p>上传后系统做四类校验：</p>
+<p>上传后，飞书会把文件作为附件交给 <code>lobster-admin-backend</code>。后端读取 Excel，写入“员工开通表”多维表格，并做四类校验：</p>
 <ol>
 <li>工号是否能在飞书通讯录里匹配到员工。</li>
 <li>姓名是否与通讯录一致，不一致时进入待确认。</li>
@@ -373,7 +385,7 @@ U003    王五    30GB            200万</code></pre>
   <img src="/assets/img/posts/feishu-lobster-deployment/admin-excel-import.png" alt="员工 Excel 一键开通截图：部署者上传包含工号、姓名、存储空间容量、每月Token容量额度的 Excel，系统自动校验并预览。" loading="lazy">
   <figcaption>员工 Excel 一键开通截图：部署者上传包含工号、姓名、存储空间容量、每月Token容量额度的 Excel，系统自动校验并预览。</figcaption>
 </figure>
-<p>Excel 导入通过后，管理台会生成内部 <code>users.csv</code> 和 profile registry。内部表会补齐 <code>feishu_open_id</code>、<code>employee_id</code>、<code>gateway_port</code>、<code>profile_name</code>、<code>quota_gb</code> 和 <code>monthly_token_budget</code> 等字段，但这些字段不要求部署者手工维护。</p>
+<p>Excel 导入通过后，飞书部署工作台会显示预览和差异提醒；确认后，后端生成内部 <code>users.csv</code> 和 profile registry。内部表会补齐 <code>feishu_open_id</code>、<code>employee_id</code>、<code>gateway_port</code>、<code>profile_name</code>、<code>quota_gb</code> 和 <code>monthly_token_budget</code> 等字段，但这些字段不要求部署者手工维护。</p>
 <h3>6. 一键创建员工 Hermes profile</h3>
 <p>点击“确认并开通”后，部署脚本 <code>lobsterctl bootstrap</code> 会批量执行，不需要管理员手动创建 30 次。脚本逻辑如下：</p>
 <pre><code>读取 Excel 导入后的员工表
@@ -456,27 +468,33 @@ hermes gateway start \
 launchctl print gui/$(id -u lobster)/com.company.lobster.u001
 curl http://127.0.0.1:31001/health</code></pre>
 <h3>8. 接入飞书自建应用</h3>
-<p>飞书接入分两边配置：飞书开放平台创建应用，部署管理台保存应用密钥和回调参数。部署人员应该先在管理台打开“飞书接入”向导，再去飞书开放平台操作。</p>
-<p>管理台需要填写：</p>
+<p>飞书接入分两边配置：飞书开放平台创建自建应用，Mac Studio 上的后端保存应用密钥和回调参数。部署人员应该先在飞书部署工作台打开“飞书接入”向导，再去飞书开放平台操作。</p>
+<p>同一个飞书自建应用承接两类入口：</p>
+<ol>
+<li>员工前台：员工与“部门小龙虾”机器人私聊、在群里 @ 机器人、点击机器人发出的交互卡片。</li>
+<li>部署工作台：部署人员进入管理员群或应用主页，通过表单、多维表格、附件上传和状态卡片管理开通、模型、知识库和联调。</li>
+</ol>
+<p>飞书部署工作台需要填写：</p>
 <pre><code>App ID
 App Secret
 Encrypt Key
 Verification Token
 事件回调地址：https://lobster.company.com/feishu/events</code></pre>
 <figure class="article-figure">
-  <img src="/assets/img/posts/feishu-lobster-deployment/admin-feishu-wizard.png" alt="飞书接入向导截图：部署者把飞书应用参数填入管理台，并复制事件回调地址到飞书开放平台。" loading="lazy">
-  <figcaption>飞书接入向导截图：部署者把飞书应用参数填入管理台，并复制事件回调地址到飞书开放平台。</figcaption>
+  <img src="/assets/img/posts/feishu-lobster-deployment/admin-feishu-wizard.png" alt="飞书接入向导截图：部署者把飞书应用参数填入飞书部署工作台，并复制事件回调地址到飞书开放平台。" loading="lazy">
+  <figcaption>飞书接入向导截图：部署者把飞书应用参数填入飞书部署工作台，并复制事件回调地址到飞书开放平台。</figcaption>
 </figure>
 <p>飞书开放平台侧按下面顺序配置：</p>
 <ol>
 <li>进入飞书开放平台，创建“企业自建应用”，应用名建议为“部门小龙虾”。</li>
 <li>启用机器人能力，头像和简介使用部门内部统一口径。</li>
-<li>在事件订阅里填写管理台给出的事件回调地址，保存后飞书会发送 challenge，管理台应显示“challenge 通过”。</li>
+<li>在事件订阅里填写飞书部署工作台给出的事件回调地址，保存后飞书会发送 challenge，工作台应显示“challenge 通过”。</li>
 <li>订阅消息事件：私聊消息、群聊 @ 消息、文件消息。</li>
-<li>订阅卡片按钮回调：保存到知识库、生成桌面研究、查看引用、确认资料类型。</li>
+<li>订阅卡片按钮回调：保存到知识库、生成桌面研究、查看引用、确认资料类型、确认批量开通。</li>
 <li>开通发送消息能力：机器人发送文本、富文本、交互卡片。</li>
 <li>开通通讯录读取能力：用员工工号匹配飞书 open_id。只读取开通所需字段，不同步无关人事信息。</li>
-<li>发布应用版本，并安装到部门可见范围。第一轮先只安装给 3 到 5 个试点用户。</li>
+<li>开通多维表格或表单相关能力：用于员工开通表、模型配置表、知识库批次表、任务状态表和审计日志表。</li>
+<li>发布应用版本，并安装到部门可见范围。第一轮先只安装给 3 到 5 个试点用户和 1 到 2 名部署人员。</li>
 </ol>
 <figure class="article-figure">
   <img src="/assets/img/posts/feishu-lobster-deployment/feishu-message-api.png" alt="飞书开放平台发送消息 API 截图：第一版用机器人消息、事件回调和交互卡片承接员工入口。" loading="lazy">
@@ -494,7 +512,13 @@ router:
   host: 127.0.0.1
   port: 8080
   profile_registry: /Users/Shared/lobster/services/router/profile_registry.sqlite</code></pre>
-<p>调通标准不是“配置保存成功”，而是下面 6 项全部通过：飞书 challenge、私聊消息事件、机器人发送消息、卡片按钮回调、工号到 open_id 的映射、个人 profile 路由。</p>
+<p>部署工作台里的多维表格建议固定为五张：</p>
+<pre><code>员工开通表：工号、姓名、容量、月 token 额度、开通状态、失败原因
+模型配置表：供应商、API Base、模型名、用途、测试状态、最后测试时间
+知识库批次表：批次名、资料密级、可访问角色、导入状态、验收问题
+任务状态表：任务 ID、任务类型、进度、操作者、开始时间、结束时间
+审计日志表：操作者、动作、对象、结果、错误码、追踪 ID</code></pre>
+<p>调通标准不是“配置保存成功”，而是下面 8 项全部通过：飞书 challenge、私聊消息事件、机器人发送消息、卡片按钮回调、工号到 open_id 的映射、员工 Excel 写入多维表格、知识库附件读取、个人 profile 路由。</p>
 <figure class="article-figure">
   <img src="/assets/img/posts/feishu-lobster-deployment/admin-debug-checklist.png" alt="飞书联调检查截图：逐项验证 challenge、消息接收、卡片按钮、个人路由和 token 统计。" loading="lazy">
   <figcaption>飞书联调检查截图：逐项验证 challenge、消息接收、卡片按钮、个人路由和 token 统计。</figcaption>
@@ -534,7 +558,7 @@ backup 是否完成一次 dry-run</code></pre>
 </figure>
 <h3>11. 部署部门知识库服务</h3>
 <p>部门知识库和个人知识库分开部署。个人知识库服务于员工自己的复用；部门知识库服务于部门级研究资产，必须有统一权限、统一元数据和统一引用记录。</p>
-<p>部署者在管理台里只需要完成三件事：</p>
+<p>部署者在飞书部署工作台里只需要完成三件事：</p>
 <ol>
 <li>在“模型配置”里选择知识库 LLM：公司内网大模型 API，或本机离线模型。</li>
 <li>在“知识库”里填写资料批次信息：批次名称、资料密级、可访问角色、资料来源说明。</li>
@@ -544,7 +568,7 @@ backup 是否完成一次 dry-run</code></pre>
   <img src="/assets/img/posts/feishu-lobster-deployment/admin-kb-upload.png" alt="知识库素材上传截图：部署者上传原始研究资料，系统自动进入转写、OCR、切分、索引和验收流程。" loading="lazy">
   <figcaption>知识库素材上传截图：部署者上传原始研究资料，系统自动进入转写、OCR、切分、索引和验收流程。</figcaption>
 </figure>
-<p>上传后系统自动处理下游环节：</p>
+<p>上传后，飞书只负责承接附件和触发事件；Mac Studio 上的 Knowledge Import Worker 自动处理下游环节：</p>
 <pre><code>文件指纹去重
   -&gt; 格式识别
   -&gt; PDF / PPT / Word / Excel 文本抽取
@@ -701,40 +725,45 @@ OCR 成功率
   error_code text
 );</code></pre>
 <h2>默认 skills</h2>
-<p>技能库按三条线维护：效率工具、产品开发、自媒体。部署完成后先全员启用低风险效率类；涉及浏览器登录态、网页自动化、外部账号和内容发布的技能，需要申请后按角色开放。</p>
+<p>技能库按企业白领的真实工作维护：研究与洞察、数据分析、办公产出、知识沉淀、质量与合规。部署完成后先全员启用低风险技能；涉及浏览器登录态、网页自动化、外部账号、敏感资料和文件系统扩大权限的技能，需要申请后按角色开放。</p>
 <figure class="article-figure">
-  <img src="/assets/img/posts/feishu-lobster-deployment/admin-skill-pack.png" alt="技能库配置截图：三条线 11 个优质 skills，按岗位启用并做审计。" loading="lazy">
-  <figcaption>技能库配置截图：三条线 11 个优质 skills，按岗位启用并做审计。</figcaption>
+  <img src="/assets/img/posts/feishu-lobster-deployment/admin-skill-pack.png" alt="技能库配置截图：面向研究、分析、办公产出和知识沉淀的企业 skills，按岗位启用并做审计。" loading="lazy">
+  <figcaption>技能库配置截图：面向研究、分析、办公产出和知识沉淀的企业 skills，按岗位启用并做审计。</figcaption>
 </figure>
-<p>第一类，效率工具：</p>
+<p>第一组，全员默认启用：</p>
 <ol>
-<li>Agent Reach：公开信息检索、RSS、社媒和网页资料追踪，默认只允许公开来源。</li>
-<li>NotebookLM Skill：把授权资料整理成可追问的笔记本，适合研究资料复盘。</li>
-<li>bb-browser：带登录态浏览器自动化，默认不全员启用，只给通过审批的岗位。</li>
-<li>skill-creator：把稳定流程沉淀成可复用 skill，默认由维护者使用。</li>
+<li>Agent Reach：公开信息检索、网页资料追踪、RSS 订阅和公开来源监测，默认只允许公开来源。</li>
+<li>Department KB Searcher：按权限检索部门研究报告、用户调研、复盘材料，并强制返回引用来源。</li>
+<li>Research Report Distiller：把 PDF、PPT、Word 和网页资料整理成结论、证据、待验证假设和行动项。</li>
+<li>User Interview / VOC Synthesizer：整理访谈记录、客服反馈、开放题和用户原话，输出主题聚类、代表性引文和洞察假设。</li>
+<li>Survey &amp; Spreadsheet Analyst：读取 Excel/CSV，做描述统计、交叉分析、异常值提示和图表建议。</li>
+<li>Data Visualization Reporter：把数据分析结果转成适合汇报的图表说明、口径解释和风险提示。</li>
+<li>Meeting Notes &amp; Action Tracker：把会议录音、纪要和聊天记录整理成决议、负责人、截止时间和待追踪问题。</li>
+<li>Executive Briefing Builder：把长材料压缩成管理层 briefing，包括背景、关键结论、影响、建议和下一步。</li>
+<li>Humanizer-zh：优化中文商业表达，减少生硬的 AI 味，适合周报、调研结论、方案说明和邮件。</li>
+<li>Citation &amp; Evidence Guard：检查回答是否有来源、是否过度推断、是否混入无权限资料。</li>
+<li>Cost-Aware Task Router：在高 token、长上下文、批量报告生成任务前提醒确认预算和数据等级。</li>
 </ol>
-<p>第二类，产品开发：</p>
+<p>第二组，按岗位或项目审批启用：</p>
 <ol>
-<li>superpowers：把需求拆成明确工作流，适合复杂任务前置规划。</li>
-<li>frontend-design：产品原型、交互草图、前端视觉方案，面向产品和研发试点用户。</li>
-<li>ui-ux-pro-max：UI/UX 评审、信息架构、可用性检查，适合产品评审前使用。</li>
-<li>Humanizer-zh：优化中文表达，减少生硬的 AI 味，适合周报、方案和对外文案。</li>
+<li>NotebookLM Skill：把授权资料整理成可追问的笔记本，适合专题研究、竞品梳理和材料复盘。</li>
+<li>bb-browser：带登录态浏览器自动化，默认不全员启用，只给通过审批的岗位，用于内部系统取数或重复网页操作。</li>
+<li>Playwright MCP：网页交互验证、流程截图和批量检查，只给维护者、数据运营或需要网页验证的研究人员。</li>
+<li>Documents / Report Writer：生成 Word 型研究纪要、调研报告、访谈总结和项目复盘。</li>
+<li>Presentations / Slide Brief Builder：把研究结论整理成汇报页结构和讲稿。</li>
+<li>Spreadsheets：用于较复杂的数据清洗、透视表、公式校验和可复用分析模板。</li>
+<li>Zotero / Source Manager：管理文献、报告来源和引用信息，适合行业研究、政策研究和技术研究岗位。</li>
+<li>skill-creator：把稳定流程沉淀成可复用 skill，默认只给维护者和流程 owner。</li>
+<li>find-skills：帮助维护者发现更合适的 skill，作为技能库治理入口。</li>
+<li>office-hours：用于市场判断、业务假设和研究结论的结构化质询，不作为内容发布工具。</li>
 </ol>
-<p>第三类，自媒体和表达：</p>
+<p>建议优先自研或定制的部门技能：</p>
 <ol>
-<li>find-skills：帮助员工发现更合适的 skill，作为技能库入口。</li>
-<li>office-hours：用于商业想法、市场判断、产品策略的结构化质询。</li>
-<li>Playwright MCP：网页交互验证和截图，默认只给研发、测试和维护者。</li>
-</ol>
-<p>部门小龙虾自身还应内置以下业务技能：</p>
-<ol>
-<li>Personal Briefing Builder：公开信息追踪和每日 briefing。</li>
-<li>Source Distiller：网页、文章、会议材料摘要。</li>
-<li>Meeting Notes Builder：会议纪要、行动项、风险点。</li>
-<li>PKM Compounder：把有效回答沉淀为个人知识库条目。</li>
-<li>Department KB Searcher：按权限检索部门资料，并强制返回引用来源。</li>
-<li>Desk Research Composer：把多份授权材料合成为 briefing 或桌面研究草稿。</li>
-<li>Cost-Aware Task Router：在高 token 任务前提醒确认。</li>
+<li>Industry Radar：按公开来源追踪行业政策、公司公告、竞品动态和关键人物观点，输出每日或每周 briefing。</li>
+<li>Desk Research Composer：把多份授权材料合成为桌面研究草稿，并把每条结论绑定来源。</li>
+<li>Insight Backlog Builder：把调研发现、未验证假设、证据强度和后续问题沉淀成可追踪 backlog。</li>
+<li>Privacy Redactor：在员工上传材料前提示疑似敏感字段、个人信息和不应进入模型的内容。</li>
+<li>Department Glossary Keeper：维护部门术语、项目代号、指标口径和常见问答，减少新课题启动成本。</li>
 </ol>
 <p>默认不启用：</p>
 <ol>
@@ -794,8 +823,13 @@ OCR 成功率
 <li><a href="https://open.feishu.cn/document/server-docs/im-v1/message/create">飞书开放平台发送消息 API</a></li>
 <li><a href="https://open.feishu.cn/document/server-docs/event-subscription-guide/event-subscription-configure-/request-url-configuration-case">飞书开放平台事件订阅</a></li>
 <li><a href="https://open.feishu.cn/document/client-docs/bot-v3/add-custom-bot">飞书开放平台机器人能力</a></li>
+<li><a href="https://open.feishu.cn/document/server-docs/docs/bitable-v1/bitable-overview">飞书开放平台多维表格 API</a></li>
+<li><a href="https://www.microsoft.com/en-us/worklab/work-trend-index/2025-the-year-the-frontier-firm-is-born">Microsoft 2025 Work Trend Index</a></li>
+<li><a href="https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-state-of-ai">McKinsey State of AI 2025</a></li>
+<li><a href="https://media.nngroup.com/media/articles/attachments/Common-Tasks_AI-in-UX.pdf">Nielsen Norman Group：Common UX Tasks Performed by UX Professionals with Generative AI</a></li>
 </ol>
 <h2>修订记录</h2>
+<p><code>v0.6.0</code>，2026-05-31：明确飞书部署工作台方案，重写企业研究分析 skills。</p>
 <p><code>v0.5.0</code>，2026-05-31：补充飞书接入联调、Excel 批量开通、知识库上传向导、用户飞书截图路径和技能库分层。</p>
 <p><code>v0.4.0</code>，2026-05-31：补充部门知识库、模型兜底方案、机器配置档位和悬浮目录。</p>
 <p><code>v0.3.0</code>，2026-05-31：扩展为部署手册和用户手册合一版本，加入机器配置费用、Hermes 部署流程、批量开通、飞书使用案例和图片放大交互。</p>
