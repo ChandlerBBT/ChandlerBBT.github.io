@@ -116,28 +116,45 @@ function buildArticleToc() {
 }
 
 function setupTutorialSidebar() {
-  const toggles = document.querySelectorAll(".tutorial-sidebar .sidebar-toggle");
-  for (const toggle of toggles) {
+  const sidebar = document.querySelector(".tutorial-sidebar");
+  if (!sidebar) return;
+
+  function setToggleOpen(toggle, isOpen) {
     const panelId = toggle.getAttribute("aria-controls");
     const panel = panelId ? document.getElementById(panelId) : null;
     const item = toggle.closest(".sidebar-item");
-    if (!panel || !item) continue;
+    if (!panel || !item) return;
+    item.classList.toggle("is-open", isOpen);
+    panel.hidden = !isOpen;
+    toggle.setAttribute("aria-expanded", String(isOpen));
+    toggle.setAttribute(
+      "aria-label",
+      `${isOpen ? "收起" : "展开"}${item.querySelector(".sidebar-page-link")?.textContent?.trim() || "当前章节"}二级目录`,
+    );
+  }
 
-    function setOpen(isOpen) {
-      item.classList.toggle("is-open", isOpen);
-      panel.hidden = !isOpen;
-      toggle.setAttribute("aria-expanded", String(isOpen));
-      toggle.setAttribute(
-        "aria-label",
-        `${isOpen ? "收起" : "展开"}${item.querySelector(".sidebar-page-link")?.textContent?.trim() || "当前章节"}二级目录`,
-      );
+  const toggles = Array.from(sidebar.querySelectorAll(".sidebar-toggle"));
+  for (const toggle of toggles) {
+    setToggleOpen(toggle, toggle.getAttribute("aria-expanded") !== "false");
+  }
+
+  sidebar.addEventListener("click", (event) => {
+    if (!(event.target instanceof Element)) return;
+
+    const button = event.target.closest("button");
+    if (!button || !sidebar.contains(button)) return;
+
+    const action = button.dataset.sidebarAction;
+    if (action === "expand" || action === "collapse") {
+      const isOpen = action === "expand";
+      for (const toggle of toggles) setToggleOpen(toggle, isOpen);
+      return;
     }
 
-    setOpen(toggle.getAttribute("aria-expanded") !== "false");
-    toggle.addEventListener("click", () => {
-      setOpen(toggle.getAttribute("aria-expanded") !== "true");
-    });
-  }
+    if (button.classList.contains("sidebar-toggle")) {
+      setToggleOpen(button, button.getAttribute("aria-expanded") !== "true");
+    }
+  });
 }
 
 buildArticleToc();

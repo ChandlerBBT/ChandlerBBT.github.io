@@ -675,8 +675,40 @@ img {
 }
 
 .tutorial-sidebar h2 {
-  margin: 0 0 12px;
+  margin: 0;
   font-size: 18px;
+}
+
+.sidebar-heading {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.sidebar-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.sidebar-actions button {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sidebar-actions button:hover,
+.sidebar-actions button:focus-visible {
+  color: var(--green);
+  border-color: rgba(31, 95, 63, 0.34);
+  background: var(--green-soft);
+  outline: none;
 }
 
 .tutorial-sidebar nav,

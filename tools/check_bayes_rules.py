@@ -217,6 +217,8 @@ def main() -> None:
     machine_translation_hits: list[tuple[Path, str]] = []
     english_leaks: list[tuple[Path, str]] = []
     bad_preamble_pages: list[Path] = []
+    missing_section_numbers: list[tuple[Path, str]] = []
+    missing_sidebar_controls: list[Path] = []
     todo_count = 0
     residual_r_blocks: list[tuple[Path, int]] = []
 
@@ -225,6 +227,27 @@ def main() -> None:
         first_line = raw.splitlines()[0].strip().lower() if raw.splitlines() else ""
         if first_line == "html" or first_line.startswith("<html"):
             bad_preamble_pages.append(audit.path)
+        soup = BeautifulSoup(raw, "html.parser")
+        sidebar = soup.select_one(".tutorial-sidebar")
+        if sidebar and not (
+            sidebar.select_one('[data-sidebar-action="expand"]')
+            and sidebar.select_one('[data-sidebar-action="collapse"]')
+        ):
+            missing_sidebar_controls.append(audit.path)
+        for section in soup.select(".tutorial-content div.section[number]"):
+            number = str(section.get("number", "")).strip()
+            if "." not in number:
+                continue
+            heading = None
+            for child in section.find_all(["h2", "h3", "h4", "h5", "h6"], recursive=False):
+                heading = child
+                break
+            if heading is None:
+                missing_section_numbers.append((audit.path, number))
+                continue
+            label = " ".join(heading.get_text(" ", strip=True).split())
+            if not re.match(rf"^\s*{re.escape(number)}(?:\s|[.:：、．]|$)", label):
+                missing_section_numbers.append((audit.path, number))
         text = visible_text(raw)
         todo_count += raw.count("TODO:")
         code_text = "\n".join(block.text for block in audit.code_blocks)
@@ -275,6 +298,8 @@ def main() -> None:
     print(f"- Machine-translation phrase hits: {len(machine_translation_hits)}")
     print(f"- English leak blocks: {len(english_leaks)}")
     print(f"- Bad HTML preambles: {len(bad_preamble_pages)}")
+    print(f"- Missing section heading numbers: {len(missing_section_numbers)}")
+    print(f"- Missing sidebar global controls: {len(missing_sidebar_controls)}")
     print(f"- Missing local links: {len(missing_links)}")
     print(f"- Missing local anchors: {len(missing_anchors)}")
     print(f"- Missing local images: {len(missing_images)}")
@@ -287,6 +312,8 @@ def main() -> None:
         ("Machine translation phrase", machine_translation_hits[:10]),
         ("English leak", english_leaks[:10]),
         ("Bad HTML preamble", [(path, "first line must be <!doctype html>") for path in bad_preamble_pages[:10]]),
+        ("Missing section heading number", missing_section_numbers[:10]),
+        ("Missing sidebar global controls", [(path, "expand/collapse all controls missing") for path in missing_sidebar_controls[:10]]),
     ]:
         for path, value in items:
             rel = path.relative_to(ROOT).as_posix()
@@ -299,6 +326,8 @@ def main() -> None:
         or missing_images
         or symbol_artifacts
         or bad_preamble_pages
+        or missing_section_numbers
+        or missing_sidebar_controls
         or residual_r_blocks
         or todo_count
     ):

@@ -886,6 +886,29 @@ def heading_section_anchor(heading) -> tuple[str, str]:
     return "", ""
 
 
+def heading_has_number(label: str, number: str) -> bool:
+    escaped = re.escape(number)
+    return bool(re.match(rf"^\s*{escaped}(?:\s|[.:：、．]|$)", label))
+
+
+def restore_section_heading_numbers(body: BeautifulSoup) -> None:
+    for section in body.select("div.section[number]"):
+        number = str(section.get("number", "")).strip()
+        if "." not in number:
+            continue
+        heading = None
+        for child in section.find_all(["h2", "h3", "h4", "h5", "h6"], recursive=False):
+            heading = child
+            break
+        if heading is None:
+            continue
+        label = " ".join(heading.get_text(" ", strip=True).split())
+        if not label or heading_has_number(label, number):
+            continue
+        heading.clear()
+        heading.append(f"{number} {label}")
+
+
 def collect_section_links(body: BeautifulSoup) -> list[tuple[str, str]]:
     sections: list[tuple[str, str]] = []
     for heading in body.find_all("h2"):
@@ -902,35 +925,39 @@ def render_sidebar(
     pages: list[Page],
     current: Page | None = None,
     current_sections: list[tuple[str, str]] | None = None,
+    sections_by_path: dict[str, list[tuple[str, str]]] | None = None,
 ) -> str:
     links = []
     current_sections = current_sections or []
+    sections_by_path = sections_by_path or ({current.path: current_sections} if current else {})
     for page in pages:
         is_current = bool(current and page.path == current.path)
         current_attr = ' aria-current="page"' if current and page.path == current.path else ""
+        page_sections = sections_by_path.get(page.path, [])
         item_classes = ["sidebar-item"]
         if is_current:
             item_classes.append("is-current")
-        if is_current and current_sections:
+        is_open = is_current and bool(page_sections)
+        if is_open:
             item_classes.append("is-open")
         toggle = '<span class="sidebar-toggle-placeholder" aria-hidden="true"></span>'
         section_panel = ""
-        if is_current and current_sections:
-            panel_id = "sidebar-sections-" + re.sub(r"[^a-z0-9]+", "-", page.path.strip("/").lower()).strip("-")
-            if not panel_id.endswith("-"):
-                panel_id = panel_id or "sidebar-sections-index"
+        if page_sections:
+            panel_slug = re.sub(r"[^a-z0-9]+", "-", page.path.strip("/").lower()).strip("-") or "index"
+            panel_id = f"sidebar-sections-{panel_slug}"
             toggle = (
-                f'<button class="sidebar-toggle" type="button" aria-expanded="true" '
+                f'<button class="sidebar-toggle" type="button" aria-expanded="{str(is_open).lower()}" '
                 f'aria-controls="{html.escape(panel_id, quote=True)}" '
-                f'aria-label="收起{html.escape(page.title_cn, quote=True)}二级目录">'
+                f'aria-label="{"收起" if is_open else "展开"}{html.escape(page.title_cn, quote=True)}二级目录">'
                 '<span aria-hidden="true">›</span>'
                 "</button>"
             )
             section_links = "".join(
-                f'<a class="section-link" href="#{html.escape(anchor, quote=True)}">{html.escape(label)}</a>'
-                for anchor, label in current_sections
+                f'<a class="section-link" href="{"#" if is_current else page.local_path + "#"}{html.escape(anchor, quote=True)}">{html.escape(label)}</a>'
+                for anchor, label in page_sections
             )
-            section_panel = f'<div class="sidebar-subsections" id="{html.escape(panel_id, quote=True)}">{section_links}</div>'
+            hidden_attr = "" if is_open else " hidden"
+            section_panel = f'<div class="sidebar-subsections" id="{html.escape(panel_id, quote=True)}"{hidden_attr}>{section_links}</div>'
         links.append(
             f'<div class="{" ".join(item_classes)}">'
             '<div class="sidebar-page-row">'
@@ -942,7 +969,13 @@ def render_sidebar(
         )
     return f"""
 <aside class="tutorial-sidebar">
-  <h2>教程目录</h2>
+  <div class="sidebar-heading">
+    <h2>教程目录</h2>
+    <div class="sidebar-actions" aria-label="二级目录控制">
+      <button type="button" data-sidebar-action="expand">全部展开</button>
+      <button type="button" data-sidebar-action="collapse">全部收起</button>
+    </div>
+  </div>
   <nav class="sidebar-list">{''.join(links)}</nav>
 </aside>
 """
@@ -989,6 +1022,7 @@ def render_chapter(
     sanitize_math_text(body)
     sanitize_generated_text(body)
     rewrite_code_blocks(body, translator, page)
+    restore_section_heading_numbers(body)
 
     title_node = body.find(["h1", "h2"])
     if title_node:
