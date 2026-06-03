@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="第 12 章 泊松回归与负二项回归 | Bayes Rules! 中文 Python 改写教程" name="description"/>
+<title>第 12 章 泊松回归与负二项回归 | Chandler's AI Productivity Notes</title>
+<link href="/assets/img/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="/assets/css/styles.css" rel="stylesheet"/>
+<script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#content">跳到正文</a>
+<header class="site-header">
+<a aria-label="Chandler's AI Productivity Notes 首页" class="brand" href="/">
+<span class="brand-mark">C</span>
+<span class="brand-name">Chandler's AI Productivity Notes</span>
+</a>
+<nav aria-label="主导航" class="site-nav">
+<a href="/">首页</a>
+<a aria-current="page" href="/posts/">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+</nav>
+</header>
+<main class="tutorial-page" id="content">
+<div class="tutorial-layout">
+<aside class="tutorial-sidebar">
+<h2>教程目录</h2>
+<nav><a href="/bayes-rules-python-cn/">首页</a><a href="/bayes-rules-python-cn/foreword/">前言</a><a href="/bayes-rules-python-cn/preface/">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a aria-current="page" href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a href="/bayes-rules-python-cn/references/">参考文献</a></nav>
+</aside>
+<article class="tutorial-content">
+<section class="normal" id="section-">
+<div class="section level1" id="chapter-12" number="12">
+<h1>第 12 章 泊松回归与负二项回归</h1>
+<div class="tutorial-note">
+<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
+</div>
+<!-- possible zip: number of transformers movies in pulse of the nation -->
+<p>从前几章的细节后退一步,回顾大目标:构建量化响应变量的回归模型 QQ0@@. 目前为止我们只有一个回归工具, 这一“正常”回归工具的名称反映了其广泛适用性。 但并不是每个模范都是正常的。 我们将在以下数据故事中扩展我们的回归工具。</p>
+<p>从这本书开始,《平等法》在美国参议院等待审议。 如果获得通过,该法案或法案将通过禁止教育、就业、住房等方面的歧视,在国家一级确保男女同性恋、双性恋和变性者的基本权利。 同样,50个州中每个州都有自己的一套独特的反歧视法律,涵盖从打击欺凌到保健覆盖的问题。 我们的目标是更好地了解一个国家的法律数量如何与其独特的人口特征和政治气候相关。 将重点缩小到城市居民的百分比。 对于后者,我们将在总统选举中运用历史的投票模式,指出一个州是否一贯投票支持民主党候选人,一贯投票支持共和党候选人57人,或者是一个摇摆不定的州,已经前后翻转。 在分析过程中, 请认识到法律数量并不能完美地代表州法律的质量,</p>
+<p>表示反歧视法的数量, 预言者则表示该州居民在市区的百分比。 此外,我们的历史政治气候预测变量具有三个层次的绝对性:民主党、GOP或摇摆。 我们第一次用三级变量工作, 从第11章中回顾,一个层次的绝对预测者,即这里的民主党,是我们模型的基准或参考水平。 其他级别,GOP和摇摆,作为指标进入我们的模型。 因此,QQ3@@表示状态QQ4@@倾斜GOP和QQ5@@表示波动状态:</p>
+<p>\[X_{i2} = \begin{cases} 1 &amp; \text{ GOP} \\ 0 &amp; \text{ otherwise} \\ \end{cases} \;\;\;\; \text{ and } \;\;\;\; X_{i3} = \begin{cases} 1 &amp; \text{ swing} \\ 0 &amp; \text{ otherwise}. \\ \end{cases}\]</p>
+<p>由于这是迄今为止我们所探索的唯一技术, 我们理解我们量化响应变量QQ0XX与预测器QQ1XX之间的关系的第一种方法可能是建立一个具有正常数据结构的回归模型:</p>
+<p>\[Y_i | \beta_0, \beta_1, \beta_2, \beta_3, \sigma \stackrel{ind}{\sim} N\left(\mu_i, \; \sigma^2 \right) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1 X_{i1} + \beta_2 X_{i2} + \beta_3 X_{i3}.\]</p>
+<p>除了理解一个城市人口和历史投票模式的“典型”国家有7项法律之外,我们以前对这种关系所知甚少。 因此,我们将在中心截击前设定一个`0',但在其他三个参数上使用信息薄弱的前科。</p>
+<p>接下来, 人权运动每年发布“国家平等指数”,监测各州的LQBTQQ权利法律数量。 在其他状态特征中,bayesrules包中的equile index数据集包括由莎拉·沃贝洛(英语:Sarah Warbelow),考特奈·阿凡特(英语:Courtnay Avant)和科林·库特尼(英语:Colin Kutney (2019))编译的2019年指数数据. 要获得一个详细的代码簿, 类型 平等在控制台。</p>
+<div class="sourceCode" id="cb227">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python"># 原书 bayesrules 数据包中的数据需改用 CSV/本地数据文件读取
+import pymc as pm
+import arviz as az
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# 装入软件包
+# 装入数据
+data(equality_index)
+equality = equality_index</code></pre>
+</div>
+<p>以下直方图显示,法律数量从低至1到高至155不等,但大多数州只有不到10部法律:</p>
+<div class="sourceCode" id="cb228">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch12-hist" style="display:block;"></span>
+<img alt="直观法界. x轴的定律从0到160不等. Y轴的计数从0到30. 直方图的条横跨增量为10。 酒吧是右侧的,最高的酒吧显示,有近30个州有0到10条法律。 大约有12个州有10至20部法律。 49个州拥有不到50项法律,还有1个外围国家拥有超过150项法律." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch12-hist-1-b2372ac17ddf.png" width="240"/>
+<p class="caption">图12.1:50个州中每个州的法律数量图。</p>
+</div>
+<p>拥有155条法律的州恰好是加利福尼亚州. 我们将会从分析中移除这个状态:</p>
+<div class="sourceCode" id="cb229">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 识别外部
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>其次,在州法律数量相对于城市人口百分比和历史投票模式的分散中,人们注意到,在历史上,城市人口较多的州和州往往有更多的LGBTQQ反歧视法律:</p>
+<div class="sourceCode" id="cb230">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-503" style="display:block;"></span>
+<img alt="按城市(x轴)百分比划分的法律(y轴)分布。 x轴的百分率 城市值从35到100不等. y轴的定律从0到40不等. 有49个数据点,按历史(dem,gop,或wing)来表示颜色. 一般来说,法律有适度的,非线性的增长,以百分率 城市. 此外,dem点往往具有较高的城市和法则值,gop点往往具有较低的城市和法则值。 摇摆点往往介于这两个极端之间." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-503-1-1d94a205485c.png" width="288"/>
+<p class="caption">图12.2:一个州反歧视法的数量与城市人口百分比和历史投票趋势的分布图。</p>
+</div>
+<p>使用stan glm(),我们把这些数据与我们先验的薄弱理解结合起来,以百分比城市和历史投票趋势模拟法律的后常态回归模型。 在对这一平等-正常-sim模型的快速后期预测检查中,我们将所观察到的反歧视法的直方图与五个后期模拟数据集进行比较(图12.3)。 (直方图比密度图更合适,因为我们的响应变量是一个非负数。) 结果并不妙 — — 这个模型的后期预测与观测到的数据特征不符. 你可能并不惊讶。 每个州所观察到的反歧视法律数量是右倾的(不是正常的!). 相比之下,从后常态回归模型模拟的数据集大致对称. 这些模拟数据集将侮辱加到伤害上,假设各州有负数定律(不可能!)是很常见的.</p>
+<div class="sourceCode" id="cb231">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# 模拟普通模式
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch-12-pp-1" style="display:block;"></span>
+<img alt="有6个直方图,其定律在x轴上从-20到40不等. 左上方的直方图为深蓝色,显示49个州观测到的定律的直方图. 这个直方图是右侧和高于0定律的,在0-2定律范围内达到顶峰. 其他5个直方图均为浅蓝色. 它们大致对称,但分散,大约在10个左右. 此外,这些法律的范围从大约10至40项法律。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-12-pp-1-1-2fb02394ef21.png" width="480"/>
+<p class="caption">图12.3:反歧视法正常回归模式的后期预测检查。 与五个后期模拟数据集( 1@@)一起绘制了观测定律的直方图( 0@@).</p>
+</div>
+<p>这种可悲的结果揭示了我们单独工具的局限性。 幸运的是,概率模型呈现出各种各样的形状,我们不必强迫某样东西变得正常。</p>
+<div class="goals">
+<p>您将把定量响应变量QQ0XX的正常回归模型扩展至一个设置,其中QQ1XX是一个对预测器XX2XX的依赖性更好的由Poisson或负二分位模型,而不是普通模型代表的计数变量.</p>
+</div>
+<div class="section level2" id="building-the-poisson-regression-model" number="12.1">
+<h2>构建Poisson回归模型</h2>
+<div class="section level3" id="specifying-the-data-model-1" number="12.1.1">
+<h3>指定数据模型</h3>
+<p>从第5章中回顾,Poisson模式适用于模拟在固定空间或时间间隔(此处为状态)内发生的、理论上没有上限的事件的离散计数(此处为反歧视法)。 Poisson在诸如我们这样的案子中特别方便, 假设各邦的LGBTQQ反歧视法数目的Poisson数据模型。 反歧视法的比例取决于人口和投票趋势(\(X_{i1}\)、\(X_{i2}\)和\(X_{i3}\)):</p>
+<p>\[Y_i | \lambda_i \stackrel{ind}{\sim} Pois\left(\lambda_i \right) .\]</p>
+<p>Poisson架构下,</p>
+<p>\[E(Y_i | \lambda_i) = \lambda_i . \]</p>
+<p>如果我们像正常回归一样进行, 我们可能假设平均定律数 是线性组合 我们的预测器, \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 图12.4中的各行图说明了这一假设,每个历史投票趋势为一。</p>
+<div class="figure" style="text-align: center"><span id="fig:ch12-trend" style="display:block;"></span>
+<img alt="此情节的y轴定律介于-10至30之间,x轴定值为% 城市值介于0至100之间. 有3条平行的向上斜线,标注为dem,gop,和秋千. 德姆线最高,Gop线最低,摇摆线在中间三明治. Gop和摇摆线都有负阻截值,或者负定律值当百分比 城市为0." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch12-trend-1-2e392cd66c75.png" width="288"/>
+<p class="caption">图12.4: 对(不正确)假设的图形描绘,无论历史政治如何,典型的州法律数量与城市人口有线性关系. 虚线水平线代表x轴.</p>
+</div>
+<div class="quiz">
+<p>图12.4突出了假设一个国家的预期法律数量( 0@@)是百分比-城市和历史的线性组合的缺陷。 这是什么?</p>
+</div>
+<p>当我们假设XQ0@@可以用XQ1@@的预测器的线性组合来表示时,XQ2@@的模型跨越正值和负值,从而暗示一些州有负面的反歧视法律. 这不合理。 与法律数量一样, 为了避免违反,通常使用日志链接功能。 58 也就是说,我们将假设,XQQ 4 ,它确实跨越正值和负值,是XQ 5 QQ 预测器的线性组合:</p>
+<p>\[Y_i | \beta_0,\beta_1, \beta_2, \beta_3 \stackrel{ind}{\sim} Pois\left(\lambda_i \right) \;\;\; \text{ with } \;\;\; \log\left( \lambda_i \right) = \beta_0 + \beta_1 X_{i1} + \beta_2 X_{i2} + \beta_3 X_{i3} .\]</p>
+<p>以预测为风险, 相反,我们总是可以把模型关系从日志规模上改变下来,因为它吸引到一个事实:如果~~~~~~ ,然后用 QQ1 表示自然数字 QQ2 :</p>
+<p>\[Y_i | \beta_0,\beta_1, \beta_2, \beta_3 \stackrel{ind}{\sim} Pois\left(\lambda_i\right) \;\; \text{ with } \;\; \lambda_i = e^{\beta_0 + \beta_1 X_{i1} + \beta_2 X_{i2} + \beta_3 X_{i3}} .\]</p>
+<p>图12.5显示了这一模型在X+0+和X+1++两个尺度上之前的可信结果。 在这两种情况下都有三个曲线,每个历史投票类别一个曲线. 在QQ2@@尺度上,这些曲线是线性的. 然而,当转换为QQ3QQ或(未登录)定律尺度时,这些曲线是非线性的,并限制在0或以上。 这就是重点所在,我们希望我们的模式能够保留这样一个事实,即一个国家不能有负面的法律。</p>
+<div class="figure" style="text-align: center"><span id="fig:ch12-log-trend" style="display:block;"></span>
+<img alt="有两块地 左图的y轴对数(法律)从1到5,x轴对数百分比 城市值从0到100. 有3条平行的向上斜线,标注为dem,gop,和秋千. 下行线最高(近2处有截流),Gop线最低(近0处有截流),摇摆线在中间三明治. 正确的图案的y轴定律介于0到150之间,x轴定律介于% 城市值介于0到100之间. 有3个非线性曲线,标注为dem,gop,和摆动. 曲线全部从0附近的截击开始,然后增加. 直线增加速度最快(在百分率城市等于100时结束近150条法律)、gop线最低(在百分率城市等于100时结束近50条法律),摇摆线在两者之间三维。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch12-log-trend-1-a0e4c441a382.png" width="528"/>
+<p class="caption">图12.5:记录的法律(左)或法律(右)数量与城市百分比和历史投票趋势之间的实例关系。</p>
+</div>
+<p>\(\log(\lambda)\)和\(\lambda\)两个比例尺上的模型曲线由 (2@@参数(\(\beta_0, \beta_1, \beta_2, \beta_3)\)参数)定义. 在描述一个状态中记录的定律数的线性模型时,这些参数具有与拦截和坡度有关的通常含义. 然而(\(\beta_0, \beta_1, \beta_2, \beta_3)\))在描述某州(未登录)法律数的非线性模型时,具有新的意义.</p>
+<div class="describe">
+<p>解释Poisson回归系数</p>
+<p>考虑Poisson回归模型的两个等效配方:</p>
+<p>\[\begin{equation} \begin{split} \log(\lambda) &amp; = \beta_0 + \beta_1 X_1 + \cdots \beta_p X_p \\ \lambda &amp; = e^{\beta_0 + \beta_1 X_1 + \cdots \beta_p X_p}. \\ \end{split} \tag{12.1} \end{equation}\]</p>
+<p>解释 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #</p>
+<p>当 QQ0 QQ 全部为 0 时, QQ1 QQ为登录平均值 QQ2 QQ , 而 QQ3 QQ 平均值 QQ4 QQ。</p>
+<p>解释 \\\\\\\\(和类似 \\\\\\\)</p>
+<p>当 @ @ @ @ @ @ @ @ @ @\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 当我们控制所有其它预测器QQ6Q, 并把QQ7QQ增加1, 从QQ8XX到XQ9XX:XX10XX是记录的平均值XX11XX的改变, 这是,</p>
+<p>\[\beta_1 = \log(\lambda_{x+1}) - \log(\lambda_x) \;\;\;\; \text{ and } \;\;\;\; e^{\beta_1} = \frac{\lambda_{x+1}}{\lambda_x} .\]</p>
+</div>
+<p>让我们把这些概念应用于图12.5中记录和未记录的州法律的假设模型。 在这个图中,曲线的定义是:</p>
+<p>\[\begin{equation} \begin{split} \log(\lambda) &amp; = 2 + 0.03X_{i1} - 1.1X_{i2} - 0.6X_{i3} \\ \lambda &amp; = e^{2 + 0.03X_{i1} - 1.1X_{i2} - 0.6X_{i3}}. \\ \end{split} \tag{12.2} \end{equation}\]</p>
+<p>考虑截取参数 \(\beta_0 = 2\). 这一拦截反映了历史上拥有0个城市人口的民主国家,即拥有QQ1的州,反歧视法的趋势。 因此,我们预计这些州的法律数量将达到                                                                                                                                                                                                         我们期望历史上拥有0个城市人口的民主国家,</p>
+<p>\[e^{\beta_0} = e^2 = 7.389 .\]</p>
+<p>现在,由于没有城市人口接近0的州, 过分强调这些解释是没有道理的。 我们只能理解QQ1@@为我们的模型提供基线,</p>
+<p>接下来考虑城市百分比系数。 在线性QQ1@@尺度上,我们仍然可以将这个值解释为图12.5(左)中线条的共享坡度. 具体地说,无论州内历史投票趋势如何,我们预计州内登记的法律数量在城市人口每增加一个百分点就会增加0.03。 我们可以更有意义地解释州法律与城市百分比之间的关系,</p>
+<p>\[e^{\beta_1} = e^{0.03} = 1.03 .\]</p>
+<p>为此,重新审视图12.5(右)中反歧视法的非线性模式。 虽然模型曲线的增量与城市递增的百分比不相同, 因此,XX0XX不是表示线性坡度,而是衡量城市平均法律百分比的非线性百分比或乘法增长。 如果一个州的城市人口比另一个州高出一个百分点,</p>
+<p>最后,考虑GOP系数。 从第11章中回顾,在解释一个绝对指标的系数时,我们必须参照参考类别,即民主党倾向状态来解释。 在线性QQ1@@尺度上,QQ2@@作为图12.5(左)中GOP与民主党模型线的垂直差. 因此,无论城市比例如何,我们预计在历史上的GOP州,登记的法律数量会比民主党州低1.1。 尽管我们也看到GOP和民主党曲线在非线性QQ3@@比例(图12.5)上存在差异,但差异并不是不变的 — — 随着城市百分比的提高,法律数量的差距会扩大。 在这种情况下,XQ4X不是代表两行之间的恒定差异,而是衡量GOP与民主党曲线的百分比或乘法差异. 因此,在任何城市百分比水平上,我们期望历史上的GOP州拥有与历史上的民主党州一样多的1/3的反歧视法律:</p>
+<p>\[e^{\beta_2} = e^{-1.1} = 0.333 .\]</p>
+<p>我们以由普瓦森数据模型编码的正式假设结尾。</p>
+<div style="page-break-after: always;"></div>
+<div class="describe">
+<p>Poisson回归假设</p>
+<p>想想贝叶斯波森回归模型 与 @@0 @@ 在哪里</p>
+<p>\[\log\left( \lambda_i \right) = \beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip} .\]</p>
+<p>这一模式的适当性取决于下列假设。</p>
+<ul>
+<li>以预测器为条件的数据结构,</li>
+<li>变数的结构 {0}} 响应变量QQ1@@有Poisson结构,即是在固定空间或时间间隔内发生的事件的离散计数.</li>
+<li>关系结构 记录的平均值 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\</li>
+<li>\(Y\)的变异结构 Poisson 随机变量 QQ1 , 比例 QQ2 , 其平均值和差异相等, QQ3 , (5. 3)。 因此,以预测器为条件的XQ4@@,XQ5@@的典型值应该大致相当于XQ6@@中的可变性. 因此,QQ7@@的变异性随着其平均增加而增加. 参见图12.6,说明这一假设何时有效,何时不适用。</li>
+</ul>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch-12-pois-assumptions" style="display:block;"></span>
+<img alt="有两块Y对X的散片 标签是好的和不好的 两者都有200个点,显示y在x增时有中等,非线性的增长,以及遵循这种关系形状的模型曲线. 在左图中,点数在x小时散落在接近曲线处,但散数随x增加而增加. 在正确的图案中,各点分散在接近曲线的地方,横跨整个图案范围." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-12-pois-assumptions-1-8bc05b25d7de.png" width="432"/>
+<p class="caption">图12.6:两个模拟数据集. 左侧的数据满足了Poisson回归的假设,即无论在任何给定的QQ0@@,QQ1@@中的可变性大致与平均QQ2@@值相等. 右侧的数据显示,在XQQ3@@值中,所有QQ4@@值的可变性一直很低。</p>
+</div>
+</div>
+<div class="section level3" id="ch12-prior-spec" number="12.1.2">
+<h3>指定前科</h3>
+<p>为了完成我们的贝叶斯模式,我们必须表达我们对回归系数的事先理解。 由于这些系数可以各自在真实的线上占据任何值,因此利用正常的前兆也是合理的。 此外,正如我们的正常回归模型一样,我们将假定这些前科(即我们以前对模型系数的理解)是独立的。 我们的Pouisson回归模型的完整表述如下:</p>
+<p>\[\begin{equation} \begin{array}{lcrl} \text{data:} &amp; \hspace{.025in} &amp; Y_i|\beta_0,\beta_1,\beta_2,\beta_3 &amp; \stackrel{ind}{\sim} Pois\left(\lambda_i \right) \;\; \text{ with } \;\; \log\left( \lambda_i \right) = \beta_0 + \beta_1 X_{i1} + \beta_2 X_{i2}+ \beta_3 X_{i3} \\ \text{priors:} &amp; &amp; \beta_{0c} &amp; \sim N\left(2, 0.5^2 \right) \\ &amp;&amp; \beta_1 &amp; \sim N(0, 0.17^2) \\ &amp;&amp; \beta_2 &amp; \sim N(0, 4.97^2) \\ &amp;&amp; \beta_3 &amp; \sim N(0, 5.60^2) \\ \end{array} \tag{12.3} \end{equation}\]</p>
+<p>首先,考虑中间截击的前面位置。 回顾我们先验的假设,即“典型”国家的平均法律数量大约为                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 因此,我们在日志比例上将 QQ2 的正常前置平均值设定为 2 :</p>
+<p>\[\log(\lambda) = \log(7) \approx 1.95 .\]</p>
+<p>此外,这一 " 正常 " 以前的范围表明我们对这一基线的相对不确定性。 尽管记录的平均法律数量很可能在2年左右, 或者,更直观的是,我们认为,在典型国家中,平均法律数量可能在3到20之间:</p>
+<p>\[(e^1, e^3) \approx (3, 20).\]</p>
+<p>在此基线之外, 我们再次使用微弱信息化的默认前期( \\\\\\\\\) , 由 stan  glm() 调制。 这些前科以零为中心,而我们变量的规模标准偏差相对较大,反映出反歧视法的数目是否和如何与一个国家的城市人口和投票趋势相关联的普遍不确定性。</p>
+<p>分析这些综合前科是否准确反映了我们对州法的不确定性, 为此,我们可以运行我们用来用两个新参数模拟后方的stan glm()函数:present PD = TRUE 指定我们希望模拟前方的stan glm(),而family = poisson 表示我们正在使用Pouisson数据模型(不是普通或goussian).</p>
+<div class="sourceCode" id="cb232">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>致电前摘要()证实我们在(12.3)中资料不足的前科的说明:</p>
+<div class="sourceCode" id="cb233">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+prior_summary(equality_model_prior)</code></pre>
+</div>
+<p>接下来,我们绘制了100个前期可行模型。 这里的曲线乱七八糟 肯定反映了我们之前的不确定性! 这些都印在地图上,表明随着城市人口的增长或减少,法律数量可能会或不会因历史投票趋势而有所差异。 我们不知道。</p>
+<div class="sourceCode" id="cb234">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch12-prior-sim-1" style="display:block;"></span>
+<img alt="这是一套法律(y轴)对百分率城市(x轴)的情节. 有300个模型曲线,三个历史级别(dem,gop,和秋千)各100个. 曲线变化很大. 一些曲线向上。 一些曲线向下。 其中一些仍然相对平坦。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch12-prior-sim-1-1-fbe1f5871555.png" width="384"/>
+<p class="caption">FIGURE 12.7: 100 先验国家反歧视法的可信模式, \(e^{\beta_0 + \beta_1 x_1 + \beta_2 x_2 + \beta_3 x_3}\), 之前的 models1@@模式下.</p>
+</div>
+</div>
+</div>
+<div class="section level2" id="ch12-simulation" number="12.2">
+<h2>模拟后台</h2>
+<p>让我们模拟Poisson后退模式, 而非从零开始stan glm()函数, 我们将采取快捷键: 我们更新( ) 平等  模型  预先模拟, 表示前  PD = FALSE( 即我们希望模拟后/ 而不是前/ )。</p>
+<div class="sourceCode" id="cb235">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+equality_model = update(equality_model_prior, prior_PD = FALSE)</code></pre>
+</div>
+<p>MCMC的追踪,密度,和自动对映图 证实我们的模拟已经稳定:</p>
+<div class="sourceCode" id="cb236">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+mcmc_trace(equality_model)
+mcmc_dens_overlay(equality_model)
+mcmc_acf(equality_model)</code></pre>
+</div>
+<p>在分析这些模拟结果之前, 首先,仅对州法数据进行5次后模拟的直方图显示了与观测到的法律数据相似的skew、范围和趋势。 第二,虽然密度图并不是计算数据的最佳显示方式,但它们使我们能够更直接地将50个后期模拟数据集与实际观测到的法律数据进行比较。 这些模拟并不完美,</p>
+<div class="sourceCode" id="cb237">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+rng = np.random.default_rng(1)
+pp_check(equality_model, plotfun = "hist", nreps = 5) +
+xlab("laws")
+pp_check(equality_model) +
+xlab("laws")</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch12-pp-check-1" style="display:block;"></span>
+<img alt="有两块地 左侧的地块有6个直方图,在x轴上定律从0到40不等. 左上方直方图为深蓝色,其他5为浅蓝色. 虽然细节各有不同,但每个直方图都是右侧的,高于0定律,并且往往有低于10定律. 右图有模拟定律值的50浅蓝色密度曲线和观测定律数据的1深蓝色密度曲线. 这个深蓝色的密度曲线是右侧扭曲的,大约从0到40定律,峰值接近2.5定律. 50浅蓝色密度曲线相互类似,深蓝色曲线也相似. 然而,它们往往在5种法律(而不是2.5)左右达到高峰。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch12-pp-check-1-1-dcb7e195ab74.png" width="672"/>
+<p class="caption">图12.8: 对反歧视法的Poisson回归模型进行后预测性检查,通过直方图(左)将观测到的定律( 0@@)与五个后模拟数据集(\(y_{\text{rep}}\))进行比较,并通过密度图(右)与50个后模拟数据集进行比较。</p>
+</div>
+</div>
+<div class="section level2" id="ch12-interp-pois" number="12.3">
+<h2>解释后文</h2>
+<p>让我们从大局开始, 在图12.9中,50个后期的可行模式提供了我们对反歧视法的总体理解。</p>
+<div class="sourceCode" id="cb238">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch12-post-plaus-trends" style="display:block;"></span>
+<img alt="有150个曲线的定律(y-轴)对百分率 城市(x-轴),50个对应每个历史级别(dem,gop,和秋千). 这些曲线都略微到中度的非线性,呈向上弯曲. 底部曲线最高,跨地块范围跨度在7.5至30个定律之间. 高普曲线最低,跨越2.5到7.5定律." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch12-post-plaus-trends-1-39b11f714a23.png" width="336"/>
+<p class="caption">图12.9:国家反歧视法数目与城市人口比率和历史投票趋势的关系的50个事后可信模式。</p>
+</div>
+<div style="page-break-after: always;"></div>
+<p>与图12.7中先验的可信模式不同,这些信息是明确的。 在任何城市人口层面上,历史上各州往往拥有最严格的反歧视法律,而Gop州则最少。 此外,一个国家的法律数量往往随着城市百分比的增加而增加。 包括回归参数QQ0XX(截断),QQ1XX(% 城市),XX2XX(历史戈普)和QQ3XX(历史锯齿):</p>
+<div class="sourceCode" id="cb239">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+tidy(equality_model, conf.int = TRUE, conf.level = 0.80)
+# :4×5
+term            estimate std.error conf.low conf.high
+&lt;chr&gt;              &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 (Intercept)       1.71     0.303     1.31      2.09
+2 percent_urban     0.0164   0.00353   0.0119    0.0210
+3 historicalgop    -1.52     0.134    -1.69     -1.34
+4 historicalswing  -0.610    0.103    -0.745    -0.477</code></pre>
+</div>
+<p>因此,一国反歧视法数量与其城市人口和历史投票趋势的后中位数关系可以描述如下:</p>
+<p>\[\begin{equation} \begin{split} \log(\lambda_i) &amp; = 1.71 + 0.0164 X_{i1} - 1.52 X_{i2} - 0.61 X_{i3} \\ \lambda_i &amp; = e^{1.71 + 0.0164 X_{i1} - 1.52 X_{i2} - 0.61 X_{i3}}. \\ \end{split} \tag{12.4} \end{equation}\]</p>
+<!-- We can further break down this relationship for each `historical` voting trend category: -->
+<!-- $$\begin{split} -->
+<!-- \text{for dem states:} & \;\;\;\; X_{i2} = 0 \text{ and } X_{i3} = 0, \text{ thus } \lambda_i = e^{1.71 + 0.0164 X_{i1}} \\ -->
+<!-- \text{for gop states:} & \;\;\;\; X_{i2} = 1 \text{ and } X_{i3} = 0, \text{ thus } \lambda_i = e^{(1.71- 1.52)  + 0.0164 X_{i1}} \\ -->
+<!-- \text{for swing states:} & \;\;\;\; X_{i2} = 0 \text{ and } X_{i3} = 1, \text{ thus } \lambda_i = e^{(1.71 - 0.61) + 0.0164 X_{i1}} \\ -->
+<!-- \end{split}$$ -->
+<p>考虑城市系数的百分率, 后中位数约为0.0164。 然后,在控制历史投票趋势时,我们预计各州反歧视法的登记数量将按城市人口每增加一个百分点增加0.0164。 如果一个州的城市人口比另一个州多1个百分点,</p>
+<p>\[e^{0.0164} = 1.0165 .\]</p>
+<p>如果一个州的城市人口比另一个州多25个百分点, 我们期望它拥有大约1.5倍的反歧视法(XQ0+), 快速的测试来解释 历史摇摆状态的XQ1@@系数 59国</p>
+<div class="quiz">
+<p>poster0@@的后中位数约为−0.61. 相应, 1\(=\)0.54. 我们如何解释这一价值? 当持有恒定百分比 城市...</p>
+<ol style="list-style-type: lower-alpha">
+<li>反歧视法的数量在每一个额外的摇摆状态中往往减少约54%。</li>
+<li>摇摆州往往拥有54%的反歧视法律,与低倾州一样多。</li>
+<li>摇摆州往往比降级州少0.54项反歧视法律。</li>
+</ol>
+</div>
+<p>这里的关键是记住,绝对的摇摆状态指标提供了与dem状态参考水平的比较. 如此一来,当控制一个州的城市人口时,我们预计在摇摆状态下,记录的反歧视法律数量会比低0.61。 类似地,在未记录的规模上,摇摆州往往拥有54%的反歧视法,如Dem倾斜州( 0@@).</p>
+<p>在结束我们的后置解释时, 请注意80%的后置可信间隔( \(\beta_1, \beta_2, \beta_3)\)) 在上述摘要中, 例如,80%的后期概率是城市系数在0.0119和0.021之间。 因此,当控制一个国家的历史政治倾向时,一个国家反歧视法的数量与其城市人口之间有着重要的积极联系。 此外,当控制一个国家的百分率城市构成时,Gop倾斜州和摇摆州反歧视法的数量往往大大低于Dem倾斜州 — — 80%的可信间隔(QQ2)和QQ3 — — 都低于0. 这些结论与图12.9中的事后可信模型是一致的。</p>
+</div>
+<div class="section level2" id="posterior-prediction-1" number="12.4">
+<h2>预测</h2>
+<p>为了探索Poisson模式在各州的运行情况,考虑明尼苏达州,这个历史上由73.3%的居民居住在城市地区和4项反歧视法组成的州:</p>
+<div class="sourceCode" id="cb240">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>根据国家的人口统计和政治倾向,我们可以大致预测其反歧视法的数目。 重要的是,反映我们模型的普瓦森数据结构,2万个模拟后预测是计数:</p>
+<div class="sourceCode" id="cb241">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 计算后期预测
+rng = np.random.default_rng(84735)
+mn_prediction = posterior_predict(
+equality_model, newdata = data.frame(percent_urban = 73.3,
+historical = "dem"))
+head(mn_prediction, 3)
+1
+[1,] 20
+[2,] 17
+[3,] 21</code></pre>
+</div>
+<p>由此产生的后期预测模型预计明尼苏达州有10至30项反歧视法律(大致),其范围远高于该州的实际法律数量(4)。 这一差异表明,一个国家的人口统计和政治倾向,以及因此我们的Poisson模式,并不能说明其反歧视法背后的全部情况。 这也揭示了明尼苏达州本身的一些东西. 对于拥有如此高的城市人口和历史上民主投票趋势的国家来说,其反歧视法律数量异常少。 (同样,一个国家的法律数量不一定代表法律的整体质量。 )</p>
+<div class="sourceCode" id="cb242">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+mcmc_hist(mn_prediction, binwidth = 1) +
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-517" style="display:block;"></span>
+<img alt="这是明尼苏达州预计定律数的直方图,这些预测值在x轴上从0到40不等. 直方图大致呈钟形,以17.5部律律为中心,大致呈8-28部律律. 竖线绘制为4定律,直方图的极低端下降." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-517-1-3842c9dde3e8.png" width="240"/>
+<p class="caption">图12.10:明尼苏达州反歧视法数量预测模型。 垂直线表示实际法数,4.</p>
+</div>
+<p>回顾我们不需要使用后预测()快捷键来模拟明尼苏达的后预测模型。 我们可以直接从两万个后置参数中, 为此,我们从每个参数中:</p>
+<ol style="list-style-type: decimal">
+<li><p>计算明尼苏达州的平均法律数量,城市比例为73.3%,历史上民主党的投票模式:</p>
+<p>\[\log(\lambda^{(i)}) = \beta_0^{(i)} + \beta_1^{(i)}\cdot 73.3 + \beta_2^{(i)}\cdot0 + \beta_3^{(i)} \cdot 0;\]</p></li>
+<li><p>在明尼苏达等州,</p></li>
+<li><p>使用 rpois () 来模拟明尼苏达州法律数量的结果。</p></li>
+</ol>
+<p>结果与捷径相符!</p>
+<div class="sourceCode" id="cb243">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 链条中每个参数的预计法律数量
+rng = np.random.default_rng(84735)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-518" style="display:block;"></span>
+<img alt="这是预测的y 新数的直方图,其中y 新数在x轴上从0到40不等. 直方图大致呈钟形,以17.5部律律为中心,大致呈8-28部律律. 竖线绘制为4定律,直方图的极低端下降." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-518-1-ea481713d564.png" width="240"/>
+<p class="caption">FIGURE 12.11:明尼苏达州反歧视法数量前预测模型,从零开始模拟.</p>
+</div>
+</div>
+<div class="section level2" id="model-evaluation" number="12.5">
+<h2>示范评价</h2>
+<p>为了结束我们的分析,让我们来评估我们反歧视法的波森回归模式的质量。 我们的模型评价问题前两个容易回答. 我们的模特儿有多公平? 虽然我们并不认为数据收集过程有偏见, 但我们确实警告不要把分析所揭示的一般的州级趋势误认为是依据个人投票行为或居住地点, 分析各州法律数量不应与分析各州法律的质量相混淆。 我们的模特怎么错了? 我们的pp check()在图12.8中表明,我们的Poisson回归假设是合理的。</p>
+<p>审议第三个模式评价问题: 我们的模型预测有多准确? 就像我们为明尼苏达州所做的那样, 我们可以检查我们数据集中49个州中的每一个州的后期预测模型。 以下图示说明每个州的法律数量与实际观测数据之间的后期可信间隔。 总体来说,我们的模型在预测Gop州的法律数量方面比在Dem州或摇摆州做得更好 — — 所观察到的Gop数据点中,更多的位于可信间隔的范围之内。 从狭义的间隔来看,我们对于法律数量往往一直较少的Gop州也具有更多的事后确定性。</p>
+<div class="sourceCode" id="cb244">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 模拟每个州的后预测模型
+rng = np.random.default_rng(84735)
+poisson_predictions = posterior_predict(equality_model, newdata = equality)
+# 绘制每个州的后期预测模型
+ppc_intervals_grouped(equality$laws, yrep = poisson_predictions,
+x = equality$percent_urban,
+group = equality$historical,
+prob = 0.5, prob_outer = 0.95,
+facet_args = list(scales = "fixed"))</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch12-pois-post-preds" style="display:block;"></span>
+<img alt="有3个散片的定律(y轴)对百分率城市(x轴),标注dem,gop,和摇摆. 每一点都是深蓝色数据点,随着城市百分比的上升,法律略有或适度增加。 与每个数据点相对应的是狭长的浅蓝色垂直条,短而宽的浅蓝色条,以及代表后期预测间隔的浅蓝色点. 在gop情节中,暗蓝色的点大部分属于间隔. 然而,在Dem和摆动的地块中,有较多的深蓝色点落到间隔之外." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch12-pois-post-preds-1-eb5ba0bde3d0.png" width="480"/>
+<p class="caption">图12.12:一个国家反歧视法数量50%和95%的后可信间隔(蓝线)。 实际法数以暗蓝点为代表.</p>
+</div>
+<p>我们可以用一个预测 摘要()将图12.12中的观测结果正式化。 在研究的49个州中,所观察到的反歧视法律数量往往只低于3.4项法律,即1.3项事后标准偏离其后期预测。 鉴于州法的数量范围,从1到38,一个3.4的典型预测错误是相当不错的! 仅78%的州观察到的法律数量处于相应的95%的后期预测间隔之内。 这意味着我们的后期预测模型“丢失”或没有预料到49个州中22%或11个州的法律数量。</p>
+<div class="sourceCode" id="cb245">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+prediction_summary(model = equality_model, data = equality)
+mae mae_scaled within_50 within_95
+1 3.407      1.304    0.3265    0.7755</code></pre>
+</div>
+<p>为了尽职调查,我们还计算了在将这一模型应用到50个州的“新”组合,或50个州的同一组合时,经过交叉验证的后期预测准确性,因为我们认识到,我们目前的数据只是及时随机的快照。 在这种情况下,结果类似,这表明我们的模型并不过于符合我们的样本数据 — — 我们期望它在预测“新”状态时也能发挥作用。</p>
+<div class="sourceCode" id="cb246">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 交叉验证
+rng = np.random.default_rng(84735)
+poisson_cv = prediction_summary_cv(model = equality_model,
+data = equality, k = 10)
+poisson_cv$cv
+mae mae_scaled within_50 within_95
+1 3.788      1.264       0.3     0.725</code></pre>
+</div>
+</div>
+<div class="section level2" id="chapter-12-overdispersion" number="12.6">
+<h2>过度分散计数的负二项回归</h2>
+<p>2017年,Cards against Humanity Saves America推出一系列月度调查,以获得"全国之声"(2017). 我们用他们2017年9月的民意调查结果来模拟去年有人阅读的书籍数量( 0@@),</p>
+<p>\[X_2 = \begin{cases} 1 &amp; \text{wise but unhappy} \\ 0 &amp; \text{otherwise (i.e., happy but unwise)}. \\ \end{cases}\]</p>
+<p>因为我们对这种关系没有任何事先的理解, 继续, 让我们加载并处理来自 bayesrules 软件包的脉冲数据。 以阅读不到100本书的人为重点:</p>
+<div class="sourceCode" id="cb247">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 装入数据
+data(pulse_of_the_nation)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>图12.13显示了读者群的一些基本模式。 第一,虽然大多数人每年阅读不到11本书,但从人到人,阅读规律有很大的变异. 此外,虽然读者人数和年龄之间的关系似乎非常薄弱,但读者人数似乎略高于喜欢智慧而不是幸福的人(对我们来说,</p>
+<div class="sourceCode" id="cb248">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch12-data" style="display:block;"></span>
+<img alt='有三块地 左图是图书的直方图. x轴的书数从0到100,y轴的计数从0到50. 直方图是右侧的,基本低于50. 0至5之间的图书比例最大,约有500种。 中间情节是散开的图书(y-轴)对年龄(x-轴),其年龄范围为18至100岁. 有1000个数据点 但书本和年龄之间没有明显的关系 右图是一盒图书(y-轴)vs wise unwise class (x-轴). 欢乐但又不明智但又不快乐的盒子是右侧的 然而,智者(Wise)但是不明智的盒式图书略高一些,中位数大约为7本书,而中位数大约为5本书,用于"快乐但不明智的盒式图书".' loading="lazy" src="/assets/img/bayes-rules-python-cn/ch12-data-1-7f282a198729.png" width="672"/>
+<p class="caption">图12.13:关于一个人在过去一年读过多少书的调查答复,以及这与年龄和一个人将智慧与幸福放在优先地位的关系。</p>
+</div>
+<p>Poisson回归工具是一个合理的第一方法,</p>
+<div class="sourceCode" id="cb249">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>但结果绝对不是很好 查看图12.14中的pp check().</p>
+<div class="sourceCode" id="cb250">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+pp_check(books_poisson_sim) +
+xlab("books")</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch12-pp-2" style="display:block;"></span>
+<img alt="书籍有51个密度曲线——50个为浅蓝色,1个为深蓝色. 50种浅蓝色曲线都相当相似——大致呈钟形,以近10种图书为中心,范围从2种到18种图书. 深蓝色曲线差异很大. 它右倾,峰值接近两本书,大约在0到50本书之间。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch12-pp-2-1-bbcd88c3aa93.png" width="288"/>
+<p class="caption">FIGURE 12.14: 读者群的Poisson回归模型的后期预测摘要.</p>
+</div>
+<p>与被观察的图书读者群相对应,这种图书读者群是右倾的,并且往往每年低于11本图书,Poisson后期的读者群模拟在大约11本图书年中是对称的. 简而言之,波森回归模式是错误的。 为什么? 好吧,记住,普瓦森回归 保留了普瓦森的财产 同等的刻薄和差异。 也就是说,它假设在年龄相近的学科和对智慧对幸福的看法( 0@@和\(X_2\))中,阅读的典型书籍数量大致相当于阅读的书籍的变数. 然而,pp check()强调,与这一假设相反,我们实际上观察到,相对于较低的普通读者而言,书籍读者人数差异很大。 我们可以用一些数字摘要确认这一看法。 第一,在我们调查的所有主题中,读者人数的差别和差别都是如此。 人们每年平均阅读10.9本书,</p>
+<div class="sourceCode" id="cb251">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 所有科目读者人数的平均值和差异
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>当我们将年龄范围分成三个组时,我们看到,在相同年龄段的学科中,同样地,在智慧与幸福之间,也就是在具有类似++++和+++++值的学科中,情况也是如此。 例如,45至72岁年龄段的受访者偏爱智慧而不是幸福,平均读者人数为12.5本,与270 \(\text{books}^2\)的差异相比,数量相对较少。</p>
+<div class="sourceCode" id="cb252">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 读者人数的平均值和差异
+# 在年龄相近的主体中
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>校对:Soup</p>
+<div class="describe">
+<p>过度分散</p>
+<p>如果XQ1@@中的观测到的可变性超过了假设概率模型XQ2@@所预期的可变性,则随机变量QQ0@@会被过度分散.</p>
+</div>
+<p>当我们的计数响应变量QQ0QQ被过度分散到无法挤入波森回归假设时,我们有一些选择. 产生类似结果的两个常见选项是:(1)在普瓦逊数据模型中包含一个过度分散参数或者(2)使用非普瓦逊数据模型. 由于它非常适合我们所建立的建模框架,因此我们将侧重于后一种方法。 为此,负二微米概率模型在QQ1@@被过度分散时,是对Poisson的有用替代品. 与Poisson模型一样,负二极管适合计数数据QQ2@@. 但与普瓦逊人不同,</p>
+<div class="describe">
+<p>负二元模型</p>
+<p>让随机变量 QQ0@@ 做一些计数, QQ1@@,</p>
+<p>\[Y | \mu, r \; \sim \; \text{NegBin}(\mu, r).\]</p>
+<p>那么, # # # # # # # # # # 具备条件 pmf #</p>
+<p>\[\begin{equation} f(y|\mu,r) = \left(\!\begin{array}{c} y + r - 1 \\ r \end{array}\!\right) \left(\frac{r}{\mu + r} \right)^r \left(\frac{\mu}{\mu + r} \right)^y\;\; \text{ for } y \in \{0,1,2,\ldots\} \tag{12.5} \end{equation}\]</p>
+<p>具有不平等的平均值和差异:</p>
+<p>\[E(Y|\mu,r) = \mu \;\; \text{ and } \;\; \text{Var}(Y|\mu,r) = \mu + \frac{\mu^2}{r}.\]</p>
+<p>与Poisson模型的比较</p>
+<p>对于巨大的对等散射参数 \(r\), \(\text{Var}(Y) \approx E(Y)\)和\(Y\) 行为 很像一个Poisson计数变量。 对于小的 3@@,\(\text{Var}(Y) &gt; E(Y)\)和\(Y\),比起一个同值的Poisson计数变量,其分布过大. 图12.15举例说明了这些主题。</p>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:negbin-ch12" style="display:block;"></span>
+<img alt="有三个地块,分别是Pois(5),NegBin(5,1000)和NegBin(5,2). 每个图案在x轴上的y值从0到25,在y轴上的pmf值从0到0.2. 此外,每个图都有垂直线,高度不同,以y的每个整数值表示. Pois(5)和NegBin(5,1000)的地块非常相似. 由垂直线的高度所形成的形状大致呈钟形,以5号左右为中心,范围为0至10号. NegBin(5,2)地块中垂直线的高度所形成的形状是右斜的,峰值较低,为2,其范围从0到15." loading="lazy" src="/assets/img/bayes-rules-python-cn/negbin-ch12-1-8e12db9b30e9.png" width="576"/>
+<p class="caption">图12.15: Pmfs用于各种Poisson和负二极随机变量,常见的平均值为5. 具有大分散参数(r = 1000)的负二极分子模型与Poisson非常相似,而具有小分散参数(r = 2)的Poisson模型则相对过度分散.</p>
+</div>
+<p>为了切换到读者群中更灵活的负二项回归模型,我们可以简单地交换出一个Poisson数据模型,换成负二项数据模型. 在这样做的时候,我们也捡到了额外的对等散射参数, \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\D\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 我们的负二项回归模型,以及由stan glm()缩放的、由prefore summary()获得的微弱信息前科如下:</p>
+<p>\[\begin{equation} \begin{array}{lcrl} \text{data:} &amp; \hspace{.025in} &amp; Y_i|\beta_0,\beta_1,\beta_2,r &amp; \stackrel{ind}{\sim} \text{NegBin}\left(\mu_i, r \right) \;\; \text{ with } \;\; \log\left( \mu_i \right) = \beta_0 + \beta_1 X_{i1} + \beta_2 X_{i2} \\ \text{priors:} &amp; &amp; \beta_{0c} &amp; \sim N\left(0, 2.5^2\right) \\ &amp; &amp; \beta_1 &amp; \sim N\left(0, 0.15^2\right) \\ &amp; &amp; \beta_2 &amp; \sim N\left(0, 5.01^2\right) \\ &amp; &amp; r &amp; \sim \text{Exp}(1)\\ \end{array} \tag{12.6} \end{equation}\]</p>
+<p>类似地,为了模拟回归参数 \((\beta_0,\beta_1,\beta_2,r)\) 的后缀,我们可以将 poisson 换成 stan glm () 中的 neg binomial 2 :</p>
+<div class="sourceCode" id="cb253">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>结果是惊人的。 通过对图书读者群的变异性纳入更灵活的假设,对图书读者群的后期模拟与我们调查数据中观察到的行为非常吻合(图12.16). 也就是说,负二元回归模型没有错误(或者至少比Poisson模型错误得多).</p>
+<div class="sourceCode" id="cb254">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+pp_check(books_negbin_sim) +
+xlim(0, 75) +
+xlab("books")</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch12-nb-pp" style="display:block;"></span>
+<img alt="书籍有51个密度曲线——50个为浅蓝色,1个为深蓝色. 曲线都是相当相似的——右斜,峰值接近2本书,大约在0到50本书之间。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch12-nb-pp-1-1ac33e62ce8f.png" width="288"/>
+<p class="caption">图12.16: 对读者群的负二项回归模型进行后期预测检查.</p>
+</div>
+<div style="page-break-after: always;"></div>
+<p>有了这种平心静气,我们就可以继续象我们一样进行Poisson分析. 主要是由于它利用了日志转换,对负二进制回归系数的解释遵循了与Poisson设定相同的框架. 考虑一些后缀,下面的()摘要予以支持:</p>
+<ul>
+<li>在控制一个人对智慧和幸福的优先考虑时,年龄和书读者之间没有显著的联系 — — 0正处在80%的年龄系数的可信后期。</li>
+<li>在控制一个人的年龄时,偏爱智慧而不是幸福的人往往会比偏爱幸福而不是智慧的人阅读更多 — — 80 % 后可信间隔======== 是舒适的0以上。 假设他们同龄, 我们期望一个更喜欢智慧的人,</li>
+</ul>
+<div class="sourceCode" id="cb255">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 数字摘要
+tidy(books_negbin_sim, conf.int = TRUE, conf.level = 0.80)
+# A:3×5
+term            estimate std.error conf.low conf.high
+&lt;chr&gt;              &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 (Intercept)     2.23       0.131    2.07      2.41
+2 age             0.000365   0.00239 -0.00270   0.00339
+3 wise_unwiseWis… 0.266      0.0798   0.162     0.368</code></pre>
+</div>
+</div>
+<div class="section level2" id="ch12-glm" number="12.7">
+<h2>一般线性模型 : 以主题为基础</h2>
+<p>虽然正常的, Poisson, 和负的二元数据结构在贝叶斯回归模型中是常见的, 我们还可以使用stan glm()将模型与Binomial,Gamma,逆常等数据结构相匹配. 所有这些选项都属于更大的一类通用线性模型(GLMs).</p>
+<p>我们不需要走遍每一个GLM, 我们可以利用我们在整个第3单元中制定的原则来构建一个具有上述任何数据结构的GLM, \(Y\)离散还是连续? 对称还是扭曲? QQ2Q的数值范围是多少? 这些问题可以帮助我们确定适当的数据结构。 第二,让QQ3@@表示其数据结构定义的QQ4@@平均值. 对于所有GLM,QQ5@@对预测器的线性组合的依赖性由XQ6@@表示.</p>
+<p>\[g\left(E(Y|\ldots)\right) = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_p X_p\]</p>
+<p>如果合适的链接函数 \\\\\\\\\取决于数据结构。 例如,在正常回归中,数据由</p>
+<p>\[Y_i | \beta_0, \beta_1, \cdots, \beta_p, \sigma \sim N(\mu_i, \sigma^2)\]</p>
+<p>和XQ0@@对预测器的依赖度</p>
+<p>\[g(\mu_i) = \mu_i = \beta_0 + \beta_1 X_{i1} + \beta_2 X_{i2} + \cdots + \beta_p X_{ip} .\]</p>
+<p>因此,正常回归使用身份链接函数,因为QQ0@@等于QQ1@@本身. 在Poisson回归中,计数数据由</p>
+<p>\[Y_i | \beta_0, \beta_1, \cdots, \beta_p \sim Pois(\lambda_i)\]</p>
+<p>和XQ0@@对预测器的依赖度</p>
+<p>\[g(\lambda_i) := \log(\lambda_i) = \beta_0 + \beta_1 X_{i1} + \beta_2 X_{i2} + \cdots + \beta_p X_{ip} .\]</p>
+<p>因此, Poisson回归使用自 \\\\\\\\\\\的日志链接功能。 负二分位回归也是如此。 我们将在下一章再研究一个GLM, 我们希望,我们对这四个具体工具(Normal、Poisson、负二氧化物和物流回归)的调查能够使你有能力在自己的贝叶斯做法中实施其他的GLM。</p>
+</div>
+<div class="section level2" id="chapter-summary-11" number="12.8">
+<h2>章节摘要</h2>
+<p>让响应变量QQ0QQ成为固定时间或空间间隔内发生的事件的离散计数. 在这种情况下,利用正常回归(Normal regreement)通过预测器的XQQ1@@模拟XQ1@@常常是不恰当的 — 它假设XQ3@@是对称的,可以是负的. Poisson回归模式提供了一个有希望的备选方案:</p>
+<p>\[\begin{equation} \begin{array}{lcrl} \text{data:} &amp; \hspace{.025in} &amp; Y_i|\beta_0,\beta_1,\ldots,\beta_p &amp; \stackrel{ind}{\sim} Pois\left(\lambda_i \right) \;\; \text{ with } \;\; \log\left( \lambda_i \right) = \beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip} \\ \text{priors:} &amp; &amp; \beta_{0c} &amp; \sim N(m_0, s_0^2) \\ &amp; &amp; \beta_{1} &amp; \sim N(m_1, s_1^2) \\ &amp;&amp; \vdots &amp; \\ &amp; &amp; \beta_{p} &amp; \sim N(m_p, s_p^2) \\ \end{array} \tag{12.7} \end{equation}\]</p>
+<p>Poisson回归的一个主要制约因素是它假设,在任意一组预测值中,XQ0@@的典型值和XQ1@@中的变异值是等价的. 因此,当XQ2@@被过度分散,即其可变性超过假设时,我们可能会使用更灵活的负二元回归模型:</p>
+<p>\[\begin{equation} \begin{array}{lcrl} \text{data:} &amp; \hspace{.025in} &amp; Y_i|\beta_0,\beta_1,\ldots,\beta_p,r &amp; \stackrel{ind}{\sim} \text{NegBin}\left(\mu_i, r \right) \;\; \text{ with } \;\; \log\left( \mu_i \right) = \beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip} \\ \text{priors:} &amp; &amp; \beta_{0c} &amp; \sim N(m_0, s_0^2) \\ &amp; &amp; \beta_{1} &amp; \sim N(m_1, s_1^2) \\ &amp;&amp; \vdots &amp; \\ &amp; &amp; \beta_{p} &amp; \sim N(m_p, s_p^2) \\ &amp; &amp; r &amp; \sim \text{Exp}(\ldots)\\ \end{array} \tag{12.8} \end{equation}\]</p>
+</div>
+<div class="section level2" id="exercises-11" number="12.9">
+<h2>练习</h2>
+<div class="section level3" id="conceptual-exercises-6" number="12.9.1">
+<h3>概念练习</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-535"><strong>Exercise 12.1  (Warming up)  </strong></span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>举个新例子(即与章节不同),我们想在其中使用Poisson,而不是普通的回归模型.</li>
+<li>Poisson回归模型使用日志链接函数,而Normal回归模型使用身份链接函数. 用一两句解释链接函数是什么.</li>
+<li>解释为什么在Poisson回归中使用日志链接函数.</li>
+<li>列出Poisson回归模型的四个假设.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-536"><strong>Exercise 12.2  (Poisson versus Negative Binomial)  </strong></span>Specify whether Poisson regression, Negative Binomial regression, both, or neither fit with each situation described below.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>响应变量是一个计数.</li>
+<li>链接为日志.</li>
+<li>链接是身份.</li>
+<li>我们需要说明过度分散的原因。</li>
+<li>反应是一个计数变量,随着预期反应的增加,变异性也随之增加.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-537"><strong>Exercise 12.3  (Why use a Negative Binomial)  </strong></span>You and your friend Nico are in a two-person <em>Bayes Rules!</em> book club. How lovely! Nico has read only part of this chapter, and now they know about Poisson regression, but not Negative Binomial regression. Be a good friend and answer their questions.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>Poisson回归的缺点是什么?</li>
+<li>负二项回归如何解决波森回归的缺点?</li>
+<li>Poisson回归是否比消极二元米亚尔更好选择?</li>
+</ol>
+<div class="exercise">
+<p>演算 12.4(解释Poisson回归系数) 作为建模者,解释回归系数的能力至关重要。 写微博的人有多少追随者, 以及推文是否包含emoji(如果有emoji, 此外,假设 # # # # # # # # # # # # # # # # # # #</p>
+<span class="math display">\[\text{log}(\lambda) = \beta_0 + \beta_1X_{1} + \beta_2X_{2}  .\]</span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>在上下文中解释。</li>
+<li>在上下文中解释。</li>
+<li>在上下文中解释。</li>
+<li>提供一个小时后推文的预期数量“Likes”的模型方程式,</li>
+</ol>
+</div>
+<div class="section level3" id="applied-exercises-4" number="12.9.2">
+<h3>应用练习</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-539"><strong>Exercise 12.5  (Eagles: get to know the data)  </strong></span>In the next exercises, you will explore how the number of eagle sightings in Ontario, Canada has changed over time. Since this context is unfamiliar to us, we’ll utilize weakly informative priors throughout. We’ll balance this prior uncertainty by the <code>bald_eagles</code> data in the <strong>bayesrules</strong> package, which includes data on bald eagle sightings during 37 different one-week observation periods. First, get to know this data.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>构建和讨论一个单一的 计数图, 鹰目击次数跨观察期。</li>
+<li>构造和讨论计数图和年份图。</li>
+<li>在探究一段时间内鹰的目击次数时,必须考虑观察期的长度每年不同,从134小时到248.75小时不等. 更新您从 b 部分的情节, 包括数小时观察长度的信息, 并评论您的调查结果。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-540"><strong>Exercise 12.6  (Eagles: first model attempt)  </strong></span>Our next goal is to model the relationship between bald eagle counts <span class="math inline">\(Y\)</span> by year <span class="math inline">\(X_1\)</span> when controlling for the number of observation hours <span class="math inline">\(X_2\)</span>. To begin, consider a <em>Normal</em> regression model of <span class="math inline">\(Y\)</span> versus <span class="math inline">\(X_1\)</span> and <span class="math inline">\(X_2\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>模拟模型后缀并检查前缀 摘要().</li>
+<li>使用仔细的标记来写出普通回归模型的完整巴耶斯结构,</li>
+<li>完成普通模型的 pp  check ()。 以此解释模型是否“良好”,如果不是,它给出哪些假设不适合秃鹰分析。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-541"><strong>Exercise 12.7  (Eagles: second model attempt)  </strong></span>Let’s try to do better. Consider a <em>Poisson</em> regression model of <span class="math inline">\(Y\)</span> versus <span class="math inline">\(X_1\)</span> and <span class="math inline">\(X_2\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>在秃鹰分析中,为什么波森回归法比正常回归法更合适?</li>
+<li>模拟Poisson回归模型的后缀 \(Y\)对\(X_1\)和\(X_2\). 请检查archive-date=中的日期值 (帮助)。</li>
+<li>使用仔细的注解来写出波伊松回归模型的完整贝叶斯结构,</li>
+<li>完成 Pouisson 模型的 pp  check()。 以此解释模型是否“良好”,如果不是,它给出哪些假设不适合秃鹰分析。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-542"><strong>Exercise 12.8  (Eagles: an even better model)  </strong></span>The Poisson regression model of bald eagle counts (<span class="math inline">\(Y\)</span>) by year (<span class="math inline">\(X_1\)</span>) and observation hours (<span class="math inline">\(X_2\)</span>), was pretty good. Let’s see if a Negative Binomial approach is even better.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>模拟模型后缀,并使用 pp check () 确认负二元模型是否合理。</li>
+<li>使用仔细的注解来写出XX0++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</li>
+<li>解释年数和时数回归系数的后置中位数估计值。 以未登录的规模进行。</li>
+<li>构造和解释当年系数的95%后可信间隔。</li>
+<li>在控制观测时数时,我们是否有充足的证据证明鹰视速随时间而增加?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-543"><strong>Exercise 12.9  (Eagles: model evaluation)  </strong></span>Finally, let’s evaluate the quality of our Negative Binomial bald eagle model.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>模特儿有多公平?</li>
+<li>模特儿怎么错了?</li>
+<li>模型预测有多准确?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-544"><strong>Exercise 12.10  (Open exercise: AirBnB)  </strong></span>The <code>airbnb_small</code> data in the <strong>bayesrules</strong> package contains information on AirBnB rentals in Chicago. This data was originally collated by <span class="citation"><a href="#ref-stolaf2" role="doc-biblioref">Trinh and Ameri</a> (<a href="#ref-stolaf2" role="doc-biblioref">2016</a>)</span> and distributed by <span class="citation"><a href="#ref-legler" role="doc-biblioref">Legler and Roback</a> (<a href="#ref-legler" role="doc-biblioref">2021</a>)</span>. In this open-ended exercise, build, interpret, and evaluate a model of the number of <code>reviews</code> an AirBnB property has by its <code>rating</code>, <code>district</code>, <code>room_type</code>, and the number of guests it <code>accommodates</code>.
+</div>
+</div>
+</div>
+</div>
+<h3>参考资料</h3>
+<div class="references csl-bib-body hanging-indent" id="refs">
+<div class="csl-entry" id="ref-pulse">
+Cards Against Humanity. 2017. <span>“<span>P</span>ulse of the <span>N</span>ation.”</span> <a href="https://thepulseofthenation.com/">https://thepulseofthenation.com/</a>.
+</div>
+<div class="csl-entry" id="ref-legler">
+Legler, Julie, and Paul Roback. 2021. <em>Beyond Multiple Linear Regression: Applied Generalized Linear Models and Multilevel Models in <span>R</span></em>. Chapman; Hall/CRC. <a href="https://bookdown.org/roback/bookdown-BeyondMLR/">https://bookdown.org/roback/bookdown-BeyondMLR/</a>.
+</div>
+<div class="csl-entry" id="ref-stolaf2">
+Trinh, Ly, and Pony Ameri. 2016. <span>“<span>AirBnB</span> Price Determinants: A Multilevel Modeling Approach.”</span> <em>Project for Statistics 316-Advanced Statistical Modeling, <span>S</span>t. <span>O</span>laf <span>C</span>ollege</em>.
+</div>
+<div class="csl-entry" id="ref-hrc">
+Warbelow, Sarah, Courtnay Avant, and Colin Kutney. 2019. <span>“2019 <span>S</span>tate <span>E</span>quality <span>I</span>ndex.”</span> <em>Human Rights Campaign Foundation</em>.
+</div>
+</div>
+</section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-11/">上一节：第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-13/">下一节：第 13 章 Logistic 回归</a></nav>
+</article>
+</div>
+</main>
+<footer class="site-footer">
+<div>
+<strong>AI 提效研究笔记</strong>
+<p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+</div>
+<div class="footer-links">
+<a href="/feed.xml">RSS</a>
+<a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+</div>
+</footer>
+<script src="/assets/js/site.js"></script>
+</body>
+</html>

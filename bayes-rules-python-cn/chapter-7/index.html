@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="第 7 章 MCMC 的底层机制 | Bayes Rules! 中文 Python 改写教程" name="description"/>
+<title>第 7 章 MCMC 的底层机制 | Chandler's AI Productivity Notes</title>
+<link href="/assets/img/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="/assets/css/styles.css" rel="stylesheet"/>
+<script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#content">跳到正文</a>
+<header class="site-header">
+<a aria-label="Chandler's AI Productivity Notes 首页" class="brand" href="/">
+<span class="brand-mark">C</span>
+<span class="brand-name">Chandler's AI Productivity Notes</span>
+</a>
+<nav aria-label="主导航" class="site-nav">
+<a href="/">首页</a>
+<a aria-current="page" href="/posts/">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+</nav>
+</header>
+<main class="tutorial-page" id="content">
+<div class="tutorial-layout">
+<aside class="tutorial-sidebar">
+<h2>教程目录</h2>
+<nav><a href="/bayes-rules-python-cn/">首页</a><a href="/bayes-rules-python-cn/foreword/">前言</a><a href="/bayes-rules-python-cn/preface/">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a aria-current="page" href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a href="/bayes-rules-python-cn/references/">参考文献</a></nav>
+</aside>
+<article class="tutorial-content">
+<section class="normal" id="section-">
+<div class="section level1" id="chapter-7" number="7">
+<h1>第 7 章 MCMC 的底层机制</h1>
+<div class="tutorial-note">
+<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
+</div>
+<p>在第六章中,我们讨论了在高级贝叶斯分析中进行MCMC后期模拟的必要性以及如何利用Rstan一揽子实现这些目的。 你现在有你需要的一切 分析更精密的贝叶斯模型 在第三单元和以后。 主要是可以在没有工作理解引擎的情况下从a点到b点驾驶. 不过, 无论是现在还是以后, 更深入地了解巴耶斯方法(和乐趣), 我们将在第7章的引擎盖下登顶。 如果在这个时候学习计算不是您的事情, 您仍然可以完成本章之后的一切。 你来</p>
+<p>Bayesian MCMC模拟是一个丰富的领域,跨越了各种具有共同目的的算法:近似后验模型. 例如,全书使用的Rstan包采用了汉密尔顿蒙特卡洛算法. 贝叶斯建模的替代rjags包采用了Gibbs采样算法. 虽然细节不同,但这两种算法都是基本大都会-哈斯廷斯算法上的变数. 而不是研究所有需要一本书的变体, 你们将建立这种算法的直觉,并学习如何从零开始在R中实施。 尽管这种实施需要本书范围之外的计算机编程技能(例如写作功能和循环),但我们将继续关注概念,以便所有人都能遵循。</p>
+<div class="sourceCode" id="cb89">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 装入本章需要的软件包</code></pre>
+</div>
+<div class="goals">
+<ul>
+<li>建立对Markov 链算法如何运作的强烈概念理解.</li>
+<li>探索基础大都会-哈斯廷斯算法.</li>
+<li>在正常-自然和Beta-Binomial设置中执行大都会-Hastings算法。</li>
+</ul>
+</div>
+<div class="section level2" id="the-big-idea" number="7.1">
+<h2>这个大主意</h2>
+<p>考虑以下具有数值结果的正常-自然模型 {0} 通常在未知平均值}{1} 左右变化,标准偏差为 0.75 :</p>
+<p>\[\begin{equation} \begin{split} Y|\mu &amp; \sim \text{N}(\mu, 0.75^2) \\ \mu &amp; \sim \text{N}(0, 1^2) \\ \end{split} \tag{7.1} \end{equation}\]</p>
+<p>对应的概率函数 \(L(\mu|y)\)和前pdf \(f(\mu)\) \(y \in (-\infty, \infty)\)和 3@@是:</p>
+<p>\[\begin{equation} L(\mu|y) = \frac{1}{\sqrt{2\pi \cdot 0.75^2}} \exp\bigg[{-\frac{(y-\mu)^2}{2 \cdot 0.75^2}}\bigg] \;\;\;\;\; \text{ and } \;\;\;\;\; f(\mu) = \frac{1}{\sqrt{2\pi}} \exp\bigg[{-\frac{\mu^2}{2}}\bigg] . \tag{7.2} \end{equation}\]</p>
+<p>假设我们观察到一个结果。 然后通过我们第5章(5.15)中的正常-正常工作,XQ1@@的后验模型是普通的,带有平均4,标准偏差0.6:</p>
+<p>\[\mu | (Y = 6.25) \sim \text{N}(4, 0.6^2) .\]</p>
+<p>正如我们在第六章中所看到的那样, 如果我们不能具体指出这个后验模型, 我们可以用MCMC模拟来估计 为了了解如何运作,请考虑潜在 QQ1@@ 迭代 MC 模拟的结果(图7.1)。 将马可夫的连锁店视为巡回演出, 微量图(左)说明了旅游路线或旅游停留顺序, 直方图(right)显示了您在整个巡演期间在每一个QQ5@@区域花费的相对时间.</p>
+<div class="figure" style="text-align: center"><span id="fig:ch-7-mcmc-goal" style="display:block;"></span>
+<img alt="有两块地 左图为痕迹图. x轴的迭代值从0到5000,y轴的mu值从2到6. 有一条线在从左到右移动时 表现得像随机的噪音 右左图是Mu的直方图,有覆盖的密度曲线. 它有一个x轴,Mu值从2到6不等. 直方图和密度曲线的形状相似. 它们大致呈钟形,最高值接近4,最低值为2.5和5.5以下。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-7-mcmc-goal-1-27b2e4a2d05a.png" width="576"/>
+<p class="caption">图7.1: 微量图(左)和直方图(右) 5000 迭代 MCMC 模拟 QQ0@@ 后传. 后pdf的叠加为蓝色(右).</p>
+</div>
+<p>作为旅游经理,您的职责是确保每个\(\mu\)地区旅游的密度与其后期的可信度成正比. 也就是说,链条应该花更多的时间在2至6之间的QQ1+Q之间进行游览,其中普通后卫pdf最多,访问QQ2+Q值少于2或大于6,而后卫掉落. 这种考虑对于制作一组准确近似于后期的旅游站至关重要,这里的旅游(图7.1右方)也是如此.</p>
+<p>作为旅游经理,你可以使用大都会-哈斯汀斯算法实现旅游路线自动化. 这个算法通过两步进程延展. 假设马可夫连锁店位于 @@ 0 @@ @@ eration eration eration eration  location  location  location  location  location  location  location  location  location  location \(\mu^{(i + 1)}\)选择如下:</p>
+<ul>
+<li>第一步:提出一个随机位置,</li>
+<li>第2步:决定是否去拟议地点( 0@@),还是留在现地点再重复(\(\mu^{(i+1)} = \mu\)).</li>
+</ul>
+<p>这似乎很容易。 例如,如果你的旅游计划没有限制的话,你可以简单地划出提议的旅游站。 从\(\text{N}(4, 0.6^2)\)后pdf \(f(\mu' | y = 6.25)\)(第1步),然后到那里(第2步). 这个大都会-哈斯廷斯算法的特例有一个特殊的名称 — Monte Carlo.</p>
+<div class="describe">
+<p>蒙特卡洛算法</p>
+<p>直接从 pdf \(f(\mu|y)\)0\(f(\mu|y)\) 构建独立的 Monte Carlo 样本 , QQ1@@, 选择每个游览站 QQ2@@:</p>
+<ul>
+<li>第一步:提出地点。 从后验模型中绘制一个位置 + 0.</li>
+<li>第二步:去那边.</li>
+</ul>
+</div>
+<p>蒙特卡洛算法很方便! 我们可以使用 rnorm( ) 直接从 QQ0 后端进行采样来实施这个算法。 其结果是一个很好的独立样本,</p>
+<div class="sourceCode" id="cb90">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+rng = np.random.default_rng(84375)
+mc_tour = data.frame(mu = rnorm(5000, mean = 4, sd = 0.6))
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch7-mc" style="display:block;"></span>
+<img alt="有Mu的直方图,有覆盖的密度曲线。 它有一个x轴,Mu值从2到6不等. 直方图和密度曲线的形状相似. 它们大致呈钟形,最高值接近4,最低值为2.5和5.5以下。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch7-mc-1-2e233b1c8e48.png" width="240"/>
+<p class="caption">图7.2: 蒙太卡罗样本的直观图, 实际的pdf以蓝色叠加.</p>
+</div>
+<p>但有一个漏洞。 记住,我们只需要MCMC来给一个贝叶斯人的后遗症做大概的描述,当后遗症过于复杂,无法说明时. 如果一个后台过于复杂, 无法直接采样, 更一般的大都会-哈斯廷斯MC算法就在这里出现. 大都会 -Hastings依赖于这样一个事实,即使我们不知道后期模式,我们确实知道后期pdf与已知的前期pdf和概率函数(7.2)的产物成正比:</p>
+<p>\[f(\mu | y=6.25) \propto f(\mu)L(\mu|y=6.25). \]</p>
+<div style="page-break-after: always;"></div>
+<p>图7.3中绘制了这种非正常的pdf。 重要的是,尽管没有适当地将其缩放到1,但是这种非正常化的pdf保留了实际后期的形状、中心倾向和变化。</p>
+<div class="figure" style="text-align: center"><span id="fig:ch-7-unnormalized" style="display:block;"></span>
+<img alt="x轴的mu值介于2到6. Y轴代表mu乘以mu给定y = 6.25的似然函数的正值. 有一条曲线大致呈钟形,以4的毛值为中心,而2.5和5.5以下的毛值则降到约0。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-7-unnormalized-1-d038ba8a180d.png" width="288"/>
+<p class="caption">图7.3:未规范的\(N(4,0.6^2)\)后pdf.</p>
+</div>
+<p>此外,大都会-哈斯廷斯算法第1步还依赖于这样一个事实,即即使我们不知道,因此无法从后验模型中取样,我们也可以建议Markov 链路旅行通过从不同且更方便的模型中取样而停止。 作为许多选择之一,我们将使用一个半宽的“统一提案”模式。 具体来说,让QQ1@@表示目前的旅游地点. 以目前位置为中心, 我们从统一型号中随机抽取QQ2@@,</p>
+<p>\[\mu' | \mu \; \sim \; \text{Unif}(\mu - w, \mu + w)\]</p>
+<p>带 pdf</p>
+<p>\[q(\mu'|\mu) = \frac{1}{2w} \;\; \text{ for } \;\; \mu' \in [\mu - w, \mu + w] .\]</p>
+<p>图7.4中的统一pdf说明,采用这种方法,建议\(\mu'\)同样可能是\(\mu - w\)和\(\mu + w\)之间的任何值.</p>
+<div class="figure" style="text-align: center"><span id="fig:ch7-unif" style="display:block;"></span>
+<img alt="x轴被标记为mu',有3个值:mu 减 w, mu, 和 mu + w. y轴被标记为 q 的 mu' 给定 mu , 范围从 0 到 1除以 2w。 有一条平直线,水平线从缪等于缪减w到缪等于缪加w. 有一条垂直的线 穆等于穆。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch7-unif-1-982e349d9b47.png" width="288"/>
+<p class="caption">图7.4:统一建议模式。</p>
+</div>
+<p>图7.5在具体情况下说明了这一想法。 以及马可夫连锁游览地点。 以目前位置为条件, 我们将提出下一个位置, 因此,所选择的半边角点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点点 具体地说,拟议的下一站同样有可能位于从2到4之间的限制区内任何地点,围绕链条目前的3个位置。</p>
+<div class="figure" style="text-align: center"><span id="fig:ch-7-mh-proposal" style="display:block;"></span>
+<img alt="x轴的mu值介于2到6. Y轴代表mu乘以mu给定y = 6.25的似然函数的正值. 有一条曲线大致呈钟形,以4的毛值为中心,而2.5和5.5以下的毛值则降到约0。 此曲线上方是一条平直水平线,从mu等于2到mu等于4不等. 此线下方是mu等于3的垂直折叠线." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-7-mh-proposal-1-c2a55c70de71.png" width="288"/>
+<p class="caption">图7.5: 大都会-哈斯廷斯算法中的步骤1的视觉表现为N \((4,0.6^2)\)  poster  poster. 一个以当前链条位置3(黑色曲线)为中心的Unif(2,4)建议模型被引向非正常的后pdf.</p>
+</div>
+<p>第一步背后的整个想法 可能看起来很愚蠢。 从统一模式中抽取的建议如何能产生正常后期模式的象样? 他们只是提案, 与生活中任何其他提议一样,他们可以感激地被否决或接受。 主要是,如果一个拟议地点(\(\mu'\))是“坏的”,我们可以拒绝。 连锁店在现址附近,</p>
+<p>大都会-哈斯廷斯算法第2步提供了一个正式的过程来决定接受还是拒绝一个提议. 让我们先了解一下我们的直觉, 假设我们的随机Unif \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 你觉得这个提议可取吗? 当然 因此,我们希望我们的马可夫连锁游览能花更多的时间去探索3.8左右的QQ1@@值,而不是3左右。 接受这个提议让我们有机会这样做。 反之,如果我们的随机Unif QQ2@@画提出链条从3移到2.1,这个位置的后卫可信度非常低,我们可能更犹豫. 在下面的测试中考虑三种可能的规则,使步骤2自动化. 第41条</p>
+<div class="quiz">
+<p>假设我们开始我们的大都会-哈斯廷斯马尔科夫连锁巡演 地点============================================================================================================================================================================================================================================ 审议步骤2中可能遵循的三项规则,决定是否接受一项提案:</p>
+<ul>
+<li>第1条:永远不接受拟议的地点。</li>
+<li>第2条:始终接受拟议的地点。</li>
+<li>第3条:只有在拟议地点(非正常)的后方合理性大于目前地点的情况下,才接受该地点。</li>
+</ul>
+<p>每个规则用于生成图7.6中的马尔科夫连锁游览之一. 将每个规则匹配到正确的巡演中.</p>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch7-bad-step2" style="display:block;"></span>
+<img alt="共有3个微量地块,每个地块的X轴从0到1000,以及一个y轴标记为mu. 左边的地块有一条线,在开始时有尖锐的线,然后是一条平坦的线。 中间的地块是一条完全平整的线. 右图显示了很多的自动化关系,并且以非常小的增量从左向右移动." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch7-bad-step2-1-65dbb0e6e42e.png" width="576"/>
+<p class="caption">FIGURE 7.6:追踪图对应大都会-哈斯廷斯算法第2步的三个不同策略.</p>
+</div>
+<p>上面的测验为你们提供了三种糟糕的选择,以确定是接受还是拒绝大都会-哈斯廷斯算法第2步中提议的旅游停留. 第1条提出一个极端:绝不接受提案。 这是一个可怕的想法。 它导致马可夫链条在每一个迭代(图2)都留在同一个位置,这肯定会产生愚蠢的后遗症. 第2条提出了相反的极端:始终接受一项提案。 这导致马可夫链条完全无法辨别其行踪(图3),完全无视我们从非正常的后台模型中获得的关于提案合理性的信息。 例如,Tour 3将大部分时间用在探索后值上。 我们从图7.3中知道,6以上是不可能的。</p>
+<p>第3条似乎是两个极端之间的合理平衡:它并不总是拒绝,也并不总是接受提案。 不过, 由于这一规则只有在其后置性大于当前位置时才接受提议的停站,最终会产生类似于以上Tour 1的马可夫链. 虽然这条链条向接近 @@0 @@ 的值飘移,</p>
+<p>让大都会-哈斯廷斯算法发挥作用。 拒绝或接受这个提议的过程(步骤2)必须包含这样一个想法:链条应该花更多的时间探索高后期可信度领域,</p>
+<ul>
+<li>第1步:通过从建议模式中抽取一笔钱,为下一个旅游站提出一个位置。</li>
+<li><strong>Step 2</strong>: Decide whether to go to the proposed location (<span class="math inline">\(\mu^{(i+1)} = \mu'\)</span>) or to stay at the current location for another iteration (<span class="math inline">\(\mu^{(i+1)} = \mu\)</span>) as follows.
+<ul>
+<li>如果拟议地点的(非正统)后置性大于当前地点的(\(\mu'\)),(\(\mu\)),(\(f(\mu')L(\mu'|y) &gt; f(\mu)L(\mu|y)\)),肯定去那里.</li>
+<li>否则,也许去那里。</li>
+</ul></li>
+</ul>
+<p>这里还有更多细节(例如,“可能”接受一项提案意味着什么? ). 接下来,</p>
+</div>
+<div class="section level2" id="the-metropolis-hastings-algorithm" number="7.2">
+<h2>大都会- Hastings 算法</h2>
+<p>大都会-哈斯廷斯构建马可夫连锁旅游的算法在这里正式确定. 探索如何在正常-自然的贝叶斯模型中实施这个算法。</p>
+<div class="describe">
+<p>大都会 -哈斯廷斯算法</p>
+<p>以数据为条件,请将参数为================= Metropolis-Hastings Markov的链条, 并透过两步进程确定下一个位置:</p>
+<ul>
+<li>第一步:提出一个新的地点。 以当前位置为条件,</li>
+<li><strong>Step 2: Decide whether or not to go there.</strong>
+<ul>
+<li><p>计算接受概率, 即接受建议书的概率 + 0 + : + 1 +。</p></li>
+<li><p>略而言之,翻一个加权硬币。 如果这是头, 若是Tails,</p>
+<p>\[\mu^{(i+1)} = \begin{cases} \mu' &amp; \text{ with probability } \alpha \\ \mu &amp; \text{ with probability } 1- \alpha. \\ \end{cases}\]</p></li>
+</ul></li>
+</ul>
+</div>
+<p>虽然注解和细节是新的,但上面的算法与我们在上一节中发展出来的概念是一致的. 首先,回顾一下,在正常-自然模拟中,我们使用了步骤1中的`0@@'建议模型。 事实上,这是有点懒。 尽管我们的正常和正常的后验模型被定义为 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 然而,使用统一建议模型简化了大都会-哈斯廷斯算法,因为它是对称的。 校对:Soup</p>
+<p>\[q(\mu'|\mu) = q(\mu|\mu') = \begin{cases} \frac{1}{2w} &amp; \text{ when $\mu$ and $\mu'$ are within $w$ units of each other} \\ 0 &amp; \text{ otherwise} \\ \end{cases} .\]</p>
+<p>这种对称性意味着提出从 0@@到\(\mu'\)的连锁移动的机会与提出从\(\mu'\)到\(\mu\)的移动相同. 例如,半宽1的制服模式同样有可能提出从QQ4@@到QQ5@@,作为从QQ6@@到QQ7@@的举动. 我们把大都会-哈斯廷斯算法这个特例称为大都会算法。</p>
+<div class="describe">
+<p>大都会算法</p>
+<p>大都会算法是大都会-哈斯廷斯的一个特例,其中建议模型是对称的. 也就是提议从QQ1++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 因此,接受概率(7.3)简化为:</p>
+<p>\[\begin{equation} \alpha = \min\left\lbrace 1, \; \frac{f(\mu')L(\mu'|y)}{f(\mu)L(\mu|y)} \right\rbrace . \tag{7.4} \end{equation}\]</p>
+</div>
+<p>检查(7.4)揭示了步骤2的细微差别, 决定是接受还是拒绝步骤1中绘制的拟议位置,</p>
+<p>\[\begin{equation} \alpha = \min\left\lbrace 1, \; \frac{f(\mu')L(\mu'|y) / f(y)}{f(\mu)L(\mu|y) / f(y)} \right\rbrace = \min\left\lbrace 1, \; \frac{f(\mu'|y)}{f(\mu|y)} \right\rbrace . \tag{7.5} \end{equation}\]</p>
+<p>这段改写强调, 他们的比例相当于未正常化的后pdf(我们可以计算得出). 因此,接受从当前位置 QQ4 QQ到拟议位置 QQ5 的概率,可以算作他们的后置可信度: QQ6 与 QQ7 的比较. 这里有两种可能的情况:</p>
+<ul>
+<li><p>设想1:                                                                                 当XQ1@@的后传性能至少和QQ2@@一样伟大时,QQ3@@. 因此,我们一定会搬到那里。</p></li>
+<li><p>设想2: \(f(\mu'|y) &lt; f(\mu|y)\) 如果XQ1@@的后传性小于QQ2@@,那么</p>
+<p>\[\alpha = \frac{f(\mu'|y)}{f(\mu|y)} &lt; 1 .\]</p>
+<p>因此,我们可能会搬到那里。 此外, ++++接近++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 与QQ4相比,</p></li>
+</ul>
+<p>设想1是直截了当的。 我们总是抓住机会, 将我们的思想包围在2号设想中 一点点R模拟很有帮助 例如,假设我们的马尔科夫巡演目前位于“3”:</p>
+<div class="sourceCode" id="cb91">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+current = 3</code></pre>
+</div>
+<p>若我们使用统一提案模式, 然后为了确定下一个旅游站,我们首先从Unif(当前-1,当前+1)模型中随机抽取一个位置(步骤1):</p>
+<div class="sourceCode" id="cb92">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+rng = np.random.default_rng(8)
+proposal = runif(1, min = current - 1, max = current + 1)
+proposal
+[1] 2.933</code></pre>
+</div>
+<p>复述图7.3,我们注意到,拟议旅游地点(2.93)的(非正常)后置理由略低于目前地点(3)。 使用dnorm()来评价这两块产品:</p>
+<ul>
+<li>dnorm (., 0, 1) 以给定的 @@ 2@@ 值计算前 pdf @@ 1@@ ;</li>
+<li>dnorm(6.25,...,0.75)用QQ1@@计算正常概率函数QQ0@@,在未知的平均值QQ2@@计算标准偏差0.75.</li>
+</ul>
+<div class="sourceCode" id="cb93">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+proposal_plaus = dnorm(proposal, 0, 1) * dnorm(6.25, proposal, 0.75)
+proposal_plaus
+[1] 1.625e-07
+current_plaus  = dnorm(current, 0, 1) * dnorm(6.25, current, 0.75)
+current_plaus
+[1] 1.972e-07</code></pre>
+</div>
+<p>因此,虽然不确定,但接受并随后迁移到拟议地点的概率较高:</p>
+<div class="sourceCode" id="cb94">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+alpha = min(1, proposal_plaus / current_plaus)
+alpha
+[1] 0.824</code></pre>
+</div>
+<p>为了作出最后决定,我们建立了一个加权硬币,它以概率===0==(0.824)接受提案,并以概率===1=(0.176)拒绝提案. 在使用样品()函数随机翻转这枚硬币时,我们接受这个提议,即巡演的下一站是2.933:</p>
+<div class="sourceCode" id="cb95">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+next_stop = sample(c(proposal, current),
+size = 1, prob = c(alpha, 1-alpha))
+next_stop
+[1] 2.933</code></pre>
+</div>
+<p>这仅仅是大都会-哈斯廷斯算法在我们的正常后期的一次迭代中 可能产生的无数结果之一。 为了精简这一过程,我们将写出我们自己的R功能, 1 mh iteratation(), 执行单一的大都会-Hastings迭代, 如果您是新写函数,我们鼓励您关注这个代码的细节的结构。 有些事要说:</p>
+<ul>
+<li>我们首先指定, One mh iteratation 是两个参数的函数( ) : Uniford- half-width w 和当前链条值。</li>
+<li>我们以 {} 打开并关闭函数定义。</li>
+<li>在函数内,我们执行与上面相同的步骤,并返回()3个信息:建议、接受概率α和下一站。</li>
+</ul>
+<div class="sourceCode" id="cb96">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+one_mh_iteration = function(w, current){
+# 步骤1:提出下一个链条位置
+proposal = runif(1, min = current - w, max = current + w)
+# 步骤2:决定是否去那里
+proposal_plaus = dnorm(proposal, 0, 1) * dnorm(6.25, proposal, 0.75)
+current_plaus  = dnorm(current, 0, 1) * dnorm(6.25, current, 0.75)
+alpha = min(1, proposal_plaus / current_plaus)
+next_stop = sample(c(proposal, current),
+size = 1, prob = c(alpha, 1-alpha))
+# 返回结果
+return(data.frame(proposal, alpha, next_stop))
+}</code></pre>
+</div>
+<p>让我们试试看。 运行于目前3个巡演站的1 mh iteratation(),</p>
+<div class="sourceCode" id="cb97">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+rng = np.random.default_rng(8)
+one_mh_iteration(w = 1, current = 3)
+proposal alpha next_stop
+1    2.933 0.824     2.933</code></pre>
+</div>
+<p>如果我们使用83号种子,则拟议的下一个巡演停站为2.018,相应的接受概率较低,为0.017:</p>
+<div class="sourceCode" id="cb98">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+rng = np.random.default_rng(83)
+one_mh_iteration(w = 1, current = 3)
+proposal   alpha next_stop
+1    2.018 0.01709         3</code></pre>
+</div>
+<p>这有道理。 我们从图7.3中看到,2.018的后置可信度远低于我们目前位置的3. 虽然我们确实想要探索这种极端价值,但我们并不想经常这样做。 事实上,我们看到,在我们硬币的翻转上,这个提议被拒绝了,旅游团再次访问其下一站的第3号地点。 作为最后一个例子,我们可以确认,当提议的下一站(此处为3.978)的后置可信度大于我们目前位置时,接受概率为1,提案自动被接受:</p>
+<div class="sourceCode" id="cb99">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+rng = np.random.default_rng(7)
+one_mh_iteration(w = 1, current = 3)
+proposal alpha next_stop
+1    3.978     1     3.978</code></pre>
+</div>
+</div>
+<div class="section level2" id="ch7-implementation" number="7.3">
+<h2>实施大都会住房</h2>
+<p>我们花了许多精力去理解如何实施大都会-哈斯廷斯算法的重迭。 那才是最难的! 为了构建整个大都会-哈斯廷斯巡回演唱会 我们的后座,我们现在只需要重复一遍。 “我们”是指计算机。 为此,下方的mh tour()功能构建了任何特定长度的Metropolis-Hastings巡演N,使用任何特定半宽W的制服建议模型:</p>
+<div class="sourceCode" id="cb100">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+mh_tour = function(N, w){
+# 1. 在地点3启动链条
+current = 3
+# 2个。初始化模拟
+mu = rep(0, N)
+# 3个。模拟 N Markov 链断
+for(i in 1:N){
+# 模拟一个迭代
+sim = one_mh_iteration(w = w, current = current)
+# 记录下一个位置
+mu[i] = sim$next_stop
+# 重置当前位置
+current = sim$next_stop
+}
+# 页:1。返回链条位置
+return(data.frame(iteration = c(1:N), mu))
+}</code></pre>
+</div>
+<p>如果你对循环和功能是新手,这个代码就是一个大跃进。 让我们集中关注#评论块所示的一般结构. 对这一职能的一次呼吁中:</p>
+<ol style="list-style-type: decimal">
+<li>在3号地点开始巡演,</li>
+<li>建立“空空”向量,</li>
+<li>使用一个循环, 在每次游览中从 1 到 N 的 {0} 停止, 运行 1  mh  输入( ) , 并将生成的下一站存储在 mu 向量的 i t 元素中。 在关闭循环前,更新当前巡演停站,作为下一个迭代的起点.</li>
+<li>返回带有迭代号的数据框, 相应的巡演停止。</li>
+</ol>
+<p>要看到此功能在作用中, 请使用 mh  tour( ) 模拟长度为 N = 5000 的 Markov 链路 , 使用半宽% 0%% 的统一建议模型 编号 :</p>
+<div class="sourceCode" id="cb101">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+rng = np.random.default_rng(84735)
+mh_simulation_1 = mh_tour(N = 5000, w = 1)</code></pre>
+</div>
+<p>下面是旅游成果的跟踪图和直方图。 值得注意的是,这次巡演产生了非常准确的N\((4, 0.6^2)\)后图. 你可能需要走出我们所经历的杂草, 通过严格和正式的程序,我们利用从统一模型中抽取的依赖性来接近正态模型。 成功了! 终于成功了!</p>
+<div class="sourceCode" id="cb102">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch7-norm-trace" style="display:block;"></span>
+<img alt="有两块地 左边的图是微量图,x轴值从0到5000,y轴值从2到6. 有一行在从左到右移动到整个情节时 表现得像随机的噪音 右图是Mu的直方图,有覆盖的密度曲线. 它有一个x轴,Mu值从2到6不等. 直方图和密度曲线的形状相似. 它们大致呈钟形,最高值接近4,最低值为2.5和5.5以下。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch7-norm-trace-1-faff66dd27c1.png" width="576"/>
+<p class="caption">图7.7: 微量图( 左) 和直方图( 右) 5000 个大都会链值 QQ0@@。 目标后pdf被叠加成蓝色.</p>
+</div>
+</div>
+<div class="section level2" id="tuning-the-metropolis-hastings-algorithm" number="7.4">
+<h2>调整大都会- Hastings 算法</h2>
+<p>让我们进入最后一片杂草。 使用统一提案模式, 我们选择的QQ2@@定义了潜在提案的邻里或范围(图7.5). 自然,选择QQ3@@影响我们马尔科夫连锁旅游的表现. 检查你的直觉 关于QQ4@@ 与这个测验。</p>
+<div class="quiz">
+<p>图7.8显示了N \((4,0.6^2)\)  poster  poster  poster  poster or or or or or @@ @@ @@ @@  three  three  three  three  three  three @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@- @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ 每次巡演都使用统一建议模式,但有不同的半宽: 1@@,\(w = 1\),或 3@@. 将每次巡演匹配到生成它的QQ4QQ.</p>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch7-bad-idea" style="display:block;"></span>
+<img alt="有六块地网 上行有3个微量地块,每个地块的x轴从0到5000,y轴的mu值从2到6. 底行有三根MU直方图,上方为密度曲线,呈钟形,中心为4,它们有x轴,MU值从2到6不等. 左边的痕迹地块显示了许多高原,或者平坦的斑点. 其下对应的直方图显示出许多尖顶,因此与密度曲线的形状不符. 中间的痕量图在3到4之间的狭小窗口中横跨mu值,其下相应的直方图只横跨3到4之间的值,因此与密度曲线的形状不符. 右痕图表现为随机噪声,在2到6的全程中跨越mu值. 其下相应的直方图与密度曲线的形状紧密匹配." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch7-bad-idea-1-beec4d616e91.png" width="576"/>
+<p class="caption">FIGURE 7.8: 三种不同的大都会-哈斯廷斯巡演的追踪地块(上行)和直方图(下行),每次巡演都使用不同的建议模式. 共享目标后pdf被叠加成蓝色.</p>
+</div>
+<p>答案如下。 42 主打线是大都会-哈斯廷斯算法能够奏效 — — 我们已经看到很多了 — 但我们必须调整它。 以我们为例,这意味着我们必须为统一提案模式选择适当的半宽乘以。 我们不希望QQ1+Q太小或太大, 43 Tour 2 说明了当QQ2@@太小时会发生什么错误(这里是QQ3@@). 您可以使用以下代码复制这些结果:</p>
+<div class="sourceCode" id="cb103">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+rng = np.random.default_rng(84735)
+mh_simulation_2 = mh_tour(N = 5000, w = 0.01)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>在这样的情况下,统一建议模型在巡演目前的地点周围布置了一个紧凑的街区 — — 连锁只能一次在0.01单元内移动. 因此,提案往往非常接近目前的位置,因此具有类似的后置可信度和被接受的似然。 具体地说,当一个提案 @@0 @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@</p>
+<p>\[\alpha = \min\left\lbrace 1, \; \frac{f(\mu')L(\mu'|y)}{f(\mu)L(\mu|y)} \right\rbrace \approx \min\left\lbrace 1, \; 1 \right\rbrace \; = 1 .\]</p>
+<p>其结果是马可夫连锁店几乎总是在动, Tour 1说明了另一个极端,</p>
+<div class="sourceCode" id="cb104">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+rng = np.random.default_rng(7)
+mh_simulation_3 = mh_tour(N = 5000, w = 100)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>通过使用一个有如此庞大的旅游区周边区域的统一提议模式,提议可能远远超出后期的“\(\mu\) ”。 在这种情况下,提案往往会被否决,结果导致一个巡演被困在同一地点,进行连续多次迭代(痕迹图中的扁平部分就是证明). Tour 3呈现一个快乐的介质. 我们最初的巡演(mh simulaulation 1)使用 1@@, 并不会被困在一个地方或地区太久。</p>
+<!-- Tuning a Metropolis-Hastings algorithm is both an art and science. -->
+<!-- It requires trial-and-error and, as with most things, gets easier with experience. -->
+<!-- The takehome point here is merely that there's no one-size-fits all Metropolis-Hastings algorithm. -->
+<!-- It must be tuned with patience, trace plots providing a helpful guide. -->
+</div>
+<div class="section level2" id="a-beta-binomial-example-1" number="7.5">
+<h2>β- Binomial 示例</h2>
+<p>对于额外的实践,让我们在Beta-Binomial模型中执行大都会-Hastings算法,其中我们观测到在2次试验中的成功:44</p>
+<p>\[\begin{split} Y|\pi &amp; \sim \text{Bin}(2, \pi) \\ \pi &amp; \sim \text{Beta}(2, 3) \\ \end{split} \;\; \Rightarrow \;\; \pi | (Y = 1) \sim \text{Beta}(3, 4) .\]</p>
+<p>再说一次,假装我们只能定义 后pdf 直至一些缺失的正常化常数,</p>
+<p>\[f(\pi | y = 1) \propto f(\pi) L(\pi | y = 1),\]</p>
+<p>其中 @@ 0@@ 是 Beta(2,3) 之前的 pdf, @@ 1@@ 是 @@ 2@@ 似然 函数。 我们的目标是利用两步的迭代过程构建一个大都会-哈斯廷斯巡回演唱会, 在第一步中,拟议的巡演停留最好限制在0到1之间,就像QQ6@@本身一样。 由于我们在上面使用的统一建议模式可能会提出超出这个范围的价值,我们将调整和使用`QQ7'建议模式。 此外,我们将在链条的每个步骤上使用相同的`#######*建议模式。 因此,我们的提案战略并不取决于目前的旅游站(尽管我们是否接受一项提案仍然会接受)。 大都会-哈斯汀斯的这个特例被称为独立采样算法。</p>
+<div class="describe">
+<p>独立采样算法</p>
+<p>独立采样算法是大都会-哈斯廷斯的一个特例,在每个迭代中使用相同的建议模型,独立于链条目前的位置. 也就是说,从目前位置的QQ0@@,从pdf \(q(\pi')\)的建议书模型中抽取了XQ1@@(相对于 3@@). 因此,接受概率(7.3)简化为:</p>
+<p>\[\begin{equation} \alpha = \min\left\lbrace 1, \; \frac{f(\pi')L(\pi'|y)}{f(\pi)L(\pi|y)}\frac{q(\pi)}{q(\pi')} \right\rbrace . \tag{7.6} \end{equation}\]</p>
+</div>
+<p>我们可以重写QQ0QQ为独立采样器,</p>
+<p>\[\begin{equation} \alpha = \min\left\lbrace 1, \; \frac{f(\pi')L(\pi'|y)/f(y)}{f(\pi)L(\pi|y)/f(y)}\frac{q(\pi)}{q(\pi')} \right\rbrace = \min\left\lbrace 1, \; \frac{f(\pi'|y)}{f(\pi|y)}\frac{q(\pi)}{q(\pi')} \right\rbrace . \tag{7.7} \end{equation}\]</p>
+<p>和大都会算法的接受概率(7.5)一样,(7.7)包括后pdf比 0@@. 这保证了独立采样者在进行动作时,会权衡XQ1@@相对于XQ2@@的相对后置性. 但与大都会验收概率不同, 相反,纳入他们的比例是一种纠正措施:接受一个提案的概率XQ5+X随着QQ7+X的增加而减少。 在概念上,我们对共同提案的价值进行惩罚,确保我们的巡演不会仅仅因为我们不断提出这些价值而漂移。</p>
+<p>下面的 one iteration () 函数执行此独立采样算法的单个迭代, 起始于任意当前值 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 在计算接受概率时, 请注意我们利用 dbeta( ) 来评价前 pdfs 和提案 以及 dbinom( ) 来评价 Binomial 概率函数 :</p>
+<div class="sourceCode" id="cb105">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+one_iteration = function(a, b, current){
+# 步骤1:提出下一个链条位置
+proposal = rng.beta(a, b, size=1)
+# 步骤2:决定是否去那里
+proposal_plaus = stats.beta.pdf(proposal, 2, 3) * stats.binom.pmf(1, 2, proposal)
+proposal_q     = stats.beta.pdf(proposal, a, b)
+current_plaus  = stats.beta.pdf(current, 2, 3) * stats.binom.pmf(1, 2, current)
+current_q      = stats.beta.pdf(current, a, b)
+alpha = min(1, proposal_plaus / current_plaus * current_q / proposal_q)
+next_stop = sample(c(proposal, current),
+size = 1, prob = c(alpha, 1-alpha))
+return(data.frame(proposal, alpha, next_stop))
+}</code></pre>
+</div>
+<div style="page-break-after: always;"></div>
+<p>随后,我们写一个βbin tour()函数,为任何Beta( 0@@)建议模型构建一个N-长的Markov链巡演,使用一个 tour()来确定每个站点:</p>
+<div class="sourceCode" id="cb106">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+betabin_tour = function(N, a, b){
+# 1. 在0.5地点启动链条
+current = 0.5
+# 2个。初始化模拟
+pi = rep(0, N)
+# 3个。模拟 N Markov 链断
+for(i in 1:N){
+# 模拟一个迭代
+sim = one_iteration(a = a, b = b, current = current)
+# 记录下一个位置
+pi[i] = sim$next_stop
+# 重置当前位置
+current = sim$next_stop
+}
+# 页:1。返回链条位置
+return(data.frame(iteration = c(1:N), pi))
+}</code></pre>
+</div>
+<p>我们鼓励你们尝试不同的调制 \\\\\\\\\\\\\的建议书模式。 为了简单起见,我们用一个 1@@,即 2@@,提议模型,对β-Binomial后座进行5000步的巡演. 因此,无论链条目前的位置如何,每一项提案都有可能出现在0-1之间。 图7.9概述了结果。 你可能不会感到惊讶, 旅行似乎很稳定、随机, 也就是说,大都会-哈斯廷斯算法允许我们利用从Beta(1,1)建议模型中提取的素材来近似我们的Beta(3,4)后期. 凉爽。</p>
+<div class="sourceCode" id="cb107">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+rng = np.random.default_rng(84735)
+betabin_sim = betabin_tour(N = 5000, a = 1, b = 1)
+# 绘制结果
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch7-indep" style="display:block;"></span>
+<img alt="有两块地 左图为痕迹图. x轴的迭代值从0到5000,y轴的pi值从0到1. 有一条线在从左到右移动时 表现得像随机的噪音 右左图为pi的直方图,呈覆盖密度曲线. 它的x轴具有pi值从0到1不等. 直方图和密度曲线的形状相似. 它们大致呈钟形,峰值Pi值接近4.5,而Pi值低于0.1和高于0.8,则下降到约0." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch7-indep-1-c89a9ae0e4f8.png" width="576"/>
+<p class="caption">图7.9: 一种微量图(左)和直方图(右),用于一个5000 \(\pi\)值的独立样本. Beta(3,4)目标后pdf是蓝色的叠加.</p>
+</div>
+</div>
+<div class="section level2" id="why-the-algorithm-works" number="7.6">
+<h2>为什么算法起作用</h2>
+<p>我们已看到大都会-哈斯汀斯算法如何运作。 但我们还没有讨论它为什么有效。 虽然我们会跳过正式证据, 整个过程, 考虑利用一个提案 pdf \(q(\mu'|\mu)\), 简单而言, 总体来说,大都会-哈斯廷斯巡回演唱会在不同对值,QQ3@@和QQ4@@之间移动. 具体地说,链条可以从QQ5@@移到QQ6@@,有概率.</p>
+<p>\[P(\mu \to \mu') = P\left(\mu^{(i+1)}=\mu' \; | \; \mu^{(i)}=\mu \right)\]</p>
+<p>或从 0@@到\(\mu\)概率</p>
+<p>\[P(\mu' \to \mu) = P\left(\mu^{(i+1)}=\mu \; | \; \mu^{(i)}=\mu' \right) .\]</p>
+<p>为了让大都会-哈斯汀斯算法有效(即产生良好的后期近似),其巡演必须保留任何 0@@和\(\mu\)对的相对后期可信度. 也就是说,这两个值之间的相对概率必须满足</p>
+<p>\[\frac{P(\mu \to \mu')}{P(\mu' \to \mu)} = \frac{f(\mu'|y)}{f(\mu|y)} .\]</p>
+<p>任何大都会-哈斯廷斯算法都是如此。 我们可以证明这一点。 首先,我们需要计算运动概率。 考虑前者。 需要提出「QQ4」, 这两起事件的相关概率分别由 5@@和\(\alpha\)(7.3)描述. 因此,链条从 QQ 7 QQ 转移到 QQ 8 QQ 概率</p>
+<p>\[P(\mu \to \mu') = q(\mu'|\mu) \cdot \min\left\lbrace 1, \; \frac{f(\mu'|y)}{f(\mu|y)} \frac{q(\mu|\mu')}{q(\mu'|\mu)} \right\rbrace .\]</p>
+<p>同样,链条也以概率从\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\</p>
+<p>\[P(\mu' \to \mu) = q(\mu|\mu') \cdot \min\left\lbrace 1, \; \frac{f(\mu|y)}{f(\mu'|y)}\frac{q(\mu'|\mu)}{q(\mu|\mu')} \right\rbrace .\]</p>
+<p>为了简化移动概率的比例,考虑两种可能的情况:</p>
+<ol style="list-style-type: decimal">
+<li><p>设想1: \(f(\mu'|y) \ge f(\mu|y)\) 当 1@@至少和\(\mu\)一样可信时,\(P(\mu \to \mu')\)简化为\(q(\mu'|\mu)\)和\[\frac{P(\mu \to \mu')}{P(\mu' \to \mu)} = \frac{q(\mu'|\mu)}{q(\mu|\mu') \frac{f(\mu|y)}{f(\mu'|y)}\frac{q(\mu'|\mu)}{q(\mu|\mu')} } = \frac{f(\mu'|y)}{f(\mu|y)} .\].</p></li>
+<li><p>设想2: \(f(\mu'|y) &lt; f(\mu|y)\) 当QQ1+@@比XQ2+@@更不可信时,QQ3+@@简化为QQ4+@@和.</p>
+<p>\[\frac{P(\mu \to \mu')}{P(\mu' \to \mu)} = \frac{q(\mu'|\mu) \frac{f(\mu'|y)}{f(\mu|y)}\frac{q(\mu|\mu')}{q(\mu'|\mu)}}{q(\mu|\mu')} = \frac{f(\mu'|y)}{f(\mu|y)} .\]</p></li>
+</ol>
+<p>因此,无论情景如何,大都会-哈斯廷斯算法都保持了任何一对数值的相对似然~~~~和~~~~~!</p>
+</div>
+<div class="section level2" id="variations-on-the-theme" number="7.7">
+<h2>关于主题的变动</h2>
+<p>我们只考虑过一个MCMC算法, 虽然这个算法很强大,但也有其极限. 在第七章中,我们用大都会-Hastings来模拟正常-自然和Beta-Binomial的后传,分别使用单参数\(\mu\)和\(\pi\). 在未来的章节中,我们的贝叶斯模型将成长为包含许多参数. 修炼一个大都会-哈斯廷斯算法来充分探索每一个参数都变得不灵验. 然而,即使它达到自身效用的极限,大都会-哈斯廷斯还是作为一套更灵活的MCMC工具的基础,包括适应性的大都会-哈斯廷斯,吉布斯和汉密尔顿蒙特卡洛(HMC)算法. 其中,HMC是rstan和rstanarm包所使用的算法.</p>
+<p>正如我们在第七章的顶部指出的,研究这些替代算法需要一本书本身. 从这里开始, 我们将依靠Rstan, 如果你有兴趣多学习一点, McElreath(2019)提供了HMC算法的优秀视频介绍,以及它如何与大都会-哈斯廷斯相比. 对于更深的潜水,布鲁克斯等人. (2011年)全面概述了更广泛的MCMC景观.</p>
+</div>
+<div class="section level2" id="chapter-summary-6" number="7.8">
+<h2>章节摘要</h2>
+<p>在第七章中,你建立了对基础大都会-哈斯廷斯MC算法的强烈概念理解. 您还应用了这个算法来研究熟悉的普通-自然模型和Beta-Binomial模型. 无论是在这些比较简单的单参数模型设置中,还是在比较复杂的模型设置中,大都会-哈斯廷斯算法通过在两个步骤之间延展,从后方产生一个大致的样本:</p>
+<ol style="list-style-type: decimal">
+<li>通过从一个提案pdf中建议一个新的链路位置,也许这取决于目前的位置。</li>
+<li>决定是否接受该提案。 简而言之,我们是否接受一项提案,取决于其后继性相对于目前地点的后继性是否有利。</li>
+</ol>
+<!-- hamiltonian:  can't do for discrete. -->
+<!-- for Gamma-Poisson -->
+<!-- simplified: -->
+<!-- - 1 leapfrog step -->
+<!-- ```{r eval = FALSE, echo = FALSE} -->
+<!-- # function to calculate log posterior -->
+<!-- log_posterior <- function(mu){ -->
+<!--   if(mu <= 0){ -->
+<!--     return(-Inf) -->
+<!--   } -->
+<!--   else{ -->
+<!--     prior      <- dgamma(mu, 1, 1) -->
+<!--     likelihood <- dpois(0, mu) -->
+<!--     return(log(prior * likelihood)) -->
+<!--   } -->
+<!-- } -->
+<!-- # analytical gradient: derivative of log posterior wrt mu -->
+<!-- gradient <- function(mu){ -->
+<!--   -dgamma(mu, 1, 1)   #or -exp(-mu) -->
+<!-- } -->
+<!-- # single HMC iteration -->
+<!-- #L = leapfrog steps or base number of steps -->
+<!-- #epsilon = base step size -->
+<!-- hmc_iteration <- function(mu_current, epsilon) { -->
+<!--   phi_current <- rnorm(1) -->
+<!--   # "Make a half step for momentum" -->
+<!--   phi <- phi_current + 0.5*epsilon*gradient(mu_current) -->
+<!--   # "Make a full step for the position" -->
+<!--   mu_proposed <- mu_current + epsilon*phi -->
+<!--   # "Make a half step for momentum" -->
+<!--   phi <- phi + 0.5*epsilon*gradient(mu_proposed) -->
+<!--   # "Negate momentum at end of trajectory to make the proposal symmetric" -->
+<!--   phi <- -phi -->
+<!--   alpha <- min(1, exp(log_posterior(mu_proposed) - log_posterior(mu_current) - (0.5*phi^2 - 0.5*phi_current^2)))  # acceptance probability from ratio of posteriors, like m-h -->
+<!--   mu_new <- sample(c(mu_proposed, mu_current), size = 1, prob = c(alpha, 1-alpha)) -->
+<!--   return(list(mu = mu_new, proposal = mu_proposed, phi = phi)) -->
+<!-- } -->
+<!-- hmc_iteration(mu_current = 1, epsilon = 0.1) -->
+<!-- # run chain -->
+<!-- hmc_run <- function(N, epsilon_0){ -->
+<!--   #Start tour at location 1 -->
+<!--   mu <- 1 -->
+<!--   # Run a for loop and store the results in hmc_stops -->
+<!--   hmc_stops <- rep(0, N) -->
+<!--   proposals <- rep(0, N) -->
+<!--   phi       <- rep(0, N) -->
+<!--   for(i in 1:N){ -->
+<!--     temp    <- hmc_iteration(mu_current = mu, epsilon_0) -->
+<!--     proposals[i] <- temp$proposal -->
+<!--     hmc_stops[i] <- temp$mu -->
+<!--     phi[i]       <- temp$phi -->
+<!--     mu       <- temp$mu -->
+<!--   } -->
+<!--   #Return the tour days, stops and proposals -->
+<!--   return(data.frame(days = c(1:N), hmc_stops, proposals, phi)) -->
+<!-- } -->
+<!-- # epsilon_0 = 0.5 is good.  roughly 66% acceptance rate -->
+<!-- # the bigger the epsilon, the fewer the acceptances -->
+<!-- epsilon_0 <- 5 -->
+<!-- sim <- hmc_run(N = 500, epsilon_0 = epsilon_0) -->
+<!-- sim %>% summarize(sum(hmc_stops == proposals) / nrow(sim)) -->
+<!-- g1 <- sim %>% ggplot(., aes(x = days, y = hmc_stops)) + geom_line() -->
+<!-- g2 <- sim %>% ggplot(., aes(x = hmc_stops)) + geom_histogram(aes(y = ..density..), color = "white", breaks = seq(0,4,length=30)) + stat_function(fun = dgamma, args = list(1, 2), color = "blue") -->
+<!-- g3 <- sim %>% ggplot(., aes(x = hmc_stops, y = phi)) + geom_line() -->
+<!-- grid.arrange(g1,g2, g3) -->
+<!-- ``` -->
+</div>
+<div class="section level2" id="exercises-6" number="7.9">
+<h2>练习</h2>
+<p>第七章继续将重点转向更多的计算方法。 变化可能不舒服,但也刺激增长。 当你通过这些练习工作的时候,你知道,如果你在挣扎, 那只是意味着你正在参与一些新概念, 你正在把工作 成长为贝叶斯人。 我们的建议是, 别急, 休息一下,回来锻炼 你感觉卡住了。 和一个朋友合作 请求帮助,并在你能帮助的时候帮助他人.</p>
+<div class="section level3" id="conceptual-exercises-1" number="7.9.1">
+<h3>概念练习</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-247"><strong>Exercise 7.1  (Getting to know Monte Carlo)  </strong></span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>蒙特卡洛算术的阶梯是什么?</li>
+<li>给蒙特卡洛算法说出一对一的利弊</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-248"><strong>Exercise 7.2  (Getting to know Metropolis-Hastings)  </strong></span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>大都会-哈斯廷斯算法的阶梯是什么?.</li>
+<li>蒙特卡洛与大都会-哈斯汀斯算法有何不同?</li>
+<li>大都会与大都会-哈斯廷斯算法有何不同?</li>
+</ol>
+<!-- a) Name one pro and one con for the Metropolis-Hastings algorithm relative to the Metropolis. -->
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-249"><strong>Exercise 7.3  (Metropolis vs Metropolis-Hastings)  </strong></span>
+Select all of the correct endings to this sentence: <em>The difference between the Metropolis and Metropolis-Hastings algorithms is that…</em>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>大都会接受所有提案,而大都会-哈斯廷斯只接受一些提案.</li>
+<li>大都会采用对称的建议书模式,而大都会-哈斯廷斯建议书模式则不一定对称.</li>
+<li>对大都会来说,接受概率比对大都会-哈斯廷斯来说简单。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-250"><strong>Exercise 7.4  (Tuning the Metropolis-Hastings)  </strong></span>In this exercise you will consider how to tune a Uniform proposal model with half-width <span class="math inline">\(w\)</span> for a Metropolis-Hastings algorithm.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>画一个追踪图, 用于巡回演出,</li>
+<li>如果QQ0QQ太小, 从而对当前链条价值的邻里定义太窄, 为什么有问题?</li>
+<li>绘制一个追踪图, 用于巡回演出, 统一提议模式使用非常大的QQ0XQ。</li>
+<li>为什么如果‘\(w\)'的面积太大,从而定义的邻里范围太广了?</li>
+<li>为巡演绘制一个跟踪图,其中统一建议模型使用XQ0QQ,既不小也不大.</li>
+<li>描述你如何寻找一个合适的 半宽的\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-251"><strong>Exercise 7.5  (Independence sampling: True or False)  </strong></span>Identify whether the below statements about independence sampling are True or False. If False, explain.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>建议书模型取决于链条的当前价值.</li>
+<li>提议模式每次都是一样的.</li>
+<li>这是大都会-哈斯廷斯算法的特例.</li>
+<li>这是大都会算法的特例</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-252"><strong>Exercise 7.6  (Proposing a new location)  </strong></span>
+In each situation below, complete Step 1 of the Metropolis-Hastings Algorithm. That is, starting from the given current chain value <span class="math inline">\(\lambda^{(i)} = \lambda\)</span> and with <code>set.seed(84735)</code>, use the given proposal model to draw a <span class="math inline">\(\lambda'\)</span> proposal value for the next chain value <span class="math inline">\(\lambda^{(i+1)}\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>\(\lambda = 4.6\),\(\lambda'|\lambda \sim N(\lambda, 2^2)\).</li>
+<li>\(\lambda = 2.1\),\(\lambda'|\lambda \sim N(\lambda, 7^2)\).</li>
+<li>\(\lambda = 8.9\),\(\lambda'|\lambda \sim \text{Unif}(\lambda-2, \lambda+2)\).</li>
+<li>\(\lambda = 1.2\),\(\lambda'|\lambda \sim \text{Unif}(\lambda-0.5, \lambda+0.5)\).</li>
+<li>\(\lambda = 7.7\),\(\lambda'|\lambda \sim \text{Unif}(\lambda-3, \lambda+3)\).</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-253"><strong>Exercise 7.7  (Calculate the acceptance probability: Part I)  </strong></span>
+Suppose that a Markov chain is currently at <span class="math inline">\(\lambda^{(i)}=2\)</span> and that the proposal for <span class="math inline">\(\lambda^{(i+1)}\)</span> is <span class="math inline">\(\lambda'=2.1\)</span>. For each pair of unnormalized posterior pdf <span class="math inline">\(f(\lambda) L(\lambda |y)\)</span> and proposal pdf <span class="math inline">\({q(\lambda'|\lambda)}\)</span>, calculate the acceptance probability <span class="math inline">\(\alpha\)</span> used in Step 2 of the Metropolis-Hastings algorithm <a href="/bayes-rules-python-cn/chapter-7/#eq:mh-alpha">(7.3)</a>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>################################################################################################################################################################################################################################################################</li>
+<li>################################################################################################################################################################################################################################################################</li>
+<li>################################################################################################################################################################################################################################################################</li>
+<li>################################################################################################################################################################################################################################################################</li>
+<li>其中哪一种情况有100%的接受概率? 解释为什么我们肯定想接受这些情景。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-254"><strong>Exercise 7.8  (Calculate the acceptance probability: Part II)  </strong></span>
+Suppose that a Markov chain is currently at <span class="math inline">\(\lambda^{(i)}=1.8\)</span> and that the proposal for <span class="math inline">\(\lambda^{(i+1)}\)</span> is <span class="math inline">\(\lambda'=1.6\)</span>. For each pair of unnormalized posterior pdf <span class="math inline">\(f(\lambda) L(\lambda |y)\)</span> and proposal pdf <span class="math inline">\({q(\lambda'|\lambda)}\)</span>, calculate the acceptance probability <span class="math inline">\(\alpha\)</span> used in Step 2 of the Metropolis-Hastings algorithm <a href="/bayes-rules-python-cn/chapter-7/#eq:mh-alpha">(7.3)</a>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>################################################################################################################################################################################################################################################################</li>
+<li>################################################################################################################################################################################################################################################################</li>
+<li>################################################################################################################################################################################################################################################################</li>
+<li>################################################################################################################################################################################################################################################################</li>
+<li>其中哪一种情况有100%的接受概率? 解释为什么我们肯定想接受这些情景。</li>
+</ol>
+</div>
+<div class="section level3" id="practice-normal-normal-simulation" number="7.9.2">
+<h3>实践:正常-正常模拟</h3>
+<p>在下一套练习中,返回贝叶斯模式设置(7.1),</p>
+<p>\[\begin{split} Y|\mu &amp; \sim \text{N}(\mu, 0.75^2) \\ \mu &amp; \sim \text{N}(0, 1^2). \\ \end{split}\]</p>
+<p>假设我们观察QQ0@@,</p>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-255"><strong>Exercise 7.9  (One iteration with a Uniform proposal model)  </strong></span>The function <code>one_mh_iteration()</code> from the text utilizes a Uniform proposal model, <span class="math inline">\(\mu'|\mu \sim \text{Unif}(\mu - w, \mu + w)\)</span> with half-width <span class="math inline">\(w = 1\)</span>. Starting from a current value of <span class="math inline">\(\mu = 3\)</span> and using <code>set.seed(1)</code>, run the code below and comment on the returned <code>proposal</code>, <code>alpha</code>, and <code>next_stop</code> values.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>1 mh 插入(w=0.01,当前=3)</li>
+<li>1 mh 插入(w=0.5,当前=3)</li>
+<li>1 mh 插入(w=1,当前=3)</li>
+<li>1 mh 插入(w=3,当前=3)</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-256"><strong>Exercise 7.10  (An entire tour with a Uniform proposal model)  </strong></span>Implement the Metropolis-Hastings function <code>mh_tour()</code> defined in Section <a href="/bayes-rules-python-cn/chapter-7/#ch7-implementation">7.3</a> to construct tours of <span class="math inline">\(\mu\)</span> under each of the following scenarios. Construct trace plots and histograms for each tour.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>50次迭代,\(w = 50\)</li>
+<li>50次迭代,\(w = 0.01\)</li>
+<li>1000次重复, \(w = 50\)</li>
+<li>1000次重复, \(w = 0.01\)</li>
+<li>对比 a 和 b 部分的痕量图。 解释为什么更改 \\\\\\\\\\\\有这种效果。</li>
+<li>考虑c和d部分的结果。 当重复次数大得多时,QQ0QQ值是否很重要? 解释一下</li>
+</ol>
+<div class="exercise">
+<p>7.11(改变建议模式) 在此操作中, 修改 one  mh  插入( ) 以创建新函数 one  mh  插入  正常( ) , 该函数使用对称的 Normal 建议模式, 以当前链条值 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\</p>
+<p>\[\mu'|\mu \sim N(\mu, s^2).\]</p>
+Subsequently, starting from a current value of <span class="math inline">\(\mu = 3\)</span> and <code>set.seed(1)</code>, run this function under each setting below. Comment on the returned <code>proposal</code>, <code>alpha</code>, and <code>next_stop</code> values.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>1 mh 插入 正常(s=0.01,当前=3)</li>
+<li>1 mh 插入 正常(s=0.5,当前=3)</li>
+<li>1 mh 插入 正常(s=1,当前=3)</li>
+<li>1 mh 插入 正常(s=3,当前=3)</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-259"><strong>Exercise 7.12  (Metropolis-Hastings tour with Normal proposals)  </strong></span>Upon completing the previous exercise, modify <code>mh_tour()</code> to create a new function, <code>mh_tour_normal()</code>, which constructs a chain of <span class="math inline">\(\mu\)</span> values using a Normal proposal model with standard deviation <span class="math inline">\(s\)</span>. Subsequently, using <code>set.seed(84735)</code>, run this function under each setting below and construct a trace plot of the chain.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>20次迭代,\(s = 0.01\)</li>
+<li>20次迭代,\(s = 10\)</li>
+<li>1000次重复, \(s = 0.01\)</li>
+<li>1000次重复, \(s = 10\)</li>
+<li>比较a和b中的微量地块. 简单解释为什么改变正常建议模型的标准偏差会造成这些差异.</li>
+<li>反省以上结果,调整你的大都会-哈斯廷斯算法. 即确定标准偏差的合理值 并提供一个痕量图作为证据。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-260"><strong>Exercise 7.13  (Change the Normal prior)  </strong></span>The <code>one_mh_iteration(w, current)</code> function from the text is tailored to the Normal-Normal model <a href="/bayes-rules-python-cn/chapter-7/#eq:ch7-gp-example">(7.1)</a> with a <span class="math inline">\(N(0,1^2)\)</span> prior for <span class="math inline">\(\mu\)</span>. For this exercise, create a new function <code>new_mh_iteration(w, current, m, s)</code> which can utilize <em>any</em> <span class="math inline">\(N(m,s^2)\)</span> prior. Subsequently, starting from a current value of <span class="math inline">\(\mu = 3\)</span> and using <code>set.seed(84735)</code>, run this function under each setting below. Comment on the resulting <code>proposal</code>, <code>alpha</code>, and <code>next_stop</code> values.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>新点数(w) =1,当前=3,m=0,s=10)</li>
+<li>新点数(w) = 1, 电流 = 3, m = 20, s = 1).</li>
+<li>新 mh 插入(w=0.1,当前=3,m=20,s=1)</li>
+<li>新建 mh 插入(w=0.1,当前=3,m= -15,s=10)</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-261"><strong>Exercise 7.14  (A Gamma-Poisson model)  </strong></span>Consider a Gamma-Poisson model in which rate <span class="math inline">\(\lambda\)</span> has a Gamma(1,0.1) prior and you observe one Poisson data point, <span class="math inline">\(Y = 4\)</span>. In this exercise, you will simulate the posterior model of <span class="math inline">\(\lambda\)</span> using an <strong>independence sampler</strong>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>下列哪一种会为您在独立采样器中使用的最合理的建议模型: 正常的,Beta的,或者表示性的? 提示:回顾一下,</li>
+<li>使用您在部分a中识别的推荐模型,模拟1000 \(\lambda\)值的巡演. 直到你满意 并拿出你最后结果的痕迹图</li>
+<li>如此一来,我们就能得出 QQ0@@的准确后台模型。 这是什么?</li>
+<li>绘制你巡演的直方图 并覆盖准确的模型 你的马可夫链式近似度有多好?</li>
+</ol>
+</div>
+<div class="section level3" id="practice-simulating-more-bayesian-models" number="7.9.3">
+<h3>练习:模拟更多贝叶斯模型</h3>
+<p>在这一节中,你将应用新的模拟技巧,用自己的数据回答自己的研究问题! 在每一种情况下,确定一个数据收集工作需要不到5分钟时间的问题。 (这部分应该是有趣的,而不是压倒性的。 )</p>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-262"><strong>Exercise 7.15  (Using your own data: Beta-Binomial Metropolis-Hastings)  </strong></span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>找出一个问题, 可以用β- Binomial 模型解答, 考虑那些易于收集数据的情景,比如您在24小时内回复的电子邮件的比例,您回复的电话的比例等.</li>
+<li>Tune 并描述 {0} 的 Beta 前置模型。。。</li>
+<li>在这里收集并记录你的数据。</li>
+<li>下面您将使用大都会-哈斯廷斯算法模拟XQ0@@的后验模型. 在这个算法中使用的合理建议模型是什么? 解释一下</li>
+<li>模拟2000 QQ0QQ值的巡演. 在你满意之前 通知你的推荐模型 并构建出产生的跟踪图</li>
+<li>绘制您巡演的直观图,并在您提问的背景中评论后验模型近似.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-263"><strong>Exercise 7.16  (Using your own data: Normal-Normal MCMC)  </strong></span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>找出一个可以用正常-自然模型回答的问题, 考虑那些易于收集数据的情景,例如每年这个时候的平均高温,你的平均小时屏幕时间等.</li>
+<li>Tune 并描述 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\。。。</li>
+<li>在这里收集并记录你的数据。</li>
+<li>下面您将使用大都会-哈斯廷斯算法模拟XQ0@@的后验模型. 在这个算法中使用的合理建议模型是什么? 解释一下</li>
+<li>模拟2000 QQ0QQ值的巡演. 在你满意之前 通知你的推荐模型 并构建出产生的跟踪图</li>
+<li>绘制您巡演的直观图,并在您提问的背景中评论后验模型近似.</li>
+</ol>
+<!-- a) Identify a question that could be answered with a Gamma-Poisson model for which you could collect data yourself _Hint: think of something easy to collect like the number of emails or text messages you get in an hour, the number of times you blink in 10 seconds, etc._  -->
+<!-- a) What prior are you going to put on $\lambda$? What is the expected value for your prior? -->
+<!-- a) Collect and record your data here. _Reminder: this shouldn't be the hard part. Make sure this takes less than 5 minutes of effort_. -->
+<!-- a) Write your own independence sampler code, complete a tour with 2000 values, tune your proposal model  until you are satisfied, and plot the trace plot. -->
+<!-- a) Plot a histogram of your tour, and comment on the posterior model  within the context of your question. -->
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-264"><strong>Exercise 7.17  (Using your own data: Normal-Normal Independence Sampler)  </strong></span>Repeat the previous exercise, this time using an independence sampler.
+</div>
+</div>
+</div>
+</div>
+<h3>参考资料</h3>
+<div class="references csl-bib-body hanging-indent" id="refs">
+<div class="csl-entry" id="ref-mcmchandbook">
+Brooks, Steve, Andrew Gelman, Galin Jones, and Xiao-Li Meng. 2011. <em>Handbook of <span>M</span>arkov Chain <span>M</span>onte <span>C</span>arlo</em>. CRC Press.
+</div>
+<div class="csl-entry" id="ref-mcyoutube">
+McElreath, Richard. 2019. <span>“Statistical <span>R</span>ethinking Winter 2019 Lecture 12.”</span> Youtube; <a href="https://www.youtube.com/watch?v=hRJtKCIDTwc">https://www.youtube.com/watch?v=hRJtKCIDTwc</a>.
+</div>
+</div>
+</section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-6/">上一节：第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-8/">下一节：第 8 章 后验推断与预测</a></nav>
+</article>
+</div>
+</main>
+<footer class="site-footer">
+<div>
+<strong>AI 提效研究笔记</strong>
+<p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+</div>
+<div class="footer-links">
+<a href="/feed.xml">RSS</a>
+<a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+</div>
+</footer>
+<script src="/assets/js/site.js"></script>
+</body>
+</html>

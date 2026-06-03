@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="第 4 章 贝叶斯分析中的平衡性与序贯性 | Bayes Rules! 中文 Python 改写教程" name="description"/>
+<title>第 4 章 贝叶斯分析中的平衡性与序贯性 | Chandler's AI Productivity Notes</title>
+<link href="/assets/img/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="/assets/css/styles.css" rel="stylesheet"/>
+<script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#content">跳到正文</a>
+<header class="site-header">
+<a aria-label="Chandler's AI Productivity Notes 首页" class="brand" href="/">
+<span class="brand-mark">C</span>
+<span class="brand-name">Chandler's AI Productivity Notes</span>
+</a>
+<nav aria-label="主导航" class="site-nav">
+<a href="/">首页</a>
+<a aria-current="page" href="/posts/">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+</nav>
+</header>
+<main class="tutorial-page" id="content">
+<div class="tutorial-layout">
+<aside class="tutorial-sidebar">
+<h2>教程目录</h2>
+<nav><a href="/bayes-rules-python-cn/">首页</a><a href="/bayes-rules-python-cn/foreword/">前言</a><a href="/bayes-rules-python-cn/preface/">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a aria-current="page" href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a href="/bayes-rules-python-cn/references/">参考文献</a></nav>
+</aside>
+<article class="tutorial-content">
+<section class="normal" id="section-">
+<div class="section level1" id="chapter-4" number="4">
+<h1>第 4 章 贝叶斯分析中的平衡性与序贯性</h1>
+<div class="tutorial-note">
+<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
+</div>
+<p>Alison Bechdel 1985年的漫画《规则》中,</p>
+<ul>
+<li>电影里至少要有两个女人</li>
+<li>这两个女人互相交谈;</li>
+<li>他们谈论的东西 除了男人。</li>
+</ul>
+<p>这些标准构成Bechdel对电影中妇女代表性的测试。 想想你看过的电影, 是接近10%,50%,80%,还是100%?</p>
+<p>让%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 三个朋友 — — 女权主义者、无知主义者和乐观主义者 — — 对QQ1@@有一些先验的想法。 在反思他过去所看过的电影时,女权主义者明白多数人缺乏强大的女性角色. 也不确定是否通过Bechdel测试是常见的, 最后,乐观主义者认为,Bechdel测试对于妇女在电影中的代表性来说是非常低的,因此假定几乎所有电影都通过了测试。 三个朋友有三种不同的前作模式, 没问题! 我们从第3章中看到, 请检查access-date=中的日期值 (帮助) Beta的直觉,请在下面的测试中先进行调试. 31个</p>
+<div class="quiz">
+<p>将图4.1前的每个beta匹配到相应的分析师:女权主义者,无知主义者,乐观主义者.</p>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch4-bechdel-priors" style="display:block;"></span>
+<img alt="图像由相邻的三块地块组成. 地块在x轴上有pi值,在y轴上有密度. 第一个情节读作前:Beta(1,1),第二个情节读作前:Beta(5,11),第三个情节读作前:Beta(14,1). 第一个地块有一个前期模型是平线. 第二块地块有一个前置的曲线,其模式约为0.29. 第三块地块有一个凸轮曲线,模式为pi等于1." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch4-bechdel-priors-1-5baad8eb8166.png" width="528"/>
+<p class="caption">FIGURE 4.1:通过Bechdel测试的电影比例的前三名模型.</p>
+</div>
+<p>Beta(5,11)先验认为大部分电影都未能通过Bechdel测试, 相形之下,Beta(14,1)对近1的QQ1@@值给予更大的先验性,从而与乐观主义者先验的理解相吻合。 这使得Beta(1,1)或Unif(0,1)在0到1之间所有值上都具有同等的可信度,这与无线索者的比喻式肩部缩水吻合——他们唯一知道的是,QQ3@@是一个比例,因此在0到1之间。</p>
+<p>三位分析师同意审查最近电影的样本, 承认QQ2@@是固定数量的独立审判中的“成功数”,他们用二元模型指定了QQ3@@对QQ4@@的依赖。 因此,每个分析师都有一个独特的Beta-Binomial模型XQ5@@,上面的超参数XQ6@@和XQ7@@:</p>
+<p>\[\begin{split} Y | \pi &amp; \sim \text{Bin}(n, \pi) \\ \pi &amp; \sim \text{Beta}(\alpha, \beta) \\ \end{split} .\]</p>
+<p>根据我们第3章的工作,每个分析师都有一个独特的后座模型,这个模型取决于他们的独特前座(通过++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</p>
+<p>\[\begin{equation} \pi | (Y = y) \sim \text{Beta}(\alpha + y, \beta + n - y) . \tag{4.1} \end{equation}\]</p>
+<p>如果你在想“每个人都能拥有自己的前身吗? 这是否总是如此主观?” 问题并没有到此结束。 他们不同的前科在多大程度上能使分析家得出关于Bechdel测试的三个不同的后结论? 这怎么可能取决于他们收集的电影数据的样本大小和结果呢? 分析家们在收集越来越多的数据时,对后方的理解会发展到什么程度? 她们会同意女性在电影中的代表性吗? 我们将在整个第四章中审查这些基本问题,继续建设我们像贝叶斯人那样思考的能力。</p>
+<div class="goals">
+<ul>
+<li><p>探索前作和数据对后作的均衡影响. 你会看到我们如何选择之前的模型, 我们数据的特点, 以及它们之间的微妙平衡 能够影响后验模型。</p></li>
+<li><p>进行相继的贝叶斯分析. 你将探索巴耶斯分析最酷的特点之一:后验模型如何随着新数据更新而演变。</p></li>
+</ul>
+</div>
+<div class="sourceCode" id="cb36">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python"># 原书 bayesrules 数据包中的数据需改用 CSV/本地数据文件读取
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+# pandas 通常可以覆盖 janitor 的表格清理任务
+
+# 装入本章将使用的软件包</code></pre>
+</div>
+<div style="page-break-after: always;"></div>
+<div class="section level2" id="ch4-priors" number="4.1">
+<h2>不同的前科,不同的后科</h2>
+<p>由无识者、女权主义者和乐观主义者调制。 不同的先验手段不仅反映了对QQ1++是接近0还是1的分歧,不同的先验可变性水平反映了分析人员在先验信息中具有不同程度的确定性这一事实. 轻而易举地说,以前的信息越确定,以前的变化就越小。 先验的信息越模糊,先验的变异性就越大. 乐观主义者的前身和无识主义者代表这两个极端. 在Beta(14,1)显示最小的变异性之前,乐观主义者在他们之前对QQ2@@(具体地说,几乎所有电影都通过了Bechdel测试)的理解中最为确定. 我们把这些前科称为资料性。</p>
+<div class="describe">
+<p>事先通报</p>
+<p>资料丰富的前一种信息反映了关于未知变量的具体信息,具有很高的确定性,即低可变性。</p>
+</div>
+<p>以前作最大的可变性, 事实上,他们的Beta(1,1)在0到1之间的每个值前都指定了等同的前可信值. 这种类型的“肩缩”前型有一个正式名称:这是一个模糊的前型。</p>
+<div class="describe">
+<p>空闲前端</p>
+<p>模糊或分散的先验反映的关于未知变量的具体信息很少。 一个平坦的前置,它给变量的所有可能值分配相同的先置性,是一个特殊的情况.</p>
+</div>
+<p>下一个自然的问题就是:他们不同的前科会如何影响女权主义者,无知主义者,乐观主义者的后期结论? 为了回答这个问题,我们需要一些数据。 我们的分析家们决定利用为Bechdel测试的五三八文章收集的数据, 32 海湾规则包包括本数据集的部分版本,命名为bechdel . 完整版本由五八R包(Kim, Ismay, and Chunn 2020)提供. 与本数据集中每部电影的标题和年份一起,二进制变量记录了影片是否通过或失败了Bechdel测试:</p>
+<div class="sourceCode" id="cb37">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 导入数据
+data(bechdel, package = "bayesrules")
+# 试拍20部电影
+rng = np.random.default_rng(84735)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>在这个样本中的20部电影中,只有9部(45%)通过了测试:</p>
+<div class="sourceCode" id="cb38">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>在通过任何正式的数学之前, 请检查您期望每个分析师 如何对这些数据作出反应。 下文将讨论答案。</p>
+<div class="quiz">
+<p>下图显示我们三位分析师的独特前科, 你期望谁的后台 将看起来最像 放大的似然? 也就是说,谁对Bechdel测试通过率的后期理解最符合观测数据中观察到的45%的通过率? 你猜谁看起来最不像是 放大的似然?</p>
+<p><img alt="图像由相邻的三块地块组成. 地块在x轴上有pi值,在y轴上有密度. 第一部情节读了女权主义的Beta(5,11),第二部情节读了无线索的Beta(1,1),第三部情节读了乐观主义者的Beta(14,1). 每块图都显示一个先验的模型和缩放的似然. 所有地块都有同样的似然,其曲线模式为pi等于0.45. 这三个地块的以往模型有所不同。 第一个地块有一个前期的曲线,其模式约为0.29. 第二块地块有一个前期模型,即平线. 第三块地块有一个凸轮曲线,模式为pi等于1." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-134-1-a86dc47c130d.png" style="display: block; margin: auto;" title="图像由相邻的三块地块组成. 地块在x轴上有pi值,在y轴上有密度. 第一部情节读了女权主义的Beta(5,11),第二部情节读了无线索的Beta(1,1),第三部情节读了乐观主义者的Beta(14,1). 每块图都显示一个先验的模型和缩放的似然. 所有地块都有同样的似然,其曲线模式为pi等于0.45. 这三个地块的以往模型有所不同。 第一个地块有一个前期的曲线,其模式约为0.29. 第二块地块有一个前期模型,即平线. 第三块地块有一个凸轮曲线,模式为pi等于1." width="528"/></p>
+</div>
+<div style="page-break-after: always;"></div>
+<p>表4.1和图4.2概述了三名分析员的后验模型,这些模型从应用(4.1)到他们独特的以往模型和共同的电影数据。 例如,女权主义的后期参数由 1@@和\(\beta + n - y = 11 + 20 - 9 = 22\)计算.</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:ch4-bechdel-table">TABLE 4.1: </span>The prior and posterior models for <span class="math inline">\(\pi\)</span>, constructed in light of the data that <span class="math inline">\(Y = 9\)</span> of <span class="math inline">\(n = 20\)</span> sampled movies pass the Bechdel test.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">分析员</th>
+<th style="text-align:left;">先验</th>
+<th style="text-align:left;">后边</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">女权主义者</td>
+<td style="text-align:left;">β( 5, 11)</td>
+<td style="text-align:left;">β( 14, 22)</td>
+</tr>
+<tr>
+<td style="text-align:left;">无明者</td>
+<td style="text-align:left;">贝塔(1,1)</td>
+<td style="text-align:left;">贝塔( 10, 12)</td>
+</tr>
+<tr>
+<td style="text-align:left;">乐观者</td>
+<td style="text-align:left;">β( 14, 1)</td>
+<td style="text-align:left;">β( 23, 12)</td>
+</tr>
+</tbody>
+</table>
+<p>你的直觉对吗? 记得乐观主义者开始于最坚持乐观的, 他们的后台模式不像其他分析家的后台同步, 20部电影样本中只有45%通过测试, 但数据令人沮丧, 不足以让他们相信好莱坞有问题, 以一个平坦、模糊的前置型号为QQ2@@的无稽之谈, 在没有任何事先信息的情况下,他们的后台模型直接反映了从所观察的电影数据中获得的洞察力. 事实上,他们的后身与规模化的似然函数是分不开的.</p>
+<div class="figure" style="text-align: center"><span id="fig:bechdel-post-ch4" style="display:block;"></span>
+<img alt="图像由相邻的三块地块组成. 地块在x轴上有pi值,在y轴上有密度. 第一部情节读了女权主义的Beta(5,11),第二部情节读了无线索的Beta(1,1),第三部情节读了乐观主义者的Beta(14,1). 每个地块都显示一个前期模型,缩放概率,以及后验模型. 所有地块都有同样的似然,其曲线模式为pi等于0.45. 这三个地块的以往模型有所不同。 第一个地块有一个前期的曲线,其模式约为0.29. 第二块地块有一个前期模型,即平线. 第三个模型有一个凸轮曲线,模式在pi等于1. 第一个图案的后验模型是介于前期模型和可能模式之间,大约pi等于0.38的曲线. 在第二部剧情中,后验模型和缩放的似然相同. 在第三段情节中,后验模型掉落到前期和缩放的似然之间." loading="lazy" src="/assets/img/bayes-rules-python-cn/bechdel-post-ch4-1-9ff2217ba189.png" width="528"/>
+<p class="caption">FIGURE 4.2:前身型号为 0@@,根据\(n = 20\)电影的\(Y = 9\)通过Bechdel的样本而构建.</p>
+</div>
+<div class="warning">
+<p>作为提醒,概率函数不是pdfs,因此一般不融合到1. 因此,无线索者的实际(无规模)似然并不等于他们的后pdf. 以简化先验的数据证据之间的视觉对比。</p>
+</div>
+<div style="page-break-after: always;"></div>
+</div>
+<div class="section level2" id="ch4-data" number="4.2">
+<h2>不同的数据,不同的后缀</h2>
+<p>如果你担心我们的三位分析师对最近通过贝奇德尔电影的比例, 别忘了数据在巴耶斯分析中扮演的角色。 为了研究这些动态,请考虑三位新的分析家 — — 莫尔特扎,纳迪德,以及乌苏拉 — — 他们都分享了在QQ1@@之前乐观的Beta(14,1),但每个人都可以访问不同的数据. Morteza评论1991年的QQ2@@电影,</p>
+<div class="sourceCode" id="cb39">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>Nadide评论2000年的QQ0QQ电影,</p>
+<div class="sourceCode" id="cb40">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>最后,乌苏拉评论2013年的QQ0@@电影,其中QQ1@@(约46%)通过Bechdel:</p>
+<div class="sourceCode" id="cb41">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>真巧啊,你这混蛋! Morteza、Nadide和Ursula收集了不同的数据, 然而他们的样本尺寸却有所不同 — — 莫尔特扎只看过13部电影,而乌苏拉则看了99部. 在做任何正式的数学之前, 请检查你的直觉, 关于这个不同的数据将如何导致 三个分析员的不同后缀。 下文将讨论答案。</p>
+<div class="quiz">
+<p>三位分析员共同的先验和独特的二元概率函数(3.12)反映了他们不同的数据,现列示如下。 你预期谁的后台会和他们的数据最同步, 由可视化的似然? 你期望谁的后台 与他们的数据同步最少?</p>
+<p><img alt="图像由相邻的三块地块组成. 地块在x轴上有pi值,在y轴上有密度. 第一个情节读作莫尔特扎:Y=6 of n=13,第二个情节读作纳迪德·Y=29 of n=63,第三个情节读作Ursula Y=46 of n=90. 每块图都显示一个先验的模型和缩放的似然. 所有地块都有前一种模型,即上升的对流曲线,模式为1. 每个情节的缩放概率都不同. 他们都有一个模式 大约Pi等于0.46。 第一种似然是差异最高的,最后的图是差异最低的." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-138-1-139c9430defc.png" style="display: block; margin: auto;" title="图像由相邻的三块地块组成. 地块在x轴上有pi值,在y轴上有密度. 第一个情节读作莫尔特扎:Y=6 of n=13,第二个情节读作纳迪德·Y=29 of n=63,第三个情节读作Ursula Y=46 of n=90. 每块图都显示一个先验的模型和缩放的似然. 所有地块都有前一种模型,即上升的对流曲线,模式为1. 每个情节的缩放概率都不同. 他们都有一个模式 大约Pi等于0.46。 第一种似然是差异最高的,最后的图是差异最低的." width="576"/></p>
+</div>
+<p>图4.3和表4.2概述了3名分析员的后验模型,这些模型从(4.1)应用到他们共同的Beta(14,1)之前的模型和独特的电影数据。 你的直觉对吗? 首先,注意到样本体积越大,概率功能就越“坚持”。 例如,莫尔特萨的13部电影小样本中反映46 % 通过率的似然相当大 — — 对于15%至75%的电影来说,他的数据是相对合理的。 对比之下,在99部电影的更大样本中反映了46%的通过率,但Ursula的概率功能是狭义的 — — 她的数据在35到55 % 的数值范围之外是不可想象的。 反过来,我们看到,似然越是坚持,数据对后期的影响就越大。 莫尔特扎仍然最不相信的是,在他的小样本中观察到的低贝赫德尔通过率,而乌苏拉最确信. 她早期的乐观情绪逐渐演变为后人的理解,认为QQ4@@很可能只有40%到55%之间.</p>
+<div class="figure" style="text-align: center"><span id="fig:bechdel-data-ch4" style="display:block;"></span>
+<img alt="图像由相邻的三块地块组成. 地块在x轴上有pi值,在y轴上有密度. 第一个情节读作莫尔特扎:Y=6 of n=13,第二个情节读作纳迪德·Y=29 of n=63,第三个情节读作Ursula Y=46 of n=90. 每块图都显示一个先验的模型和缩放的似然. 所有地块都有前一种模型,即上升的对流曲线,模式为1. 每个情节的缩放概率都不同. 他们都有一个模式 大约Pi等于0.46。 第一种似然是差异最高的,最后的图是差异最低的. 每个地块的后验模型都落在前期模型和比例概率之间. 从第一图到最后一图,后验模型比前期模型更接近概率." loading="lazy" src="/assets/img/bayes-rules-python-cn/bechdel-data-ch4-1-6e83ee652b1b.png" width="528"/>
+<p class="caption">FIGURE 4.3: 由相同的先验但不同的数据构建的XQ0@@的后置模型为每个分析师绘制.</p>
+</div>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:ch4-bechdel-table-2">TABLE 4.2: </span>The prior and posterior models for <span class="math inline">\(\pi\)</span>, constructed in light of a common Beta(14,1) prior and different data.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">分析员</th>
+<th style="text-align:left;">数据</th>
+<th style="text-align:left;">后边</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">莫尔特扎</td>
+<td style="text-align:left;">\(Y = 6\) \(n = 13\)</td>
+<td style="text-align:left;">β( 20, 8)</td>
+</tr>
+<tr>
+<td style="text-align:left;">纳迪</td>
+<td style="text-align:left;">\(Y = 29\) \(n = 63\)</td>
+<td style="text-align:left;">贝塔( 43, 35)</td>
+</tr>
+<tr>
+<td style="text-align:left;">乌苏拉</td>
+<td style="text-align:left;">\(Y = 46\) \(n = 99\)</td>
+<td style="text-align:left;">β( 60,54)</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level2" id="striking-a-balance-between-the-prior-data" number="4.3">
+<h2>在上一个数据之间求得平衡( D)</h2>
+<div class="section level3" id="connecting-observations-to-concepts" number="4.3.1">
+<h3>将观察与概念连接</h3>
+<p>不同前科(第4.1节)和不同数据(第4.2节)对我们事后对未知变量的理解可能产生的影响。 然而,后or是双方较为细微的牵引战. 图4.4中的地块网格显示了后验模型在前期和数据之间的平衡。 每行对应一个独特的前置模型,每列对应一个独特的数据集.</p>
+<div class="figure" style="text-align: center"><span id="fig:bechdel-combined-ch4" style="display:block;"></span>
+<img alt="在图中,有9块地块以3行和3列显示。 列读数据为:Y=6 ofn=13,数据为:Y=29 nn=63,数据为Y=46 nn=99从左到右. 该行读作前:Beta(14,1),前:Beta(5,11),前:Beta(1,1),从上到下. 每个地块都有前期模型,缩放概率和后期. 这些模型中每个模型的变化都用文字解释." loading="lazy" src="/assets/img/bayes-rules-python-cn/bechdel-combined-ch4-1-847ba2451000.png" width="528"/>
+<p class="caption">FIGURE 4.4:在前期模型和观测数据的不同组合下构建的XQ0@@的后置模型.</p>
+</div>
+<p>从左到右跨网格移动,样本大小从QQ0XX增加到QQ1XX,同时保留通过Bechdel测试的电影比例(XX2XX). 数据对后期的影响也随着样本大小增加。 这还意味着,随着我们收集新的数据,我们先验的理解的影响正在减弱。 此外,后方对数据进行小费平衡的速度取决于先验。 从上到下跨网格移动,前身从信息化(Beta(14,1))转移到模糊化(Beta(1,1)). 自然,信息越多的先天,对后天的影响就越大.</p>
+<p>结合这些观察,格网中最后一列给出了非常重要的贝叶斯语的冲锋线:无论他们之前对QQ0@@的认知的强度和差异如何,3位分析师都会根据强力数据形成共同的后台理解. 这个观察是解脱。 如果贝叶斯模型面对越来越多的数据而笑,我们就会有麻烦。</p>
+<p>到处玩! 为了更深入地探索前期和数据在后期分析中扮演的角色,在Beta(\(\alpha\),\(\beta\))前期模型和观测数据的不同组合下,使用plot beta binomial()并在bayesrules套件中总结 beta binomial()的功能,以可视化和概括Beta-Binomial后验模型,在Beta(\(\alpha\),\(\beta\))前期模型和观测到的数据,XQQ4@@试验中的成功:</p>
+<div class="sourceCode" id="cb42">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 绘制 Beta- Binomial 模型
+plot_beta_binomial(alpha = ___, beta = ___, y = ___, n = ___)
+# 获得Beta-Binomial模型的数字摘要
+summarize_beta_binomial(alpha = ___, beta = ___, y = ___, n = ___)</code></pre>
+</div>
+</div>
+<div class="section level3" id="ch4-concepts" number="4.3.2">
+<h3>将概念与理论联系起来</h3>
+<p>在数据与先验的平衡中, 他们也得到了优雅的数学结果的支持。 如果你想用理论支持你的直觉, 若你不愿跳过技术细节,</p>
+<p>考虑一下一般的Beta-Binomial设置, 其中 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 在观察QQ3@@试验成功后, 从(3.11)中可以看出,我们事后对QQ6@@的理解中的核心倾向可以用后面的意思来衡量,</p>
+<p>\[E(\pi | Y=y) = \frac{\alpha + y}{\alpha + \beta + n} .\]</p>
+<p>只要稍作调整,我们就可以分离出先验和观测到的数据对后期含义的影响。 但注意到我们只是将两个分数乘以1(例如,</p>
+<p>\[\begin{split} E(\pi | Y=y) &amp; = \frac{\alpha}{\alpha + \beta + n} + \frac{y}{\alpha + \beta + n} \\ &amp; = \frac{\alpha}{\alpha + \beta + n}\cdot\frac{\alpha + \beta}{\alpha + \beta} + \frac{y}{\alpha + \beta + n}\cdot\frac{n}{n} \\ &amp; = \frac{\alpha + \beta}{\alpha + \beta + n}\cdot\frac{\alpha}{\alpha + \beta} + \frac{n}{\alpha + \beta + n}\cdot\frac{y}{n} \\ &amp; = \frac{\alpha + \beta}{\alpha + \beta + n}\cdot E(\pi) + \frac{n}{\alpha + \beta + n}\cdot\frac{y}{n} . \\ \end{split}\]</p>
+<p>我们现在把后遗症分成两块:一块取决于前遗症。 (3.2) 以及一部取决于我们样本试验中观察到的成功率的作品, 事实上,后面的表示是先验的平均值和样本成功率的加权平均值,它们的显著加权比合到1: \[\frac{\alpha + \beta}{\alpha + \beta + n} + \frac{n}{\alpha + \beta + n} = 1 .\]</p>
+<p>例如,考虑Morteza和Ursula的后期手段,表4.2概述了这些设置。 使用共享的 beta( 14, 1) 之前的 {0} Morteza 和 Ursula 分享了前一个平均值。 然而,它们的数据却有所不同。 Morteza观察了XQ2+X的XQ3+X电影通过了Bechdel测试,因此有后期的表示:</p>
+<p>\[\begin{split} E(\pi | Y=6) &amp; = \frac{14 + 1}{14 + 1 + 13} \cdot E(\pi) + \frac{13}{14 + 1 + 13}\cdot\frac{y}{n} \\ &amp; = 0.5357 \cdot \frac{14}{15} + 0.4643 \cdot \frac{6}{13} \\ &amp; = 0.7143 . \\ \end{split}\]</p>
+<p>乌苏拉观察了############################################## ############################### #############################################################################################################################################################################</p>
+<p>\[\begin{split} E(\pi | Y=46) &amp; = \frac{14 + 1}{14 + 1 + 99} \cdot E(\pi) + \frac{99}{14 + 1 + 99}\cdot\frac{y}{n} \\ &amp; = 0.1316 \cdot \frac{14}{15} + 0.8684 \cdot \frac{46}{99} \\ &amp; = 0.5263 . \\ \end{split}\]</p>
+<p>Morteza 和 Ursula 有着相同的前置平均值, 也观察到相似的 Bechdel 通过率大约为46%, 由于莫尔特扎只观察了QQ2@@的电影,他的后传意味着前传的平均值比他样本中观察到的Bechdel通过率要轻一点:0.5357对0.4643. 相比之下,由于乌苏拉观察到的电影数量相对较多的QQ3@@,她的后期表示对前期平均值的权重要小于她样本中观察到的Bechdel通过率:0.1316对0.8684.</p>
+<p>这些结果的影响是mathemagic. 一般来说,当我们收集越来越多的数据时,考虑后台会发生什么事。 随着样本大小XQ0XX增加,Beta(XQ1XX)的重量(由此影响)前型号接近0,</p>
+<p>\[\frac{\alpha + \beta}{\alpha + \beta + n} \to 0 \;\; \text{ as } n \to \infty,\]</p>
+<p>数据重量(因此的影响)接近1,</p>
+<p>\[\frac{n}{\alpha + \beta + n} \to 1 \;\; \text{ as } n \to \infty.\]</p>
+<p>因此,我们掌握的数据越多,后期的意思就越会向数据中显示的趋势飘移,而不是前期的趋势:</p>
+<p>\[E(\pi | Y=y) = \frac{\alpha + \beta}{\alpha + \beta + n}\cdot E(\pi) + \frac{n}{\alpha + \beta + n}\cdot\frac{y}{n} \;\;\; \to \;\;\; \frac{y}{n} .\]</p>
+<p>这种漂移的发生速度取决于先验的调音(即\(\alpha\)和\(\beta\))是信息还是模糊的. 因此,这些数学结果支持了我们在图4.4中就后面的平衡和数据所作的观察。 不仅如此, 在练习中,您将显示我们可以将后置模式写成上一个模式的加权平均值和观察到的样本成功率:</p>
+<p>\[\text{Mode}(\pi | Y=y) = \frac{\alpha + \beta - 2}{\alpha + \beta + n - 2} \cdot\text{Mode}(\pi) + \frac{n}{\alpha + \beta + n - 2} \cdot\frac{y}{n} .\]</p>
+</div>
+</div>
+<div class="section level2" id="ch4-sequential" number="4.4">
+<h2>序列分析:随数据而变化</h2>
+<p>在上文的讨论中,我们研究了随着越来越多的数据进入,数据的影响越来越大,以往数据对后世的影响越来越小。 考虑这一概念的细微差别。 “随着越来越多的数据进入”这一短语使人们认识到,数据收集以及我们事后理解的演变是逐步发生的。 例如,几十年来,随着科学家获得新的信息,他们对气候变化的理解不断演变。 随着新的民意测验结果的出现,总统候选人对其赢得选举机会的理解在几个月内不断演变。 为这一演变提供正式框架是巴耶斯统计最强大的特征之一!</p>
+<p>让我们从3.6节重新审视米尔格拉姆对服从行为的研究。 在这个背景下, QQ0QQ 代表了将服从权威的人的比例, 在米尔格拉姆的研究中,服从权威意味着给另一位参与者造成严重电击(这实际上是一种阴谋). 在Milgram的实验之前, 我们虚构的心理学家预计很少有人会服从权威, 他们后来指出,40名研究参与者中有26人造成了他们认为的严重冲击。</p>
+<p>现在,假设心理学家 逐渐收集这些数据, 每天,在三天的时间里。 每天,他们都评估QQ0QQ课题,并记录了QQ1QQ,是造成最严重冲击的数字(因此,QQ2XQ)。 在QQ3@@的首日参与者中,只有QQ4@@给出了最严重的冲击. 因此,到了第一天结束时,心理学家对QQ5XX的理解已经发展起来。 由此可知(4.1)33</p>
+<p>\[\pi | (Y = 1) \sim \text{Beta}(2,19) .\]</p>
+<p>第二天更繁忙,结果更惨淡:在 0@@的参与者中,\(Y = 17\)造成了最严重的冲击。 因此,到第二天结束时,心理学家对QQ2@@的理解再次演变 — — QQ3@@很可能比他们预期的要大。</p>
+<div class="quiz">
+<p>第二天末心理学家的后台是什么?</p>
+<ol style="list-style-type: lower-alpha">
+<li>贝塔( 19, 22)</li>
+<li>贝塔( 18, 13)</li>
+</ol>
+</div>
+<p>如果你的回答是“a”,你是对的。 在第二日, 心理学家并没有简单地忘记第一天发生的事情, 相反,他们从Beta(2,19)的后言中了解到的,在第2天的开始。 因此,通过(4.1),2日末的 0@@的后验模型是Beta(19,22). 34 第三天,QQ2@@参与者的QQ1@@发出最强烈的冲击,因此他们的QQ3@@模型是从Beta(19,22)之前的Beta(27,24)之后演化而来的. 35 从心理学家最初的Beta(1,10)到他们的Beta(27,24)之后的三天研究结束时的完整演变情况,见表4.3。 图4.5在图片中展现了这一演变,包括心理学家在观察如此多的研究参与者后从第一天到第二天的大跃进(20人中的17人).</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:ch4-sequential-table-1">TABLE 4.3: </span>A sequential Bayesian analysis of Milgram’s data.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">天数</th>
+<th style="text-align:left;">数据</th>
+<th style="text-align:left;">型号</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+0
+</td>
+<td style="text-align:left;">纳</td>
+<td style="text-align:left;">贝塔(1,10)</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:left;">Y = 1 n = 10个</td>
+<td style="text-align:left;">贝塔(2,19)</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2
+</td>
+<td style="text-align:left;">Y = 17 n = 20个</td>
+<td style="text-align:left;">贝塔( 19, 22)</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+3
+</td>
+<td style="text-align:left;">Y=8,n=10个</td>
+<td style="text-align:left;">β( 27, 24)</td>
+</tr>
+</tbody>
+</table>
+<div class="figure" style="text-align: center"><span id="fig:ch4-sequential-plot-1" style="display:block;"></span>
+<img alt="图像有四个不同的曲线. 第一种是前置模型,模式为pi等于0. 第二曲面标注为后曲面:第1天,且模式在pi左右等于0.05. 第三个曲线被贴上后缀: 第2天,并且有一个模式,大约pi等于0.46. 第四曲面标注为后曲面:第3天,且模式在pi左右等于0.53." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch4-sequential-plot-1-1-bcaf63923030.png" width="480"/>
+<p class="caption">图4.5:表4.3汇总的Milgram数据的顺序分析。</p>
+</div>
+<p>我们刚刚进行的过程, 逐渐更新心理学家的后验模型,</p>
+<div class="describe">
+<p>贝叶斯语序列分析(学名:Aka Bayesian learning).</p>
+<p>在相继进行的贝叶斯分析中,随着更多数据的出现,后验模型将逐步更新. 每一份新数据,在观察这些数据之前反映我们理解的前一个后验模型就成为了新的前期模型.</p>
+</div>
+<p>随着新数据的出现进化的能力是贝叶斯框架最强大的特征之一. 这些类型的相继分析也维持了两种基本和共同的感性。 首先,最后的后验模型是数据顺序变化不定,即它不受我们观察数据的顺序的影响。 假设心理学家观察Milgram的学习数据时, 表4.4和图4.6汇总了他们对XQ6XX的理解的演变情况。 与他们对反向数据收集的分析(表4.3)相比,心理学家对QQ7QQ的不断发展理解走的是另一条道路。 然而,它最终仍位于同一地点 — Beta(27,24)后. 通过将图4.6和图4.5进行比较,突出了这些不同的演变。</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:ch4-sequential-table-2">TABLE 4.4: </span>A sequential Bayesian analysis of Milgram’s data, reversing the order in which the data was observed.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">天数</th>
+<th style="text-align:left;">数据</th>
+<th style="text-align:left;">型号</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+0
+</td>
+<td style="text-align:left;">纳</td>
+<td style="text-align:left;">贝塔(1,10)</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+1
+</td>
+<td style="text-align:left;">Y=8,n=10个</td>
+<td style="text-align:left;">贝塔( 9, 12)</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2
+</td>
+<td style="text-align:left;">Y = 17 n = 20个</td>
+<td style="text-align:left;">β( 26, 15)</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+3
+</td>
+<td style="text-align:left;">Y = 1 n = 10个</td>
+<td style="text-align:left;">β( 27, 24)</td>
+</tr>
+</tbody>
+</table>
+<div class="figure" style="text-align: center"><span id="fig:ch4-sequential-plot-2" style="display:block;"></span>
+<img alt="图像有四个不同的曲线. 第一种是前置模型,模式为pi等于0. 第二个曲线被贴上后缀:第1天,并且有一个模式,大约pi等于0.42. 第三个曲线被贴上后缀: 第2天,并且有一个模式,大约pi等于0.64. 第四曲面标注为后曲面:第3天,且模式在pi左右等于0.53." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch4-sequential-plot-2-1-90decdc18a18.png" width="480"/>
+<p class="caption">图4.6:表4.4汇总的米尔格拉姆数据的顺序分析。</p>
+</div>
+<p>相继分析的第二个基本特征是,最终的后期只取决于累积数据. 例如,在Milgram实验的三天时间里, 参与者中, 在第3.6节中,我们同时评价了所有这些数据,而不是逐步评价。 我们从心理学家Beta(1,10)的原型跳到Beta(27,24)的后期型。 无论是渐进评估数据还是全部评估数据,</p>
+</div>
+<div class="section level2" id="proving-data-order-invariance" number="4.5">
+<h2>证明数据顺序不变化</h2>
+<p>在上一节中,你看到了数据顺序变化的证据。 证明贝叶斯所有模特都喜欢这个特点。 这个部分很有趣,但不会破坏你未来的工作</p>
+<div class="describe">
+<p>数据顺序变化</p>
+<p>让%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 然后进行顺序分析,我们首先观测数据点QQ2@@,然后观测第二个数据点QQ3@@,将产生与我们首先观测数据点QQ5@@,然后观测数据点QQ6@@相同的后台模型:</p>
+<p>\[f(\theta | y_1,y_2) = f(\theta|y_2,y_1).\]</p>
+<p>同样,后验模型对于我们是否一次或连续观测所有数据是不一致的。</p>
+</div>
+<p>为了证明数据顺序的不变化属性, 让我们首先具体说明后pdf \(f(\theta | y_1,y_2)\) 的结构, 以及XQ4@@的概率函数,</p>
+<p>\[f(\theta|y_1) = \frac{\text{prior}\cdot \text{likelihood}}{\text{normalizing constant}} = \frac{f(\theta)L(\theta|y_1)}{f(y_1)} .\]</p>
+<p>第二步,我们根据观测新数据更新我们的模型。 因此, 请不要忘记我们从QQ1@@指定之前的模型开始,</p>
+<p>\[f(\theta|y_2) = \frac{\frac{f(\theta)L(\theta|y_1)}{f(y_1)}L(\theta|y_2)}{f(y_2)} = \frac{f(\theta)L(\theta|y_1)L(\theta|y_2)}{f(y_1)f(y_2)} . \]</p>
+<p>同样,以相反的顺序观察数据, \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\:</p>
+<p>\[f(\theta|y_2,y_1) = \frac{f(\theta)L(\theta|y_2)L(\theta|y_1)}{f(y_2)f(y_1)} . \]</p>
+<p>不仅数据顺序不会影响QQ0的终极后期模式, 为此,假设我们从原先的QQ1@@开始,一起观察数据QQ2@@,而不是顺序观察. 此外,假设这些数据点是无条件和有条件独立的,因此</p>
+<p>\[f(y_1,y_2) = f(y_1)f(y_2) \;\; \text{ and } \;\; f(y_1,y_2 | \theta) = f(y_1|\theta)f(y_2|\theta) .\]</p>
+<p>因此,这种“数据堆放”产生的后pdf相当于上述顺序分析产生的pdf:</p>
+<p>\[\begin{split} f(\theta|y_1,y_2) &amp; = \frac{f(\theta)L(\theta|y_1,y_2)}{f(y_1,y_2)} \\ &amp; = \frac{f(\theta)f(y_1,y_2|\theta)}{f(y_1)f(y_2)} \\ &amp; = \frac{f(\theta)L(\theta|y_1)L(\theta|y_2)}{f(y_1)f(y_2)} . \\ \end{split}\]</p>
+</div>
+<div class="section level2" id="dont-be-stubborn" number="4.6">
+<h2>不要固执</h2>
+<p>第四章强调了贝叶斯哲学的一些最令人信服的方面 — — 它为我们逐渐形成理解提供了框架和灵活性。 失去这一巴耶斯人利益的唯一方法之一是从一个极端顽固的前作模式开始. 一个模型如此固执,以至于它给某些参数值指定了先验的0概率. 以Milgram研究为例, 假设某个研究者对人性利益抱有顽固的信念, 他们通过0至0.25的统一型号表达这种事先的理解。</p>
+<p>\[\pi \sim \text{Unif}(0,0.25)\]</p>
+<p>在图4.7中显示并指定</p>
+<p>\[f(\pi) = 4 \; \text{ for } \pi \in [0, 0.25] .\]</p>
+<p>现在,假设这位研究员被告知, 第一批的QQ0 QQ1的参与者 带来了冲击。 这80%的数字与顽固的研究人员的信念背道而驰。 请检查access-date=中的日期值 (帮助) 请检查access-date=中的日期值 (帮助) 研究者如何根据这些数据更新他们的后遗症.</p>
+<div class="quiz">
+<p>图4.7的每幅图都说明了顽固的研究人员先验的pdf和概率功能。 哪些情节准确描绘了研究者相应的后台?</p>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch4-stubborn-plot" style="display:block;"></span>
+<img alt="图像包括三个图案,彼此相邻,标注为a,b,c从左到右. 地块在x轴上有pi值,在y轴上有密度. 这三块地块的后验模型 都是一样的 是一个曲线,其模式大约为pi 等于 0.8. 之前的型号为平线,只有pi的对应密度从0到0.25. 第一个模型的规模似然介于前期和后期之间。 在第二幅图中,缩放的似然更接近先验的模型. 在第三幅图中,缩放概率最接近先验的模型,且其模式为0.25,且没有概率值在pi从0.25到0.25的范围之外被证明." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch4-stubborn-plot-1-7cf1c421935f.png" width="768"/>
+<p class="caption">FIGURE 4.7:顽固的研究人员的先验和似然,有三个潜在的对应后验模型.</p>
+</div>
+<p>似乎很奇怪的是, 情节(c)中的后验模型与顽固的研究人员根据观测到的数据对QQ0@@的最新理解一致。 后验模型的定义与前期模型定义的数值相同。 也就是说,后期模式的支持是继承了之前模式的支持. 由于心理学家先验的模型为0.25以上的任何值指定了零概率,他们的后验模型也必须为这个范围内的任何值指定零概率。 在数学上, pdf @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@,</p>
+<p>\[\begin{split} f(\pi | y=8) &amp; \propto f(\pi)L(\pi | y=8) \\ &amp; = 4 \cdot \left(\!\begin{array}{c} 10 \\ 8 \end{array}\!\right) \ \pi^{8} (1-\pi)^{2} \\ &amp; \propto \pi^{8} (1-\pi)^{2}. \\ \end{split}\]</p>
+<p>这个数学的影响是巨大的。 不管顽固的研究者收集了多少反证,他们的后遗症永远也不会超过0.25的上限,即使他们收集了十亿个学科的数据. 幸运的是,我们有些好消息要告诉你:这个贝叶斯流浪汉是完全可以预防的。</p>
+<div class="describe">
+<p>热提示 : 如何避免一个令人遗憾的先验模式</p>
+<p>让QQ0QQ成为一些值得关注的参数. 无论您认为您有多少关于QQ1QQ的信息, 或您想让您获得多少信息, 请务必将非 0 的可信度指定为 QQ2QQ 的每个可能值, 即使这个可信度接近 0。 例如,如果QQ3@@是一个在技术上可以从0到1之间的比例,那么您之前的模型也应该在这个连续体中定义.</p>
+</div>
+</div>
+<div class="section level2" id="a-note-on-subjectivity" number="4.7">
+<h2>关于主观性的说明</h2>
+<p>在第一章中, 我们提到对贝叶斯统计的共同批评, 具体地说,有些人担心“主观”调整先验的模型会让贝叶斯分析师得出他们想要的任何结论。 我们可以更强烈地反对这种批评, 重新联系和扩展你在整个书中探讨的一些概念。</p>
+<div class="quiz">
+<p>对于下面的每个陈述,请说明该陈述是真实的还是虚假的. 提供你的推理。</p>
+<ol style="list-style-type: decimal">
+<li>所有事先的选择都是信息性的。</li>
+<li>事先提供信息可能有很好的理由。</li>
+<li>任何事先的选择都可以通过足够的数据来克服.</li>
+<li>频率学派主义模式是完全客观的。</li>
+</ol>
+</div>
+<p>答复见脚注。 36 考虑要点。 整个第4章你都证实, 贝叶斯人确实可以建立基于“主观”经验的前身。 这很少是件坏事, 在最好的情况下,主观的先行者可以反映我们的分析中应该包括的大量过去的经验,但不幸的是,不能这样做。 即使主观前科与实际观察到的证据相违背,随着这些证据的堆积,其对后科的影响也逐渐消失. 我们见过一个最坏的情况。 这是可预防的。 如果主观的先导性足够固执,以至于在可能的参数值上指定了零概率,那么任何反证量都不足以调和它.</p>
+<p>最后,尽管我们鼓励你们在应用贝叶斯方法时持批评态度,但请不要担心这些方法比经常使用的方法更主观。 没有一个人能够从分析中去除所有的主观性. 我们所携带的生活经历和知识,从我们所问的研究问题到我们收集的数据,为我们提供了一切信息。 贝叶斯人和频率学派分析中,</p>
+</div>
+<div class="section level2" id="chapter-summary-3" number="4.8">
+<h2>章节摘要</h2>
+<p>在第四章中,我们探讨了后验模型在前期模型与数据之间作用的平衡。 总的来说,我们看到以下趋势:</p>
+<ul>
+<li><p>先验的影响越是模糊和资料性越强,即我们先验的确定性越强,先验对后世的影响就越大。</p></li>
+<li><p>数据影响越大,数据对后期的影响越大. 因此,如果两位具有不同前科的研究人员掌握充分的数据,那么他们的后台就会有类似的数据.</p></li>
+</ul>
+<p>此外,我们看到,在相继进行的贝叶斯分析中,随着越来越多的数据进入,我们逐步更新我们的后验模型。 这个后遗症的最终目的地不受我们观察这个数据的顺序(即后遗症是数据顺序的不定)的影响,也不受我们是在一个大垃圾堆里还是渐进地观察数据的影响.</p>
+<div style="page-break-after: always;"></div>
+</div>
+<div class="section level2" id="exercises-3" number="4.9">
+<h2>练习</h2>
+<div class="section level3" id="review-exercises" number="4.9.1">
+<h3>审查工作</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-140"><strong>Exercise 4.1  (Match the prior to the description)  </strong></span>Five different prior models for <span class="math inline">\(\pi\)</span> are listed below.
+Label each with one of these descriptors: somewhat favoring <span class="math inline">\(\pi&lt;0.5\)</span>, strongly favoring <span class="math inline">\(\pi&lt;0.5\)</span>, centering <span class="math inline">\(\pi\)</span> on 0.5, somewhat favoring <span class="math inline">\(\pi&gt;0.5\)</span>, strongly favoring <span class="math inline">\(\pi&gt;0.5\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>贝塔(1.8,1.8)</li>
+<li>贝塔( 3, 2)</li>
+<li>贝塔(1,10)</li>
+<li>β(1,3)</li>
+<li>β( 17, 2)</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-141"><strong>Exercise 4.2  (Match the plot to the code)  </strong></span>Which arguments to the <code>plot_beta_binomial()</code> function generated the plot below?
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>α=2,β=2,y=8,n=11</li>
+<li>α=2,β=2,y=3,n=11</li>
+<li>α=3,β=8,y=2,n=6</li>
+<li>α=3,β=8,y=4,n=6</li>
+<li>α=3,β=8,y=2,n=4</li>
+<li>α=8,β=3,y=2,n=4</li>
+</ol>
+<p><img loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-142-1-2e88bfdfe5db.png" style="display: block; margin: auto;" width="384"/></p>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-143"><strong>Exercise 4.3  (Choice of prior: gingko tree leaf drop)  </strong></span>A ginkgo tree can grow into a majestic monument to the wonders of the natural world.
+One of the most notable things about ginkgo trees is that they shed all of their leaves at the same time, usually after the first frost.
+Randi thinks that the ginkgo tree in her local arboretum will drop all of its leaves next Monday.
+She asks 5 of her friends what they think about the probability (<span class="math inline">\(\pi\)</span>) that this will happen.
+Identify some reasonable Beta priors to convey each of these beliefs.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>本说这不可能</li>
+<li>艾伯特说他很不确定,讨厌树 他不知道,他不会的</li>
+<li>凯蒂给了它一些思考,根据去年发生的事情,认为有很高的机会.</li>
+<li>达里尔认为有很好的机会 但他有点不确定</li>
+<li>Scott认为这很可能不会发生,</li>
+</ol>
+</div>
+<div class="section level3" id="practice-different-priors-different-posteriors" number="4.9.2">
+<h3>实践:不同的前科,不同的后科</h3>
+<p>对于本节的所有练习,考虑以下故事. 当地冰激凌店开业,直至日用完冰激凌. 乍得想拿个冰淇淋圆锥。 他问同事, 他们的Beta Presidents for QQ1@@ 如下:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">同事</th>
+<th align="left">先验</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">金亚</td>
+<td align="left">β( 1, 2)</td>
+</tr>
+<tr class="even">
+<td align="left">费尔南多</td>
+<td align="left">β( 0.5, 1)</td>
+</tr>
+<tr class="odd">
+<td align="left">西亚拉</td>
+<td align="left">β( 3, 10)</td>
+</tr>
+<tr class="even">
+<td align="left">泰勒</td>
+<td align="left">β( 2, 0.1)</td>
+</tr>
+</tbody>
+</table>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-144"><strong>Exercise 4.4  (Choice of prior)  </strong></span>Visualize and summarize (in words) each coworker’s prior understanding of Chad’s chances to satisfy his ice cream craving.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-145"><strong>Exercise 4.5  (Simulating the posterior)  </strong></span>Chad peruses the shop’s website. On 3 of the past 7 days, they were still open at 2 p.m.. Complete the following for each of Chad’s coworkers:
+</div>
+<ul>
+<li>模拟他们的后验模型;</li>
+<li>创建模拟后方的直方图;以及</li>
+<li>使用模拟来估计后方的平均值为 \(\pi\)。</li>
+</ul>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-146"><strong>Exercise 4.6  (Identifying the posterior)  </strong></span>Complete the following for each of Chad’s coworkers:
+</div>
+<ul>
+<li>识别%% 1 的确切后置模式 · ;</li>
+<li>计算%% 1 的确切后置平均值 ; 和 (中文(简体) ).</li>
+<li>与前一次演习的模拟结果进行比较。</li>
+</ul>
+</div>
+<div class="section level3" id="practice-balancing-the-data-prior" number="4.9.3">
+<h3>练习:平衡数据与前置</h3>
+<div class="exercise">
+<span class="exercise" id="exr:ch4-dom-post"><strong>Exercise 4.7  (What dominates the posterior?)  </strong></span>In each situation below you will be given a Beta prior for <span class="math inline">\(\pi\)</span> and some Binomial trial data. For each scenario, identify which of the following is true: the prior has more influence on the posterior, the data has more influence on the posterior, or the posterior is an equal compromise between the data and the prior.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>前文:\(\pi \sim \text{Beta}(1, 4)\),数据:\(Y = 8\)在\(n = 10\)审判中的成功.</li>
+<li>先验:\(\pi \sim \text{Beta}(20, 3)\),数据:\(Y = 0\)在\(n = 1\)审判中的成功.</li>
+<li>前文:\(\pi \sim \text{Beta}(4, 2)\),数据:\(Y = 1\)在\(n = 3\)审判中的成功.</li>
+<li>前文:\(\pi \sim \text{Beta}(3, 10)\),数据:\(Y = 10\)在\(n = 13\)审判中的成功.</li>
+<li>前文:\(\pi \sim \text{Beta}(20, 2)\),数据:\(Y = 10\)在\(n = 200\)审判中的成功.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-147"><strong>Exercise 4.8  (Visualizing the evolution)  </strong></span>For each scenario in Exercise <a href="/bayes-rules-python-cn/chapter-4/#exr:ch4-dom-post">4.7</a>, plot and compare the prior pdf, scaled likelihood function, and posterior pdf for <span class="math inline">\(\pi\)</span>.
+</div>
+<div style="page-break-after: always;"></div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-148"><strong>Exercise 4.9  (Different data: more or less sure)  </strong></span>Let <span class="math inline">\(\pi\)</span> denote the proportion of people that prefer dogs to cats. Suppose you express your prior understanding of <span class="math inline">\(\pi\)</span> by a Beta(7, 2) model.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>根据你的前身,什么是合理值 \\\\\\\\\\\\\\\\\\\\\\\\“ ?。。。</li>
+<li>如果你在调查中看到... ... ...... 评论一下您对QQ3的正确理解和确定性。</li>
+<li>如果相反,你注意到只有 1@@的人喜欢狗,那会如何改变你对\(\pi\)的理解?</li>
+<li>如果相反,你注意到, \(n = 20\)的人喜欢狗,</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-149"><strong>Exercise 4.10  (What was the data?)  </strong></span>In each situation below we give you a Beta prior and a Beta posterior. Further, we tell you that the data is Binomial, but we <em>don’t</em> tell you the observed number of trials <span class="math inline">\(n\)</span> or successes <span class="math inline">\(y\)</span> in those trials. For each situation, identify <span class="math inline">\(n\)</span> and <span class="math inline">\(y\)</span>, and then utilize <code>plot_beta_binomial()</code> to sketch the prior pdf, scaled likelihood function, and posterior pdf.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>ưμ㼯A</li>
+<li>前:Beta(0.5、0.5),后:Beta(3.5、10.5)</li>
+<li>前身:Beta(10,1),后身:Beta(12,15)</li>
+<li>前:Beta(8,3),后:Beta(15,6)</li>
+<li>前身:Beta(2,2),后身:Beta(5,5)</li>
+<li>ưμ㼯A</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:ch4-diff-data"><strong>Exercise 4.11  (Different data, uninformative prior)  </strong></span>In each situation below we have the same prior on the probability of a success, <span class="math inline">\(\pi \sim \text{Beta}(1, 1)\)</span>, <em>but different data</em>. Identify the corresponding posterior model and utilize <code>plot_beta_binomial()</code> to sketch the prior pdf, likelihood function, and posterior pdf.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>审判中,</li>
+<li>在审判中</li>
+<li>审判中,</li>
+<li>审判中,</li>
+<li>审判中,</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-150"><strong>Exercise 4.12  (Different data, informative prior)  </strong></span>Repeat Exercise <a href="/bayes-rules-python-cn/chapter-4/#exr:ch4-diff-data">4.11</a>, this time assuming a <span class="math inline">\(\pi \sim \text{Beta}(10, 2)\)</span> prior.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-151"><strong>Exercise 4.13  (Bayesian bummer)  </strong></span>Bayesian methods are great! But, like anything, we can screw it up. Suppose a politician specifies their prior understanding about their approval rating, <span class="math inline">\(\pi\)</span>, by: <span class="math inline">\(\pi \sim \text{Unif}(0.5,1)\)</span> with pdf <span class="math inline">\(f(\pi) = 2\)</span> when <span class="math inline">\(0.5 \le \pi &lt; 1\)</span>, and <span class="math inline">\(f(\pi) = 0\)</span> when <span class="math inline">\(0 &lt; \pi &lt; 0.5\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>绘制前一个 pdf (用手)。</li>
+<li>描述政治人物先验对\(\pi\)的理解。</li>
+<li>政治人物的助手向他们展示民意调查, 构建政治人物后pdf的公式与素描。</li>
+<li>描述政治人物对\(\pi\)的理解。 用这个来解释政治家在指明他们的前身时所犯的错误.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-152"><strong>Exercise 4.14  (Challenge: posterior mode)  </strong></span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li><p>在Beta-Binomial的设置中, 显示我们可以将 QQ0 的后置模式写成上一个模式的加权平均值和观察到的样本成功率 :</p>
+<p>\[\text{Mode}(\pi | Y=y) = \frac{\alpha + \beta - 2}{\alpha + \beta + n - 2} \cdot\text{Mode}(\pi) + \frac{n}{\alpha + \beta + n - 2} \cdot\frac{y}{n} .\]</p></li>
+<li><p>当我们的样本大小增加时, 用证据支持你的回答</p></li>
+</ol>
+</div>
+<div class="section level3" id="practice-sequentiality" number="4.9.4">
+<h3>惯例:顺序</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-153"><strong>Exercise 4.15  (One at a time)  </strong></span>Let <span class="math inline">\(\pi\)</span> be the probability of success for some event of interest. You place a Beta(2, 3) prior on <span class="math inline">\(\pi\)</span>, and are really impatient. Sequentially update your posterior for <span class="math inline">\(\pi\)</span> with each new observation below.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>第一项意见:成功</li>
+<li>第二项意见:成功</li>
+<li>第三点意见:失败</li>
+<li>第四点意见:成功</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-154"><strong>Exercise 4.16  (Five at a time)  </strong></span>Let <span class="math inline">\(\pi\)</span> be the probability of success for some event of interest. You place a Beta(2, 3) prior on <span class="math inline">\(\pi\)</span>, and are impatient, but you have been working on that aspect of your personality. So you sequentially update your posterior model of <span class="math inline">\(\pi\)</span> after every five (!) new observations. For each set of five new observations, report the updated posterior model for <span class="math inline">\(\pi\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>第一套意见:3项成功</li>
+<li>第二套意见:1项成功</li>
+<li>第三套意见:1项成功</li>
+<li>第四套意见:2项成功</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:ch4-shoes"><strong>Exercise 4.17  (Different data, different posteriors)  </strong></span>A shoe company develops a new internet ad for their latest sneaker. Three employees share the same Beta(4, 3) prior model for <span class="math inline">\(\pi\)</span>, the probability that a user will click on the ad when shown. However, the employees run three different studies, thus each has access to different data. The first employee tests the ad on 1 person – they do not click on the ad. The second tests 10 people, 3 of whom click on the ad. The third tests 100 people, 20 of whom click on the ad.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>使用 plot  beta () 绘制上一个 pdf。 请描述雇员先验对用户点击广告机的似然的理解。</li>
+<li>指定三个员工的 {0} 的独特后置模式。 我们鼓励你们“从零开始”即不依赖Beta-Binomial后方公式来构建这些后方。</li>
+<li>为每个雇员绘制先验的pdf、概率函数和后pdf。</li>
+<li>总结并比较雇员的后期模式。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-155"><strong>Exercise 4.18  (A sequential employee)  </strong></span>The shoe company described in Exercise <a href="/bayes-rules-python-cn/chapter-4/#exr:ch4-shoes">4.17</a> brings in a fourth employee. They start with the same Beta(4, 3) prior for <span class="math inline">\(\pi\)</span> as the first three employees but, not wanting to re-create work, don’t collect their own data.
+Instead, in their first day on the job, the new employee convinces the first employee to share their data.
+On the second day they get access to the second employee’s data and on the third day they get access to the third employee’s data.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>假设新员工在每一天结束时更新他们的后验模型。 他们的后台是什么? 在第二天结束时? 第三天结束时?</li>
+<li>绘制新员工的前身和三个(顺序)后身。 以文字来描述他们在工作前三天对QQ0@@的理解是如何演变的.</li>
+<li>换句话说,这位新雇员在从其他三名雇员那里获得数据之后,直到工作第三天结束才更新他们的后台。 指定他们的后置模式为 @@0 @@ ,并将它与来自(a)部分的 3 后置日期相比较。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-156"><strong>Exercise 4.19  (Bechdel test)  </strong></span>In this exercise we’ll analyze <span class="math inline">\(\pi\)</span>, the proportion of films that pass the Bechdel test, using the <code>bechdel</code> data. For each scenario below, specify the posterior model of <span class="math inline">\(\pi\)</span>, and calculate the posterior mean and mode.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>约翰有一个平面Beta(1,1)的前身,并分析1980年的电影.</li>
+<li>第二天,约翰分析了1990年的电影,同时借鉴了前一天的分析.</li>
+<li>第三天,约翰分析2000年的电影,同时再次利用前两天的分析。</li>
+<li>Jenna也开始用Beta(1,1)前作的分析,但分析1980年,1990年,2000年的电影,全部在第一天.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-157"><strong>Exercise 4.20  (Bayesian and frequentist: sequential edition)  </strong></span>You learned in this chapter that we can use Bayes to sequentially update our understanding of a parameter of interest. How is this different from what the frequentist approach would be? How is it similar?
+</div>
+</div>
+</div>
+</div>
+<h3>参考资料</h3>
+<div class="references csl-bib-body hanging-indent" id="refs">
+<div class="csl-entry" id="ref-bechdel1986dykes">
+Bechdel, Alison. 1986. <em>Dykes to Watch Out for</em>. Firebrand Books.
+</div>
+<div class="csl-entry" id="ref-fte">
+Kim, Albert Y., Chester Ismay, and Jennifer Chunn. 2020. <em>Fivethirtyeight: Data and Code Behind the Stories and Interactives at <span>F</span>ive<span>T</span>hirty<span>E</span>ight</em>. <a href="https://CRAN.R-project.org/package=fivethirtyeight">https://CRAN.R-project.org/package=fivethirtyeight</a>.
+</div>
+</div>
+</section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-3/">上一节：第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-5/">下一节：第 5 章 共轭族</a></nav>
+</article>
+</div>
+</main>
+<footer class="site-footer">
+<div>
+<strong>AI 提效研究笔记</strong>
+<p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+</div>
+<div class="footer-links">
+<a href="/feed.xml">RSS</a>
+<a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+</div>
+</footer>
+<script src="/assets/js/site.js"></script>
+</body>
+</html>

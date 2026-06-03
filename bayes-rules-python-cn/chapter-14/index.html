@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="第 14 章 朴素贝叶斯分类 | Bayes Rules! 中文 Python 改写教程" name="description"/>
+<title>第 14 章 朴素贝叶斯分类 | Chandler's AI Productivity Notes</title>
+<link href="/assets/img/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="/assets/css/styles.css" rel="stylesheet"/>
+<script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#content">跳到正文</a>
+<header class="site-header">
+<a aria-label="Chandler's AI Productivity Notes 首页" class="brand" href="/">
+<span class="brand-mark">C</span>
+<span class="brand-name">Chandler's AI Productivity Notes</span>
+</a>
+<nav aria-label="主导航" class="site-nav">
+<a href="/">首页</a>
+<a aria-current="page" href="/posts/">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+</nav>
+</header>
+<main class="tutorial-page" id="content">
+<div class="tutorial-layout">
+<aside class="tutorial-sidebar">
+<h2>教程目录</h2>
+<nav><a href="/bayes-rules-python-cn/">首页</a><a href="/bayes-rules-python-cn/foreword/">前言</a><a href="/bayes-rules-python-cn/preface/">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a aria-current="page" href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a href="/bayes-rules-python-cn/references/">参考文献</a></nav>
+</aside>
+<article class="tutorial-content">
+<section class="normal" id="section-">
+<div class="section level1" id="chapter-14" number="14">
+<h1>第 14 章 朴素贝叶斯分类</h1>
+<div class="tutorial-note">
+<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
+</div>
+<p></p>
+<p>南极洲各地有多种企鹅物种,包括Adelie、Chinstrap和Gentoo。 当在南极旅行中遇到这些企鹅之一时,我们可能会对其物种进行分类.</p>
+<p>\[Y = \begin{cases} A &amp; \text{ Adelie} \\ C &amp; \text{ Chinstrap} \\ G &amp; \text{ Gentoo} \\ \end{cases}\]</p>
+<p>通过检查各种物理特征,例如企鹅的体重是否超过平均4200克,</p>
+<p>\[X_{1} = \begin{cases} 1 &amp; \text{ above-average weight} \\ 0 &amp; \text{ below-average weight} \\ \end{cases}\]</p>
+<p>以及企鹅账单的测量</p>
+<p>\[\begin{split} X_{2} &amp; = \text{ bill length (in mm)} \\ X_{3} &amp; = \text{ flipper length (in mm)} \\ \end{split}\]</p>
+<p>由Gorman,Williams,和Fraser(2014年)提供,Horst,Hill,和Gorman(2020年)发行的企鹅数据包含了上述物种和344个南极企鹅样本的特征信息:</p>
+<div class="sourceCode" id="cb280">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python"># 原书 bayesrules 数据包中的数据需改用 CSV/本地数据文件读取
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.naive_bayes import GaussianNB, MultinomialNB
+# pandas 通常可以覆盖 janitor 的表格清理任务
+
+# 装入软件包
+# 装入数据
+data(penguins_bayes)
+penguins = penguins_bayes</code></pre>
+</div>
+<p>在这些企鹅中,152只是阿德利,68只是金丝雀,124只是根牙. 这些物种在我们的数据集中的比例分解反映了野生物种的分解。 我们先验对任何新企鹅的假设是,</p>
+<div class="sourceCode" id="cb281">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>在开始分析这些数据之前,先进行一个快速的测验.</p>
+<div class="quiz">
+<p>解释为什么正常或逻辑回归模型都不适合将企鹅的物种从物理特征上分类。</p>
+</div>
+<p>正常回归并不是了解自身与物理特征关系的适当工具。 尽管物流回归(目前)是我们模拟和分类绝对响应变量的唯一工具,但在此也不合适。 回顾在Bernoulli数据结构下,物流回归模型仅限于对二进制响应变量进行分类. 然而我们的物种变量 \(Y\)有三类。 幸运的是, 我们将在第14章中探讨后勤回归的替代方案, 相对于贝叶斯物流回归,朴素贝叶斯分类有一些优点:</p>
+<ul>
+<li>它可以将XQ0QQ的绝对响应变量分为两个或两个以上类别;</li>
+<li>除了贝叶斯统治,</li>
+<li>它的计算效率,即不需要MCMC模拟。</li>
+</ul>
+<p>听起来很棒。 但正如你可能预料的那样,这些好处并非没有代价。 我们将会在本章中看到,天真的贝叶斯分类被称作“消极”是有原因的。</p>
+<div class="goals">
+<ul>
+<li>探索天真贝叶分类的内在作用.</li>
+<li>在R中执行天真贝叶分类.</li>
+<li>制定评估天真贝叶分类质量的战略.</li>
+</ul>
+</div>
+<div class="section level2" id="naive-one-case" number="14.1">
+<h2>对一只企鹅进行分类</h2>
+<p>我们只用一只企鹅开始我们的天真贝叶分类。 假设南极研究者遇到一只重量小于4200克的企鹅,上面有195毫米长的翻盘和50毫米长的比尔. 我们的目标是帮助这个研究者 确定这个企鹅的物种,阿德利,钦斯特拉,或根图。</p>
+<div class="section level3" id="one-categorical-predictor" number="14.1.1">
+<h3>一个绝对的预测器</h3>
+<p>企鹅体重小于4200g, 即不高于平均体重。 接受以下的测验,先建立一些直觉. 64个</p>
+<div class="quiz">
+<p>根据下面的情节,哪个物种最有可能低于平均重量?</p>
+</div>
+<div class="sourceCode" id="cb282">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch14-bars" style="display:block;"></span>
+<img alt="亚德利 钦斯特普 或根图 三条栏杆的高度均为1. 每个栏的遮蔽度均大于 平均 重量,0或1。 在Gentoo的酒吧中,高于平均体重=1占近100%。 在Adelie和Chinstrap的酒吧里,高于平均体重=1 占近100%,低得多 -- -- Adelie约为15%,Chinstrap约为10%。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch14-bars-1-e4ff81a07c64.png" width="384"/>
+<p class="caption">FIGURE 14.1:每个企鹅物种中高于平均体重的比例.</p>
+</div>
+<p>在图14.1中注意到,奇氏企鹅最有可能低于平均重量。 然而,在宣布这只企鹅是金丝雀之前,我们应该考虑这是在野外遇到的最罕见的物种. 也就是说,我们必须像贝叶斯人一样思考,将我们的数据信息与我们先验关于物种成员的信息结合起来,为我们企鹅物种构建一个后验模型。 贝叶斯对这项任务采取的幼稚的分类方法只不过是直接从第2章中呼吁贝叶斯经过考验和真实的规则。 一般来说,为了计算我们的企鹅是物种的后期概率, 根据它的重量状况,我们可以插进</p>
+<p>\[\begin{equation} f(y \; | \; x_1) = \frac{\text{ prior} \cdot \text{likelihood}}{\text{ normalizing constant }} = \frac{f(y)L(y \; | \; x_1)}{f(x_1)} \tag{14.1} \end{equation}\]</p>
+<p>根据《完全概率法》,</p>
+<p>\[\begin{equation} \begin{split} f(x_1) &amp; = \sum_{\text{all } y'} f(y')L(y' \; | \; x_1) \\ &amp; = f(y' = A)L(y'=A|x_1) + f(y' = C)L(y'=C|x_1) + f(y' = G)L(y'=G|x_1).\\ \end{split} \tag{14.2} \end{equation}\]</p>
+<p>按物种分列上述平均体重状况的表格提供了完成巴耶斯计算的必要信息:</p>
+<div class="sourceCode" id="cb283">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>事实上,我们可以直接从这个表格中计算出我们企鹅物种的后验模型。 例如,注意在低于平均体重的193只企鹅中,有126只是Adelies. 因此,这只企鹅有65%的后期概率是阿德利:</p>
+<p>\[f(y = A \; | \; x_1 = 0) = \frac{126}{193} \approx 0.6528 .\]</p>
+<p>将上面的塔基信息插入贝叶斯规则(14.1), 这乏味的一步并不令人烦恼, 首先,我们先验关于物种成员的资料表明,Adelies是最常见的,Chinstraps最少:</p>
+<p>\[\begin{equation} f(y = A) = \frac{151}{342}, \;\;\;\;\; f(y = C) = \frac{68}{342}, \;\;\;\;\; f(y = G) = \frac{123}{342} . \tag{14.3} \end{equation}\]</p>
+<p>此外,这些似然表明,低于平均水平的体重在奇斯特拉普企鹅中最为常见。 例如,89.71%的Chinstraps但只有4.88%的Gentoos低于平均体重:</p>
+<p>\[\begin{split} L(y = A \; | \; x_1 = 0) &amp; = \frac{126}{151} \approx 0.8344 \\ L(y = C \; | \; x_1 = 0) &amp; = \frac{61}{68} \approx 0.8971 \\ L(y = G \; | \; x_1 = 0) &amp; = \frac{6}{123} \approx 0.0488 \\ \end{split}\]</p>
+<p>将这些前科和概率插进(14.2),在所有物种中观测低于平均重量的企鹅的总概率是:</p>
+<p>\[f(x_1 = 0) = \frac{151}{342} \cdot \frac{126}{151} + \frac{68}{342} \cdot \frac{61}{68} + \frac{123}{342} \cdot \frac{6}{123} = \frac{193}{342} .\]</p>
+<p>最后,根据贝叶斯的规则,我们可以证实,这只企鹅有65%的后期机会是Adelie:</p>
+<p>\[\begin{split} f(y = A \; | \; x_1 = 0) &amp; = \frac{f(y = A) L(y = A \; | \; x_1 = 0)}{f(x_1 = 0)} \\ &amp; = \frac{(151/342) \cdot (126/151)}{193/342} \\ &amp; \approx 0.6528 . \\ \end{split}\]</p>
+<p>同样,我们可以证明</p>
+<p>\[f(y = C \; | \; x_1 = 0) \approx 0.3161 \;\;\;\; \text{ and } \;\;\;\; f(y = G \; | \; x_1 = 0) \approx 0.0311 . \]</p>
+<p>总之,这种企鹅是Adelie的后期概率是另外两个物种的两倍以上。 因此,根据我们先验的信息和企鹅的体重低于平均水平,我们天真的贝叶斯分类就是这个企鹅是爱德莉。 虽然低于平均水平的体重在阿德利人中比在钦斯特林人中更为少见,但由于阿德利人更为常见,最终分类被推向边缘.</p>
+</div>
+<div class="section level3" id="naive-one-quant" number="14.1.2">
+<h3>一个量化预测器</h3>
+<p>让我们暂时忽略企鹅的重量, 采取以下的测验来建立一些直觉. 65个</p>
+<div class="quiz">
+<p>根据图14.2, 哪些物种是50毫米长的帐单是最常见的?</p>
+</div>
+<div class="sourceCode" id="cb284">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch14-penguin-bill-density" style="display:block;"></span>
+<img alt="有三个相互重叠的密度图案为bill 长 mm,每个物种各一个 -- -- Adelie、Chinstrap和Gentoo。 密度图大致对称。 阿德利密度图是左最远的,以39毫米左右为中心,大约从30毫米到46毫米不等。Gentoo密度图向右偏移,以48毫米左右为中心,大约从40毫米到55毫米不等。Chinstrap密度图与Gentoo密度图有很多重叠之处,不过以49毫米左右为中心略高。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch14-penguin-bill-density-1-6e477f8e7ab1.png" width="336"/>
+<p class="caption">FIGURE 14.2:在三个企鹅物种中观测到的帐单长度(mm)的密度图案.</p>
+</div>
+<p>从情节中得知,一个50毫米长的帐单对于一个阿德利企鹅来说会非常长. 尽管在Chinstrap和Gentoo之间的法案长度差别较小,但Chinstrap法案往往更长。 特别是,一个50毫米长的法案对于钦斯特拉布斯来说相当平均,虽然对于根图斯来说略长. 因此,我们的数据显示 我们的企鹅是金丝雀。 同样,我们必须权衡这些数据 来看待一个事实,即金丝雀是这三种物种中最罕见的。 因此, 我们可以呼吁贝叶斯规则,</p>
+<p>\[\begin{equation} f(y \; | \; x_2) = \frac{f(y)L(y \; | \; x_2)}{f(x_2)} = \frac{f(y)L(y \; | \; x_2)}{\sum_{\text{all } y'} f(y')L(y' \; | \; x_2)} . \tag{14.4} \end{equation}\]</p>
+<p>我们的问题是: 如果企鹅是Adelie, 与企鹅的绝对权重地位(QQ1@@)不同, 因此,我们不能简单地从物种列表中计算出XQ2@@xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx 以定义概率函数。 这是天真的贝叶斯分类的“成性”部分发挥作用的地方。 任何量化预测器, 此处的XQ5XX, 以及标准偏差:</p>
+<p>\[\begin{split} X_2 \; | \; (Y = A) &amp; \sim N(\mu_A, \sigma_A^2) \\ X_2 \; | \; (Y = C) &amp; \sim N(\mu_C, \sigma_C^2) \\ X_2 \; | \; (Y = G) &amp; \sim N(\mu_G, \sigma_G^2) \\ \end{split} .\]</p>
+<p>但对于账单长度, 重新审视图14.2,注意到在每个物种中,帐单长度大致是围绕不同手段而成的,标准偏差略有不同. 因此,我们可以调整每个物种的正态模型, 设定其XQ1+X和XX2+X参数, 用于观测到的样本 手段和标准偏离 该物种的帐单长度。 例如,我们将调制Adelie物种的正常帐单长度模型,使其具有平均和标准的偏差 +++++ mm和++++++mm:</p>
+<div class="sourceCode" id="cb285">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 为每个 Y 组计算样本平均值和 sd
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>绘制每个物种的调制常态模型证实了这种天真的贝叶斯假设并不完美 — — 比图14.2中原始数据的密度图略更为理想。 但是,</p>
+<div class="sourceCode" id="cb286">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch14-n" style="display:block;"></span>
+<img alt="有3个正常曲线,每个物种各一个 -- -- 阿德利、钦斯特拉和根图。 阿德利曲线是左最远的曲线,以39毫米左右为中心,大约从30毫米到48毫米不等。 Gentoo曲线向右偏移,稍稍宽一些,以48毫米左右为中心,大约从39毫米到57毫米不等。 Chinstrap曲线与Gentoo曲线有很多重叠之处,不过在49毫米左右以稍高的曲线为中心。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch14-n-1-64466a1cba25.png" width="336"/>
+<p class="caption">FIGURE 14.3:普通pdfs调制,以匹配三个企鹅物种中观察到的账单长度(mm)的平均值和标准偏差.</p>
+</div>
+<div style="page-break-after: always;"></div>
+<p>回顾这个正常性假设提供了我们所需要的机制, 来评价在三个物种中观察50毫米长的帐单的似然, 连接到图14.3时,这些似然与50毫米长的帐单长度的正常密度曲线高度相对应。 因此,在Chinstrap中观察到50毫米长的帐单的似然略高于Gentoo,在Adelie企鹅中则不太可能。 更具体地说,我们可以使用dnorm()计算概率.</p>
+<div class="sourceCode" id="cb287">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# L(y) = 缩写 a × 2 = 50) (单位:美元)
+dnorm(50, mean = 38.8, sd = 2.66)
+[1] 2.12e-05
+# L(y = C = | x 2 = 50)
+dnorm(50, mean = 48.8, sd = 3.34)
+[1] 0.112
+# L(y = G = | x 2 = 50)
+dnorm(50, mean = 47.5, sd = 3.08)
+[1] 0.09317</code></pre>
+</div>
+<p>我们已掌握一切, 通过每个物种的先验概率(à la (14.2))来加权概率, 观察一只50毫米长的企鹅的边缘 pdf 是</p>
+<p>\[f(x_2 = 50) = \frac{151}{342} \cdot 0.0000212 + \frac{68}{342} \cdot 0.112 + \frac{123}{342} \cdot 0.09317 = 0.05579 .\]</p>
+<p>因此,后期的概率 我们的企鹅是阿德利人</p>
+<p>\[f(y = A \; | \; x_2 = 50) = \frac{(151/342) \cdot 0.0000212}{0.05579} \approx 0.0002 .\]</p>
+<p>同样,我们可以计算</p>
+<p>\[f(y = C \; | \; x_2 = 50) \approx 0.3992 \;\;\;\; \text{ and } \;\;\;\; f(y = G \; | \; x_2 = 50) \approx 0.6006 . \]</p>
+<p>因此,根据我们先验的资料和企鹅的账单长度,我们天真的贝叶斯分类法是,这只企鹅是根图(Gentoo) — — 它的后期概率最高。 尽管50毫米长的帐单在根图人中比在钦斯特拉普人中更为少见,但由于根图人在野外更为常见,最终分类被推向边缘.</p>
+</div>
+<div class="section level3" id="naive-two-quant" number="14.1.3">
+<h3>两个预测器</h3>
+<p>我们现在对企鹅物种做了两个天真的Bayes分类,一个完全基于我们的企鹅体重低于平均水平的事实,另一个完全基于它的50毫米长的帐单(除了我们以前的资料之外 )。 这些分类有分歧:我们把企鹅归类为前一个分析中的Adelie,后一个分析中的Gentoo。 我们的Bayes分类方法还有待改进。 特别是,我们不仅可以依靠任何一个预测器,而且可以把多个预测器纳入我们的分类过程。</p>
+<p>考虑一下我们的企鹅的帐单长度为 QQ0 mm , 翻转长度为 QQ1 mm。 单靠其中之一就可能导致分类错误。 正如钦斯特拉和根图企鹅单凭其账单长度很难区分一样,钦斯特拉和阿德利企鹅单凭翻转长度很难区分(图14.4)。</p>
+<div class="sourceCode" id="cb288">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch14-2-pred" style="display:block;"></span>
+<img alt="有两块地 左边的地块有三块重叠的密度地块 Bill word mm,每个物种一个 -- -- Adelie, Chinstrap,和Gentoo。 密度图大致对称。 阿德利密度图是左最远的,以39毫米左右为中心,大约从30毫米到46毫米不等。Gentoo密度图向右偏移,以48毫米左右为中心,大约从40毫米到55毫米不等。Chinstrap密度图与Gentoo密度图有很多重叠之处,不过以49毫米左右为中心略高。 右图有3个重叠密度图的flipper 长 mm,每个物种各1个. 密度图大致对称。 阿德利密度图是左最远的,以190毫米左右为中心,约170毫米至210毫米. 钦斯特利密度图与阿德利密度图有很多重叠之处,尽管以196毫米左右为中心略高. Gentoo密度图更高,以220毫米左右为中心,与其他两个密度图几乎没有重叠." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch14-2-pred-1-078e311790bd.png" width="528"/>
+<p class="caption">FIGURE 14.4:在我们三个企鹅物种中,比尔长度(mm)和翻转长度(mm)的密度图案.</p>
+</div>
+<p>但是,当我们把关于账单和翻转长度的信息结合起来时,这些物种是相当可以区分的。 我们的企鹅用50毫米长的钞票和195毫米长的翻盘, 代表于图14.5中破折线的交汇处,</p>
+<div class="sourceCode" id="cb289">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch14-bill-flipper" style="display:block;"></span>
+<img alt="用于342只企鹅的bill 长 mm(y-轴) vs falper 长 mm(x-轴)的散列图. 这些点是按物种排列的 -- -- Adelie、Chinstrap和Gentoo。 对于每个物种来说,比尔长度和翻转长度之间有着适度的正联. 然而,这些点按照物种分为不同的群。 Gentoos往往具有较高的比尔长度和高翻转长度. Adelies的帐单长度往往较低,翻页长度也较低. Chinstraps往往具有较高的比尔长度和中等翻车长度. 在50毫米和195毫米的翻车长度的法案腿上标有一点。 它完全属于Chinstrap集群。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch14-bill-flipper-1-0e37d114b20e.png" width="336"/>
+<p class="caption">FIGURE 14.5:在我们三个企鹅物种中,一个散开的帐单长度(mm)相对于翻转长度(mm).</p>
+</div>
+<p>让我们用天真的贝叶斯分类法来平衡这些数据与我们先验关于物种成员的资料。 为了计算企鹅是物种的后期概率, 我们可以调整Bayes的规则,</p>
+<p>\[\begin{equation} f(y \; | \; x_2, x_3) = \frac{f(y) L(y \; | \; x_2, x_3)}{\sum_{\text{all } y'} f(y')L(y' \; | \; x_2, x_3)} . \tag{14.5} \end{equation}\]</p>
+<p>这又是一个新的曲折: 我们如何计算包含两个变量 — — — — — 的似然函数? 这是另一个“消极”的假设。 假设预测器是有条件独立的,</p>
+<p>\[L(y \; | \; x_2, x_3) = f(x_2, x_3 \; | \; y) = f(x_2 \; | \; y)f(x_3 \; | \; y) .\]</p>
+<p>换句话说,在每个物种中,我们假设企鹅的帐单长度与其翻页长度没有关系。 从数学和计算上来说,这个假设使得天真的贝叶斯算法变得有效和可管理. 然而,它也可能使它是错误的。 重访图14.5. 在每个物种中,翻转长度和账单长度看起来是正相关,而不是独立的. 然而,我们天真地推开不完善的独立假设,从而削弱我们分类准确性的似然。</p>
+<p>那么,多变的朴素贝叶斯模型 假设我们的两个预测器是正常的 有条件的独立。 我们已经在14.1.2节中调制了这个正常模式, 类似地,我们可以调和不同物种的正态模型 翻转长度QQ1XX,以匹配相应的样本手段和标准偏差:</p>
+<div class="sourceCode" id="cb290">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 为每个 Y 组计算样本平均值和 sd
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>因此,我们可以评估对三个物种中的每个物种观测到195毫米的翻转长度的似然。 编号 :</p>
+<div class="sourceCode" id="cb291">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# L(y) = 缩写 AXX 3 = 195) (中文(简体) ).
+dnorm(195, mean = 190, sd = 6.54)
+[1] 0.04554
+# L(y = C = | x 3 = 195)
+dnorm(195, mean = 196, sd = 7.13)
+[1] 0.05541
+# L(y = G = | x 3 = 195)
+dnorm(195, mean = 217, sd = 6.48)
+[1] 0.0001934</code></pre>
+</div>
+<p>对每个物种来说,我们现在都有可能 观察一个账单长度为 \(X_2 = 50\) mm(第14.1.2节),观测翻转长度为 1@@毫米(以上)的似然,以及先验的概率(14.3)。 结合起来,观测每个物种的50毫米长的帐单和195毫米长的翻转机的似然是:</p>
+<p>\[\begin{split} f(y' = A)L(y' = A \; | \; x_2 = 50, x_3 = 195) &amp; = \frac{151}{342} \cdot 0.0000212 \cdot 0.04554 \\ f(y' = C)L(y' = C \; | \; x_2 = 50, x_3 = 195) &amp; = \frac{68}{342} \cdot 0.112 \cdot 0.05541 \\ f(y' = G)L(y' = G \; | \; x_2 = 50, x_3 = 195) &amp; = \frac{123}{342} \cdot 0.09317 \cdot 0.0001934 \\ \end{split}\]</p>
+<p>总计</p>
+<p>\[\sum_{\text{all } y'}f(y')L(y' \; | \; x_2 = 50, x_3 = 195) \approx 0.001241 .\]</p>
+<p>并插入贝叶斯规则(14.5),</p>
+<p>\[f(y = A | x_2 = 50, x_3 = 195) = \frac{\frac{151}{342} \cdot 0.0000212 \cdot 0.04554}{0.001241} \approx 0.0003 .\]</p>
+<p>同样,我们可以计算</p>
+<p>\[\begin{split} f(y = C | x_2 = 50, x_3 = 195) &amp; \approx 0.9944 \\ f(y = G | x_2 = 50, x_3 = 195) &amp; \approx 0.0052 . \end{split}\]</p>
+<p>最后,我们的企鹅几乎肯定是一个金丝雀。 虽然我们没有单独使用任何物理特征得出这个结论,</p>
+<div style="page-break-after: always;"></div>
+<div class="describe">
+<p>自然湾分类</p>
+<p>让QQ0QQ表示一个包含两个或两个以上类别的绝对响应变量,而QQ1QQ则成为XQ2Q的一组可能的预测器. 之后的概率是,一个有观测到的预测器的新病例 QQ4@@属于XQ5@@级</p>
+<p>\[f(y | x_1, x_2, \ldots, x_p) = \frac{f(y)L(y \; | \; x_1, x_2, \ldots, x_p)}{\sum_{\text{all } y' }f(y')L(y' \; | \; x_1, x_2, \ldots, x_p)} .\]</p>
+<p>Naive Bayes 分类对 QQ0@@ 的似然函数得出以下天真假设. 编号 :</p>
+<ul>
+<li><p>预测员 有条件的独立,因此</p>
+<p>\[L(y \; | \; x_1, x_2, \ldots, x_p) = \prod_{i=1}^p f(x_i \; | \; y)\; .\]</p></li>
+<li><p>对于绝对的预测器 \\\\\\\\\\,有条件的pmf</p>
+<p>\[f(x_i \; | \; y) = P(X_i = x_i \; | \; Y = y)\]</p>
+<p>估计的样本比例是观测到的\\\\\\\\\\\\\\\\\\\\\\\\\的病例。</p></li>
+<li><p>对于定量预测器 QQ0@@,条件 pmf / pdf \(f(x_i \; | \; y)\) 由普通模型定义:</p>
+<p>\[X_i | (Y = y) \sim N(\mu_{iy}, \sigma^2_{iy}).\]</p>
+<p>也就是说,在每一个类别中,我们假设, \\\\\\\\ 通常分布在一些平均\\\\\\ \\\\ 与标准偏差\\\ \\\\\\\\\\\\\\\\。 此外,我们估计XQ4+和XQ5+的样本中XQ6+的数值在XQ7+中的平均值和标准偏差。</p></li>
+</ul>
+</div>
+</div>
+</div>
+<div class="section level2" id="implementing-evaluating-naive-bayes-classification" number="14.2">
+<h2>实施和评估天真贝叶分类</h2>
+<p>我们不需要用手来做这些事情。 为了在 R 中实施天真贝叶分类,我们将在 e1071 套件中使用天真贝叶()功能(Meyer et al. 2021 (中文(简体) ). 和stan glm()一样,我们向天真的Bayes()提供数据和公式,说明在分析中使用哪些数据变量。 然而,由于天真的贝叶斯直接从数据中计算出先验的概率,而且实施不需要MCMC模拟,所以我们不必担心提供先验模型或Markov 链的信息. 下面我们构建两个天真的贝叶斯分类算法,一个单独使用bill word mm,另一个还包含falper word mm:</p>
+<div class="sourceCode" id="cb292">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+naive_model_1 = naiveBayes(species ~ bill_length_mm, data = penguins)
+naive_model_2 = naiveBayes(species ~ bill_length_mm + flipper_length_mm,
+data = penguins)</code></pre>
+</div>
+<p>让我们用这两个方法来划分我们在整个第14.1节所研究的本金:</p>
+<div class="sourceCode" id="cb293">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+our_penguin = data.frame(bill_length_mm = 50, flipper_length_mm = 195)</code></pre>
+</div>
+<p>从天真 model 1开始,预测()函数在最终分类的同时返回每个物种的后概率. 这一分类遵循了一个简单的规则:将企鹅归类为后期概率最高的物种. 这一过程的结果与我们在第14.1.2节中“亲手”得到的结果相似,只是由于一些四舍五入的错误而略微减少。 基本上,仅根据它的账单长度,我们最好的猜测是,这只企鹅是Gentoo:</p>
+<div class="sourceCode" id="cb294">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+predict(naive_model_1, newdata = our_penguin, type = "raw")
+Adelie Chinstrap Gentoo
+[1,] 0.000169    0.3978  0.602
+predict(naive_model_1, newdata = our_penguin)
+[1] Gentoo
+Levels: Adelie Chinstrap Gentoo</code></pre>
+</div>
+<p>正如我们在14.1.3节中得出的结论, 如果我们考虑到它的账单长度和翻页长度, 我们最好的猜测是,这只企鹅是一只金丝雀:</p>
+<div class="sourceCode" id="cb295">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+predict(naive_model_2, newdata = our_penguin, type = "raw")
+Adelie Chinstrap   Gentoo
+[1,] 0.0003446    0.9949 0.004787
+predict(naive_model_2, newdata = our_penguin)
+[1] Chinstrap
+Levels: Adelie Chinstrap Gentoo</code></pre>
+</div>
+<p>我们同样可以运用我们天真的贝叶斯模型 来分类任何数量的企鹅。 与物流回归一样,我们将采取两种共同办法评估这些分类的准确性:</p>
+<ol style="list-style-type: decimal">
+<li>构建混淆矩阵,将我们样本企鹅的观测物种与其幼稚的贝叶斯物种分类进行比较;</li>
+<li>更清楚地了解我们天真的贝叶斯模型 如何对新企鹅进行分类 计算出交叉验证的分类准确性估计</li>
+</ol>
+<p>首先,我们用天真 模型 1和天真 模型 2将每个企鹅分类,并将它们储存在企鹅体内,作为1级和2级:</p>
+<div class="sourceCode" id="cb296">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>下文对四个随机抽样的企鹅进行了分类结果,与这些企鹅的实际物种形成对比. 对于后两只企鹅,这两个模型产生相同的分类(Adelie),这些分类是正确的. 对于前两个企鹅来说,这两个模型导致了不同的分类. 在这两种情况下,天真 model 2是正确的.</p>
+<div class="sourceCode" id="cb297">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+rng = np.random.default_rng(84735)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>当然,天真 模范 2的表现是否总的比天真 模范 1还有待观察. 为此,下面的混乱矩阵总结了我们样本中所有企鹅模型的分类精度。 使用这些来完成以下的测试。 页:1</p>
+<div class="quiz">
+<ol style="list-style-type: decimal">
+<li>在天真 模范 1中,像其他哪些物种是最常被误分类的?</li>
+<li>哪种模式更适合对金丝雀企鹅进行分类?</li>
+<li>哪个型号的总精度较高?</li>
+</ol>
+</div>
+<div class="sourceCode" id="cb298">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 天真的迷惑矩阵  model  1
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>考虑到这些动因,让我们来检查两个混淆矩阵。 一个快速的观察是天真 model 2能全面发挥更好的工作. 它不仅在Adelie, Chinstrap,和Gentoo物种中的分类精度率高于天真的 model 1,它的整体精度也更高. 天真 2正确分类为327(146 0@@). 在344个企鹅总数(95%)中,59 \(+\)122),而天真 model 1正确分类只有261个(76%). 在天真 模型 2比天真 模型 1享有最大改进的地方,就是在Chinstrap企鹅的分类. 在天真的 model 1中,只有9%的钦斯特拉普被正确分类,其中85%的whipping被错误分类为Gentoo. 在87%,Chinstraps的分类精度在天真 model 2中要高得多.</p>
+<p>最后,为了尽职尽责,我们可以利用10倍的交叉验证来评价和比较我们天真的贝叶斯分类模型对新企鹅的分类,而不仅仅是我们样本中的企鹅的分类。 我们使用Baylesrules软件包中的天真 分类 摘要 cv()功能这样做:</p>
+<div class="sourceCode" id="cb299">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+rng = np.random.default_rng(84735)
+cv_model_2 = naive_classification_summary_cv(
+model = naive_model_2, data = penguins, y = "species", k = 10)</code></pre>
+</div>
+<p>Cv model 2$folds object contains the classification accuracy rates for each of the 10 folds whereas cv_model_2$cv 平均所有十折的结果:</p>
+<div class="sourceCode" id="cb300">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+cv_model_2$cv
+species       Adelie   Chinstrap       Gentoo
+Adelie 96.05% (146)  2.63%  (4)  1.32%   (2)
+Chinstrap  7.35%   (5) 86.76% (59)  5.88%   (4)
+Gentoo  0.81%   (1)  0.81%  (1) 98.39% (122)</code></pre>
+</div>
+<p>这个交叉验证的混淆矩阵的精确率与上面没有验证的混淆矩阵的精确率相当. 这意味着我们的朴素贝叶斯模型 似乎在新企鹅身上表现得和我们用来建造这个模型的企鹅样本一样好。</p>
+<div style="page-break-after: always;"></div>
+</div>
+<div class="section level2" id="naive-bayes-vs-logistic-regression" number="14.3">
+<h2>自然湾与物流回归</h2>
+<p>考虑到三个企鹅物种类别,上面的分类分析需要天真的贝叶斯分类 — — 对这项任务采取逻辑回归甚至不是一个选择。 然而,在具有二进制绝对响应变量的情景中,逻辑回归和天真的贝叶斯都是可行的分类方法. 事实上,我们鼓励你们重新审视和运用天真的贝叶斯(Bayes)在第十三章中的雨水分类例子。 在这样的二进制设置中,问题就变成了要使用的分类工具. 幼稚的贝叶斯和后勤回归都有其利弊. 虽然天真的贝叶斯在计算上当然是高效的,但它也对数据结构做了一些非常僵硬且往往不适当的假设. 你可能也注意到,我们失去了一些细微 与朴素贝叶斯。 不同于后勤回归模型</p>
+<p>\[\log\left(\frac{\pi}{1 - \pi}\right) = \beta_0 + \beta_1 X_1 + \cdots + \beta_k X_p ,\]</p>
+<p>天真的贝叶斯缺乏回归系数。 因此,虽然天真的贝叶斯可以将关于预测器的QQ1@@的信息转换成QQ2@@的分类,但它并没有对这些变量之间的关系进行很多的光辉化.</p>
+<p>是否朴素贝叶斯或物流回归是二进制分类工作的正确工具取决于情况. 一般来说,如果僵硬的朴素贝叶斯假设是不恰当的,或者你关心QQ0@@和QQ1@@之间的具体联系(即你并不只是想要一套分类),你应该使用逻辑回归. 否则,天真贝叶可能只是事情。 最好不要选择! 试着从两个工具中学习</p>
+</div>
+<div class="section level2" id="chapter-summary-13" number="14.4">
+<h2>章节摘要</h2>
+<p>Naive Bayes分类法是用两个或两个以上分类法对绝对响应变量进行分类的实用工具. 让 1@@成为 set2@@的一套可能的预测器,</p>
+<p>\[f(y | x_1, x_2, \ldots, x_p) = \frac{f(y)L(y \; | \; x_1, x_2, \ldots, x_p)}{\sum_{\text{all } y' }f(y')L(y' \; | \; x_1, x_2, \ldots, x_p)} .\]</p>
+<p>预测器是有条件独立的, 在适当情况下,这些简化的假设使得天真的贝叶斯模型在计算上有效和直接适用. 然而,当这些简化假设被违反(这很常见)时,天真的贝叶斯模型可能会产生误导性分类.</p>
+<div style="page-break-after: always;"></div>
+</div>
+<div class="section level2" id="exercises-13" number="14.5">
+<h2>练习</h2>
+<div class="section level3" id="conceptual-exercises-8" number="14.5.1">
+<h3>概念练习</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-616"><strong>Exercise 14.1  (Naive)  </strong></span>Why is naive Bayes classification called <em>naive</em>?
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-617"><strong>Exercise 14.2  (Which model?)  </strong></span>For each scenario below, indicate whether you could classify <span class="math inline">\(Y\)</span> by <span class="math inline">\(X\)</span> using logistic regression, naive Bayes classification, or both.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>我们想要将一个人的政治派别(民主党、共和党或他人)按他们的年龄划分。</li>
+<li>我们想把一个人是否拥有汽车按年龄划分,</li>
+<li>我们想将一个人是否拥有汽车按其位置(城市、郊区或农村)分类。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-618"><strong>Exercise 14.3  (Pros and cons)  </strong></span>Every modeling technique has some pros and cons.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>说说天真的贝叶分类法</li>
+<li>说说天真的贝叶斯分类法</li>
+</ol>
+</div>
+<div class="section level3" id="applied-exercises-6" number="14.5.2">
+<h3>应用练习</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-620"><strong>Exercise 14.4  (Fake news: exclamation points)  </strong></span>The <code>fake_news</code> data in the <strong>bayesrules</strong> package contains information about 150 news articles, some real news and some fake news. In the next exercises, our goal will be to develop a model that helps us classify an article’s <code>type</code>, real or fake, using a variety of predictors. To begin, let’s consider whether an article’s title has an exclamation point (<code>title_has_excl</code>).
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>构造和讨论文章类型与标题的关系可视化 has excl。</li>
+<li>假设新文章在网上发布,其标题没有感叹点. 利用朴素贝叶斯分类计算文章真实的后期概率. 从零开始,不使用带有预测的天真Bayes().</li>
+<li>使用带有预测的天真Bayes( ) 来检查您的工作。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-621"><strong>Exercise 14.5  (Fake news: title length)  </strong></span>Consider another possible predictor of article type: the number of words in the title.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>构建和讨论文章类型与标题 字数之间的可视化关系。</li>
+<li>在使用朴素贝叶斯分类法来根据文章的标题-字进行分类时,我们假设标题-字的数量是有条件的正常的。 你觉得这个分析是公平的假设吗?</li>
+<li>如果在网上发布新文章,其标题有15个字。 利用朴素贝叶斯分类计算文章真实的后期概率. 从零开始,不使用带有预测的天真Bayes().</li>
+<li>使用带有预言的天真Bayes( ) 来检查您的工作。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-622"><strong>Exercise 14.6  (Fake news: title length and negative sentiment)  </strong></span>Of course, we can use more than one feature to help us classify whether an article is real or fake. Here, let’s consider both an article’s title length (<code>title_words</code>) and the percent of words in the article that have a <code>negative</code> sentiment.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>构建和讨论文章类型与负面情绪之间关系的可视化.</li>
+<li>构造一个既带有标题 字又带有阴性的文章类型的可视化关系。</li>
+<li>若新文章在网上发布, 利用朴素贝叶斯分类计算文章真实的后期概率. 从零开始,不使用带有预测的天真Bayes().</li>
+<li>使用带有预言的天真Bayes( ) 来检查您的工作。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-623"><strong>Exercise 14.7  (Fake news: three predictors)  </strong></span>Suppose a new article is posted online – it has a 15-word title, 6% of its words have negative associations, and its title <em>doesn’t</em> have an exclamation point. Based on these three features, utilize naive Bayes classification to calculate the posterior probability that the article is real. Do so using <code>naiveBayes()</code> with <code>predict()</code>.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-624"><strong>Exercise 14.8  (Fake news: let’s pick a model)  </strong></span>We’ve now tried four different naive Bayes classification models of article <code>type</code>. In this exercise you’ll evaluate and compare the performance of these four models.
+</div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">模型</th>
+<th align="left">公式</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">新闻  型号  1</td>
+<td align="left">类型~标题 has excl</td>
+</tr>
+<tr class="even">
+<td align="left">新闻  模式  2</td>
+<td align="left">类型~标题 字</td>
+</tr>
+<tr class="odd">
+<td align="left">新闻  模式  3</td>
+<td align="left">类型 ~标题 字+负</td>
+</tr>
+<tr class="even">
+<td align="left">新闻  模式  4</td>
+<td align="left">类型 ~标题 字+负标题+标题 has excl</td>
+</tr>
+</tbody>
+</table>
+<ol style="list-style-type: lower-alpha">
+<li>为 news model 1 构建一个交叉验证的混淆矩阵。</li>
+<li>在混淆矩阵中解释每个百分比。</li>
+<li>同样,为其他三种模型构建交叉验证的混淆矩阵。</li>
+<li>如果我们的目标是最好地检测文章是否是假的,</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-625"><strong>Exercise 14.9  (Logistic vs naive)  </strong></span>Naive Bayes isn’t the only approach we can take to classifying real vs fake news. Since article <code>type</code> is <em>binary</em>, we could also approach this task using <strong>Bayesian logistic regression</strong>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>从信息薄弱的前科开始,使用stan glm()来模拟所有三个预测器对新闻类型的后期逻辑回归模型:标题 词,负,标题 has excl.</li>
+<li>表演和讨论一些MCMC诊断.</li>
+<li>构造和讨论 pp check ()。</li>
+<li>采用0.5的概率截断法,对后勤回归模型的敏感性和特殊性进行交叉验证的估计。</li>
+<li>将后勤回归模型的交叉验证指标与天真 模型 4的对比. 哪个模式更能发现假新闻?</li>
+</ol>
+</div>
+<div class="section level3" id="open-ended-exercises-3" number="14.5.3">
+<h3>不限成员名额的工作</h3>
+<p>
+</p>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-626"><strong>Exercise 14.10  (Open exercise: climate change)  </strong></span>The <code>pulse_of_the_nation</code> data in the <strong>bayesrules</strong> package contains responses of 1000 adults to a wide-ranging survey. In one question, respondents were asked about their belief in <code>climate_change</code>, selecting from the following options: climate change is <code>Not Real at All</code>, <code>Real but not Caused by People</code>, or <code>Real and Caused by People</code>. In this open-ended exercise, complete a naive Bayesian analysis of a person’s belief in <code>climate_change</code>, selecting a variety of possible predictors that are of interest to you.
+</div>
+<p></p>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-627"><strong>Exercise 14.11  (Open exercise: vaccine safety)  </strong></span>The <code>pulse_of_the_nation</code> survey also asked respondents about their agreement with the statement that <code>vaccines_are_safe</code>, selecting from the following options: <code>Neither Agree nor Disagree</code>, <code>Somewhat Agree</code>, <code>Somewhat Disagree</code>, <code>Strongly Agree</code> or <code>Strongly Disagree</code>. In this open-ended exercise, complete a naive Bayesian analysis of belief in the safety of vaccines, selecting a variety of possible predictors that are of interest to you.
+</div>
+</div>
+</div>
+</div>
+<h3>参考资料</h3>
+<div class="references csl-bib-body hanging-indent" id="refs">
+<div class="csl-entry" id="ref-penguins">
+Gorman, Kristen B., Tony D. Williams, and William R. Fraser. 2014. <span>“Ecological Sexual Dimorphism and Environmental Variability Within a Community of <span>A</span>ntarctic Penguins (<span>G</span>enus <span>P</span>ygoscelis).”</span> <em>PLoS ONE</em> 9(3) (e90081). <a href="https://doi.org/10.1371/journal.pone.0090081">https://doi.org/10.1371/journal.pone.0090081</a>.
+</div>
+<div class="csl-entry" id="ref-penguins2">
+Horst, Allison, Alison Hill, and Kristen Gorman. 2020. <em>Palmerpenguins: <span>P</span>almer <span>A</span>rchipelago (<span>A</span>ntarctica) Penguin Data</em>. <a href="https://cran.r-project.org/web/packages/palmerpenguins/index.html">https://cran.r-project.org/web/packages/palmerpenguins/index.html</a>.
+</div>
+<div class="csl-entry" id="ref-R-e1071">
+Meyer, David, Evgenia Dimitriadou, Kurt Hornik, Andreas Weingessel, and Friedrich Leisch. 2021. <em>E1071: Misc Functions of the Department of Statistics, Probability Theory Group (Formerly: E1071), TU Wien</em>. <a href="https://CRAN.R-project.org/package=e1071">https://CRAN.R-project.org/package=e1071</a>.
+</div>
+</div>
+</section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-13/">上一节：第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-15/">下一节：第 15 章 分层模型的魅力</a></nav>
+</article>
+</div>
+</main>
+<footer class="site-footer">
+<div>
+<strong>AI 提效研究笔记</strong>
+<p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+</div>
+<div class="footer-links">
+<a href="/feed.xml">RSS</a>
+<a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+</div>
+</footer>
+<script src="/assets/js/site.js"></script>
+</body>
+</html>

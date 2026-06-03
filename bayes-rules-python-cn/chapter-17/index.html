@@ -1,0 +1,1329 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="第 17 章 含预测变量的正态分层模型 | Bayes Rules! 中文 Python 改写教程" name="description"/>
+<title>第 17 章 含预测变量的正态分层模型 | Chandler's AI Productivity Notes</title>
+<link href="/assets/img/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="/assets/css/styles.css" rel="stylesheet"/>
+<script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#content">跳到正文</a>
+<header class="site-header">
+<a aria-label="Chandler's AI Productivity Notes 首页" class="brand" href="/">
+<span class="brand-mark">C</span>
+<span class="brand-name">Chandler's AI Productivity Notes</span>
+</a>
+<nav aria-label="主导航" class="site-nav">
+<a href="/">首页</a>
+<a aria-current="page" href="/posts/">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+</nav>
+</header>
+<main class="tutorial-page" id="content">
+<div class="tutorial-layout">
+<aside class="tutorial-sidebar">
+<h2>教程目录</h2>
+<nav><a href="/bayes-rules-python-cn/">首页</a><a href="/bayes-rules-python-cn/foreword/">前言</a><a href="/bayes-rules-python-cn/preface/">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a aria-current="page" href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a href="/bayes-rules-python-cn/references/">参考文献</a></nav>
+</aside>
+<article class="tutorial-content">
+<section class="normal" id="section-">
+<div class="section level1" id="chapter-17" number="17">
+<h1>第 17 章 含预测变量的正态分层模型</h1>
+<div class="tutorial-note">
+<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
+</div>
+<p>在15章中,我们说服你们,需要等级模式。 在第16章中,我们建立了第一个等级模型——一个正常的等级模型,没有预测器。 在这里,我们将采取下一个自然步骤,用预测器构建一个正常等级回归模型。 回到樱桃花十里跑跑的赛跑分析, 我们的目标是更好地了解运行时间的变化: 有些人跑得比其他人快到什么程度? 与年龄有关的运行时间如何? 这在什么程度上因人而异?</p>
+<p>在回答这些问题时, 我们将使用来自刺刀规则包的樱桃-blossom-sample数据, 这个数据记录了36名不同的跑者在50和60年进入10英里赛程多年的比赛中各有多次净跑次数(以分钟计).</p>
+<div class="sourceCode" id="cb349">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python"># 原书 bayesrules 数据包中的数据需改用 CSV/本地数据文件读取
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pymc as pm
+import arviz as az
+
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# 装入软件包
+# 装入数据
+data(cherry_blossom_sample)
+running = cherry_blossom_sample</code></pre>
+</div>
+<p>但事实证明,运行数据缺少了一些净比赛时间. 由于预测 摘要( )、 添加  fitted  draws( ) 和 添加  prespected draws( ) 等函数需要关于每个种族的完整信息, 我们将省略包含不完整观察的行。 在这样做时,重要的是在选择我们感兴趣的变量后使用na.omit(),这样我们就不会因为这些变量的信息不完整而抛出对这些变量有完整信息的观察。</p>
+<div class="sourceCode" id="cb350">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 删除 NA
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>通过对每个跑者进行多重观测,这一数据分为等级或分组。 为了承认这种组合结构,让 0@@表示净运行时间,让 1@@表示在 their3@@的比赛中跑者\(j\)的年龄. 第15章预示忽略数据组群结构将是错误的:完全的集合方法忽略了我们对每个跑者有多重依赖性观察的事实, 我们分析运行时间和年龄之间的关系, 将结合我们在整个书中开发的两个巴耶斯模式:</p>
+<ul>
+<li>当我们的数据没有分组结构(第9章至第14章)时,由预测器的XX0XXXXXX 返回模型;</li>
+<li>用于组合结构数据但不使用预测器的 QQ0XX的层次模型(第16章)。</li>
+</ul>
+<div class="goals">
+<ul>
+<li>由预测器建立响应变量QQ0QQ的层次回归模型.</li>
+<li>评价和比较等级和非等级模式。</li>
+<li>使用分级模型进行后期预测.</li>
+</ul>
+</div>
+<div class="section level2" id="first-steps-complete-pooling" number="17.1">
+<h2>第一步:完成集合</h2>
+<p>要探索运行时间( 0@@)与年龄(\(X_{ij}\))之间的关联, 这并非正确的做法, 为此,第15章的QQ2+Q的完整集合回归模型假设一个针对年龄的线性关系QQ3+X,且前科信息不足:</p>
+<p>\[\begin{equation} \begin{split} Y_{ij} | \beta_0, \beta_1, \sigma &amp; \sim N(\mu_i, \sigma^2) \;\; \text{ where } \mu_i = \beta_0 + \beta_1 X_{ij} \\ \beta_{0c} &amp; \sim N(0, 35^2) \\ \beta_1 &amp; \sim N(0, 15^2) \\ \sigma &amp; \sim \text{Exp}(0.072) \\ \end{split} \tag{17.1} \end{equation}\]</p>
+<p>这个模型取决于三个全球参数:截取QQ0@@,年龄系数XQ1@@,回归模型XQ2@@的可变性. 现将第15.1节的这些参数的后期模拟结果总结如下。</p>
+<div class="sourceCode" id="cb351">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 以后的简要统计
+model_summary = tidy(complete_pooled_model,
+conf.int = TRUE, conf.level = 0.80)
+model_summary
+# bble:2×5
+term        estimate std.error conf.low conf.high
+&lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 (Intercept)   75.2      24.6     43.7     106.
+2 age            0.268     0.446   -0.302     0.842</code></pre>
+</div>
+<p>这种完全集合模式的氛围由图17.1所捕捉:它将所有种族结果拼凑在一起,并以共同的全球模式来描述运行时间和年龄之间的关系. 通过这种方式,净运行时间相对于年龄的分散显示,后期中位数模型为75.2 @@0 @@ 0  age 0 68 0 68 0 268 岁,关系很弱。</p>
+<div class="sourceCode" id="cb352">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 前置中位数模型
+B0 = model_summary$estimate[1]
+B1 = model_summary$estimate[2]
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch17-scatter" style="display:block;"></span>
+<img alt="净时间(y-轴)对年龄(x-轴)的散点。 252分中的每分代表一个跑者获得一个赛事结果. 各个点有很大的可变性,而且净时间和年龄之间没有明显的关系。 这种关系以一条近平缓,正斜的模型线为代表." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch17-scatter-1-18638aba16a9.png" width="240"/>
+<p class="caption">图17.1: 净运行时间与年龄的分布图,以及完全集合模式的后中位数模型。</p>
+</div>
+<p>这一年龄系数的后中位数估计表明,运行时间在年龄上每年增加0.27分钟。 此外,由于XQ1的后期间隔为80%, 跨度为0, (-0.3, 0.84), 我们的直觉(和个人经验)说,这是错的,随着成年人年龄的增长,他们往往会放慢速度。 这种直觉是正确的。</p>
+</div>
+<div class="section level2" id="hierarchical-model-with-varying-intercepts" number="17.2">
+<h2>具有不同截击方式的等级模型</h2>
+<div class="section level3" id="model-building" number="17.2.1">
+<h3>示范建筑</h3>
+<p></p>
+<p>第15章表明,用完整的集合回归模型(17.1)来阻止我们的跑者分析确实是错误的。 因此,我们的下一个目标是纳入数据分组结构,同时保持我们的年龄预测器。 从本质上讲,我们希望将完全集合回归模型的回归原则与简单的普通等级模型的分组原则结合起来,而不从第16章中作出预测:</p>
+<p>\[\begin{equation} \begin{array}{rll} Y_{ij} | \mu_{j}, \sigma_y &amp; \sim N(\mu_{j}, \sigma_y^2) &amp; \text{model of running times WITHIN runner $j$} \\ \mu_{j} | \mu, \sigma_\mu &amp; \stackrel{ind}{\sim} N(\mu, \sigma_\mu^2) &amp; \text{model of how typical running times vary BETWEEN runners} \\ \mu, \sigma_y, \sigma_\mu &amp; \sim \; ... &amp; \text{prior models on global parameters} \\ \end{array} \tag{17.2} \end{equation}\]</p>
+<p>这种等级回归模型将从(17.2)建立起来,分三个类似的层展开.</p>
+<div class="section level4" id="layer-1-variability-within-runner" number="17.2.1.1">
+<h4>第1层:跑者内部的可变性</h4>
+<p>简单普通等级模式的第一层(17.2)假设每个跑者的净运行时间在自己的平均时间左右通常不同,</p>
+<p>\[Y_{ij} | \mu_{j}, \sigma_y \sim N(\mu_{j}, \sigma_y^2) .\]</p>
+<p>将年龄信息纳入我们对于跑者跑步时间的理解中, 我们可以用跑者专用的XX0XXXX, 有不止一种方式,</p>
+<p>\[\mu_{ij} = \beta_{0j} + \beta_1 X_{ij} .\]</p>
+<p>因此,我们分级模式的第一层描述了每个跑者内部的净时间和年龄之间的关系。 通过:</p>
+<p>\[\begin{equation} Y_{ij} | \beta_{0j}, \beta_1, \sigma_y \sim N(\mu_{ij}, \sigma_y^2) \;\; \text{ where } \; \mu_{ij} = \beta_{0j} + \beta_1 X_{ij} . \tag{17.3} \end{equation}\]</p>
+<p>对每个跑者来说,(17.3)假定他们的跑步时间通常分布在年龄和跑者特有的平均值上, 这个模型取决于三个参数: 3@@,\(\beta_1\),\(\sigma_y\). 尤其关注下标,</p>
+<ul>
+<li>\(\beta_{0j}\) = 截取赛跑者回归模型 =====================================================================================================================================================================================================================================================</li>
+</ul>
+<p>其他参数为全球参数,或由所有跑者共享。 编号 :</p>
+<ul>
+<li>\(\beta_1\) = 全球年龄系数,即跑者每一年净时间的典型变化增加的年龄;以及</li>
+<li>===============================================================================================================================================================================================================================================================</li>
+</ul>
+<p>我们的第一层等级模式(17.3)假设运行时间与年龄之间的关系因跑者而异, 图17.2说明了这些假设,帮助我们在背景中加以翻译:虽然一些跑者往往比其他跑者快或慢,但跑者在跑步时间上随着年龄的增长大致相同。</p>
+<div class="figure" style="text-align: center"><span id="fig:diff-intercept-ch17" style="display:block;"></span>
+<img alt="这是按年龄(x轴)划分的净运行时间(y轴)的图案. 有36条平行,正斜的型号线路,每跑者1条. 截击范围从-10到50. 拦截中心标志为β 0,拦截中的传播标志为sigma 0." loading="lazy" src="/assets/img/bayes-rules-python-cn/diff-intercept-ch17-1-68161b4d9af2.png" width="288"/>
+<p class="caption">FIGURE 17.2: 假想平均回归模型,\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 黑点代表了跑者专用截击的QQ1@@,</p>
+</div>
+</div>
+<div class="section level4" id="layer-2-variability-between-runners" number="17.2.1.2">
+<h4>第2层:跑者之间的可变性</h4>
+<p>与简单的等级模型(17.2)一样,我们等级回归模型的第一层(17.3)抓住了跑者内部运行时间和年龄之间的关系. 在下一层,我们必须捕捉跑步时间和年龄之间的关系如何因跑步者而异,即跑步者之间。</p>
+<div class="quiz">
+<p>我们目前的模型参数中哪一个,\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 这种模型的合理结构是什么?</p>
+</div>
+<p>由于这是我们所假设的唯一回归特征, 我们的36名选手样本来自同一群选手。 而不是采取集合方式, 让每个XQ1XQ有一个独特的前传, 因此假设一名跑者QQ2XQ不能告诉我们另一个前传, 因此, 基准运行速度通常在某位平均值(QQ3)左右,</p>
+<p>\[\begin{equation} \beta_{0j} | \beta_0, \sigma_0 \stackrel{ind}{\sim} N(\beta_0, \sigma_0^2) . \tag{17.4} \end{equation}\]</p>
+<p>图17.2 增加了取决于两个新参数的层次模型的上下文:</p>
+<ul>
+<li>\(\beta_0\) = 全球平均拦截所有跑者,即平均跑者的基准速度;</li>
+<li>\(\sigma_0\)=截击 1@@中的组间变异,即基线速度因跑者而异的程度.</li>
+</ul>
+</div>
+<div class="section level4" id="layer-3-global-priors" number="17.2.1.3">
+<h4>第3层:全球前科</h4>
+<p>现在,我们完成了我们分级回归模式的前两层,它反映了运行时间和年龄的关系,在跑者内部和之间。 与任何贝叶斯模式一样,最后一步是说明我们的前科。</p>
+<div class="quiz">
+<p>对于哪些模型参数,我们必须在我们的分级回归模型的最后一层中具体说明前科?</p>
+</div>
+<p>从(17.3)和(17.4)开始,我们分级回归模式的最后一层必须指定全球参数的前身:\(\beta_0\)、\(\beta_1\)、\(\sigma_0\)。 是这些全球参数来描述跑者的全部人口,而不只是我们样本中的那些。 与往常一样, 我们将使用独立的正常前缀来表示回归系数。 将使用独立的前兆, 最终的分级回归模式将跑者内部的运行时间XX10XX与年龄XX11XXX(17.3)之间的关系信息与跑者之间的基线速度XX12XXX(17.4)差异信息与我们先验对全球跑者群体更广泛的理解相结合. 如图17.2所示,这种特定的模型通常被称为分级随机截取模型:</p>
+<p>\[\begin{equation} \begin{array}{rll} Y_{ij} | \beta_{0j}, \beta_1, \sigma_y &amp; \sim N(\mu_{ij}, \sigma_y^2) \;\; \text{ with } \;\; \mu_{ij} = \beta_{0j} + \beta_1 X_{ij} &amp; \text{(regression model} \\ &amp;&amp; \text{ WITHIN runner $j$)} \\ \beta_{0j} | \beta_0, \sigma_0 &amp; \stackrel{ind}{\sim} N(\beta_0, \sigma_0^2) &amp; \text{(variability in baseline speeds} \\ &amp;&amp; \text{ BETWEEN runners)}\\ \beta_{0c} &amp; \sim N(m_0, s_0^2) &amp; \text{(priors on global parameters)} \\ \beta_1 &amp; \sim N(m_1, s_1^2) &amp; \\ \sigma_y &amp; \sim \text{Exp}(l_y) &amp; \\ \sigma_0 &amp; \sim \text{Exp}(l_0). &amp; \\ \end{array} \tag{17.5} \end{equation}\]</p>
+<p>整套模型假设概述如下。</p>
+<div class="describe">
+<p>正常等级回归假设</p>
+<p>让QQ0++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ Bayesian Normal restall model(17.5)的XQ4+X的XQ5+X的合适性取决于以下假设.</p>
+<ul>
+<li>预测器上的数据结构, 任何一组的QQ1+, 然而,同一组内的不同数据点(\(j\),\(Y_{ij}\)和\(Y_{hj}\))是相互关联的.</li>
+<li>关系的结构在任意一个组 QQ0 QQ 中,XQ1 QQ(QQ2 QQ)的典型结果可以写成预测器的线性函数 QQ3 Q.</li>
+<li>在任何组合内, 在任何组合内, 以任何预测值, 观测到的值 , 通常会围绕平均值 ,</li>
+<li>团体间可变性的结构 团体特定基线或截击 \(\beta_{0j}\) 通常围绕全球截击 \(\beta_0\) 与标准偏差 \(\sigma_0\) .</li>
+</ul>
+</div>
+<div class="describe">
+<p>连接分级和完整的集合模式</p>
+<p>完整的集合模式(17.1)是一个特殊情况(17.5)。 这两种型号在XQ0@@时是等效的,即各组的拦截没有不同.</p>
+</div>
+</div>
+</div>
+<div class="section level3" id="another-way-to-think-about-it-1" number="17.2.2">
+<h3>另一种思考方式</h3>
+<p>从第16章中回顾,有两种方法可以思考特定群体的参数. 首先,在我们运行时间的分级回归模型(17.5)中,我们加入了跑者特有的截击参数XQ0XX,以表示基线速度可以因跑者而异. 我们曾认为这些跑者专用截击是一些全球截击的正常偏差, 同样,我们可以认为 跑者特定的拦截 作为随机的扭动或调整 QQ5QQ到QQ6XX,</p>
+<p>\[\beta_{0j} = \beta_0 + b_{0j} \]</p>
+<p>如果这些调值是正常偏差为 0, 且标准偏差为 QQ0QQ 编号 :</p>
+<p>\[b_{0j} \sim N(0, \sigma_0^2) .\]</p>
+<p>举个例子 假设一些跑者QQ0@@的基线运行速度为QQ1@@分钟,而所有跑者的平均基线速度为QQ2@@分钟. 因此,无论在哪个年龄,跑者QQ3@@的跑速往往比平均水平慢5分钟. 也就是说 4 和</p>
+<p>\[\beta_{0j} = \beta_0 + b_{0j} = 19 + 5 = 24 .\]</p>
+<p>一般来说,我们可以将我们的等级模型(17.5)中的第1层和第2层重新划定如下:</p>
+<p>\[\begin{equation} \begin{split} Y_{ij} | \beta_{0j}, \beta_1, \sigma_y &amp; \sim N(\mu_{ij}, \sigma_y^2) \;\; \text{ with } \;\; \mu_{ij} = (\beta_0 + b_{0j}) + \beta_1 X_{ij} \\ b_{0j} | \sigma_0 &amp; \stackrel{ind}{\sim} N(0, \sigma_0^2) \\ \beta_{0c} &amp; \sim N(m_0, s_0^2) \\ \beta_1 &amp; \sim N(m_1, s_1^2) \\ \sigma_y &amp; \sim \text{Exp}(l_y) \\ \sigma_0 &amp; \sim \text{Exp}(l_0). \\ \end{split} \tag{17.6} \end{equation}\]</p>
+</div>
+<div class="section level3" id="tuning-the-prior" number="17.2.3">
+<h3>调整前一个</h3>
+<p>在等级回归模式框架(17.5)到位后, 我们先验的理解是:</p>
+<ul>
+<li>这个年龄段的典型跑者在10英里的赛程中跑出8分钟到12分钟的距离,因此整个赛程的净时间在80到120分钟之间. 因此,我们将设定全球拦截中心时间的先验模式。 (这个中心截击比原始截击的QQ1@@要容易得多,</li>
+<li>我们非常确定, 10英里赛跑中, 我们并不非常确定这一增长的速度, 但认为每年大概在0. 将全球年龄系数确定为0。</li>
+<li>除了典型的选手的典型净时间外,我们对于选手之间的变异性( 0@@),以及选手的净时间可能与其回归趋势波动的程度(\(\sigma_y\)),没有事先明确的理解. 因此,我们将利用这些标准偏差参数的资料不足的前科。</li>
+</ul>
+<p>我们最后的分级随机截击模式如下,</p>
+<p>\[\begin{equation} \begin{split} Y_{ij} | \beta_{0j}, \beta_1, \sigma_y &amp; \sim N(\mu_{ij}, \sigma_y^2) \;\; \text{ with } \;\; \mu_{ij} = \beta_{0j} + \beta_1 X_{ij} \\ \beta_{0j} | \beta_0, \sigma_0 &amp; \stackrel{ind}{\sim} N(\beta_0, \sigma_0^2) \\ \beta_{0c} &amp; \sim N(100, 10^2) \\ \beta_1 &amp; \sim N(2.5, 1^2) \\ \sigma_y &amp; \sim \text{Exp}(0.072) \\ \sigma_0 &amp; \sim \text{Exp}(1). \\ \end{split} \tag{17.7} \end{equation}\]</p>
+<p>为了了解我们以前模型的综合含义,我们用stan glmer()模拟了20,000个以前的参数集,并使用以下特殊参数:</p>
+<ul>
+<li>我们以公式净~年龄+(1 + + )来指定按年龄分列的净乘数模型。 这基本上结合了非等级回归公式(净~年龄)和无预测器的等级模型(净~(1~Q)跑者).</li>
+<li>我们指定prefore PD = TRUE来表示我们希望从前,而不是后,模型中模拟参数.</li>
+</ul>
+<div class="sourceCode" id="cb353">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>模拟结果说明了我们36名跑者内部和之间的运行时间和年龄之间的关系的20 000种先验可行的假设。 虽然我们鼓励你们自己再多画几幅图, 但是我们只展示了4个预想, 这些先验的各种情况反映了我们对运行的总体不确定性。 虽然每种情况都符合我们的看法,即跑步者可能随着时间的推移而放慢速度,但增长率相当大。 此外,在研究跑者特有的回归线之间的距离时,有些情景反映了一种合理性,即跑者之间的差别很小,而另一些情景则表明一些跑者可能比其他跑者快得多。</p>
+<p>最后,我们还从以前的模型中模拟了100个种族结果数据集,涉及各种跑步者和年龄。 图17.3(右)中的100个密度图反映了这些模拟数据集中净时的分布. 在这些模拟中,还是有相当的距离的。 虽然有些结果跨度可笑(如负净运行时间),但模拟的多样性及其涵盖的一般价值组合充分反映了我们先验的理解和不确定性。 例如,由于25-30分钟的里程是一个良好的步行(不跑)速度,整个10英里赛程的上值大约250-300分钟似乎是合理的.</p>
+<div class="sourceCode" id="cb354">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+rng = np.random.default_rng(84735)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch17-prior-sim" style="display:block;"></span>
+<img alt="有两块地 左侧有4块按年龄(x轴)划分的净时间(y轴)的独立的地块. 每块地皮内有36条平行线. 在其中的2个地块中,这些线路几乎平坦,并且有非常相似的拦截. 在另外2块地块中,这些线路具有较陡峭的斜坡和较广泛的截击. 右图有100个密度曲线的净运行时间. 虽然大部分是钟形的,中心位置接近100分钟,但分布的变异很多. 有些曲线从-100到300分钟不等,而另一些曲线则从70到130分钟不等。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch17-prior-sim-1-4752c67abe5f.png" width="672"/>
+<p class="caption">图17.3:等级回归模型先验模型下的模拟情景(17.7). 左侧是4套预言中的36个跑者特异性关系, 右侧是密度图 包含100套前置的运行时间数据</p>
+</div>
+</div>
+<div class="section level3" id="chapter-17-random-intercepts" number="17.2.4">
+<h3>后期模拟和分析</h3>
+<p>让我们用一些数据反驳我们先验对运行时间和年龄之间的关系的理解。 我们按年龄为下面的36名选手 安排了跑步时间 这重申了我们的模式建设进程和我们以前的一些预感。 大多数跑者的时间会随着年龄的增长而增加,跑者本身之间也存在差异 — — 有些往往比其他跑者快。</p>
+<div class="sourceCode" id="cb355">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-719" style="display:block;"></span>
+<img alt="净时间(y-轴)对年龄(x-轴)为36个散点,每个跑者1个. 净时从60分钟到120分钟不等. 年龄在50至62岁之间。 每个跑者都有多个数据点. 这些积分中的行为从跑者到跑者都不同,无论是在他们典型的净时数还是随着年龄而变化的净时数." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-719-1-b85205aca6d7.png" width="576"/>
+<p class="caption">图17.4:36名跑者按年龄分列的净运行时间分布图。</p>
+</div>
+<p>将我们先验的理解与这些数据相结合,我们用一个战术快捷键来模拟后期随机截取模式(17.5)按年龄排列的净次数(17.5):我们用前期 PD=FALSE来更新运行的 model 1 prior. 我们鼓励你们继续检查以前的调子以及一些Markov 链诊断:</p>
+<div class="sourceCode" id="cb356">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 模拟后台
+running_model_1 = update(running_model_1_prior, prior_PD = FALSE)
+# 检查以前的规格
+prior_summary(running_model_1)
+# 马可夫链诊断
+mcmc_trace(running_model_1)
+mcmc_dens_overlay(running_model_1)
+mcmc_acf(running_model_1)
+neff_ratio(running_model_1)
+rhat(running_model_1)</code></pre>
+</div>
+<p>我们的模型中有40个参数:36个跑者专用拦截参数( 0@@),还有4个全球参数(\(\beta_0, \beta_1, \sigma_y, \sigma_0\)). 这些标签在stan glmer()模拟结果中标注如下:</p>
+<ul>
+<li>(截断)================================================================== (=========================================================================================================================================================================================</li>
+<li>年龄========</li>
+<li>b [(拦截)跑者:j] = \(b_{0j} = \beta_{0j} - \beta_0\) ,跑者XX1XX的基线速度与平均基线速度的区别</li>
+<li>西格玛======</li>
+<li>Sigma[运行者:(截断),(截断)]=+++++=</li>
+</ul>
+<p>我们将继续关注这些大主题,</p>
+<div class="section level4" id="posterior-analysis-of-the-global-relationship" number="17.2.4.1">
+<h4>对全球关系的后期分析</h4>
+<p>首先,考虑典型跑者运行时间和年龄之间的全球关系:</p>
+<p>\[\beta_0 + \beta_1 X .\]</p>
+<p>                                                                                                                        和XQ1@@,固定跨跑者,如下所示.</p>
+<div class="sourceCode" id="cb357">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+tidy_summary_1 = tidy(running_model_1, effects = "fixed",
+conf.int = TRUE, conf.level = 0.80)
+tidy_summary_1
+# bble:2×5
+term        estimate std.error conf.low conf.high
+&lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 (Intercept)    19.1     11.9       3.74     34.5
+2 age             1.30     0.213     1.02      1.58</code></pre>
+</div>
+<p>因此,典型的跑步者可能每年在1.02至1.58分钟之间放慢速度。 这个范围完全和舒适地超过0,这为典型的跑者往往随着年龄而减慢提供了重要证据. 这一论断在视觉上得到了以下200条可能存在的全球示范线的支持,这些示范线与它们的后中位数相叠加,它们都显示出运行时间和年龄之间的积极联系。 在绘制这些模型行时,请注意我们使用re fitted draws() 和 re formula = NA来指定我们对运行时间的全局性,而不是针对特定群体的模型感兴趣:</p>
+<div class="sourceCode" id="cb358">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+B0 = tidy_summary_1$estimate[1]
+B1 = tidy_summary_1$estimate[2]
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch17-post-global" style="display:block;"></span>
+<img alt="有201条模式线净时(y轴)对时(x轴). 200条黑线也有相似的坡度,然而拦截的长度大约为15分钟. 单蓝色模型线穿过200条黑线的中心." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch17-post-global-1-532244833d06.png" width="240"/>
+<p class="caption">FIGURE 17.5:200后可信的全球模式线,\(\beta_0 + \beta_1 X\),用于运行时间与年龄的关系.</p>
+</div>
+<div class="describe">
+<p>统计与实际意义</p>
+<p>当我们在上述讨论中使用“重大”一词时,我们指的是统计意义。 这仅仅表明存在一种积极的关系。 在这种情况下,我们还认为,每年减缓1.02分钟至1.58分钟具有有意义的规模,具有现实世界的影响。 也就是说,这种积极的关系实际上也非常重要。</p>
+</div>
+<p>不要让细节分散你对这里重要一击的注意力。 通过整合我们数据的分组结构,我们的分级随机拦截模型拥有完整的集合模型(17.1)所缺乏的:探测运行时间和年龄之间重要关系的力量. 我们第15章的讨论揭示了为何在我们的运行分析中发生这种情况:将所有跑者的数据集中起来掩盖了一个事实,即大多数个人跑者随着年龄的增长而放慢速度。</p>
+</div>
+<div class="section level4" id="posterior-analysis-of-group-specific-relationships" number="17.2.4.2">
+<h4>对特定群体关系的后期分析</h4>
+<p></p>
+<p>在我们的下一步, 让我们来检查一下分级随机拦截模式 揭示出什么 关于跑步者在净运行时间和年龄之间的特殊关系,</p>
+<p>\[\beta_{0j} + \beta_1 X_{ij} \; = (\beta_0 + b_{0j}) + \beta_1 X_{ij} .\]</p>
+<p>将全球年龄参数QQ0+++, 后者需要我们在第16章中建立的专门语法,从而需要一些耐心。 首先,b[(拦截)跑者:j]链与跑者特异性和全球截击XQ2@@的区别对应. 因此,我们通过扩展-draws()和突变()在b[(拦截)跑者:j]链中添加(截断)链来获得每个 QQ3@@的MC 链条。 然后我们用中位数 qi()来获取每个跑者QQ4@@链的后总结:QQ5@@:</p>
+<div class="sourceCode" id="cb359">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 特定跑者拦截情况前摘要
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>考虑跑者4和5的成绩,后中位点截击30.8分钟对6.7分钟,跑者4的基线速度似乎比跑者5慢,因此,在任何共用年龄,我们预计跑者4的跑速度大约比跑者5慢24.1分钟(\(30.8 - 6.7\)).  :</p>
+<div class="sourceCode" id="cb360">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>这些意见在下面的地块中得到了反映,这些地块展示了100个按年龄分列的跑者4岁和5岁净时间的后期可行模型:</p>
+<div class="sourceCode" id="cb361">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 跑者100个后期可行型号 4 &amp; 5
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch17-post-subject" style="display:block;"></span>
+<img alt="分别为净时(y-轴)对年龄(x-轴)的200条型号线,2条跑车每条100条,标注4和5条,在两条跑车中,线的坡度相似,随年龄而略有增加. 然而,跑者4的线路往往跌到100分钟以上,因此比跑者5的线路要高,跑者5的线路往往跌到85分钟以下。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch17-post-subject-1-bfef2be282a0.png" width="288"/>
+<p class="caption">图17.6:按年龄划分的100个可能运行时间的后验模型,============</p>
+</div>
+<div style="page-break-after: always;"></div>
+<p>我们也可以探索所有36名选手的型号, 快速比较,跑步特异性后置中位模型在下方绘制,并与后置中位全球模型XQ1@@相叠加. 这促使人们认识到,全球模式代表了运行时间与最普通跑者年龄之间的关系。 个人跑车模型围绕这个全球平均值而变化,有些具有更快的基准速度( 2@@),有些则具有较慢的基准速度(\(\beta_{0j} &gt; \beta_0\)).</p>
+<div class="sourceCode" id="cb362">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 使用全球模型绘制跑者专用模型
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch17-post-subject-trend" style="display:block;"></span>
+<img alt="净时(y-轴)对年龄(x-轴)有36条灰色模型线,每跑者1条. 这些都具有相同的坡度,但不同的截击距离大约50分钟。 有一条蓝色的模型线穿过灰色线的中央." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch17-post-subject-trend-1-fc7da12ddb0c.png" width="168"/>
+<p class="caption">FIGURE 17.7:从等级随机截击模型(gray)计算出来的我国36名跑者后中位数模型,带有后中位数全球模型(蓝色).</p>
+</div>
+</div>
+<div class="section level4" id="posterior-analysis-of-within--and-between-group-variability" number="17.2.4.3">
+<h4>对组内和组间差异的后置分析</h4>
+<p>所有关于跑者特异性模型变化的论述,让我们对最后剩余的模型参数进行后期审议, \(\sigma_y\)测量每个跑者内部平均回归模型的变异性,\(\sigma_0\)测量跑者之间的基线运行速度变异性. 图17.8中的模拟数据集提供了一些直觉. 在情景(a)中,两个组(XQ4@@)内部的均值模型的变异性与两个组(XQ5@@)模型的变异性相比相当小,导致这两个组之间的差别很大. 在情景(b)中,QQ6@@大于QQ7@@,导致各组之间几乎没有区别.</p>
+<div class="figure" style="text-align: center"><span id="fig:btwn-within-ch17" style="display:block;"></span>
+<img alt="y vs x有2个散点,标注为a和b. 两个地块都有50个蓝色点和50个黑色点. 两者还有两条平行的,向上倾斜的模型线,一条用于蓝点,一条用于黑点. 在图a中,蓝点和黑点并不重叠,并且紧紧围绕各自的模型线分布. 在图b中,蓝点和黑点有很多重叠之处,它们相当分散于各自的模型线周围." loading="lazy" src="/assets/img/bayes-rules-python-cn/btwn-within-ch17-1-eb1a8af0694b.png" width="336"/>
+<p class="caption">FIGURE 17.8:响应变量QQ0QX之间的关系模拟输出. 和预测器 \\ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ 和 \ 3 \ \ \ (b)。</p>
+</div>
+<div style="page-break-after: always;"></div>
+<p>差异参数的前置()摘要表明,运行中的分析更像是情景(a)而不是情景(b)。 估计在任何年龄时, 根据作者的评估(没有人是职业跑者!),在10英里长的赛程中,这一偏差相当小,表明跑步时间和跑步者年龄之间的关系相当密切。 相比之下,我们预计基线速度从跑者到跑者(XQ2@@)大约为13.3分钟。</p>
+<div class="sourceCode" id="cb363">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+tidy_sigma = tidy(running_model_1, effects = "ran_pars")
+tidy_sigma
+# A: 2 x 3
+term                    group    estimate
+&lt;chr&gt;                   &lt;chr&gt;       &lt;dbl&gt;
+1 sd_(Intercept).runner   runner      13.3
+2 sd_Observation.Residual Residual     5.25</code></pre>
+</div>
+<p>相比之下,后结果显示, \(\sigma_y &lt; \sigma_0\) — — 赛跑者之间的模型差异大于赛跑者内部的模型差异。 想想这个办法 如同第16.3.3节中简单的等级模型一样,我们可以将所有跑车和赛车比赛时间的总变异性分解为由跑车的变异性以及每个跑车的变异性(16.8)所解释的:</p>
+<p>\[\text{Var}(Y_{ij}) = \sigma_0^2 + \sigma_y^2 .\]</p>
+<p>因此,按比例(16.9),跑者之间的差别约占赛车时间总变化的86.62%(多数!),跑者内部各种族之间的波动解释了另外13.38%:</p>
+<div class="sourceCode" id="cb364">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+sigma_0 = tidy_sigma[1,3]
+sigma_y = tidy_sigma[2,3]
+sigma_0^2 / (sigma_0^2 + sigma_y^2)
+estimate
+1   0.8662
+sigma_y^2 / (sigma_0^2 + sigma_y^2)
+estimate
+1   0.1338</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="section level2" id="hierarchical-model-with-varying-intercepts-slopes" number="17.3">
+<h2>具有不同截取和坡度的等级模型</h2>
+<p>既然书里写得这么远, 你就会知道, 偶尔必须回避细节, 我们只有4名跑者的数据图17.9显示,等级随机拦截模式(17.5)可能过分简化现实。 虽然这个模型承认一些跑者往往比其他跑者更快,但它假设随着年龄变化的运行时间( 0@@)对每个跑者来说是一样的. 在现实中,虽然有些跑者以相似的速度慢下来(例如跑者4和5),但有些跑者以更快的速度慢下来(例如跑者20),有些则勉强慢下来(例如跑者29)。</p>
+<div class="sourceCode" id="cb365">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 在数据中绘制特定跑者模型
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch17-diff-slopes" style="display:block;"></span>
+<img alt="净运行时间(y-axis)对年龄(x-axis)有4个散片,标签为4、5、20和29。 每个都有5个数据点. 在图4和图5中,数据点呈适度上升趋势。 20号地块的上升趋势较快,29号地块的上升趋势相当平坦。 相比之下,4号和20号地块的数据点往往比29号地块的数据点高(100分钟以上)(低于70分钟)。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch17-diff-slopes-1-02ca811428e5.png" width="672"/>
+<p class="caption">图17.9:4个学科的运行时间与年龄的分布和观察到的趋势。</p>
+</div>
+<p>关于所有36名跑者观察到的趋势的简介,更全面地描述了随着年龄变化的净时间可能因跑者而异的程度:</p>
+<div class="sourceCode" id="cb366">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch17-all-sub" style="display:block;"></span>
+<img alt="由36条模型线组成的图案,为净时(y轴)对龄(x轴),每跑者1条. 几乎所有的这些线路都有正斜坡,虽然截流非常不同. 例如,一些跑者有跨年龄停留在70分钟以下的线路,而另一些则有停留在110分钟以上的线路。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch17-all-sub-1-529a8d3d00f7.png" width="240"/>
+<p class="caption">图17.10:36个学科(gray)与后期中位数模型(蓝色)的运行时间相对于年龄的观察趋势.</p>
+</div>
+<div class="quiz">
+<p>我们如何修改随机截击模式(17.5),以认识到运行时间随年龄变化的速度可能因跑者而异?</p>
+</div>
+<div class="section level3" id="model-building-1" number="17.3.1">
+<h3>示范建筑</h3>
+<p>在图17.10的启发下,我们的目标是建立一个模型,承认在运行时间和年龄之间的关系中,截流(即基线速度)和坡度(即速度随年龄变化)可能因跑者而异。 为此,我们可以将17.5年的全球年龄系数++0++替换为跑者特有的系数++1++. 因此,每个跑者XQ2@@的运行时间和年龄关系模式变为:</p>
+<p>\[\begin{equation} Y_{ij} | \beta_{0j}, \beta_{1j}, \sigma_y \sim N(\mu_{ij}, \sigma_y^2) \;\; \text{ where } \mu_{ij} = \beta_{0j} + \beta_{1j} X_{ij} . \tag{17.8} \end{equation}\]</p>
+<p>因此,正如我们在(17.5)中假设的,跑者专用拦截器通常分布在有些全球拦截器的周围,标准偏差为:\(\sigma_0\),我们现在也假设跑者专用年龄系数为:\(\beta_{1j}\),通常分布在一些全球年龄系数的周围,标准偏差为:\(\sigma_1\):</p>
+<p>\[\begin{equation} \beta_{0j} | \beta_0, \sigma_0 \sim N(\beta_0, \sigma_0^2) \;\;\;\; \text{ and } \;\;\;\; \beta_{1j} | \beta_1, \sigma_1 \sim N(\beta_1, \sigma_1^2) \tag{17.9} \end{equation}\]</p>
+<p>但是这些前科还没有完成 — — +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 让QQ3@@代表QQ4@@与QQ5@@之间的关联. 为了反映这种相关性,我们代表了XQ6X和XQ7XX的普通模式。</p>
+<p>\[\begin{equation} \left(\begin{array}{c} \beta_{0j} \\ \beta_{1j} \\ \end{array}\right) \vert \beta_0, \beta_1, \sigma_0, \sigma_1 \;\; \sim \;\; N\left( \left(\begin{array}{c} \beta_0 \\ \beta_1 \\ \end{array}\right), \; \Sigma \right) \tag{17.10} \end{equation}\]</p>
+<p>校对:Soup</p>
+<p>\[\begin{equation} \Sigma = \left(\begin{array}{cc} \sigma_0^2 &amp; \rho \sigma_0 \sigma_1 \\ \rho \sigma_0 \sigma_1 &amp; \sigma_1^2 \\ \end{array}\right) . \tag{17.11} \end{equation}\]</p>
+<p>虽然这段笔记显得令人难以忍受, 跑步截击与斜坡之间的关联, 这是等级模式的有趣特征! 图17.11提供了一些见解。 Plot (a) 说明了在XQ6和QQ7之间有着强烈的负面关联的情景 — — 起步较低(小XQ8)的模型往往以更快的速度增长(高XQ9). 在图(c)中, QQ10XX和XX11XXX之间有着强烈的正相关关系 — — 开始更高的模型(较大的XX12XX)也倾向于以更快的速度增长(更高的XX13XX). 在这两种极端之间,情节(b) 说明了群体特定拦截和斜坡之间没有关联的情况。</p>
+<div class="figure" style="text-align: center"><span id="fig:corr-ch17" style="display:block;"></span>
+<img alt="共有3块地块,每个地块有10条y vs x的模型线,它们有不同的截流和斜坡. 在a图中,截流较小的线往往有更大的坡度. 在图b中,拦截和斜坡之间没有明显的关系. 在c版图中,有较大截流的线条往往有较大坡度,在线条中形成扇形." loading="lazy" src="/assets/img/bayes-rules-python-cn/corr-ch17-1-a691908c59fb.png" width="480"/>
+<p class="caption">图17.11: 响应变量 &amp; # # # #0 # # 之间关系的模拟输出 (a),(b),以及(c),(c)。</p>
+</div>
+<p>结合我们正在进行的分析,考虑这种关联的影响。 第74条</p>
+<div class="quiz">
+<ol style="list-style-type: decimal">
+<li>In our running example, what would it mean for <span class="math inline">\(\beta_{0j}\)</span> and <span class="math inline">\(\beta_{1j}\)</span> to be <em>negatively</em> correlated?
+<ol style="list-style-type: lower-alpha">
+<li>起步较慢(即基线较高)的跑车也往往以更快的速度减速.</li>
+<li>跑步者的速度随着时间推移而放慢,</li>
+<li>启动速度较快(即基线较低)的跑车往往以更快的速度减速.</li>
+</ol></li>
+<li>同样,那意味着什么? 和XQ1@@是正相关?</li>
+</ol>
+</div>
+<p>完成的分级模型(17.12)将(17.8)和(17.10)与全球参数的前身拉在一起. 基于你可能想象的原因,这经常被称为一个等级随机拦截和坡度模型:</p>
+<p>\[\begin{equation} \begin{array}{rl} Y_{ij} | \beta_{0j}, \beta_{1j}, \sigma_y &amp; \sim N(\mu_{ij}, \sigma_y^2) \;\; \text{ where } \; \mu_{ij} = \beta_{0j} + \beta_{1j} X_{ij} \\ &amp; \\ \left(\begin{array}{c} \beta_{0j} \\ \beta_{1j} \\ \end{array}\right) \vert \beta_0, \beta_1, \sigma_0, \sigma_1 &amp; \sim N\left( \left(\begin{array}{c} \beta_0 \\ \beta_1 \\ \end{array}\right), \; \Sigma \right) \\ &amp; \\ \beta_{0c} &amp; \sim N(100, 10^2) \\ \beta_1 &amp; \sim N(2.5, 1^2) \\ \sigma_y &amp; \sim \text{Exp}(0.072) \\ \Sigma &amp; \sim \text{(decomposition of covariance)}. \\ \end{array} \tag{17.12} \end{equation}\]</p>
+<p>等效地,我们可以将随机截取和坡度重新表述为随机切换到全球截取和坡度:\(\mu_{ij} = (\beta_0 + b_{0j}) + (\beta_1 + b_{1j}) X_{ij}\)与 0@@.</p>
+<p>\[\left(\begin{array}{c} b_{0j} \\ b_{1j} \\ \end{array}\right) \vert \; \sigma_0, \sigma_1 \sim N\left( \left(\begin{array}{c} 0 \\ 0 \\ \end{array}\right), \; \Sigma \right) .\]</p>
+<div class="describe">
+<p>连接我们的等级模式</p>
+<p>随机截击型号(17.5)是特例(17.12). 当\(\sigma_1 = 0\),即组别特定年龄系数不因组别而异时,这两个模型是等效的.</p>
+</div>
+<p>这个模型中的大部分作品都很熟悉. 对于全球参数 ++0+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 我们之前用的信息很少 然而,还有一大块新的东西。 我们需要一个共同的先行模式, 来表达我们对++++,+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 在本书的写法中,stan glmer () 函数允许用户通过共变分解(covariance),或decov (),模型来先定义这个. 一般来说,这个模型将我们先验的共变矩阵模型分解为关于三个独立块的先验信息:</p>
+<ol style="list-style-type: decimal">
+<li><p>组合特定截击和斜坡的关联性,%% 0%% (图17.11)</p></li>
+<li><p>拦截和坡度因组别而异的合并程度, 0@@;</p></li>
+<li><p>(b) 由于截取次数不同而导致各组之间差异的相对比例,</p>
+<p>\[\pi_0 = \frac{\sigma_0^2}{\sigma_0^2 + \sigma_1^2} \;\; \text{ vs } \;\; \pi_1 = \frac{\sigma_1^2}{\sigma_0^2 + \sigma_1^2} .\]</p></li>
+</ol>
+<p>图17.12提供了这第三部作品的一些上下文,展现了\(\pi_0\)和\(\pi_1\)的关系的一些情景. 一般来说, 2@@和\(\pi_1\)总和为1,因此有着推拉的关系. 例如,当XQ4@@和XQ5@@时,截取(XQ6@@)的变异性与坡度(XQ7@@)的变异性相比是很大的. 因此,团体特异性模型之间的大多数变异性都由截取(plot a)的不同来解释. 相比之下,当QQ8@@和XQ9@@时,群体特异性模型之间的大多数变异都由坡度(plot c)的差异来解释. 在这些极端之间,当QQ10@@和QQ11@@都是大约0.5时,各组之间的变化大约一半可以用不同的截击来解释,另一半可以用不同的斜坡(plot b)来解释.</p>
+<div class="figure" style="text-align: center"><span id="fig:ch17-pi" style="display:block;"></span>
+<img alt="共有3块地块,每块都有20条y vs x的模型线. 在a图中,线与不同的截击平行,但坡度相等. 在图b中,线路有不同的截流和不同的坡度. 在c号地块中,线路共用相同的截击,但坡度不同." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch17-pi-1-139153d2e26b.png" width="528"/>
+<p class="caption">FIGURE 17.12:响应变量QQ0QX之间的关系模拟输出. 和预测器 ++++ 当 +++ 和 ++ 3 ++ (a), ++ 4 + (b), ++ 5 + 和 ++ 6 + (c) 时。</p>
+</div>
+<p>在我们的分析中,我们将使用低信息化的默认设置,用于分级随机截取和坡度模型: decov(reg = 1,conc = 1,形状= 1,比例=1)在rstainar注解中. 这就对上述三个部分提出了下列先验的假设:</p>
+<ol style="list-style-type: decimal">
+<li>关联性QQ0QQ在-1至1之间的任何地方都有同样的似然;</li>
+<li>我们以前关于拦截和坡度因跑者而异的总程度的资料很少;</li>
+<li>由不同截击导致的跑者之间变化的相对比例同样可能出现在0到1之间, 也就是说, 我们完全不确定从跑者到跑者的基准速度是否有更多、更少或相同的变化,</li>
+</ol>
+<p>我们将在这本书之前使用这些默认假设。 在默认值之外,事先指定和调整共变分解需要获得两个新的概率模型. 我们将在下一节提出更可选的细节, 并将好奇的读者介绍给Gabry和Goodrich(2020a),</p>
+</div>
+<div class="section level3" id="optional-the-decomposition-of-covariance-model" number="17.3.2">
+<h3>可选 : 共变模型的分解</h3>
+<p></p>
+<p>让我们仔细看看共变模型的分解。 首先,我们定义了三块,这三块对说明我们以前对随机拦截和坡度共变矩阵的理解很重要。 (17.11),以及由此定义的QQ1@@参数. 这些作品按照上述相应解释编号:</p>
+<p>\[\begin{array}{rlr} R &amp; = \left(\begin{array}{cc} 1 &amp; \rho \\ \rho &amp; 1 \end{array}\right) &amp; \text{(1)} \\ \tau &amp; = \sqrt{\sigma_0^2 + \sigma_1^2} &amp; \text{(2)}\\ \pi &amp; = \left(\begin{array}{c} \pi_0 \\ \pi_1 \end{array}\right) = \left(\begin{array}{c} \frac{\sigma_0^2}{\sigma_0^2 + \sigma_1^2} \\ \frac{\sigma_1^2}{\sigma_0^2 + \sigma_1^2} \end{array}\right) &amp; \text{(3)}\\ \end{array}\]</p>
+<p>我们可以将QQ0 分解成一个产品, 如果你知道一些线性代数,你可以确认这个结果,尽管我们可以重写QQ4@@的事实是这里最重要的:</p>
+<p>\[\begin{split} \left(\begin{array}{cc} \sigma_0^2 &amp; \rho\sigma_0\sigma_1 \\ \rho\sigma_0\sigma_1 &amp; \sigma_1^2 \end{array}\right) &amp; = \left(\begin{array}{cc} \sigma_0 &amp; 0 \\ 0 &amp; \sigma_1 \end{array}\right) \left(\begin{array}{cc} 1 &amp; \rho \\ \rho &amp; 1 \end{array}\right)\left(\begin{array}{cc} \sigma_0 &amp; 0 \\ 0 &amp; \sigma_1 \end{array}\right) = \text{diag}(\sigma_0, \sigma_1) \; R \; \text{diag}(\sigma_0, \sigma_1). \\ \end{split}\]</p>
+<p>我们可以进一步分解 ############################################################################################################################################################################################################################################################</p>
+<p>\[\left(\begin{array}{c} \sigma_0 \\ \sigma_1 \end{array}\right) = \tau \sqrt{\pi} .\]</p>
+<p>由于我们可以使用 QQ1、 QQ2 和 QQ3 来重写 QQ0 , 我们也可以通过 对这三部曲的 综合理解来表达我们之前对 QQ4 的理解。 之前我们只是简单地表达的</p>
+<p>\[\Sigma \sim \text{(decomposition of covariance)}\]</p>
+<p>实际由三个个人前科定义:</p>
+<p>\[\begin{split} R &amp; \sim \text{LKJ}(\eta) \\ \tau &amp; \sim \text{Gamma}(s, r) \\ \pi &amp; \sim \text{Dirichlet}(2, \delta) \\ \end{split}\]</p>
+<p>让我们从关联矩阵上的“LKJ”前模型开始, 在我们的车型(17.12)中,QQ2@@只取决于XQ3@@在组别截击QQ4@@和斜坡QQ5@@之间的关联. 因此,LKJ的前置模型简化为前置模型的QQ6@@与pdf.</p>
+<p>\[f(\rho) = \left[2^{1-2\eta}\frac{\Gamma(2\eta)}{\Gamma(\eta)\Gamma(\eta)} \right] (1 - \rho^2)^{\eta - 1} \;\;\;\; \text{ for } \rho \in [-1,1] . \]</p>
+<p>图17.13在各种规范化参数下展示了LKJ pdf,说明\(\eta\)与1的重要比较:</p>
+<ul>
+<li>虽然我们不确定这种关联是负的还是正的,</li>
+<li>LKJ模式在-1至1之间是统一的,</li>
+<li>设定QQ0XX表示先验的谅解,即特定群体的截击和斜坡最有可能是微弱的关联性(QQ1X). LKJ的拥抱值接近0.</li>
+</ul>
+<div class="figure" style="text-align: center"><span id="fig:ch17-lkj" style="display:block;"></span>
+<img alt="rho有3个密度地块,标注为LKJ(0.5),LKJ(1),和LKJ(4). rho值从−1到1. LKJ(0.5)密度曲线在0左右对称. 其最高值为−1和1的极端rho值,中间为扁平. LKJ(2)密度曲线平坦,高度0.5. LKJ(4)曲线呈钟形,以0为中心,范围约为−0.95至0.95." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch17-lkj-1-93ba6268badf.png" width="480"/>
+<p class="caption">图17.13:LKJ pdf在三个规范化参数下.</p>
+</div>
+<p>其次,对于拦截和坡度的总标准偏差, 0@@,我们使用“通常的”Gamma前(或它的标志性特例). 最后,考虑XQ1@@和XQ2@@参数的前置. 回顾XQ3X和QQ4XX分别测量由于截击和斜度不同而导致各组之间差异的相对比例。 因此,++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</p>
+<p>\[\pi_0 + \pi_1 = \frac{\sigma_0^2}{\sigma_0^2 + \sigma_1^2} + \frac{\sigma_1^2}{\sigma_0^2 + \sigma_1^2} = 1.\]</p>
+<p>因此,我们可以使用联合对称的Dirichlet +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 对称的 Dirichlet pdf 定义了有效的 QQ3@@对的相对前置性:</p>
+<p>\[f(\pi_0,\pi_1) = \frac{\Gamma(2\delta)}{\Gamma(\delta)\Gamma(\delta)} (\pi_0 \pi_1)^{\delta - 1} \;\;\;\; \text{ for } \; \pi_0,\pi_1 \in [0,1] \; \text{ and } \; \pi_0 + \pi_1 = 1 .\]</p>
+<p>事实上,在特例中,当我们只有2个组别特定的参数, 0@@和\(\beta_{1j}\),\((\pi_0, \pi_1)\)的对称Dirichlet模型就用:</p>
+<p>\[\pi_0 \sim \text{Beta}(\delta, \delta) \;\; \text{ and } \;\;\pi_1 = 1 - \pi_0 .\]</p>
+<p>图17.14 显示了在各种浓度参数下对齐的边际对称Dirichlet pdf,即Beta pdf,用于QQ0@@,说明了XQ2@@与1:</p>
+<ul>
+<li>设置 QQ0 QQ 将更多时间放在 0 或 1 左右的比例上。 这表明先验的理解是,各组之间差异较小(XQ2@@)或相对较少(XQ3@@)的原因是截取的不同而不是坡度的不同(图17.12地块a和c)。</li>
+<li>表示截取的变异性解释了各个群体之间的变异性,</li>
+<li>设定 \(\delta &gt; 1\) 表示先验的谅解,即各组之间的变异性有大约一半是由截击的不同来解释,另一半是由坡度的不同来解释(图17.12图b). 这之前的拥抱值是0.5。</li>
+</ul>
+<div class="figure" style="text-align: center"><span id="fig:ch17-dir" style="display:block;"></span>
+<img alt="有3块密度地块为pi 0,标注为Dirichlet(0.5),Drichlet(1),和Drichlet(4). pi 0值从0到1. Dirichlet(0.5)密度曲线在0.5左右对称. 其最高值为极Pi 0值为0和1,中间为扁平. 迪里希莱特(1)密度曲线平坦,高度为1. 迪里希莱特(4)曲线呈钟形,中心为0.5,范围约为0.05至0.95." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch17-dir-1-ebd1183a0dda.png" width="480"/>
+<p class="caption">图17.14: 三个浓度参数下的边际对称Dirichlet pdf.</p>
+</div>
+<p>当我们的模型同时有特定组的截击和坡度时,我们将使用下列差异前缀的默认分解,这表示对特定组的截击和坡度之间的关联性,特定组模型中的整体变异性,以及以不同截击与不同坡度来解释这种变异性的相对程度等具有一般的不确定性:</p>
+<p>\[\begin{split} R &amp; \sim \text{LKJ}(1) \\ \tau &amp; \sim \text{Gamma(1,1)}, \text{ i.e., } \text{Exp}(1) \\ \pi &amp; \sim \text{Dirichlet}(2, 1) \\ \end{split}\]</p>
+<p>在rstanarm注音中,此前缀用 decov(reg = 1,conc = 1,形状= 1,scale = 1)表示. 要在前面调谐,您可以更改 LKJ 矩形化参数 \\ 0\\\, Gamma 形状和尺度参数, 以及 Dirichlet conc entration 参数 \\ 1\。</p>
+</div>
+<div class="section level3" id="ch-17-rand-int-slope-sim" number="17.3.3">
+<h3>后期模拟和分析</h3>
+<p>最后,让我们模拟我们分级随机拦截和坡度模式运行时间(17.12)。 这需要稍稍调整一下我们的stan glmer()调用:而不是使用公式净~年龄+(1~Q)跑者,而是使用净~年龄+(年龄+)跑者.</p>
+<div class="sourceCode" id="cb367">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="warning">
+<p>这个模拟会很惨的 注意我们stan glmer()语法中的附加参数: 适应 delta = 0.9999。 简而言之,life delta是基础MCMC算法的调试参数,其技术细节不在这本书的范围之内. 在这个例子之前, 我们一直在使用0. 95 的默认调整值来进行模拟。 然而,在这个具体的例子中,默认产生警告: 热身后发生了1次不同的过渡. 这个警告表明,MCMC算法在探索我们的参数值的后期可视范围方面有一段艰难的时间. 当遇到这一问题时,一个策略是将适应 delta的数值提升到接近1的某个值,这样做会产生更慢但更稳定的模拟。 关于不同过渡的更多技术细节和如何解决这些问题,我们建议Modrak(2019年)。</p>
+</div>
+<div class="section level4" id="posterior-analysis-of-the-global-and-group-specific-parameters" number="17.3.3.1">
+<h4>对全球和特定群体参数的前期分析</h4>
+<p>还记得认为随机拦截模型中的40个参数是很多吗? 这个新模型有78个参数:36个跑者专用截取参数 \(\beta_{0j}\),36个跑者专用年龄系数 \(\beta_{1j}\),以及6个全球参数 (\(\beta_0, \beta_1, \sigma_y, \sigma_0, \sigma_1, \rho\)). 让我们从运行时间和年龄关系的全球模式开始逐块审视这些,</p>
+<p>\[\beta_0 + \beta_1 X .\]</p>
+<p>这里的随机截击和倾斜模型(17.12)的结果与随机截击模型(17.5)的结果相当相似:后期中位模型为18.5+1.32岁.</p>
+<div class="sourceCode" id="cb368">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 全球回归参数快速汇总
+tidy(running_model_2, effects = "fixed", conf.int = TRUE, conf.level = 0.80)
+# bble:2×5
+term        estimate std.error conf.low conf.high
+&lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 (Intercept)    18.5     11.6       3.61     33.6
+2 age             1.32     0.217     1.04      1.59</code></pre>
+</div>
+<p>全球平均模式QQ0QQ捕捉平均跑者运行时间与年龄之间的关系, 这两种模式开始出现差异的,是它们对与跑者具体关系的评估。 获取跑者专用截击和坡度的MCMC链具有相当的技术性. 我们鼓励你们通过下面的代码逐行选择 下面是一些重要的细节:</p>
+<ul>
+<li>spale draws () 使用 b [term, runder] 来抓取所有跑者特定参数的链条。 目前,这些链条与XQ0+X和XQ1+X相对应,是跑步特异性与全球截击和年龄系数的区别.</li>
+<li>pivot 宽度 () 为 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\</li>
+<li>突变()通过对全局性(阻断)和跑者特定调整b (阻断)进行组合,获得跑者特异性截击QQ0@@,命名为跑者 阻断. 跑者特异性系数, 跑者年龄,</li>
+</ul>
+<div class="sourceCode" id="cb369">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 为跑者特定截击和斜坡获取MCMC链
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>从这些链条上,我们可以获得每个跑者特定截击和年龄系数的后置中位数. 由于我们在这里只获得后置中位数,我们使用组合 by()组合的总结(),而不是使用中位 qi()函数:</p>
+<div class="sourceCode" id="cb370">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 跑者特定型号的前中位数
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>图17.15列出所有36名选手的后期中位数模型。</p>
+<div class="sourceCode" id="cb371">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch17-post-meds-2" style="display:block;"></span>
+<img alt="净时(y-轴)对时(x-轴)有36条灰色模型线. 他们有不同的截击 大约40分钟。 它们都有中度正倾斜坡,各跑者之间略有不同。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch17-post-meds-2-1-f0b0f673accd.png" width="240"/>
+<p class="caption">图17.15: 从等级随机截击和坡度模型计算出来的36名跑者后期中位模型.</p>
+</div>
+<p>对 你惊讶吗? 我们有点惊讶。 坡度确实不同,但并没有我们预期的那么剧烈。 但后来我们想起 收缩! 考虑试样跑者1和10。 他们的后传显示,跑者10的运行时间平均每年只增加1.06分钟,跑者1的运行时间平均每年增加1.75分钟:</p>
+<div class="sourceCode" id="cb372">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:balance-ch-17" style="display:block;"></span>
+<img alt="有2块净运行时间(y轴)对年龄(x轴),标签为1号和10号. 每块地上都有一条近乎平坦的黑线 落在垂直的中心 每一个都有一个蓝线和一个虚线. 蓝色和破碎的线条在1号地块中落在黑线以下,在10号地块中则在黑线以上. 破折线有相似的,中度的坡度,大于黑线的坡度. 然而,蓝线的坡度不同——在地块1中为负数,在地块10中为正数." loading="lazy" src="/assets/img/bayes-rules-python-cn/balance-ch-17-1-a28bca36cfd4.png" width="364.8"/>
+<p class="caption">图17.16: 对于跑者1和10,从分级随机拦截和坡度模型(dashed)中运行时间和年龄之间的后中位关系与观察到的无集合模型(蓝色)和完整的集合模型(黑色)形成对比.</p>
+</div>
+<p>图17.16将这些跑者1和10的后置中位数模型对比为完整的集合后置模型(黑色)和没有集合后置模型(蓝色). 同往常一样,等级模型在这两个极端之间达成平衡. 和没有集合模型一样,等级模型的确在两个跑者之间有差异. 然而,差别并不那么明显。 等级模型从没有集合模型中抽出,转向完整的集合模型。 虽然这种萎缩对跑者10来说是微妙的,但跑者1的跑步时间和年龄之间的关联从负切换为正切换. 这是预料之中的。 我们的等级模型假设,一个跑者的行为可以告诉我们另一个跑者的行为。 此外,我们对于每个跑者的数据点很少,最多只有7个比赛。 在观察如此之少的情况下,其他跑者的信息对于我们对任何个人的后期理解具有充分的影响(正如它应该的那样)。 就跑者1而言,其他35名跑者的数据足以让我们认为,这名跑者最终也会放慢速度。</p>
+</div>
+<div class="section level4" id="posterior-analysis-of-within--and-between-group-variability-1" number="17.3.3.2">
+<h4>对组内和组间差异的后置分析</h4>
+<p>退后,我们也应该问自己:值得吗? 将随机跑车特有的年龄系数纳入我们的运行时间模型中,按年龄划分了37个参数。 但至少从视觉上看, 为了对这一变化进行数字评估,我们可以审查X\(\sigma_1\)的后期趋势。 (sd age.runner) (英语). 我们也会查一查@@@@@@@@@@@@@@@@@@@#@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@p@@@@@@@@@@@@@@@@@@@@@@@@////////////////</p>
+<div class="sourceCode" id="cb373">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+tidy(running_model_2, effects = "ran_pars")
+# A:4×3
+term                       group    estimate
+&lt;chr&gt;                      &lt;chr&gt;       &lt;dbl&gt;
+1 sd_(Intercept).runner      runner     1.34
+2 sd_age.runner              runner     0.251
+3 cor_(Intercept).age.runner runner    -0.0955
+4 sd_Observation.Residual    Residual   5.17</code></pre>
+</div>
+<p>考虑这一产出的一些突出内容:</p>
+<ul>
+<li><p>年龄系数 ××××××××年的标准偏差可能为每年0.251分钟左右. 在10英里赛跑的规模上,这说明跑者在跑步时间随年龄变化的速度方面差异很小.</p></li>
+<li><p>根据%%%%%%%的输出, 个人跑者的净时数往往偏离自己的平均时数大约5.17分钟。</p></li>
+<li><p>跑者特异性参数QQ0++与XQ1+++之间, 因此,似乎,从一开始速度更快的跑者往往以更快的速度减速。</p></li>
+</ul>
+<div style="page-break-after: always;"></div>
+</div>
+</div>
+</div>
+<div class="section level2" id="model-evaluation-selection" number="17.4">
+<h2>模式评价和选择</h2>
+<p></p>
+<p>目前我们按年龄构建了三种运行时间模式的序列:完全集合模式(17.1),分级随机截击模式(17.5),分级随机截击模式(17.12). 图17.17提醒人们注意这三个模型背后的一般假设。</p>
+<div class="figure" style="text-align: center"><span id="fig:hierarchical-regression" style="display:block;"></span>
+<img alt="有3块净时间(y轴)对年龄(x轴)的地块. 左地块有一个单线,几乎平坦,但正坡. 中间地块有36条平行,向上斜线. 右地块有36条线路,有不同的截流和斜坡." loading="lazy" src="/assets/img/bayes-rules-python-cn/hierarchical-regression-1-c752e4486b6b.png" width="672"/>
+<p class="caption">FIGURE 17.17:在使用群结构数据时,使用XQ0+X的三种不同方法来建模XQ0+X的理念背后:完整集合(左),分级随机截击(中),分级随机截击和倾斜(右).</p>
+</div>
+<p>那该用哪一个? 为了回答这个问题,我们可以利用第十章和第十一章的框架来比较我们的三个模式,并问这些问题:(1) 每个模式如何公平? (单位:千美元) 2)每个模型有多错? (单位:千美元) 3)每个模型的后期预测有多准确? 考虑问题(1)。 每个模型的背景和数据收集程序相同。 由于数据被匿名化,跑者意识到赛事结果将会公开,因此我们认为这个数据收集过程是公平的. 此外,虽然模型对运行时间和年龄之间的关系得出了略有不同的结论(例如,等级模型得出了这种关系是重要的结论),但这些结论似乎都没有对社会或个人产生消极影响。 因此,我们的三种模式同样公平。</p>
+<p>接下来,审议问题(2)。 事后预测检查表明,完整的集合模型相对低估了运行时间的变异性 — — 从完整的集合后模拟的运行时间数据集往往比我们实际观察到的运行时间略小一些。 因此,完整的集合模型比分级模型更错误.</p>
+<div class="sourceCode" id="cb374">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+pp_check(complete_pooled_model) +
+labs(x = "net", title = "complete pooled model")
+pp_check(running_model_1) +
+labs(x = "net", title = "running model 1")
+pp_check(running_model_2) +
+labs(x = "net", title = "running model 2")</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-741" style="display:block;"></span>
+<img alt="有3块地块,标注完整的集合模型,运行1号模型,运行2号模型. 每一个中都有50个浅蓝色密度曲线的模拟净运行时间数据,以及观测到的净运行时间数据相同的1个深蓝色密度曲线. 这种深蓝色的密度曲线大致呈钟形,有两座峰近80分钟和100分钟,从大约50分钟到125分钟不等. 在每幅图中,50轻蓝密度曲线相互类似,与深蓝色曲线相似. 略有例外的是完全集合模型中,50轻蓝密度曲线比深蓝色曲线略窄." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-741-1-c113237ec558.png" width="576"/>
+<p class="caption">FIGURE 17.18:对完整集合模型(左),随机截击模型(中),以及随机截击和倾斜模型(右)进行后期预测检查.</p>
+</div>
+<p>事实上,我们知道完整的集合模式是错误的。 由于忽略了数据的分组结构,它错误地假设每个种族观察都独立于其他种族. 视权衡情况而定,我们也许会接受这种错误,但在一些分析中简化假设。 然而,至少有两个迹象表明,这对我们进行的分析来说是一个错误。</p>
+<ol style="list-style-type: decimal">
+<li>完全的集合模式不够强大,</li>
+<li>我们不仅看到一些跑者比其他跑者慢得多的视觉证据,</li>
+</ol>
+<p>讨论结束后, 在选择运行 model 1和运行 model 2时,考虑问题(3):这些模型的预测精度是什么? 回顾第11章中回答这一问题的一些办法:后期预测摘要和ELPD。 首先,我们利用海湾规则包中的预测 摘要()函数来比较这两个模型对作为我们样本一部分的36个跑者运行结果的预测。</p>
+<div class="sourceCode" id="cb375">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 计算预测摘要
+rng = np.random.default_rng(84735)
+prediction_summary(model = running_model_1, data = running)
+mae mae_scaled within_50 within_95
+1 2.626      0.456    0.6865     0.973
+prediction_summary(model = running_model_2, data = running)
+mae mae_scaled within_50 within_95
+1 2.53     0.4424    0.7027     0.973</code></pre>
+</div>
+<p>按所有度量,运行 model 1和运行 model 2产生类似的准确的后期预测. 对这两种模型来说,观测到的净运行时间往往为2.63分钟和2.53分钟,即0.46和0.44标准差,与它们的后期预测值相差甚远。 后期预测模型在观测到的运行时间中,50%和95%的预测间隔之内,其覆盖范围也类似。</p>
+<p>除了我们自己的跑者样本之外,我们还可以利用预测 摘要 cv()来获得经过验证的后期预测准确性指标。 这个想法与非等级模型相同,但细节有所变化,以反映我们的数据的分组结构. 为了探究我们的模型如何预测那些没有列入样本数据的跑步者的运行行为,我们把跑步者,而不是个人种族结果,分成不同的折叠。 例如,对于有36个跑者10倍的交叉验证,每个折叠将包含样本跑者中3或4个的数据. 因此,我们将利用32个或33个样本跑者的数据,对10个模型的每个模型进行培训,并在其他3个或4个模型上进行测试。 我们包含了好奇者的代码 但不要在这里运行。</p>
+<div class="sourceCode" id="cb376">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+prediction_summary_cv(model = running_model_1, data = running,
+k = 10, group = "runner")</code></pre>
+</div>
+<div class="warning">
+<p>对于等级模型,预测 summary cv () 函数将组,而不是单个结果 \\\\\\\\\\\\\\分为不同的折叠. 因此,如果我们有10组,10倍的交叉验证将利用9组的数据建立每个培训模式,并在第10组测试. 当我们想评估我们的模型在多大程度上概括到我们没有数据样本以外的新群体时,这种方法是有道理的。 但这不是我们的目标。 相反,我们不妨评估我们的模型如何很好地预测我们至少掌握一些数据的各群体的新成果。 例如,我们不评估我们的模型对新选手净时数的预测如何,我们也许希望评估它如何预测一个我们掌握过赛事数据的选手的下一次净时数。 简言之,预测 摘要 cv()并非包罗万象. 为了讨论对分级模式进行交叉验证的各种办法,以及如何从头实施这些办法,我们建议Vehtari(2019年)。</p>
+</div>
+<p>最后,考虑我们两个等级模式的最后比较:相互验证的预期对数密度。 运行 model 1的估计ELPD比运行 model 2的ELPD低,尽管在两个标准错误之内. 因此,通过这一衡量标准,我们两个等级模型的后期预测准确性没有显著差异。</p>
+<div class="sourceCode" id="cb377">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 为两个模型计算ELPD
+elpd_hierarchical_1 = loo(running_model_1)
+elpd_hierarchical_2 = loo(running_model_2)
+# 比较ELPD
+loo_compare(elpd_hierarchical_1, elpd_hierarchical_2)
+elpd_diff se_diff
+running_model_2  0.0       0.0
+running_model_1 -1.6       1.2</code></pre>
+</div>
+<p>在反思我们的模型评估后, 我们准备做出最后决定: 我们选择运行 模型 1。 运行时间与年龄之间的关系。 运行 model 1而不是运行 model 2的选择就由此而来:运行 model 2中附加的随机年龄系数所带来的复杂性几乎没有产生明显的改变或好处. 因此,增加的复杂性根本不值得(至少对我们来说).</p>
+</div>
+<div class="section level2" id="posterior-prediction-2" number="17.5">
+<h2>预测</h2>
+<p></p>
+<p>最后,让我们用我们喜欢的模型,运行 模型 1,来做一些后期预测. 假设我们想预测三个不同的跑者在61岁时会达到的运行时间, 虽然迈尔斯的跑步能力是个谜, 如果趋势继续下去,我们预计10号跑者的时间将比1号跑者的时间要慢,因为他们都是61岁:</p>
+<div class="sourceCode" id="cb378">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 选手1和10的选手特定选手趋势
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-747" style="display:block;"></span>
+<img alt="净运行时间(y-轴)对年龄(x-轴)有2个散点,标签分别为1和10,分别有4和5个数据点. 就图1而言,4个数据点都低于80分钟,在4年的时间里保持相当平坦。 对于10号地块,5个数据点全部降到100分钟以下,并增加到6年的130分钟。" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-747-1-7cec2d3d6991.png" width="288"/>
+<p class="caption">图17.19: 观察到的1号和10号跑者的净运行时间按年龄分列。</p>
+</div>
+<p>一般来说,让 @@0 @@ @@ @@ @@ @@  denote  denote @@  denote @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@  @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@  age  age  age  age  age  age  age  age  age @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ ’ @@ ’ ’ ’ ’ ’ ’ ’ 例如第16章中, 我们可以通过模拟第一层(17.3)的预测来估算XQ3@@的后期预测模型,</p>
+<p>\[Y_{\text{new},j}^{(i)} | \beta_{0j}, \beta_1, \sigma_y \; \sim \; N\left(\mu_{ij}^{(i)}, \left(\sigma_y^{(i)}\right)^2\right) \;\; \text{ where } \; \mu_{ij}^{(i)} = \beta_{0j}^{(i)} + \beta_1^{(i)} \cdot 61 .\]</p>
+<p>由此形成的后期预测模型将反映跑者XQ0XX赛时的两个不确定性来源:组内采样变异性XQ1X(我们不能完全预测跑者XX2XX时间从他们的平均模型中预测);后期变异性在XQ3XX,XQ4XX,和XQ5XX(确定跑者XX6XXX的运行时间和年龄关系的参数是未知的和随机的). 由于我们没有任何关于我们新选手迈尔斯基线速度的数据, 预测他的赛车时间还有第三个不确定因素:组群采样变异性QQ7Q(底线速度因选手而异). 尽管我们建议用“手”来模拟后期预测的概念(正如我们在第16章中所做的那样),</p>
+<div class="sourceCode" id="cb379">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 为3名跑者模拟后预测模型
+rng = np.random.default_rng(84735)
+predict_next_race = posterior_predict(
+running_model_1,
+newdata = data.frame(runner = c("1", "Miles", "10"),
+age = c(61, 61, 61)))</code></pre>
+</div>
+<p>这些后期预测模型如图17.20所示。 我们期望10号跑者在61岁时, 我们的迈尔斯净时间的后期预测模型介于这两个极端之间。 之后的中位数预测还不到100分钟,</p>
+<div class="sourceCode" id="cb380">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+B0 + B1 * 61
+[1] 98.54</code></pre>
+</div>
+<p>我们的默认假设是,他是一名普通跑者。 这一假设的不确定性反映在相对广泛的后期预测模型中。 自然,在观察了1和10的跑者数据后,我们更确定他们61岁时会有多快。 但Miles是一张野生卡片——他可能非常快或非常慢!</p>
+<div class="sourceCode" id="cb381">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 后期预测模型图
+mcmc_areas(predict_next_race, prob = 0.8) +
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch17-pred-spot" style="display:block;"></span>
+<img alt="净运行时间(x轴)有3个钟形密度图,每个跑者1个:跑者1个,迈尔斯,跑者10个. 跑者1的密度地块以85分钟左右为中心,从大约65分钟到105分钟不等. 跑者10的密度地块要高得多,与跑者1的密度地块几乎没有重叠. 它以125分钟左右为中心,大约从105分钟到145分钟不等。 迈尔斯的密度地块落在中心,宽得多,因此与跑者1号和10号的地块重叠. 迈尔斯的密度地块以100分钟左右为中心,从大约40分钟到160分钟不等." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch17-pred-spot-1-d4d0d18e5f8d.png" width="384"/>
+<p class="caption">FIGURE 17.20:61岁采样跑者1岁和10岁净跑时间的预测模型,以及Miles,我们最初的试样中没有的跑者。</p>
+</div>
+<div style="page-break-after: always;"></div>
+</div>
+<div class="section level2" id="details-longitudinal-data" number="17.6">
+<h2>详细情况:纵向数据</h2>
+<p>按年龄分列的净时间运行数据为纵向数据。 我们观察每个赛跑者在一段时间内的主要兴趣所在。 尽管我们这种关系的分级模式说明了任何跑者运行时间的关联性,但它们对这种关联性作了简化的假设:所有年龄的人都是一样的。 与此相对照,你也许可以想象一个年龄的观察与类似年龄的观察更紧密地相关. 例如,跑者在60岁时的净时间与其在59岁时的净时间的关系可能比在50岁时更为密切。 这超出了本书的范围,但我们可以调整我们等级模型的结构,以考虑纵向关联结构。 我们鼓励有兴趣的读者查看Bayeslongitudinal R包(Carreño and Cuervo 2017)和赖德和沃雷(1982年)的奠基论文.</p>
+</div>
+<div class="section level2" id="example-danceability" number="17.7">
+<h2>示例:可跳舞性</h2>
+<p>让我们重新审视第16章的数据, 在那里,我们研究了一个关于歌曲流行度的分级模型, 说明我们把数据 和每个被取样的艺术家的多首歌曲组合在一起。 我们在此将重点转向一首歌的舞蹈性, 一首歌的舞容和声优均以0(低)至100(高)的尺度来衡量. 因此,低等的分数被分配到负/悲伤/愤怒的歌曲,高等的分数被分配到正/快乐/喜悦的歌曲.</p>
+<p>但对于舞蹈、流派和华丽之间可能存在的关系, 因此,我们将在分析过程中利用资料不足的前科。 从前科开始,将必要的数据加载到本分析中:</p>
+<div class="sourceCode" id="cb382">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 导入和扭曲数据
+data(spotify)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>图17.21显示了这些变量之间关系的一些全球模式和艺术家特有的模式:</p>
+<div class="sourceCode" id="cb383">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch17-spotify-data" style="display:block;"></span>
+<img alt="有3块可舞(y-轴)的地块,范围从20到90. 左图中各有6个流派的可舞布景. 盒子里有很多重叠的地方 有着相似的中心和分布 说唱流派的票箱略高,而摇滚流派的票箱更低。 中间的情节是可舞性对valence(x轴)的散射图,范围从0到100不等. 有350个数据点显示出舞蹈和英勇之间的温和、积极的关系。 右图有44条可舞性对华丽的模范线(x轴),每艺术家1条. 这些拦截方式不同,有些线路低于其他人的受欢迎程度. 它们也有不同的坡度,多数为正坡." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch17-spotify-data-1-e6650b585814.png" width="768"/>
+<p class="caption">图17.21: 舞蹈性与流派(左)和华丽(中)的关系,用于个人歌曲. 舞蹈与艺术家的英勇关系(右).</p>
+</div>
+<p>当将所有歌曲集中在一起时,注意摇滚歌曲往往最不舞,说唱歌曲最多(略微差). 此外,舞蹈性似乎与英勇性有微弱但积极的联系。 说得通 悲歌往往不会激发舞蹈. 全球模式可能掩盖实际发生的情况。 为此,最终版图中的艺术家特异性模型描绘了更为详尽的画面. 这里要讨论的两个关键主题是:(1) 有些艺术家的歌曲往往比其他的歌更能跳舞,(2) 艺术家之间舞蹈能力和价值之间的联系可能有所不同,尽管这通常是正面的。</p>
+<p>要模拟这些关系,让我们来定义一些标记。 为歌\(i\). 在艺术家的作品中, 其次,注意有6种不同的流派,其中edm是基线或参考. 因此,我们必须确定另外5个预测器,每个非编辑流派各一个。 具体地说,让QQ4@@成为一首歌曲是否分别落在拉丁语,流行语,r&amp;b,rap,和摇滚流派中的指标. 举例来说,</p>
+<p>\[X_{ij2} = \begin{cases} 1 &amp; \text{ Latin genre} \\ 0 &amp; \text{ otherwise}. \\ \end{cases}\]</p>
+<p>因此,对于一首编曲来说,所有流派指标都是0. 我们将会考虑两种可能的舞蹈模式, 模式1的第一层假设:</p>
+<p>\[\mu_{ij} = \beta_{0j} + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \cdots + \beta_6 X_{ij6} .\]</p>
+<p>全球系数 QQ0 QQ 反映了一个假设,即舞蹈性,华丽性和流派之间的关系对于每个艺术家都是相似的. 然而,艺术家专有的截击XQ1@@假设,当持有一首歌曲的华丽和流派时,一些艺术家的歌曲往往比其他艺术家的歌曲更能跳舞.</p>
+<p>模型2的第一层包含额外的艺术家特有价值系数,假设 QQ0QQ与</p>
+<p>\[\mu_{ij} = \beta_{0j} + \beta_{1j} X_{ij1} + \beta_2 X_{ij2} + \cdots + \beta_6 X_{ij6} .\]</p>
+<p>因此,与模型1不同的是,模型2假设舞蹈与英勇的关系可能因艺术家而异. 这与上面的艺术家特有模式是一致的——对于大多数艺术家来说,舞蹈能力随着歌曲的快乐而增加. 对其他人来说,它减少了。 两种模型都利用以下信息薄弱的前科进行模拟:</p>
+<!-- AJ: the formulas don't fit on the first line, so I think we'll need to not have tidy code here  -->
+<div class="sourceCode" id="cb384">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>对这两个模型的后期预测检查相似,两个模型都产生后期模拟的歌曲舞容数据集,这些数据集与原始歌曲数据中的主要特征一致.</p>
+<div class="sourceCode" id="cb385">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+pp_check(spotify_model_1) +
+xlab("danceability")
+pp_check(spotify_model_2) +
+xlab("danceability")</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-755" style="display:block;"></span>
+<img alt="有2块地块,一块对应 model 1,另一块对应 model 2. 它们似乎非常相似。 每块都有51块密度的可舞地,50块为浅蓝色,1块为深蓝色. 都类似——大致呈钟形,以65个左右为中心,范围从30到100个不等. 深蓝色线的左倾略多一点,中心稍高。" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-755-1-b7f87e5f6a11.png" width="480"/>
+<p class="caption">图17.22:Spotify Model 1(左)和Model 2(右)的前预测检查。</p>
+</div>
+<p>然而,在比较他们的ELPD后,我们认为最好采用模式1。 两种型号的质量没有显著差异,型号1则基本简单. 如果没有更多的艺术家数据,很难知道艺术家特有的价值系数是否微不足道,因为舞蹈性和价值之间的关系并不因艺术家而异,或者我们没有足够数据来确定每个艺术家是否如此。</p>
+<div class="sourceCode" id="cb386">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 为两个模型计算ELPD
+elpd_spotify_1 = loo(spotify_model_1)
+elpd_spotify_2 = loo(spotify_model_2)
+# 比较ELPD
+loo_compare(elpd_spotify_1, elpd_spotify_2)
+elpd_diff se_diff
+spotify_model_2  0.0       0.0
+spotify_model_1 -5.3       3.0</code></pre>
+</div>
+<p>挖掘到模型1,首先考虑全球模型参数( 0@@)的后总结. 对于任何流派中的平均艺术家来说,我们预计舞蹈能力每提高10个百分点,就会增加2.16至3分,这在统计学上是显著的,但相当微不足道。 在流派中,似乎在控制华丽时,只有岩石的舞蹈能力明显低于edm. 其80%的可信间隔是唯一一个完全位于0以上或以下的间隔,表明对于一般艺术家来说,摇滚歌曲的典型舞蹈性比同样华丽的编曲低1.42至12分.</p>
+<div class="sourceCode" id="cb387">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+tidy(spotify_model_1, effects = "fixed",
+conf.int = TRUE, conf.level = 0.80)
+# A:7×5
+term        estimate std.error conf.low conf.high
+&lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 (Intercept)   53.3      3.02     49.4      57.1
+2 valence        0.258    0.0330    0.216     0.300
+3 genrelatin     0.362    3.58     -4.15      5.02
+4 genrepop       0.466    2.67     -2.96      3.89
+5 genrer&amp;b      -2.43     2.85     -6.05      1.22
+6 genrerap       1.68     3.15     -2.29      5.68
+7 genrerock     -6.73     4.14    -12.0      -1.42</code></pre>
+</div>
+<p>在解释这些摘要时,要记住流派系数直接比较每个流派与单独编辑,而不是,比如,岩石与r&amp;b. 相比之下,mcmc reares()提供了对所有流派后流派的有用的视觉比较. 除了岩石系数之外, 0 对其他流派系数来说是一个相当后期的可信值, 后台也有相当的重叠。 因此,尽管有证据表明其中一些流派比其他流派更能跳舞(例如说唱对R&amp;b),但差别并不大。</p>
+<div class="sourceCode" id="cb388">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 绘制流派系数的后验模型
+mcmc_areas(spotify_model_1, pars = vars(starts_with("genre")), prob = 0.8) +
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-759" style="display:block;"></span>
+<img alt="有5个钟形密度地块,5个流派相关系数各1个,垂直线的系数值为0. 密度有很多重叠之处。 岩层密度最大,以-6为中心,大约为-15-3. 它是唯一一个密度曲线 大部分下降到0以下。 其它密度地块以接近0的数值为中心,彼此相似." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-759-1-3cde00decc9e.png" width="336"/>
+<p class="caption">图17.23:Spotify Model 1中流派相关系数的后置模型.</p>
+</div>
+<p>最后,考虑一下我们样本中的两位艺术家:米西·埃利奥特(Missy Elliott)和卡米洛(Camilo)的一些后期结果. 下面的整理()摘要将这些艺术家的典型舞蹈能力水平与一般艺术家的舞蹈能力水平比较, 当控制华丽和流派时,艾略特的歌曲往往比一般艺术家的舞技要多得多,而卡米洛的舞技则往往较少. 例如,埃利奥特的典型歌舞能力比平均水平高出2.78至14.8分,有80%的后期概率。</p>
+<div class="sourceCode" id="cb389">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+tidy(spotify_model_1, effects = "ran_vals",
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>我们的等级回归模式考虑到了艺术家们典型的舞蹈水平以及歌曲的优雅和流派。 假设两位艺术家的下一首歌曲的得分是80分, 图17.24 绘制了两位艺术家的后期预测模型以及莫赫森·比兹(Mohsen Beats)的预测模型。 莫赫森·比兹是一位摇滚艺术家,虽然不在我们的样本中,但也发布了一首价值80的歌曲。 Elliott的歌舞能力很可能是这三首歌中最高的。 虽然卡米洛通常的舞蹈能力低于平均水平,</p>
+<div class="sourceCode" id="cb390">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 为3名艺术家模拟后期预测模型
+rng = np.random.default_rng(84735)
+predict_next_song = posterior_predict(
+spotify_model_1,
+newdata = data.frame(
+artist = c("Camilo", "Mohsen Beats", "Missy Elliott"),
+valence = c(80, 60, 90), genre = c("latin", "rock", "rap")))
+# 后期预测模型图
+mcmc_areas(predict_next_song, prob = 0.8) +
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch17-missy" style="display:block;"></span>
+<img alt="有3个钟形密度的可舞性地块,3个艺术家各一个:卡米洛,莫赫森贝茨,和米西·艾略特. 密度略有重叠。 Mohsen Beats的密度最高,以63为中心,大约在13到113之间。 卡米洛的密度地块略高而狭小,以接近70为中心,从大约35到105不等. 密西·埃利奥特的密度图案还较高,以87为中心,范围从大约57到117不等." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch17-missy-1-efb3c16d9b2e.png" width="345.6"/>
+<p class="caption">FIGURE 17.24:为下几首歌的受欢迎性,由米西·艾略特,穆赫森·比特斯和卡米洛制作的预测模型.</p>
+</div>
+<div class="describe">
+<p>还有一件事</p>
+<p>如果你密切关注,你可能会发现我们的模型有缺陷。 它产生后期可舞性预测,超过100的最高可舞性水平. 这是使用“正常”模拟一个范围有限的响应变量(此处为0-100)的结果。 这里的正常假设是“足够好的”,但我们不妨考虑用一种“Beta”模型来取代它。</p>
+</div>
+</div>
+<div class="section level2" id="chapter-summary-16" number="17.8">
+<h2>章节摘要</h2>
+<p>在第十七章中,我们探索了在与组合结构化或分级数据合作时,如何通过预测器建立XQ0XXX的分级模型. 假设我们有多个数据点 每一个XQ2QQ组。 对每组的XQ3@@,请XQ4@@和XQ5@@表示XQ6@@的对应变量XQ7@@和XX8@@的不同预测器的XQ9@@的XQ6@@第一组观测数据. 然后一个正常的层次回归模型 QQ10XX vs QQ11XX由三层组成:它将关于XQ12XX和XQ13XX之间群体内部关系的信息结合起来,并包含关于群体之间这些关系如何变化的信息,我们先验对更广泛的全球人口的理解. Letting QQ14@@表示一组特定群体的参数和(XQ15@@)一组全球参数:</p>
+<p>\[\begin{array}{rll} Y_{ij} | \beta_j, \sigma_y &amp; \sim N(\mu_{ij}, \sigma_y^2) &amp; \text{regression model within group $j$} \\ \beta_j | \beta, \sigma &amp; \sim N(\beta, \sigma^2) &amp; \text{variability in regression parameters between groups} \\ \beta, \sigma_y, \sigma, ... &amp; \sim \cdots &amp; \text{prior models on global parameters} \\ \end{array}\]</p>
+<p>在回归的定义中, 在最简单的随机截取模式中, 我们假设各组可能拥有独特的基线,</p>
+<p>\[\begin{split} \mu_{ij} &amp; = \beta_{0j} + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \cdots + \beta_p X_{ijp} \\ &amp; = (\beta_0 + b_{0j}) + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \cdots + \beta_p X_{ijp}. \\ \end{split}\]</p>
+<p>在最复杂的随机拦截和倾斜模式中, 我们假设各组有独特的基线,</p>
+<p>\[\begin{split} \mu_{ij} &amp; = \beta_{0j} + \beta_{1j} X_{ij1} + \beta_{2j} X_{ij2} + \cdots + \beta_{pj} X_{ijp} \\ &amp; = (\beta_0 + b_{0j}) + (\beta_1 + b_{1j}) X_{ij1} + (\beta_2 + b_{2j}) X_{ij2} + \cdots + (\beta_p + b_{pj}) X_{ijp}. \\ \end{split}\]</p>
+<p>在两者之间,我们可以假设一些预测者需要特定群体的系数,而另一些预测者则不需要:</p>
+<p>\[\begin{split} \mu_{ij} &amp; = \beta_{0j} + \beta_{1j} X_{ij1} + \beta_2 X_{ij2} + \cdots + \beta_p X_{ijp} \\ &amp; = (\beta_0 + b_{0j}) + (\beta_1 + b_{1j}) X_{ij1} + \beta_2 X_{ij2} + \cdots + \beta_p X_{ijp}. \\ \end{split}\]</p>
+</div>
+<div class="section level2" id="exercises-16" number="17.9">
+<h2>练习</h2>
+<div class="section level3" id="conceptual-exercises-11" number="17.9.1">
+<h3>概念练习</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-762"><strong>Exercise 17.1  (Translating assumptions into model notation)  </strong></span>To test the relationship between reaction times and sleep deprivation, researchers enlisted 3 people in a 10-day study. Let <span class="math inline">\(Y_{ij}\)</span> denote the reaction time (in ms) to a given stimulus and <span class="math inline">\(X_{ij}\)</span> the number of days of sleep deprivation for the <span class="math inline">\(i\)</span>th observation on subject <span class="math inline">\(j\)</span>. For each set of assumptions below, use mathematical notation to represent an appropriate Bayesian hierarchical model of <span class="math inline">\(Y_{ij}\)</span> vs <span class="math inline">\(X_{ij}\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>有些人的反应往往比其他人快,</li>
+<li>虽然有些人的反应往往比其他人快,但剥夺睡眠对反应时间的影响对所有人都是一样的.</li>
+<li>没有人有内在的更快的反应时间,尽管剥夺睡眠可能影响一些人的反应时间超过其他人。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-763"><strong>Exercise 17.2  (Sketch the assumption: Part 1)  </strong></span>Continuing with the sleep study, suppose we model the relationship between reaction time <span class="math inline">\(Y_{ij}\)</span> and days of sleep deprivation <span class="math inline">\(X_{ij}\)</span> using the random intercepts model <a href="/bayes-rules-python-cn/chapter-17/#eq:hierarchical-1-ch17">(17.5)</a>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>绘制一幅数据图,</li>
+<li>解释一下在睡眠研究中 QQ0XQ意味着什么</li>
+<li>重复部分假设 {0}</li>
+<li>重复b部分假设 \(\sigma_y &lt; \sigma_0\)。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-764"><strong>Exercise 17.3  (Sketch the assumption: Part 2)  </strong></span>Suppose instead that we model the relationship between reaction time <span class="math inline">\(Y_{ij}\)</span> and days of sleep deprivation <span class="math inline">\(X_{ij}\)</span> using the random intercepts and slopes model <a href="/bayes-rules-python-cn/chapter-17/#eq:hierarchical-diff-slope-ch17">(17.12)</a> (with different priors).
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>勾勒出一组特定主题的趋势,我们也许可以看看相关参数是否为正                                                                                                                                                                                                             </li>
+<li>解释一下在睡眠研究中 QQ0XQ意味着什么</li>
+<li>重复 {0} 的 a 部分。。。</li>
+<li>重复 b 部分为 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #。。。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:ch17-pugs"><strong>Exercise 17.4  (Making meaning of models)  </strong></span>To study the relationship between weight and height among pug puppies, you collect data on 10 different litters, each containing 4 to 6 puppies born to the same mother. Let <span class="math inline">\(Y_{ij}\)</span> and <span class="math inline">\(X_{ij}\)</span> denote the weight and height, respectively, for puppy <span class="math inline">\(i\)</span> in litter <span class="math inline">\(j\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>为型号1写出正式的型号注解,随机截取型号为QQ0@@ vs 1@@.</li>
+<li>为型号2写出正式的型号注解,随机截取和斜坡型号为 0@@ vs 1@@.</li>
+<li>总结模式1和2.背后假设的关键差异,在小狗的背景中根植这一讨论。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-765"><strong>Exercise 17.5  (Translating models to code)  </strong></span>Suppose we had <code>weight</code> and <code>height</code> data for the puppy study. 请写出相应的 <code>PyMC</code> 模型代码 for models 1 and 2 from Exercise <a href="/bayes-rules-python-cn/chapter-17/#exr:ch17-pugs">17.4</a>.
+</div>
+</div>
+<div class="section level3" id="applied-exercises-9" number="17.9.2">
+<h3>应用练习</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-766"><strong>Exercise 17.6  (Sleep: setting up the model)  </strong></span>In the above conceptual exercises, you considered a sleep study of the relationship between reaction time and the number of days of sleep deprivation. You will explore this relationship in more depth here. To this end, suppose researchers tell us that on a typical day, the average person should have a reaction time of roughly 250ms to the stimulus used in the sleep study. Beyond this baseline, we’ll balance weakly informative priors with the <code>sleepstudy</code> data from the <strong>lme4</strong> package to better understand reaction times. Specifically, consider two possible models as expressed by <code>PyMC</code> syntax:
+</div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">模型</th>
+<th align="left">公式</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">反应~天+(1+QQ主题).</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">反应~天+(天~主题).</td>
+</tr>
+</tbody>
+</table>
+<ol style="list-style-type: lower-alpha">
+<li>睡眠研究数据中的分组变量是什么,为什么将这种分组结构纳入我们的分析中很重要?</li>
+<li>使用正式的缩写来定义模式1和2的等级回归结构(您将在下一个练习中调整前缀).</li>
+<li>总结模式1和2的关键差异,在睡眠研究中根植这一讨论.</li>
+<li>利用睡眠研究数据,构建和讨论一个有助于你探索哪个模型更合适的图案:1或2.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-767"><strong>Exercise 17.7  (Sleep: simulating the model)  </strong></span>Continuing with the sleep analysis, let’s simulate and dig into the hierarchical posteriors.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>模拟模式1和2. 的后置反应,请记住使用250ms的基准反应时间,否则信息不充分。</li>
+<li>对于模式2,报告反应时间的全球后回归中位数模型.</li>
+<li>对于模式2,构建和解释日回归系数的80%可信间隔.</li>
+<li>对于模型2, 计算和解释后置中位数 {0} ,\(\sigma_0\),\(\sigma_1\), and3@@.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-768"><strong>Exercise 17.8  (Sleep: group-specific inference)  </strong></span>Next, let’s dig into what Model 2 indicates about the individuals that participated in the sleep study.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>使用你的后期模拟来识别反应时间随着睡眠剥夺而变化最小的人. 写出他们的后期中位回归模型.</li>
+<li>重复第一部分,这次是针对反应时间随着睡眠剥夺而变化最大的人.</li>
+<li>利用你的后期模拟来识别基准反应时间最慢的人. 写出他们的后期中位回归模型.</li>
+<li>重复c部分,这次是对于基准反应时间最快的人.</li>
+<li>模拟,图解,讨论后期预测模型 反应时间 5天 剥夺睡眠 的两个主体: 你和308。 鼓励您先从头开始尝试, 然后再依赖后端的快捷键。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-769"><strong>Exercise 17.9  (Sleep: Which model?)  </strong></span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>评估反应时间的两种模式:它们错了吗? 他们公平吗? 他们的后期预测有多准确?</li>
+<li>你更喜欢哪一种模型, 这说明反应时间和睡眠剥夺之间的关系是什么? 用后证来解释你的回答</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-770"><strong>Exercise 17.10  (Voices: setting up the model)  </strong></span>Does one’s voice pitch change depending on attitude? To address this question, <span class="citation"><a href="#ref-voices" role="doc-biblioref">Winter and Grawunder</a> (<a href="#ref-voices" role="doc-biblioref">2012</a>)</span> conducted a study in which each subject participated in various role-playing dialogs. These dialogs spanned different contexts (e.g., asking for a favor) and were approached with different attitudes (polite vs informal). In the next exercises you’ll explore a hierarchical regression analysis of <span class="math inline">\(Y_{ij}\)</span>, the average voice pitch in subject <span class="math inline">\(j\)</span>’s <span class="math inline">\(i\)</span>th dialog session (measured in Hz), by <span class="math inline">\(X_{ij}\)</span>, whether or not the dialog was polite (vs informal). Beyond a baseline understanding that the typical voice pitch is around 200 Hz, you should utilize weakly informative priors.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>使用正式的注解,定义QQ0@@对QQ1@@的等级回归模型. 在这样做时,假设基线语音音波与主题不同,但态度对语音音波的影响在所有主体中是相似的.</li>
+<li>比较和对比了模型参数\(\beta_{0j}\)和\(\beta_0\)在这种语音音波研究中的含义. 注:请注意,QQ2@@是一个绝对指标变量。</li>
+<li>比较和对比了模型参数\(\sigma_y\)和\(\sigma_0\)在这种语音音波研究中的含义.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-771"><strong>Exercise 17.11  (Voices: check out some data)  </strong></span>To balance our weakly informative priors for the model of pitch by attitude, check out some data.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>从 Bayesrules 软件包装入声音数据。 本样本中包括多少研究课题? 每个主题都参加了多少次对话?</li>
+<li>构建和讨论一个说明声音投射与主体内部和主体之间态度之间关系的情节.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-772"><strong>Exercise 17.12  (Voices: simulating the model)  </strong></span>Continuing with the voice pitch analysis, in this exercise you will simulate and dig into the hierarchical posterior of your model parameters.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>以态度模拟声波的分级后期模式. 构造和讨论微量地块、密度地块、自动连接地块和链输出的 pp check()。</li>
+<li>构造和解释 &amp; #% 0 的95% 可信间隔。。。</li>
+<li>构造和解释 &amp; #% 0 的95% 可信间隔。。。</li>
+<li>是否有充分证据表明,对于一般主体来说,语音投注因态度(政治与非正式)不同而不同? 解释一下</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-773"><strong>Exercise 17.13  (Voices: focusing on the individual)  </strong></span>Continuing with the voice pitch analysis, in this exercise you will focus on specific subjects.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>报告语音投注与态度关系的全球后中位数模型.</li>
+<li>报告并对比我们数据中两个学科的后置中位数模型:A和F.</li>
+<li>使用后预言(),在新的礼貌对话中模拟后预言语音投影模式,针对三个不同的题材:A,F,和你. 使用 mcmc  areas () 显示您的模拟结果, 并讨论您的发现。</li>
+</ol>
+</div>
+<div class="section level3" id="open-ended-exercises-4" number="17.9.3">
+<h3>不限成员名额的工作</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-775"><strong>Exercise 17.14  (Open exercise: coffee)  </strong></span>What makes some coffee beans more winning than others? In this open-ended exercise, construct, interpret, and evaluate a hierarchical regression model of the professional rating or “total cup points” awarded to a batch of coffee beans. Do so using the <code>coffee_ratings_small</code> data from the <strong>bayesrules</strong> package which contains information for multiple batches of coffee beans from each of 27 farms. <em>You</em> get to choose which predictors to use.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-776"><strong>Exercise 17.15  (Sleep: different priors)  </strong></span>In our earlier sleep analysis, we utilized weakly informative priors. Pretending that you haven’t already seen the data, specify a model of <code>Reaction</code> time by <code>Days</code> of sleep deprivation using priors that you tune yourself. Use prior simulation to illustrate your prior understanding.
+</div>
+</div>
+</div>
+</div>
+<h3>参考资料</h3>
+<div class="references csl-bib-body hanging-indent" id="refs">
+<div class="csl-entry" id="ref-bayeslongitudinal">
+Carreño, Edwin Javier Castillo, and Edilberto Cepeda Cuervo. 2017. <em>Bayeslongitudinal: Adjust Longitudinal Regression Models Using <span>B</span>ayesian Methodology</em>. <a href="https://CRAN.R-project.org/package=bayeslongitudinal">https://CRAN.R-project.org/package=bayeslongitudinal</a>.
+</div>
+<div class="csl-entry" id="ref-gabgood2">
+Gabry, Jonah, and Ben Goodrich. 2020a. <span>“Estimating Generalized Linear Models with Group-Specific Terms with Rstanarm.”</span> <a href="https://mc-stan.org/rstanarm/articles/glmer.html">https://mc-stan.org/rstanarm/articles/glmer.html</a>.
+</div>
+<div class="csl-entry" id="ref-laird">
+Laird, N., and J. Ware. 1982. <span>“Random-Effects Models for Longitudinal Data.”</span> <em>Biometrics</em> 38 4: 963–74.
+</div>
+<div class="csl-entry" id="ref-divergence">
+Modrak, Martin. 2019. <span>“Divergent Transitions – a Primer.”</span> <a href="https://discourse.mc-stan.org/t/divergent-transitions-a-primer/17099">https://discourse.mc-stan.org/t/divergent-transitions-a-primer/17099</a>.
+</div>
+<div class="csl-entry" id="ref-vehtari_cv">
+Vehtari, Aki. 2019. <span>“Cross-Validation for Hierarchical Models.”</span> <a href="https://avehtari.github.io/modelselection/rats_kcv.html">https://avehtari.github.io/modelselection/rats_kcv.html</a>.
+</div>
+<div class="csl-entry" id="ref-voices">
+Winter, Bodo, and Sven Grawunder. 2012. <span>“The Phonetic Profile of <span>K</span>orean Formal and Informal Speech Registers.”</span> <em>Journal of Phonetics</em> 40: 808–15.
+</div>
+</div>
+</section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-16/">上一节：第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">下一节：第 18 章 非正态分层回归与分类</a></nav>
+</article>
+</div>
+</main>
+<footer class="site-footer">
+<div>
+<strong>AI 提效研究笔记</strong>
+<p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+</div>
+<div class="footer-links">
+<a href="/feed.xml">RSS</a>
+<a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+</div>
+</footer>
+<script src="/assets/js/site.js"></script>
+</body>
+</html>

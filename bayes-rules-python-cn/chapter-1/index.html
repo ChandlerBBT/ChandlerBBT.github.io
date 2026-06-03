@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="第 1 章 贝叶斯图景总览 | Bayes Rules! 中文 Python 改写教程">
+  <title>第 1 章 贝叶斯图景总览 | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+      <a href="/posts/" aria-current="page">最新文章</a>
+      <a href="/tags/">主题</a>
+      <a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <h2>教程目录</h2>
+  <nav><a href="/bayes-rules-python-cn/">首页</a><a href="/bayes-rules-python-cn/foreword/">前言</a><a href="/bayes-rules-python-cn/preface/">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/" aria-current="page">第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a href="/bayes-rules-python-cn/references/">参考文献</a></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <section class="normal" id="section-">
+<div class="section level1" id="chapter-1" number="1">
+<h1>第 1 章 贝叶斯图景总览</h1>
+<div class="tutorial-note">
+<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
+</div>
+
+<div class="describe">
+<p>如果我们不改变, -碧昂丝 歌词来自“卫星”。</p>
+</div>
+<p>每个人都改变主意了 你可能在最后一刻改变主意了 在打开之前,你无疑对这本书有些成见,无论是从其标题,其在线评论,还是与阅读过它的朋友的对话中形成的. 然后,你看到第一章 以碧昂丝的引文开头, 这是统计书的一个不寻常的选择。 也许这让你觉得“ 这本书会比我意识到的更有趣!” 也许它起到了相反的作用。 没关系。 我们想说的是,我们同意碧昂丝的观点,改变只是生活的一部分。</p>
+<p>我们不断更新我们有关世界的知识, 在孩童时期, 需要几处溢出才能明白液体不会停留在玻璃中。 或一对夫妇试图交谈, 其他知识在制造中的时间更长。 例如,假设你镇上有一家新的意大利餐厅。 它有五星级的在线评分 而你喜欢意大利菜! 因此,在踏进餐厅之前,你预计会很美味。 在你第一次访问时,你收集了一些可食用的数据:你的意大利面食到达了一个大烂摊子. 网友对自己的可怕饭菜(可能只是一顿暴风雨)评价很高, 愿意再给餐厅一次机会 你再去一次 将餐厅评分为四星。 你继续参观餐厅,收集可食用的数据,每次更新你的知识.</p>
+<div class="figure" style="text-align: center"><span id="fig:restaurant-diagram" style="display:block;"></span>
+<img alt="一个流图,在同一水平上有两个椭圆. 一个椭圆读入信息 5星级餐厅,另一个读入数据 酥面。 两个椭圆有一个箭头指向另一个更低的椭圆. 此椭圆读取更新信息 3星级餐厅. 右侧还有一个椭圆 读取新数据 美味的alfredo。 两个椭圆也有一个箭指向另一个低层的椭圆,读取更新信息4星餐厅. 右侧还有一个椭圆 读新数据 所以沙拉。 更新信息的两个椭圆和新数据都有指向下层的箭头,没有任何新的椭圆." loading="lazy" src="/assets/img/bayes-rules-python-cn/restaurant_diagram-0ced4f310b04.png" width="75%"/>
+<p class="caption">FIGURE 1.1:你对一家餐馆的不断发展的知识.</p>
+</div>
+<div style="page-break-after: always;"></div>
+<p>图1.1记录了巴耶斯人自然知识的积累过程,即承认你的先入为主,利用数据更新你的知识,并重复. 我们可以把同样的贝叶斯程序 应用于严格的研究调查 如果你是一名政治学家, 如果你是一位环境科学家, 你的可能是分析人类在气候变化中的作用。 您不会无上下文地进行这样的调查 — — 您会携带一定程度的基于以往研究和经验的来历或事先信息。 自然,正是根据这些信息,你解释新的数据,在开发更新或后期信息时权衡。 你收集新证据时继续完善这些信息(图1.2)。</p>
+<div class="figure" style="text-align: center"><span id="fig:bayes-diagram" style="display:block;"></span>
+<img alt="同级有两处椭圆形. 一个读前,另一个读数据。 两个椭圆有一个箭头指向一个贴有下层标签的后方的椭圆. 后椭圆在其右侧标注的新数据上有另一个椭圆. 后缀和新数据椭圆有一个箭头向下指向另一个贴有后缀的椭圆. 这个后椭圆在它的右标签的新数据上有另一个椭圆. 带有后缀和新数据标签的两个椭圆用折射箭头向下点." loading="lazy" src="/assets/img/bayes-rules-python-cn/bayes_diagram-b3e62242fc26.png" width="45%"/>
+<p class="caption">图1.2:贝叶斯知识积累图.</p>
+</div>
+<p>图1.2中体现的巴耶斯哲学是巴耶斯统计的基础. 在整个书中,你将构建你所需要的方法和工具,在严格的数据分析中实施这个哲学. 这种经历需要一种目的感和一张地图。</p>
+<div class="goals">
+<ul>
+<li>学着像贝叶斯人一样思考.</li>
+<li>探索贝叶斯数据分析的基础,以及它们如何与频率学派替代方法形成对比.</li>
+<li>略学贝叶斯哲学史.</li>
+</ul>
+</div>
+<div class="section level2" id="thinking-like-a-bayesian" number="1.1">
+<h2>像贝叶斯人一样思考</h2>
+<p>鉴于我们强调贝叶斯人对知识建设的自然方式,你可能会惊讶地知道另一种频率学派主义哲学传统上一直支配着统计. 在探索它们的差异之前,重要的是要注意到巴耶斯主义和经常主义的分析有一个共同的目标:学习我们周围世界的数据。 贝叶斯人和频率学派者的分析都使用数据来适应模型,作出预测,并评价假说. 在使用相同数据时,它们通常会产生一套类似的结论。 尽管我们经常将运用这些哲学的人称为“巴耶主义者”和“频率学派”, 这种区分在实践中并不总是那么明显,甚至连作者在作品中都应用了哲学,因此没有用单一的标签来表示。 我们在这里的目标不是“站在一边”,而是要说明贝叶斯和频率学派分析背后的逻辑、方法和解释方面的关键差异。</p>
+<div class="section level3" id="quiz-yourself-1" number="1.1.1">
+<h3>问你自己</h3>
+<p>在我们阐述贝叶斯人与频率学派哲学之前,先进行一个快速的测验来评估你目前的倾向. 在这样做的时候,尝试放弃你过去可能学到的任何规则,只是随心所欲地走.</p>
+<ol style="list-style-type: decimal">
+<li><p>在翻转公平硬币时,我们说“翻转头的概率是0.5。” 你怎么解释这个概率?</p>
+<ol style="list-style-type: lower-alpha">
+<li>如果我把硬币翻一翻, 大约50%是正面。</li>
+<li>头和脚印都一样可信</li>
+<li>a和b都有道理。</li>
+</ol></li>
+<li><p>投票员声称候选人A有0.9的胜率。 你怎么解释这个概率?</p>
+<ol style="list-style-type: lower-alpha">
+<li>如果我们反复观察选举,候选人A将赢得大约90%的时间。</li>
+<li>候选人 A胜过败。</li>
+<li>投票员的计算是错误的。 候选人A或胜或败,因此他们的获胜概率只能是0或1.</li>
+</ol></li>
+<li><p>考虑两项主张。 (1)祖奥富声称他可以预测硬币翻转的结果. 为了测试他的说法,你翻了一个公平硬币10次 他正确地预测了所有10次。 (2)卡维亚声称她可以区分天然和人工甜味剂. 为了检验她的说法,你给她10个更甜的样本 她正确地识别了每一个。 根据这些实验,你得出什么结论?</p>
+<ol style="list-style-type: lower-alpha">
+<li>你对Kavya的主张比Zuofu的主张更有信心。</li>
+<li>支持Zuofu索赔的证据与支持Kavya索赔的证据一样有力。</li>
+</ol></li>
+<li><p>假设在最近的一次医生诊疗中,你检测出一种非常罕见的疾病。 如果你只能问医生一个问题,那会是什么?</p>
+<ol style="list-style-type: lower-alpha">
+<li>我真正染上这种疾病的似然有多大?</li>
+<li>如果我没有这种疾病,</li>
+</ol></li>
+</ol>
+<p>接下来,用下面的评分系统来计分 1 从4到5的总数表明你目前的思维相当频繁,而从9到12的总数表明与贝叶斯哲学是一致的。 在这些极端之间,从6到8的总数表明,你在两个哲学中都看到了优势。 你现在的倾向可能比贝叶斯或反之更频繁 你读这本书时,这些倾向可能会改变。 他们可能不会。 现在,我们只想强调贝叶斯人与经常主义哲学之间的主要分歧。</p>
+</div>
+<div class="section level3" id="bayes-v-freq-probability" number="1.1.2">
+<h3>概率的含义</h3>
+<p>概率理论是每个统计分析的核心. 然而,正如第1.1.1节问题1和2所示,贝叶斯人和频率学派在象概率意义一样根本的问题上存在分歧。 例如,在问题1中,一位贝叶斯人和频率学派都会说,观测概率 公平硬币翻转的正面是1/2. 差别在于其诠.</p>
+<div class="describe">
+<p>解释概率</p>
+<ul>
+<li>在贝叶斯哲学中,一个概率度量一个事件的相对合理性.</li>
+<li>频率学派哲学因其对概率的解释而得名,作为可重复事件的长期相对频率.</li>
+</ul>
+</div>
+<p>因此,在硬币翻转的例子中,一位贝叶斯人会得出结论,头像和尾像同样可能. 与此相反,一个频率学派会得出这样的结论:如果我们反复翻转硬币,这些翻转中大约一半会是头. 让我们尝试把这些想法运用到问题2中, 这种例行选举计算说明了频率学派主义解释中的漏洞. 因为选举是一次性的, 一个非常严格的常态解释甚至可以得出投票员的结论,这是错误的。 由于候选人要么胜要么败,他们的获胜概率必须是1或0. 一个不太频繁的解释虽然有点尴尬,但更合理:在长期假设的重复选举,即情况类似的选举中,候选人A将赢得大约90%的时间。</p>
+<p>选举的例子并不罕见。 通常情况下, 政客是否赢得选举,明天是否下雨,人类是否在火星上生活,都是一次性的事件. 虽然在这些一次性场合对概率的频繁解释可能是尴尬的,但更灵活的贝叶斯解释提供了一个表达这些事件不确定性的途径. 例如,一位贝叶斯人会将“0.9的胜率”解释为,根据选举模式,获胜的相对合理性很高 — — 候选人胜率比输率高9倍。</p>
+</div>
+<div class="section level3" id="the-bayesian-balancing-act" number="1.1.3">
+<h3>贝叶斯平衡法</h3>
+<p>受Berger(1984年)的一例启发,第1.1.1节中的问题3为您提供了两种情景:(1)Zuofu声称他可以预测硬币翻转的结果;(2)Kavya声称她可以区分天然甜剂和人工甜剂. 但第二个说法是可信的(有些人有些敏感), 因此,想象一下,当Zuofu和Kavya在测试他们的说法时,他们都享受了十分之一的成功率:Zuofu正确预测了10枚硬币翻转的结果,Kavya正确地确定了10种不同甜品的来源。 我们可以从这些数据中得出什么结论? 它是否提供了同样的证据来支持Zuofu和Kavya的申诉? 贝叶斯人和频繁派哲学家通过不同的透镜来看待这些问题.</p>
+<p>让我们从常识的角度来审视一下, 因此,在频繁的分析中, " 10分之10 " 是 " 10分之10 " ,无论它是否与Zuofu的硬币或Kavya的甜品有关。 这意味着频繁分析会导致同样自信的结论,认为祖奥富可以预测硬币翻转,卡维亚可以区分天然和人造甜味剂(至少是在纸上,如果不是在我们肚子里). 2 鉴于Zuofu的主张是荒谬的,这种频繁的结论有点奇怪,它抛弃了所有先验的知识,而只支持10个数据点。 我们无法抗拒用图1.3来表达这个结论,</p>
+<div class="figure" style="text-align: center"><span id="fig:freq-diagram" style="display:block;"></span>
+<img alt="标记为数据的椭圆" loading="lazy" src="/assets/img/bayes-rules-python-cn/freq_diagram-8fe8c5b61833.png" width="10%"/>
+<p class="caption">图1.3: 常识建设图.</p>
+</div>
+<p>与此相对照,巴耶斯人的分析使我们先验的知识有了发言权。 但Kavya的说法是合理的。 因此,我们在权衡了这些不同的前科之后,对Zuofu和Kavya的主张有不同的理解。 因为数据与我们先验的数据一致, 然而,由于它与我们以前的经验不一致,我们只是把Zuofu的“精神分裂”成就说成是简单的运气。</p>
+<p>允许自己以前的经验在统计分析中发挥正式作用的想法似乎有点愚蠢。 事实上,贝叶斯哲学的一个常见批评是它过于主观。 我们还没有做很多工作来对抗这些批评。 图1.2可能会让你相信 贝叶斯分析涉及到一些主观的杂耍: 将前作和一些数据结合起来,然后从后面跳出来。 在现实中,巴耶斯哲学为这种知识创造提供了正式的框架. 这一框架取决于以前的信息、数据及其之间的平衡。</p>
+<div class="figure" style="text-align: center"><span id="fig:bayes-balance" style="display:block;"></span>
+<img alt="三重天秤,每重一面分别持前,另一面各有数据. 左边的尺度向前倾斜,中间平衡,右边向数据倾斜。" loading="lazy" src="/assets/img/bayes-rules-python-cn/bayes-balance-1-0874d158f88b.png" width="408"/>
+<p class="caption">图1.4:贝叶斯分析将我们以往的经验与新数据相平衡。 根据设定,前项被给予比数据(左)更多的权重,前项和数据被给予相等权重(中),或者前项被给予比数据(右)少的权重.</p>
+</div>
+<p>在建立后方时,前方信息与数据之间的平衡由每种信息的相对强度决定. 例如,我们以前曾非常强烈地理解祖奥福不是一个灵媒,但支持他的说法的数据却很少(10枚硬币翻转)。 因此,像图1.4中的左图一样,前图在我们事后的理解中占据了更大的份量. 我们并不固执, 如果Zuoofu正确预测了1万枚硬币翻转的结果, 这个数据的力量将远远超过我们之前,</p>
+<p>允许后人平衡前科和数据对于贝叶斯知识建设进程至关重要。 当我们没有多少数据时,我们的后台可以利用我们先验的知识中的力量. 随着我们收集更多的数据,先验者失去其影响. 无论是在科学、决策还是生活中,人们都倾向于这样思考(El-Gamal和Grether,1995年),并取得进步。 两位科学家在收集越来越多的数据时,将就人类在气候变化中的作用达成一致,无论他们以前受过何种培训和经验。 3,随着他们阅读本书越来越多的页面,两位读者将就巴耶斯统计的力量达成一致. 图1.5说明了这一合乎逻辑和令人鼓舞的想法。</p>
+<div class="figure" style="text-align: center"><span id="fig:our-bayes-diagram" style="display:block;"></span>
+<img alt="一个流程图,说明两个人的巴耶斯分析最终如何在共同的后台理解中走到一起. 有一些椭圆标注在你的前,你的数据,你的后,你的新数据,我的前,我的数据,我的后,我的新后. 流图最后的椭圆标注为我们的后身." loading="lazy" src="/assets/img/bayes-rules-python-cn/our_bayes_diagram-b73332b5a84d.png" width="80%"/>
+<p class="caption">图1.5:双人贝叶斯知识建设图.</p>
+</div>
+</div>
+<div class="section level3" id="asking-questions" number="1.1.4">
+<h3>提问</h3>
+<p>在1.1.1节的第4个问题中,你被要求想象一下你检测出一种罕见的疾病呈阳性,而只得问医生一个问题:(a) 我实际感染这种疾病的机会有多大? 或者(b) 如果实际上我没有这种疾病,那么我得到这种阳性检测结果的机会有多大? 作者们认为, 虽然对这两个问题的答复会有所帮助, 我们宁可理解未知疾病状况的不确定性, 尽管巴耶斯人和频率学派者的分析都是为了利用你的测试结果(数据)来评估你是否患有罕见疾病(假设), 具体而言,贝叶斯人的分析根据观测到的数据评估了假说不确定性,而频繁分析则根据假设假说评估了观测到数据的不确定性.</p>
+<div class="describe">
+<p>提问</p>
+<ul>
+<li>贝叶斯假说测试试图回答: 根据观测到的数据,假设正确的似然有多大?</li>
+<li>一个频繁的假说测试试图回答: 如果这个假设事实上是不正确的,那么我观察到这个数据,甚至更极端的数据的机会有多大?</li>
+</ul>
+</div>
+<p>为明确起见,请考虑表1.1概述的情况,在100人中,只有4人患有这种疾病。 在96个没有疾病的人中,有9个检测呈阳性,从而获得误导性的检测结果。 在有病的4人中,有3人检测呈阳性,从而获得准确的检测结果.</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:disease-population">TABLE 1.1: </span>Disease status and test outcomes for 100 people.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">测试阳性</th>
+<th style="text-align:right;">测试负数</th>
+<th style="text-align:right;">共计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">疾病</td>
+<td style="text-align:right;">
+3
+</td>
+<td style="text-align:right;">
+1
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">没有病</td>
+<td style="text-align:right;">
+9
+</td>
+<td style="text-align:right;">
+87
+</td>
+<td style="text-align:right;">
+96
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">共计</td>
+<td style="text-align:right;">
+12
+</td>
+<td style="text-align:right;">
+88
+</td>
+<td style="text-align:right;">
+100
+</td>
+</tr>
+</tbody>
+</table>
+<p>在这个情景中,巴耶斯分析会问:鉴于我的测试结果呈阳性,我实际患上这种疾病的似然有多大? 因为12个检测呈阳性的人中只有3个患有此病(表1.1),所以你只有25%的机会患此病。 因此,当我们考虑到这种疾病的罕见性和相对较高的假阳性率时,你实际上不太可能有这种疾病。 多解脱.</p>
+<p>回顾第1.1.2节,你可能预计,对这一分析采取频繁的做法会有所不同。 从经常发生的观点来看,由于疾病状况是不可重复的,因此你患这种疾病的概率要么是1,要么是0 — — 你有,要么是没有。 相反,医疗检查(和一般的数据收集)是可重复的。 可以屡试屡试治病. 因此,一个频繁的分析会问:如果我真的没有这种疾病,那我检验阳性的机会是什么? 在96名无此病的人中只有9人检测呈阳性,</p>
+<p>9/96频率学派概率计算在精神上类似于p值. 一般来说,p值测量的是,如果原始假设不正确,观测到的数据是否比我们的数据更极端。 虽然P值在频率学派主义做法中占据显著地位达数十年之久, 美国统计协会(Goodman 2011)发布官方“公共安全公告 ” ( Wasserstein 2016), P值被如此普遍误解的原因很简单 — — 研究一个尚未证实的假说(无论你是否患有罕见的疾病)的不确定性比我们已经观察到的数据的不确定性(你检测出罕见的疾病呈阳性)更自然. 页:1</p>
+</div>
+</div>
+<div class="section level2" id="a-quick-history-lesson" number="1.2">
+<h2>一个快速的历史教训</h2>
+<p></p>
+<p>鉴于巴耶斯思想的自然性质,你可能会惊讶地知道巴耶斯的势头是相对较近的。 “巴耶斯人”曾经是专业行业和研究圈外的模糊名词,</p>
+<p>尽管巴耶斯人最近越来越受欢迎,但巴耶斯人的统计数据植根于18世纪的统计学家、部长和哲学家托马斯·巴耶斯牧师的著作。 虽然贝叶斯在1740年代发展了他的哲学,但直到20世纪后期,这部作品才被广泛的观众所接受. 在两个多世纪之间的时间里,频率学派哲学主导了统计研究和实践. 贝叶斯哲学不仅在这段时间里脱离了大众的青睐,反而受到污蔑. 早在1990年,Marilyn vos Savant在为现在经典的Monty Hall概率谜题提出贝叶斯解决方案时,就被她"游行"杂志专栏的一些读者嘲笑. 显然有超过一万名读者写信反驳和嘲笑她的解决方案. 7 Vos Savant的Bayesian解决方案后来被证明是无可争议的正确. 然而,经过如此程度的审视,许多研究者将他们的贝叶斯式追求置于包袱之下是难怪的。 尽管艾伦·图灵在当时也没有宣称如此多,但他在二战中破解了德国的恩尼格玛密码,约翰·图基在20世纪60年代率先使用贝叶斯方法(McGrayne 2012)进行选举日预测.</p>
+<p>这本书的公开存在表明,污名化已经基本消退. 为什么? (1)计算进步. 贝叶斯应用需要尖端的计算资源, (2)脱离传统. 因为人们通常会学习, 因为人们在实践中经常使用这种方法,所以统计课程中也吸收了经常使用的方法,因此人们也学习这种方法。 这种循环很难打破. (3) 重新评估“主观性”。 现代统计实践是启蒙时代的一个孩子. 一种对启蒙主义理想的反映,频率学派的方法被接受为优异,客观的替代主观的贝叶斯主义哲学. 由于若干原因,这种主观的耻辱正在慢慢消失。 首先,“主观”标签可以印在所有统计分析上,无论是经常性的还是贝叶斯式的。 我们以前的知识自然地告诉我们测量什么,我们为什么测量它,以及我们如何模拟它。 第二,启蒙后, " 主观 " 已不再是一个肮脏的词。 毕竟,正如两位面包师可能使用两种不同的食谱来制作同样美味的百吉饼一样,两位分析师可能使用两种不同的技术来制作同样内容丰富的分析.</p>
+<p>图1.6提供了贝叶斯时间表的规模感。 记得托马斯·贝耶斯在1740年代开始发展贝耶斯哲学. 直到二百多年后的1953年(!),阿丽安娜·W·罗森布卢斯(Arianna W. Rosenbluth)才写出了第一个完整的马可夫链式蒙特卡洛算法,使得实际进行贝叶斯统计成为可能. 甚至在后来的1969年,大卫·布莱克威尔(David Blackwell)引入了最早的巴耶斯语教科书之一,将这些方法带到了更广泛的受众(Blackwell 1969). Bayesian社区目前在全球迅速扩展,8个利用Bayesian框架,从模拟南非COVID-19率(Mbuvha和Marwala 2020)到监测侵犯人权行为(Lum等人,2010年)。 我们,这本书的作者,是贝叶斯人故事的一部分,我们不仅希望能够创造出一种资源,邀请你们也成为这个故事的一部分。</p>
+<div class="figure" style="text-align: center"><span id="fig:ch1portraits" style="display:block;"></span>
+<img alt='四张框框照片相互对齐 从左到右是托马斯·贝耶斯肖像的照片,阿丽安娜·W·罗森布卢斯的照片,大卫·布莱克威尔的照片,以及读作"插入你的照片"的空框. 托马斯·贝耶斯的肖像是黑白两色的,他穿着类似尼加利亚的服装. 他的头发很短 Arianna W. Rosenbluth的照片是在86岁时拍到的。 她戴着眼镜,微笑, 和灰色头发拉回。 大卫·布莱克威尔(David Blackwell)穿着棕色框眼镜和白领衬衫在镜头中微笑. 他的头部有灰色的短发。' loading="lazy" src="/assets/img/bayes-rules-python-cn/timeline-757f079ca56d.png" width="100%"/>
+<p class="caption">图1.6: 从左到右依次排列:托马斯·贝耶斯的肖像(未知作者/公有领域,维基媒体Commons); Arianna W. Rosenbluth的照片(Marshall N. Rosenbluth,维基媒体Commons);加利福尼亚州伯克利的David Blackwell的照片(George M. Bergman,维基媒体Commons);你! (插入你自己的照片)!.</p>
+</div>
+</div>
+<div class="section level2" id="a-look-ahead" number="1.3">
+<h2>展望未来</h2>
+<p>在这本书里 你会学会如何让你的贝叶斯思想复活 此次勘探的结构概述如下. 尽管这些章节被分成了更广泛的单元,每个单元都有一个独特的主题,但整个书中有一个共同的线索:构建和分析贝叶斯模型,用于某些变量的行为“ 0@@。 “</p>
+<div class="section level3" id="ch1-unit-1" number="1.3.1">
+<h3>第1股:贝叶斯基金会</h3>
+<div class="describe">
+<p>动机问题</p>
+<p>我们怎样才能将巴耶斯思想 纳入一个正式的模型,</p>
+</div>
+<p>第一分队为贝叶斯分析奠定了基础。 你们将探索贝叶斯模式的核心, 这些独特的模型被捆绑在一起 在更广泛的共济会家庭。 此外,它们还针对不同结构的变数,从而将我们的贝叶斯思想运用到各种各样的情景中。</p>
+<p>首先,Beta-Binomial模型可以帮助我们利用二进制绝对变量XX0XX的数据确定澳大利亚明天降雨的概率,无论在1000个采样日中是否每个下雨(图1.7(a))。 Gamma-Poisson模型可以帮助我们探索加拿大安大略省秃鹰目击率,使用变数QQ1@@的数据,在37个一周观测期中每个观测期都看到鹰的计数(图1.7(b)). 最后,正常-自然模型可以利用钟形变量XQ2@@的数据,对澳大利亚平均下午3时的温度进行洞察,样本研究日的温度(图1.7(c)). 第9条</p>
+<div class="figure" style="text-align: center"><span id="fig:ch1-example-univariate" style="display:block;"></span>
+<img alt="三块地 图片(a)是一个条形图,显示大约200天下雨,大约800天没有下雨。 (b)图是鸟类计数的直方图。 计数范围大约为0到10,右侧为1,这是最典型的计数。 plot(c)是一种密度图,温度为3pm. 温度的钟形分布平均约为18度,粗略范围为8至30度." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch1-example-univariate-1-688d67572943.png" width="624"/>
+<p class="caption">FIGURE 1.7:(a) 澳大利亚1 000个采样日的降雨量的二分米产出;(b) 在37个一周的观察期内观测到的Poisson秃鹰计数; (c) 澳大利亚通常在200天的下午3时温度(摄氏度)分布。</p>
+</div>
+</div>
+<div class="section level3" id="unit-2-posterior-simulation-analysis" number="1.3.2">
+<h3>第2单元:后期模拟和分析</h3>
+<div class="describe">
+<p>激发人心的问题</p>
+<p>当我们的贝叶斯模型变得过于复杂 无法用数学来说明时, 我们如何去估计它们? 一旦我们指定或大致确定了一个模型,我们如何从中得出意义和正式结论?</p>
+</div>
+<p>我们可以使用贝叶斯规则在数学上指定第1单元中介绍的每个基本贝叶斯模型. 然而,当我们把这些贝叶斯建模工具概括到更广泛的环境时, 事情变得非常复杂。 结果? 我们也许无法具体指明模式。 永远不要害怕 — — 数据分析师们并不知道会面对未知人物吐出双手. 当我们不知道什么时, 在第二单元,你会学会使用马可夫链 Monte Carlo 模拟技术 来近似于其他的贝叶斯模型。</p>
+<p>一旦我们为特定情景指定或大致确定了贝叶斯模式,我们也必须能够对结果作出意义和得出正式结论。 后期分析是问“这一切意味着什么?” 的过程,围绕三个主要要素:后期估计、假设测试和预测。</p>
+</div>
+<div class="section level3" id="unit-3-bayesian-regression-classification" number="1.3.3">
+<h3>第3单元:巴伐利亚回归和分类</h3>
+<div class="describe">
+<p>动机问题</p>
+<p>我们并不总是对变数的孤独行为感兴趣。 我们也许想了解QQ1++与一组XQ2++潜在预测变量(XQ3+++)之间的关系. 我们如何建立贝叶斯人模式? 我们怎么知道我们的是不是个好模特?</p>
+</div>
+<p>3单元是真正保持乐趣的地方。 在第三组之前 我们的激励性研究问题都集中在一个变量上 例如,在正常-正常情况下,我们有兴趣探索澳大利亚的 1@@,下午3时的温度。 但一旦我们掌握了这个响应变量, 我们能否根据上午9时的温度( 3@@)和准确位置(\(X_2\))来模拟和预测下午3时的温度? 为此,我们将在第三单元调查传统上属于两类的贝叶斯建模工具:</p>
+<ul>
+<li>模拟和预测量化响应变量 QQ0QX是一个回归任务。</li>
+<li>模拟和预测一个绝对的响应变量 QQ0QX是一个分类任务。</li>
+</ul>
+<p>让我们把这些术语与我们从第1.3.1节中的三个例子联系起来。 首先,在澳大利亚温度的例子中,我们的样本数据表明,沃隆贡的温度往往比较暖和,在上午9点温度越高,下午3点温度就越高。 (图1.8(c))。 由于下午3点温度响应变量是定量的,模拟这种关系是一个回归任务. 事实上,我们可以将单在QQ0@@中的行为的单位1正常-正态模型概括起来,来构建XQ1@@和预测器XQ2@@和XQ3@@之间的关系的正常回归模型. 同样,我们可以将我们对定量鸟类计数(XQ4@@)的单位1Gamma-Poisson分析扩展为Poisson回归模型,描述这些计数如何随着时间推移而增加(XQ5@@)(图1.8(b))。</p>
+<div class="figure" style="text-align: center"><span id="fig:ch1-example-relationships" style="display:block;"></span>
+<img alt="三块地 插图(a)显示两个湿度水平的箱状,一个在第二天不下雨的天数,另一个在每天下雨的天数。 降雨前几天湿度一般较高,约60%,降雨前几天湿度较低,约45%,无雨前几天湿度较低. 斑点(b)是逐年盘点鸟类的散点,这表明秃鹰目击的次数随着时间推移而增加。 plot(c)是一个散点,表明3pm温度与9m温度有很强的正比关系,在Wollongong温度往往比较暖和。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch1-example-relationships-1-b593a552e4a6.png" width="768"/>
+<p class="caption">图1.8:(a) 明天的雨对今天的湿度;(b) 秃鹰的数量; (c) 澳大利亚两个不同城市的下午3时对上午9时的温度。</p>
+</div>
+<p>不论澳大利亚明天是否下雨, 在QQ1@@中理解一般的降雨规律是不错的. 根据今天的天气规律预测雨量, 例如,在我们样本数据中,雨天的湿度通常高于非雨天(图1.8(a))。 由于QQ3@@在本文中是绝对的, 我们将探讨第3单元的两种分类方法,首先是后勤回归,这是第1单元Beta-Binomial模型的延伸。 第二,Naive Bayes分类法是Bayes规则的简化延伸。</p>
+</div>
+<div class="section level3" id="unit-4-hierarchical-bayesian-models" number="1.3.4">
+<h3>第4单元:分级贝叶斯模型</h3>
+<div class="describe">
+<p>动机问题</p>
+<p>帮帮我! 如果我们的数据结构违反了第三单元回归和分类模型背后的独立性假设,怎么办? 具体地说,假设我们数据集中每个随机“组”有多个观测数据。 我们如何调整我们的贝叶斯模型 不仅承认,而且利用这个结构?</p>
+</div>
+<p>第3单元的回归和分类模式是在假定独立的情况下运作的。 也就是说,他们假设我们有关反应和预测变量的数据( 0@@)是一个随机的样本 — — 样本中任何一个主体的观测值独立于任何其他主体. 独立数据的结构如下表所示:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="center">观察</th>
+<th align="center">尔</th>
+<th align="center">页:1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">1</td>
+<td align="center">…</td>
+<td align="center">…</td>
+</tr>
+<tr class="even">
+<td align="center">2</td>
+<td align="center">…</td>
+<td align="center">…</td>
+</tr>
+<tr class="odd">
+<td align="center">3</td>
+<td align="center">…</td>
+<td align="center">…</td>
+</tr>
+</tbody>
+</table>
+<p>这一假设在实践中经常遭到违反。 因此,在第4单元中,我们将大大扩展我们的贝叶斯模型工具箱的灵活性,纳入分级数据或分组数据。 例如,我们的数据可能包括一组抽样的录制艺术家和数据 \\0\\\和\1\\关于每个艺术家内部的多个单个歌曲;或者一组抽样的实验室和来自每个实验室内部多个单个实验的数据;或者一组抽样的人群,我们随着时间的推移对数据进行多个单个观测. 这一想法见以下数据表:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="center">组</th>
+<th align="center">尔</th>
+<th align="center">页:1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center">A级</td>
+<td align="center">…</td>
+<td align="center">…</td>
+</tr>
+<tr class="even">
+<td align="center">A级</td>
+<td align="center">…</td>
+<td align="center">…</td>
+</tr>
+<tr class="odd">
+<td align="center">页:1</td>
+<td align="center">…</td>
+<td align="center">…</td>
+</tr>
+<tr class="even">
+<td align="center">页:1</td>
+<td align="center">…</td>
+<td align="center">…</td>
+</tr>
+<tr class="odd">
+<td align="center">页:1</td>
+<td align="center">…</td>
+<td align="center">…</td>
+</tr>
+</tbody>
+</table>
+<p>我们将在第4单元探讨的分级模式将容纳和利用这种分类数据。 通过在模型中适当反映这种数据结构,我们不仅可以避免做错事,还可以增强我们的能力,以发现XQ0@@和XQ1@@之间的关系的根本趋势,如果仅依靠第3单元的模型技术,就可能掩盖这些趋势。</p>
+</div>
+</div>
+<div class="section level2" id="chapter-summary" number="1.4">
+<h2>章节摘要</h2>
+<p>在第一章,你学会了如何思考 像一个贝叶斯人。 在基本的巴耶斯知识建设过程中(图1.2):</p>
+<ul>
+<li>我们通过平衡我们的数据中的信息和我们以前的知识来构建我们的后期知识;</li>
+<li>随着更多的数据进入,我们继续完善这一知识,因为我们原先的影响逐渐淡化为背景;因此,</li>
+<li>根据越来越多的数据,两位以相反知识为开端的分析师将聚集在同一后期知识上.</li>
+</ul>
+</div>
+<div class="section level2" id="exercises" number="1.5">
+<h2>练习</h2>
+<p>在这些第一次练习中,我们希望你在将你从本章学到的想法纳入你的思维方式时,能够做出一些错误并从中吸取教训。 归根结底,我们希望你对这些想法的理解会比如果你从未犯过错误的话要多。</p>
+<div class="exercise">
+<p>锻炼1.1(巴耶巧克力牛奶) 在第六季电视剧"公园与娱乐"的第四集中,波尼公园与Rec部门副主任莱斯利·克诺佩因官方Parks和Rec Twitter帐号的推文不当,正受到波尼市议员杰里米·贾姆的询问. 以下贾姆和克诺佩的交流是巴耶斯思想的一个例子:</p>
+<p>JJ:“当这个病态的堕落的微博第一次曝光时, 现在,你说这是一个不幸的错误。 为何继续翻滚?”</p>
+<p>LK:“因为我学到了新的信息。 四岁时,我以为巧克力牛奶来自棕牛. 当我发现有些东西叫做巧克力糖浆时,</p>
+<strong>JJ:</strong> “I don’t think I’m out of line when I say this scandal makes Benghazi look like Whitewater.”
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>确定Leslie巧克力牛奶故事的可能前信息。</li>
+<li>找出Leslie在巧克力牛奶故事中 与那些传来的信息相对应的数据</li>
+<li>识别巧克力牛奶故事的最新结论.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-44"><strong>Exercise 1.2  (Stats Tweets)  </strong></span>In May 2020 the Twitter user @frenchpressplz tweeted<a class="footnote-ref" href="#fn10" id="fnref10"><sup>10</sup></a> “Normalize changing your mind when presented with new information.” We consider this a #BayesianTweet.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>写你自己的#BayesianTweet。</li>
+<li>写你自己的#FrequentistTweet.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-45"><strong>Exercise 1.3  (When was the last time you changed your mind?)  </strong></span>Think of a recent situation in which you changed your mind. As with the Italian restaurant example (Figure <a href="/bayes-rules-python-cn/chapter-1/#fig:restaurant-diagram">1.1</a>), make a diagram that includes your prior information, your new data that helped you change your mind, and your posterior conclusion.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-46"><strong>Exercise 1.4  (When was the last time you changed someone else’s mind?)  </strong></span>Think of a recent situation in which you had a conversation in which you changed someone else’s mind. As with the Italian restaurant example (Figure <a href="/bayes-rules-python-cn/chapter-1/#fig:restaurant-diagram">1.1</a>), make a diagram that includes the prior information, the new data that helped you change their mind, and the posterior conclusion.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-47"><strong>Exercise 1.5  (Changing views on Bayes)  </strong></span>When one of the book authors started their master’s degree in biostatistics, they had never used Bayesian statistics before, and thus felt neutral about the topic. In their first semester, they used Bayes to learn about diagnostic tests for different diseases, saw how important Bayes was, and became very interested in the topic. In their second semester, their mathematical statistics course included a Bayesian exercise involving ant eggs which both disgusted them and felt unnecessarily difficult – they became disinterested in Bayesian statistics. In the first semester of their Biostatistics doctoral program, they took a required Bayes class with an excellent professor, and became exceptionally interested in the topic. Draw a Bayesian knowledge-building diagram that represents the author’s evolving opinion about Bayesian statistics.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-48"><strong>Exercise 1.6  (Applying for an internship)  </strong></span>There are several data scientist openings at a much-ballyhooed company. Having read the job description, you know for a fact that you are qualified for the position: this is your <em>data</em>. Your goal is to ascertain whether you will actually be offered a position: this is your <em>hypothesis</em>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>在测试你将会得到这个职位的假设时,</li>
+<li>重复一部分,从某人 使用贝叶斯思想的角度。</li>
+<li>你宁愿回答哪个问题: 频率学派还是贝叶斯人? 解释你的推理。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-49"><strong>Exercise 1.7  (You already know stuff)  </strong></span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>识别您所熟悉的话题(例如运动,学校主题,音乐).</li>
+<li>确定关于这一主题的假设。</li>
+<li>你目前的专门知识如何说明你对这一假设的结论?</li>
+<li>你在这里用什么框架? 贝叶斯人还是频率学派?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-50"><strong>Exercise 1.8  (Benefits of Bayesian Statistics)  </strong></span>Your friend just became interested in Bayesian statistics. Explain the following to them:
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>为什么贝叶斯统计有用?</li>
+<li>贝叶斯人和频率学派者的统计有何相似之处?</li>
+</ol>
+</div>
+</div>
+<h3>参考资料</h3>
+<div class="references csl-bib-body hanging-indent" id="refs">
+<div class="csl-entry" id="ref-berger">
+Berger, James O. 1984. <em>The Likelihood Principle (Lecture Notes-Monograph Series)</em>. Institute of Mathematical Statistics.
+</div>
+<div class="csl-entry" id="ref-birdsorg">
+Birds Canada. 2018. <a href="https://www.birdscanada.org/">https://www.birdscanada.org/</a>.
+</div>
+<div class="csl-entry" id="ref-blackwell">
+Blackwell, David. 1969. <em>Basic Statistics</em>. McGraw Hill.
+</div>
+<div class="csl-entry" id="ref-elgamal">
+El-Gamal, Mahmoud A, and David M Grether. 1995. <span>“Are People <span>B</span>ayesian? <span>U</span>ncovering Behavioral Strategies.”</span> <em>Journal of the American Statistical Association</em> 90 (432): 1137–45.
+</div>
+<div class="csl-entry" id="ref-pvalue">
+Goodman, Steven. 2011. <span>“A Dirty Dozen: Twelve p-Value Misconceptions.”</span> <em>Seminars in Hematology</em> 45: 135–40.
+</div>
+<div class="csl-entry" id="ref-lum2010">
+Lum, Kristian, Megan Price, Tamy Guberek, and Patrick Ball. 2010. <span>“Measuring Elusive Populations with <span>B</span>ayesian Model Averaging for Multiple Systems Estimation: A Case Study on Lethal Violations in <span>C</span>asanare, 1998-2007.”</span> <em>Statistics, Politics and Policy</em> 1 (1).
+</div>
+<div class="csl-entry" id="ref-mbuvha">
+Mbuvha, Rendani, and Tshilidzi Marwala. 2020. <span>“Bayesian Inference of <span>COVID-19</span> Spreading Rates in <span>S</span>outh <span>A</span>frica.”</span> <em>PLOS ONE</em> 15 (8): 1–16. <a href="https://doi.org/10.1371/journal.pone.0237126">https://doi.org/10.1371/journal.pone.0237126</a>.
+</div>
+<div class="csl-entry" id="ref-Mcgrayne">
+McGrayne, Sharon. 2012. <em>The Theory That Would Not Die - <span>H</span>ow <span>B</span>ayes’ <span>R</span>ule Cracked the <span>E</span>nigma Code, Hunted down <span>R</span>ussian Submarines and Emerged Triumphant from Two Centuries of Controversy</em>. Yale University Press.
+</div>
+<div class="csl-entry" id="ref-birdstidy">
+R for Data Science. 2018. <span>“Christmas Bird Counts.”</span> <em>TidyTuesday Github Repostitory</em>. <a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-06-18">https://github.com/rfordatascience/tidytuesday/tree/master/data/2019/2019-06-18</a>.
+</div>
+<div class="csl-entry" id="ref-thinkepi">
+Roberts, Siobhan. 2020. <span>“How to Think Like an Epidemiologist.”</span> <em>New York Times</em>, August. <a href="https://www.nytimes.com/2020/08/04/science/coronavirus-bayes-statistics-math.html">https://www.nytimes.com/2020/08/04/science/coronavirus-bayes-statistics-math.html</a>.
+</div>
+<div class="csl-entry" id="ref-pvals2">
+Wasserstein, Ronald L. 2016. <span>“The <span>ASA</span>’s Statement on p-Values: Context, Process, and Purpose.”</span> <em>The American Statistician</em> 70: 129–33.
+</div>
+</div>
+
+</section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/about-the-authors/">上一节：作者简介</a><a href="/bayes-rules-python-cn/chapter-2/">下一节：第 2 章 贝叶斯公式</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js"></script>
+</body>
+</html>

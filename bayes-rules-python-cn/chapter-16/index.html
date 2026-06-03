@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="第 16 章 无预测变量的正态分层模型 | Bayes Rules! 中文 Python 改写教程" name="description"/>
+<title>第 16 章 无预测变量的正态分层模型 | Chandler's AI Productivity Notes</title>
+<link href="/assets/img/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="/assets/css/styles.css" rel="stylesheet"/>
+<script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#content">跳到正文</a>
+<header class="site-header">
+<a aria-label="Chandler's AI Productivity Notes 首页" class="brand" href="/">
+<span class="brand-mark">C</span>
+<span class="brand-name">Chandler's AI Productivity Notes</span>
+</a>
+<nav aria-label="主导航" class="site-nav">
+<a href="/">首页</a>
+<a aria-current="page" href="/posts/">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+</nav>
+</header>
+<main class="tutorial-page" id="content">
+<div class="tutorial-layout">
+<aside class="tutorial-sidebar">
+<h2>教程目录</h2>
+<nav><a href="/bayes-rules-python-cn/">首页</a><a href="/bayes-rules-python-cn/foreword/">前言</a><a href="/bayes-rules-python-cn/preface/">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a aria-current="page" href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a href="/bayes-rules-python-cn/references/">参考文献</a></nav>
+</aside>
+<article class="tutorial-content">
+<section class="normal" id="section-">
+<div class="section level1" id="chapter-16" number="16">
+<h1>第 16 章 无预测变量的正态分层模型</h1>
+<div class="tutorial-note">
+<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
+</div>
+<p>我们将在第16章中, 假设我们有一些响应变量, 考虑以下数据故事. Spotify音乐流媒体平台为听众提供了超过5000万首歌曲的访问权限. 当然,有些歌曲比其他歌曲更受欢迎. 让QQ2@@成为一首歌曲的Spotify受欢迎度评分为0-100级. 一般来说,一首歌曲在平台上播放的越近,其受欢迎程度就越高. 因此,受欢迎程度并不一定衡量一首歌曲的整体质量、长期受欢迎程度或超过Spotify观众的受欢迎程度。 虽然很难不问哪些歌曲能帮助我们预测收视率, 我们尤其希望更好地了解:</p>
+<ul>
+<li>Spotify歌曲的典型流行是什么?</li>
+<li>艺术家之间的受欢迎程度有多大不同?</li>
+<li>对于任何单曲艺人来说,歌曲的受欢迎程度会有多少不同?</li>
+</ul>
+<p>除了对平均受欢迎程度在50左右的模糊感之外, 我们对这些动态没有任何强烈的事先理解, 因此,我们来查查数据。 在bayesrules包中标注数据是Kaylin Pavlik(2019年)分析的一个数据子集,通过#TidyTuesday项目(R for Data Science 2020d)分发. 它包含了关于Spotify的350首歌曲的信息. 68个</p>
+<div class="sourceCode" id="cb312">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python"># 原书 bayesrules 数据包中的数据需改用 CSV/本地数据文件读取
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pymc as pm
+import arviz as az
+# pandas.Categorical 可处理因子水平和类别顺序
+
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# 装入软件包
+# 装入数据
+data(spotify)</code></pre>
+</div>
+<p>在这里,我们只选择了几个对我们的分析很重要的变量,并用fct reorder()在forcats套件(Wickham 2021)中按照他们的平均歌曲受欢迎度重新排序艺术家级别:</p>
+<div class="sourceCode" id="cb313">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>也鼓励您全面查看所发现的数据。 但即使只有几个片段可以显示一个层次或分组的数据结构:</p>
+<div class="sourceCode" id="cb314">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 头几行
+head(spotify, 3)
+# A:3×3
+artist title        popularity
+&lt;fct&gt;  &lt;chr&gt;             &lt;dbl&gt;
+1 Alok   On &amp; On              79
+2 Alok   All The Lies         56
+3 Alok   Hear Me Now          75
+# 歌曲数量
+nrow(spotify)
+[1] 350
+# 艺术家人数
+nlevels(spotify$artist)
+[1] 44</code></pre>
+</div>
+<p>具体地说,我们总共350首歌曲的样本由44位艺术家的多首歌曲组成,这44位艺术家又从Spotify上所有有歌曲的艺术家的人群中抽取(图16.1)。</p>
+<div class="figure" style="text-align: center"><span id="fig:spotify-hierarchical-data-diagram" style="display:block;"></span>
+<img alt='流图. 顶部是Spotify上标注所有艺术家的盒子"人口". 在这个盒子中,有3个不同的箭头,通往标有"艺术家1","艺术家2"和"艺术家44"的盒子. 其中每个盒子中都有多个箭头,导致气泡,代表着每个艺术家身上的一组独特的数据点.' loading="lazy" src="/assets/img/bayes-rules-python-cn/spotify-hierarchical-data-diagram-cdef7c59416b.png" width="100%"/>
+<p class="caption">图16.1:艺术家等级数据.</p>
+</div>
+<p>艺人 意指数据框架总结了每个艺人上观察到的歌曲数量,以及这些歌曲的平均受欢迎程度. 下面显示的是两位观众中收视率最低且平均最高的艺术家. 考虑到我们的分析中已经排除了近10%的Spotify歌曲,</p>
+<div class="sourceCode" id="cb315">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>回顾第15章,我们将考虑三种不同的方法来分析这一Spotific流行数据:</p>
+<ul>
+<li><p>完全集合 忽略艺术家 将所有歌曲拼凑在一起(图15.5).</p></li>
+<li><p>不能单独分析每位艺术家, 并假设一位艺术家的数据并不包含另一位艺术家的宝贵信息(图15.6)。</p></li>
+<li><p>部分集合(通过分级模式)承认组合结构,这样,即使艺术家在受欢迎度上有所不同,他们也可能分享关于彼此和更广泛的艺术家群体的宝贵信息(图16.1)。</p></li>
+</ul>
+<p>你可能怀疑,前两种方法过度简化分析。 尝试它们的好处是,它会提醒我们,为什么我们首先应该关心等级模式。</p>
+<div class="goals">
+<ul>
+<li>构建一个没有预测器的变数QQ0QQ的层次模型.</li>
+<li>使用rstanar模拟和分析这个等级模型.</li>
+<li>使用层次模型来预测 \\\\\\\\\\\\。</li>
+</ul>
+<p>以大局为中心, 我们把对等级模型的首次探索 放在正常设置上,</p>
+</div>
+<div class="warning">
+<p>随着我们的贝叶斯模型工具包的扩展,我们的R工具和语法也必须扩大. 耐心一点,当你在这个单位看到更多的例子时,语法中的规律会变得更加熟悉。</p>
+</div>
+<div style="page-break-after: always;"></div>
+<div class="section level2" id="chapter-16-complete-pooling" number="16.1">
+<h2>完整的集合模式</h2>
+<p></p>
+<p>仔细分析组结构化数据需要一些新的标记. 通常我们会使用 0@@和\(j\)下标来追踪我们样本中每首歌的两条信息:\(j\)表示一首歌曲的艺人,\(i\)表示每一名艺人内部的具体歌曲. 首先,让我们的QQ4 表示我们为艺术家的QQ5的歌曲数量。 例如,前两位艺人分别拥有\(n_1 = 4\)和\(n_2 = 10\)的歌曲:</p>
+<div class="sourceCode" id="cb316">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+head(artist_means, 2)
+# A: 2 x 3
+artist        count popularity
+&lt;fct&gt;         &lt;int&gt;      &lt;dbl&gt;
+1 Mia X             4       13.2
+2 Chris Goldarg    10       16.4</code></pre>
+</div>
+<p>此外,每个艺术家的歌曲数量低至2首,高至40首:</p>
+<div class="sourceCode" id="cb317">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>总结所有艺术家的歌曲数量,</p>
+<p>\[n = \sum_{j=1}^{44} n_j = n_1 + n_2 + \cdots + n_{44} = 350 .\]</p>
+<p>在艺术家之外是歌曲本身。 为了区分歌曲,我们会让QQ0@@ (或作 1@@)代表为艺术家\(j\)的\(i\)Th歌,其中\(i \in \{1,2,\ldots,n_j\}\)和\(j \in \{1,2, \ldots, 44\}\). 因此,我们可以把350首总曲目的样本当作44位艺术家各自收集的较小的样本:</p>
+<p>\[Y := \left((Y_{11}, Y_{21}, \ldots, Y_{n_1,1}), (Y_{12}, Y_{22}, \ldots, Y_{n_2,2}), \ldots, (Y_{1,44}, Y_{2,44}, \ldots, Y_{n_{44},44})\right) .\]</p>
+<p>作为分析这些数据的第一种方法,我们将实施一个完整的歌曲流行集合模式,该模式忽略了数据分组结构,将所有歌曲合并为一个样本。 这个池子的密度图案表明,从歌曲到歌曲的受欢迎程度有很大的差别,收视率大约在10到95之间.</p>
+<div class="sourceCode" id="cb318">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-656" style="display:block;"></span>
+<img alt="歌曲流行的密度情节. 流行值从大约10到100不等。 它们略微左倾,峰值接近70。" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-656-1-6262d96f7439.png" width="240"/>
+<p class="caption">图16.2: 从歌曲到歌曲的流行度变化的密度情节.</p>
+</div>
+<p>虽然这些评分看起来有些偏差, 我们将会使用以下正常-正常完全的集合模式, 这些先验的规格可以使用prefer 摘要()加以确认。</p>
+<p>\[\begin{equation} \begin{split} Y_{ij} | \mu, \sigma &amp; \sim N(\mu, \sigma^2) \\ \mu &amp; \sim N(50, 52^2) \\ \sigma &amp; \sim \text{Exp}(0.048) \\ \end{split} \tag{16.1} \end{equation}\]</p>
+<p>虽然我们在第5章和第9章中看到类似的模型, 因为 2@@和\(\sigma\)被每首歌\(Y_{ij}\)分享, 在所有歌曲中,所有艺术家在人口中:</p>
+<ul>
+<li>\(\mu\) = 全球平均受欢迎程度;和</li>
+<li>\(\sigma\) = 受欢迎程度从歌曲到歌曲的全球标准偏差.</li>
+</ul>
+<p>为了模拟相应的后期,请注意完整的集合模型(16.1)是伪装中的简单的普通回归模型. 具体地说,如果我们用注 0@@代替全球平均值\(\mu\),(16.1)是一个只截取回归模型,没有预测符\(X\). 考虑到这一点,我们可以使用stan glm()模拟完整的集合模型,其公式受欢迎度~1,其中1指定了一个“只接受”的术语:</p>
+<div class="sourceCode" id="cb319">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>以下的后篇摘要表明Spotify歌曲具有典型的流行性评分,QQ0@@,58.39分左右,标准差相对较大,从歌曲到歌曲,QQ1@@,20.67分左右.</p>
+<div class="sourceCode" id="cb320">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+complete_summary = tidy(spotify_complete_pooled,
+effects = c("fixed", "aux"),
+conf.int = TRUE, conf.level = 0.80)
+complete_summary
+# A:3×5
+term        estimate std.error conf.low conf.high
+&lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 (Intercept)     58.4     1.10      57.0      59.8
+2 sigma           20.7     0.776     19.7      21.7
+3 mean_PPD        58.4     1.57      56.4      60.4</code></pre>
+</div>
+<p>根据这些结果,完成下面的测验。 第69条</p>
+<div class="quiz">
+<p>假设以下三位艺术家在Spotify上各发布一首新歌:</p>
+<ul>
+<li>Mia X,我们样本中最受欢迎的艺术家(13人)。</li>
+<li>碧昂丝(Beyoncé),是一位艺术家,在我们的样本中拥有近乎最高的热门(70).</li>
+<li>Mohsen Beats是一个我们没有观察到的音乐团体。</li>
+</ul>
+<p>使用完整的集合模式,每首歌曲的流行程度的大致后期预测意味着什么?</p>
+</div>
+<p>您的直觉可能合理暗示了这三位艺术家的预期受欢迎程度应该不同 — 我们的数据表明,碧昂丝的歌曲会比米娅的歌曲更受欢迎. 然而,回顾一下,通过将所有歌曲拼凑在一起,我们的完整集合模型忽略了任何艺术家特有的信息. 因此,后期预言任何新歌的受欢迎程度都会与每位艺术家相同,在我们样本中的人(Beyoncé和Mia X)和没有的人(Mohsen Beats). 此外,共享的后期预测平均受欢迎程度大致相当于全球平均值的后期预期值,XQ0+QQ1+58.39。 将后期预测的受欢迎模式(浅蓝色)与所有44个抽样艺术家的受欢迎水平(暗点)一起绘制,说明这种过度简化的不幸后果 — — 尽管我们知道他们不是,但对所有艺术家都一视同仁。</p>
+<div class="sourceCode" id="cb321">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+rng = np.random.default_rng(84735)
+predictions_complete = posterior_predict(spotify_complete_pooled,
+newdata = artist_means)
+ppc_intervals(artist_means$popularity, yrep = predictions_complete,
+prob_outer = 0.80) +
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch16-complete-pred" style="display:block;"></span>
+<img alt="每个艺术家(x轴)的受欢迎情节(y轴). 暗蓝色点代表观测到的艺术家受欢迎程度,受欢迎程度从15到80不等. 与每个数据点相对应的是狭长的浅蓝色垂直条,短而宽的浅蓝色条,以及代表后期预测间隔的浅蓝色点. 这些间隔非常宽广,每个艺术家都一样. 对于3位艺术家来说,观察到的受欢迎程度低于预测间隔." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch16-complete-pred-1-477c6b15fba0.png" width="768"/>
+<p class="caption">FIGURE 16.3: 艺术家歌曲流行的预测间隔,根据完整的集合模型计算.</p>
+</div>
+</div>
+<div class="section level2" id="chapter-16-no-pooling" number="16.2">
+<h2>无集合模式</h2>
+<p></p>
+<p>完全的集合模型忽略了我们Spotify数据的组合结构 — — 我们的样本中有44个独特的艺术家,每个有多个歌曲. 接下来,考虑不采用反方向的集合模式,单独分析每个艺术家的受欢迎程度。 图16.4显示每个艺术家的歌曲受欢迎程度。</p>
+<div class="sourceCode" id="cb322">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch16-dens" style="display:block;"></span>
+<img alt="有44个密度的地块 受欢迎,每个艺术家1个。 无论是在中心还是传播方面,这些差异都很大。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch16-dens-1-cadcb0bdd672.png" width="576"/>
+<p class="caption">FIGURE 16.4:由艺人描述的歌曲到歌曲的流行程度变化的密度情节.</p>
+</div>
+<div style="page-break-after: always;"></div>
+<p>这场乱七八糟的台词中的一击就是: 艺术家们在受欢迎度和受欢迎度方面的典型的受欢迎度和可变性各不相同. 一些艺术家的歌曲的受欢迎程度往往低于25,而另一些则往往高于75。 此外,对于一些艺术家来说,从歌曲到歌曲的受欢迎程度非常一致,或者说变化不大。 对其他人来说,歌曲的流行程度在地图上到处下降——他们的一些歌曲是狂野流行的,而另一些则不那么流行.</p>
+<p>而非假设全球平均受欢迎程度, 歌曲的受欢迎程度通常分布在一些有标准偏差的作品上:</p>
+<p>\[\begin{equation} Y_{ij} | \mu_j, \sigma \sim N(\mu_j, \sigma^2) \tag{16.2} \end{equation}\]</p>
+<p>这样</p>
+<ul>
+<li>\(\mu_j\) = 艺术家的歌曲热门性;</li>
+<li>\(\sigma\) = 每位艺术家中流行歌曲与歌曲的标准偏差.</li>
+</ul>
+<p>图16.5说明了这些参数和我们44名抽样艺术家中仅有5名的模型假设。 首先,我们的普通数据模型(16.2)假设不同艺术家之间的平均受欢迎程度是不同的,即有些艺术家的歌曲往往比其他艺术家的歌曲更受欢迎。 相较于此,它假设歌曲之间流行程度的变异性, QQ2@@, 尽管图16.4可能会质疑常态和等量变异的假设, 每一个艺术家的样本都很小, 目前的简化假设是一个合理的起点。</p>
+<div class="figure" style="text-align: center"><span id="fig:spotify-hierarchy-model-vis-1" style="display:block;"></span>
+<img alt="有5个重叠的正常曲线. 它们具有相同的标准偏差,但以一系列数值为中心,标签为mu 1至mu 5. 有一个箭头表示每个曲线中共享的标准偏差或分布由sigma y测量." loading="lazy" src="/assets/img/bayes-rules-python-cn/spotify-hierarchy-model-vis-1-1-fb20b02e5c4a.png" width="480"/>
+<p class="caption">图16.5: 没有集合模型假设的说明。</p>
+</div>
+<p>没有集合数据结构的标记(16.2)也澄清了我们没有集合方法的一些特点:</p>
+<ul>
+<li>每首同名艺人演唱的歌曲,</li>
+<li>不同艺术家的歌曲 \(j\)和\(k\),\(Y_{ij}\)和\(Y_{ik}\),有不同的平均参数 \(\mu_j\)和\(\mu_k\). 因此,每个艺术家都得到一个独特的恶毒,一个艺术家的恶毒不告诉我们另一个的恶毒。</li>
+<li>虽然我们的模型没有汇集玩家平均受欢迎程度的信息, 我们还可以给每个艺术家指定独特的标准偏差参数,QQ3@@,但共享的标准偏差假设却将事情简化了很多. 本着这种简洁的精神,我们将继续将(16.3)称为不集合模式,尽管“不”集合更为合适。</li>
+</ul>
+<p>最后,为了完成不集合模型,我们利用信息不足的正常前科来计算平均参数QQ0XX(每个都以50的受欢迎率为中心)和标准偏差参数QQ1XX的前兆。 我们不在此列出:</p>
+<p>\[\begin{equation} \begin{split} Y_{ij} | \mu_j, \sigma_j &amp; \sim N(\mu_j, \sigma^2) \\ \mu_j &amp; \sim N(50, s_j^2) \\ \sigma &amp; \sim \text{Exp}(0.048). \\ \end{split} \tag{16.3} \end{equation}\]</p>
+<p>为了模拟没有集合模型的后缀, 我们可以将艺术家当作一个预测器, 在缺乏全球截取术语的反演模型中。 70 此设置由公式受欢迎度~艺术家− 1 指定:</p>
+<div class="sourceCode" id="cb323">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>基于你对无集合策略的理解,完成下面的测试. 71号</p>
+<div class="quiz">
+<p>假设以下三位艺术家在Spotify上各发布一首新歌:</p>
+<ol style="list-style-type: lower-alpha">
+<li>Mia X,我们样本中最受欢迎的艺术家(13人)。</li>
+<li>碧昂丝(Beyoncé),是一位艺术家,在我们的样本中拥有近乎最高的热门(70).</li>
+<li>Mohsen Beats是一个我们没有观察到的音乐团体。</li>
+</ol>
+<p>使用没有集合模式,</p>
+</div>
+<p>由于每个艺术家都获得一个独特的平均受欢迎参数 \(\mu_j\), 因此,在使用资料不足的前科之后,米娅·Q·斯的后期预测模型应该集中在她观察到的13个样本的附近,而碧昂斯的样本应该接近70个。 事实上,图16.6证实,每个艺术家下一首歌的受欢迎程度的后期预测模型以他们观察到的样本歌曲的平均受欢迎程度为中心。</p>
+<div class="sourceCode" id="cb324">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 模拟后期预测模型
+rng = np.random.default_rng(84735)
+predictions_no = posterior_predict(
+spotify_no_pooled, newdata = artist_means)
+# 绘制后导间隔
+ppc_intervals(artist_means$popularity, yrep = predictions_no,
+prob_outer = 0.80) +
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch16-post-pred-no" style="display:block;"></span>
+<img alt="每个艺术家(x轴)的受欢迎情节(y轴). 暗蓝色点代表观测到的艺术家受欢迎程度,受欢迎程度从15到80不等. 与每个数据点相对应的是狭长的浅蓝色垂直条,短而宽的浅蓝色条,以及代表后期预测间隔的浅蓝色点. 这些间隔往往跨越30个受欢迎的级别,并且每个都集中在深蓝色的点上." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch16-post-pred-no-1-30a46eb3f852.png" width="768"/>
+<p class="caption">FIGURE 16.6: 艺术家歌曲受欢迎程度的预测后间隔,按不集合模式计算.</p>
+</div>
+<p>如果我们不停下来思考, 没有集合模型承认一些艺术家往往比其他艺术家更受欢迎. 然而,有两个关键的缺点。 首先,没有集合模型在得知另一个艺术家的典型受欢迎程度时,忽略了一个艺术家的数据. 这对于艺术家来说尤其成问题,我们对他们来说几乎没有数据点。 例如,我们对Mia QQs下一首歌的低后期预测是基于一首微调的4首歌曲. 其他艺术家的数据显示这些低收视率可能只是一个艰难的突破 — — 她的下一首歌可能更受欢迎! 同样,我们对Lil Skies下一首歌的高后期预测仅基于三首歌曲。 从其他艺术家的数据来看, 我们可能会怀疑这是否是初学者的幸运,</p>
+<p>第二,没有集合模型不能被推广到我们样本之外的艺术家. 记得莫森比兹吗? 因为没有集合模式是针对我们样本中的艺术家量身定做的, Mohsen Beats 也不属于这个样本, 也就是说,正如没有集合模型假设我们的样本中没有一位艺术家包含我们样本中另一位艺术家典型受欢迎的有价值的信息一样,它假设我们的样本艺术家并没有告诉我们那些没有进入我们样本的艺术家的典型受欢迎情况。 也说明为何我们不能将艺术家作为绝对的预测者, 除了违反独立这一假设之外,这样做只会让我们了解我们样本中的44位艺术家。</p>
+</div>
+<div class="section level2" id="hierarchical-building-16" number="16.3">
+<h2>建立分级模式</h2>
+<p></p>
+<div class="section level3" id="the-hierarchy" number="16.3.1">
+<h3>等级</h3>
+<p>我们希望我们重新说服大家, 我们必须仔细注意分级的数据。 为此,我们最终将具体化Spotify流行程度的分级正常模式。 这个模型有几层,两层与分级结构的斑点数据(图16.1)有关,第三层与我们模型参数上以前的模型有关. 下面是这一模型的一个非常概括的纲要,这些图层仅供参考:</p>
+<p>\[\begin{equation} \begin{array}{lrl} \text{Layer 1:} &amp; \hspace{-0.05in} Y_{ij} | \mu_j, \sigma_y &amp; \hspace{-0.075in} \sim \text{model of how song popularity varies WITHIN artist } j \\ \text{Layer 2:} &amp; \hspace{-0.05in} \mu_j | \mu, \sigma_\mu &amp; \hspace{-0.075in} \sim \text{model of how the typical popularity $\mu_j$ varies BETWEEN artists}\\ \text{Layer 3:} &amp; \hspace{-0.05in} \mu, \sigma_y, \sigma_\mu &amp; \hspace{-0.075in} \sim \text{prior models for shared global parameters} \\ \end{array} \tag{16.4} \end{equation}\]</p>
+<p>第1层涉及我们等级数据中最小的单位:每个艺术家内部的单曲. 与没有集合模式(16.2)一样,第一层是团体或艺术家特异性的,因此承认歌曲的受欢迎程度++0++部分取决于艺术家. 歌曲的受欢迎程度通常分布在一些有标准偏差的作品上:</p>
+<p>\[Y_{ij} | \mu_j, \sigma_y \sim N(\mu_j, \sigma_y^2)\]</p>
+<p>因此,第一层参数的含义与没有集合模型的含义相同:</p>
+<ul>
+<li>\(\mu_j\) = 艺术家的歌曲热门性;</li>
+<li>QQ0@@ = 组内变化,即每个艺人内部流行的歌曲与歌曲的标准偏差.</li>
+</ul>
+<p>未来, 如果我们在每位艺术家身上分别列出前科, 第2层(16.4)是等级模型开始自我区分的地方. 第2层承认,我们44位抽样的艺术家都是来自Spotify的广大艺术家。 在这个人群中,艺术家和艺术家的受欢迎程度各不相同. 我们假设个人的平均受欢迎程度, 通常分布在XQ2左右,</p>
+<p>\[\mu_j | \mu, \sigma_\mu \sim N(\mu, \sigma^2_\mu) .\]</p>
+<p>因此,我们可以考虑两个新的参数如下:</p>
+<ul>
+<li>\(\mu\) = 平均歌曲受欢迎度的全球平均值 =====================================================================================================================================================================================================================================================</li>
+<li>QQ0@@ = 组别变异性,即平均受欢迎度的标准偏差 QQ1@@ 从艺术家到艺术家.</li>
+</ul>
+<!-- AJ: I think this is more confusing than helpful? -->
+<p>我们44位艺术家平均受欢迎程度的密度图表明,这一先验的假设是合理的。 这些艺术家的样本似乎大致分布在某种全球平均值上:</p>
+<div class="sourceCode" id="cb325">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-664" style="display:block;"></span>
+<img alt="艺术家的密度图意味着受欢迎。 平均受欢迎程度大致呈钟形,以55人左右为中心,范围大约为15至80人." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-664-1-528a40691c15.png" width="240"/>
+<p class="caption">图 16.7岁: 从艺术家到艺术家 平均歌曲受欢迎程度的变异性</p>
+</div>
+<div class="describe">
+<p>标记提示</p>
+<ul>
+<li><p>\(\mu_j\)和\(\mu\)有区别. 当一个参数有一个下标QQ2@@时,它指的是组XQ3@@的一个特征. 当一个参数没有下标 QQ 4 QQ 时, 它就是全球对应的,</p></li>
+<li><p>下标表示兴趣的组或层次。 例如,QQ0@@指每个组内QQ1@@值的标准偏差,而XQ2@@指组内XQ3@@值的标准偏差.</p></li>
+</ul>
+</div>
+<p>虽然第1层和第2层使我们了解了分级结构的数据,但记住这是一本巴耶斯书。 因此,在我们的等级模型(16.4)的最后第3层中,我们必须具体说明描述和分享所有Spotify艺术家的全球参数的先验模型: 0@@、\(\sigma_y\)和\(\sigma_\mu\)。 与往常一样,普通模型为平均参数QQ3@@提供了合理的前置,而标准偏差术语XQ4@@和XQ5@@提供了合理的前置.</p>
+<p>综上所述,我们最后的分级模式汇集了艺术家内部(Layer 1)个人歌曲受欢迎程度如何变化的模式,以及艺术家之间(Layer 2)受欢迎程度如何变化的模式,以及我们以前对整个艺术家群体(Layer 3)的理解。 资料不足的前科在此说明,下文予以确认。 请注意,我们再次假定基线歌曲的受欢迎程度为50。</p>
+<p>\[\begin{equation} \begin{array}{rll} Y_{ij} | \mu_j, \sigma_y &amp; \sim N(\mu_j, \sigma_y^2) &amp; \text{model of individual songs within artist $j$} \\ \mu_j | \mu, \sigma_\mu &amp; \stackrel{ind}{\sim} N(\mu, \sigma_\mu^2) &amp; \text{model of variability between artists}\\ \mu &amp; \sim N(50, 52^2) &amp; \text{prior models on global parameters} \\ \sigma_y &amp; \sim \text{Exp}(0.048) &amp; \\ \sigma_\mu &amp; \sim \text{Exp}(1) &amp; \\ \end{array} \tag{16.5} \end{equation}\]</p>
+<p>该型号有特殊名称:单向分析差异. 我们将在第16.3.3节中探讨这个Moniker背后的动机。</p>
+<div class="describe">
+<p>差异单向分析(ANOVA)</p>
+<p>假设我们有多个数据点 关于每个XQ0QQ组。 对于每组的XQ1@@,请XQ2@@表示QQ3@@的观察,而QQ4@@表示样本大小. 那么XQ5@@的单向ANOVA模式是:</p>
+<p>\[\begin{equation} \begin{array}{rll} Y_{ij} | \mu_j, \sigma_y &amp; \sim N(\mu_j, \sigma_y^2) &amp; \text{model of individual observations within group $j$} \\ \mu_j | \mu, \sigma_\mu &amp; \stackrel{ind}{\sim} N(\mu, \sigma_\mu^2) &amp; \text{model of how parameters vary between groups}\\ \mu &amp; \sim N(m, s^2) &amp; \text{prior models on global parameters} \\ \sigma_y &amp; \sim \text{Exp}(l_y) &amp; \\ \sigma_\mu &amp; \sim \text{Exp}(l_{\mu}) &amp; \\ \end{array} \tag{16.6} \end{equation}\]</p>
+</div>
+</div>
+<div class="section level3" id="another-way-to-think-about-it" number="16.3.2">
+<h3>另一种思考方式</h3>
+<p>表示一般歌曲的受欢迎程度会因艺术家而异。 我们的分级模式(16.5)呈现出这些艺术家特异性的表示, 我们可以将艺术家特有的手段视为随机调整或调整,</p>
+<p>\[\mu_j = \mu + b_{j} \]</p>
+<p>如果这些调值是正常偏差为 0, 且标准偏差为 QQ0QQ 编号 :</p>
+<p>\[b_j \sim N(0, \sigma_\mu^2) .\]</p>
+<p>例如,假设Spotify上所有歌曲的平均受欢迎程度是 0@@,而一些艺术家的平均受欢迎程度是\(\mu_j = 65\). 这名艺术家的平均受欢迎程度比全球平均水平高10人。 也就是说 3 和</p>
+<p>\[\mu_j = \mu + b_j = 55 + 10 = 65 .\]</p>
+<p>一般来说,我们可以将我们等级模型(16.5)中的第1层和第2层重新划定如下:</p>
+<p>\[\begin{equation} \begin{split} Y_{ij} | \mu_j, \sigma_y &amp; \sim N(\mu_j, \sigma_y^2) \;\; \text{ with } \;\; \mu_j = \mu + b_{j} \\ b_{j} | \sigma_\mu &amp; \stackrel{ind}{\sim} N(0, \sigma_\mu^2) \\ \mu &amp; \sim N(50, 52^2) \\ \sigma_y &amp; \sim \text{Exp}(0.048) \\ \sigma_\mu &amp; \sim \text{Exp}(1) \\ \end{split} \tag{16.7} \end{equation}\]</p>
+<p>同样,这两种型号配体(16.5)和(16.7)是等同的。 他们只是思考我们数据等级结构的两种不同方式。 我们将会在整个书中使用两者。</p>
+</div>
+<div class="section level3" id="ch16-within-btwn" number="16.3.3">
+<h3>组内对组之间的变化</h3>
+<p>让我们采用我们刚刚建立的模式。 在第四单元之前我们研究的模型 使我们能够探索一个变异源, 在单个观测中, \\\\\\\\ 整个人群。 与此相对照,正确命名的分级数据单向“差异分析”模型使我们能够将QQ1@@的差异分解为两个来源:(1)任何特定组内单个观测XQ2@@的差异,XQ3@@;(2)各组间特征的差异,XQ4@@,即从组到组. \(Y\)的总差异是这两个部分的总和:</p>
+<p>\[\begin{equation} \text{Var}(Y_{ij}) = \sigma_y^2 + \sigma_{\mu}^2 . \tag{16.8} \end{equation}\]</p>
+<p>我们还可以按比例考虑这一细分:</p>
+<p>\[\begin{equation} \begin{split} \frac{\sigma^2_y}{\sigma^2_\mu + \sigma^2_y} &amp; = \text{ proportion of $\text{Var}(Y_{ij})$ that can be explained by } \\[-2.5ex] &amp; \; \;\;\;\; \text{ differences in the observations within each group} \\ \frac{\sigma^2_\mu}{\sigma^2_\mu + \sigma^2_y} &amp; = \text{ proportion of $\text{Var}(Y_{ij})$ that can be explained by } \\[-2.5ex] &amp; \;\;\;\;\; \text{ differences between groups} \\ \end{split} \tag{16.9} \end{equation}\]</p>
+<p>或以Spotify分析为背景, 我们可以量化所有歌曲和艺术家( 0@@)中受欢迎程度的总差异,</p>
+<p>图16.8说明了比较这两个变异源的三种情况。 一种极端的情况是,群体之间的变异性远大于群体内部的变异性,XQ0@@(plot a). 在这种情况下,QQ1@@中的多数变异可以用各组之间的差异来解释. 另一个极端是群体之间的变异性远低于群体内部的变异性,XQ2@@(plot c). 这导致对两个组的QQ3QQ值几乎没有区分. 因此,XQ4@@中大多数的变异可以用每个组内部的观测差异来解释,而不是各组本身之间的差异. 从图16.4的44个密度地块来看, 我们的Spotify数据会沿着这个光谱下降, 然而,我们对第16.4节的事后分析将表明,我们的例子处于中间。 任何一位艺术家内部的歌曲与歌曲的区别在规模上都与艺术家之间的区别类似(à la plot b).</p>
+<div class="figure" style="text-align: center"><span id="fig:btwn-within" style="display:block;"></span>
+<img alt="有三块地块,标注为a,b,和c. 在地块中,一个是两个密度不重叠的地块。 b. 地块中有两个密度小的重叠地块。 C区是两个密度极重的地块。" loading="lazy" src="/assets/img/bayes-rules-python-cn/btwn-within-1-41f11c58430f.png" width="768"/>
+<p class="caption">FIGURE 16.8:在 1@@(a),\(\sigma_y = \sigma_\mu\)(b)和\(\sigma_y = 4 \sigma_\mu\)(c)时,对两个组的变数 0@@的模拟输出. 相应地,XQQQ值之间的组内关联是0.8(a)、0.5(b)和0.2(c)。</p>
+</div>
+<p>(a) 插图说明分组数据的另一个特征:任何特定组内的多重观测是相互关联的。 一首碧昂丝歌曲的流行程度与其他碧昂丝歌曲的流行程度有关. 一首米娅X歌曲的受欢迎程度与其他米娅X歌曲的受欢迎程度有关. 一般说来,单向ANOVA模式(16.6)假设,虽然对一组的观测独立于对另一组的观测,但对同一组的2个观测点的群内关联是:</p>
+<p>\[\begin{equation} \text{Cor}(Y_{ij}, Y_{kj}) = \frac{\sigma^2_\mu}{\sigma^2_\mu + \sigma^2_y} . \tag{16.10} \end{equation}\]</p>
+<p>因此,群体越是独特,每组内部的相关性就越大。 例如,图16.8的图(a)中组内关联度为0.8,这一数字接近1。 相比之下,各组的相似性越大,XQ1XX的相对小,每个组内的相关性就越小. 例如,图(c)中的组内关联度为0.2,一个数字接近0. 一旦模拟我们的模型后期, 我们就会回到这些想法, 这样就可以把一些数字放进我们的Spotify数据中。</p>
+</div>
+</div>
+<div class="section level2" id="ch-16-analyze" number="16.4">
+<h2>A. 后方分析</h2>
+<div class="section level3" id="posterior-simulation-2" number="16.4.1">
+<h3>后期模拟</h3>
+<p>下一步:后卫! 注意到我们的分级Spotify模型(16.5)共有47个参数:44个艺术家专用参数( 0@@)和3个全局参数(\(\mu\),\(\sigma_y\),\(\sigma_\mu\)). 探索这些whopp 47参数的后验模型需要MCMC模拟. 为此,stan glmer () 函数的操作非常像stan glm (),有两个小的扭矩.</p>
+<ul>
+<li>表示艺术家变量定义了我们的数据组结构, 而非预测受欢迎程度,</li>
+<li>\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 对于这个特定的模型,只有一组艺术家特有的参数XQ1@@,这相当于一个Exp(1)前. (你将在第17章中更多地了解事前差异。)</li>
+</ul>
+<!-- KEEP reference for decov: https://mc-stan.org/users/documentation/case-studies/tutorial_rstanarm.html -->
+<div class="sourceCode" id="cb326">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>所有47个参数的MCMC诊断证实,我们的模拟已经稳定下来:</p>
+<div class="sourceCode" id="cb327">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+mcmc_trace(spotify_hierarchical)
+mcmc_dens_overlay(spotify_hierarchical)
+mcmc_acf(spotify_hierarchical)
+neff_ratio(spotify_hierarchical)
+rhat(spotify_hierarchical)</code></pre>
+</div>
+<p>我们的等级模型(16.5)在收录歌曲流行程度的变异性时, 一套歌曲流行度的后期模拟数据集与原始流行度数据的一般特征一致.</p>
+<div class="sourceCode" id="cb328">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+pp_check(spotify_hierarchical) +
+xlab("popularity")</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-668" style="display:block;"></span>
+<img alt="歌曲受欢迎的密度图有51幅,50幅为浅蓝色,1幅为深蓝色. 它们都相似 -- -- 大致呈钟形,以60个左右为中心,范围从0到120个不等。 深蓝线略窄,以70左右为中心." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-668-1-01f19d58b285.png" width="240"/>
+<p class="caption">FIGURE 16.9:100后模拟歌曲流行度数据集(浅蓝色)与实际观测到的流行度数据(深蓝色).</p>
+</div>
+<p>藉此保证, 首先,我们发现的... 等级模拟包含Markov 链 长度2万 我们47个参数中的每一个。 要了解此信息是如何存储的, 请检查第一个和最后一个参数的标签 :</p>
+<div class="sourceCode" id="cb329">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 在数据框架中存储模拟
+spotify_hierarchical_df = as.data.frame(spotify_hierarchical)
+# 检查前三个和最后三个参数标签
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>由于这里参数的数量和类型,总结我们对所有这些参数的后期理解,比起非等级模型,需要更加谨慎. 我们将一步一步地处理事情, 提供我们所需要的第4单元中所有其他等级模型的战术细节,</p>
+</div>
+<div class="section level3" id="posterior-analysis-of-global-parameters" number="16.4.2">
+<h3>对全球参数的预测分析</h3>
+<p>让我们首先审视全球参数( 0@@,\(\sigma_y\),\(\sigma_\mu\)), 这些参数出现在stan glmer () 输出的极上和极下方,并标注如下:</p>
+<ul>
+<li>\(\mu\) = (截断)</li>
+<li>\(\sigma_y\) = 西格玛</li>
+<li>======================================================================================================================================================================================================================================= (======================= 第72条</li>
+</ul>
+<p>将“固定”与“无差异”或“全球”同义。 从结果来看,平均艺术家的受欢迎程度在49.3至55.7之间,有80%的似然。</p>
+<div class="sourceCode" id="cb330">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+tidy(spotify_hierarchical, effects = "fixed",
+conf.int = TRUE, conf.level = 0.80)
+# bble:1×5
+term        estimate std.error conf.low conf.high
+&lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 (Intercept)     52.5      2.48     49.3      55.7</code></pre>
+</div>
+<p>拨打后面的中位数 我们可以指定效果 = “ ran  pars ” , 即与运行多姆性或变异性有关的参数 :</p>
+<div class="sourceCode" id="cb331">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+tidy(spotify_hierarchical, effects = "ran_pars")
+# A: 2 x 3
+term                    group    estimate
+&lt;chr&gt;                   &lt;chr&gt;       &lt;dbl&gt;
+1 sd_(Intercept).artist   artist       15.1
+2 sd_Observation.Residual Residual     14.0</code></pre>
+</div>
+<p>后中位数% 0%。 (sd Obervation.Residual )指出,在任何给定的艺术家中,受欢迎的收视率往往会因歌曲不同而变化14分. 在15.1左右,标准偏差QQ1@@(sd (Intercept).artist )往往略高一些,因此,平均受欢迎的评分往往从艺术家到艺术家各15.1分不等。 到了(16.10),这两个变异的来源表明,同一位艺术家在多首歌曲中的受欢迎程度往往有中度的相关性,接近0.54:</p>
+<div class="sourceCode" id="cb332">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+15.1^2 / (15.1^2 + 14.0^2)
+[1] 0.5377</code></pre>
+</div>
+<p>歌曲受欢迎程度的54%由艺术家之间的差异来解释,</p>
+<div class="sourceCode" id="cb333">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+14.0^2 / (15.1^2 + 14.0^2)
+[1] 0.4623</code></pre>
+</div>
+</div>
+<div class="section level3" id="posterior-analysis-of-group-specific-parameters" number="16.4.3">
+<h3>对特定群体参数的前期分析</h3>
+<p>现在,让我们把焦点从全球特色转向我们44个样本艺术家的艺术家特色。 写成全球最受欢迎的歌曲:</p>
+<p>\[\mu_j = \mu + b_j .\]</p>
+<p>因此, ############################################################################################################################################################################################################################################################## 由stan glmer()模拟的就是这些扭矩, 使用参数效果=“ran vals”(即运行的dom 艺人特有val ues):</p>
+<div class="sourceCode" id="cb334">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+artist_summary = tidy(spotify_hierarchical, effects = "ran_vals",
+conf.int = TRUE, conf.level = 0.80)
+# 检查第一位和最后两位艺人的结果( L)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>想想卡米洛的八成可信间隔:卡米洛的平均受欢迎率可能比一般艺术家高19.4到32.4。 Mia QQs的受欢迎率比一般艺术家低23.4至40.7。 我们还可以结合我们在全球的MMC模拟中, 艺术家“j”:</p>
+<p>\[\mu_j = \mu + b_j = \text{(Intercept) + b[(Intercept) artist:j]} .\]</p>
+<p>干净的bayes软件包为这项工作提供了一些工具。 我们将会一步一步地走下去, 首先,我们使用spread draws()来提取每个迭代中每个艺术家的(intercept)和b[(intercept)艺术家:j]值. 然后我们总结这两个术语来定义 mu j。 包含20000个MCMC样本,</p>
+<div class="sourceCode" id="cb335">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 给每个mu j获得MCMC链
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>例如,在第一套连锁值中,Alok的平均受欢迎度(67.4)比平均数(51.1)高16.3点。 包括后期平均值和80%可信间隔:</p>
+<div class="sourceCode" id="cb336">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 获取 mu j 的后总结
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>画出所有44位艺术家80%的后期可信间隔,</p>
+<div class="sourceCode" id="cb337">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-681" style="display:block;"></span>
+<img alt="每名艺人(x轴)平均受欢迎收视率(y轴)的情节. 黑点标记每个艺术家的 mu j 值。 垂直黑线代表相应的可信间隔. 这些间隔对于一些艺术家来说相当狭窄,并且比其他艺术家要宽. 它们往往涵盖不到20个受欢迎级别。" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-681-1-67037219677f.png" width="768"/>
+<p class="caption">FIGURE 16.10:每个艺人平均歌曲受欢迎率的后可信间隔为80%.</p>
+</div>
+<p>我们期望一些艺术家会比其他艺术家更受欢迎, 暂停考虑为什么在下面的测验中。 73国</p>
+<div class="quiz">
+<p>在谱面较受欢迎的一端,Lil Skies和Frank Ocean有着相似的后期热门程度. 然而,对Lil Skies来说,80%的可信间隔比对Frank Ocean来说要宽得多. 解释为什么</p>
+</div>
+<p>要弄清楚Lil Skies和Frank Ocean为何有相似的后期含义, 而我们对弗兰克·奥克兰的后期理解是基于40首歌曲,也就是数据集中大多数的艺术家,而我们只有3首歌曲用于Lil Skies. 因此,我们自然对弗兰克·奥克斯的受欢迎程度有更大的后期确定性,从而缩短间隔。</p>
+<div class="sourceCode" id="cb338">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+</div>
+</div>
+<div class="section level2" id="ch16-prediction" number="16.5">
+<h2>预测</h2>
+<p></p>
+<p>我们的以上分析显示, 现在将注意力从趋势转向细节:预测艺术家在Spotify上发布的下一首新歌的受欢迎程度。 虽然过程不同,但我们可以利用我们的等级模型(16.5)来为任何艺术家做出这样的预测,无论那些曾经做过还是没有做到我们的样本: Frank Ocean的下一首歌会有多受欢迎 是我们原作样本中的艺术家? Mohsen Beats的下一首歌呢? 要将这一概念与分级建模联系起来,在依赖快捷键后-预测()函数之前,必须“用手”完成这一过程。 我们在这里这样做。</p>
+<p>首先考虑一个被观测到的团体或艺术家的后期预测, Frank Ocean, \\\\\\\\\\\\我们样本中的第39位艺术家。 我们的等级模式第一层(16.5)在这种情况中占据着关键位置:它假设个人Frank Ocean歌曲的受欢迎程度通常会围绕自己的平均受欢迎程度(QQ1), 因此,为了大致了解海洋在Spotify的下一首歌的受欢迎程度的后期预测模型,我们可以模拟在20 000 MC参数集中每集评估的1层模型的预测:</p>
+<p>\[\begin{equation} Y_{\text{new,j}}^{(i)} | \mu_j, \sigma_y \; \sim \; N\left(\mu_j^{(i)}, \left(\sigma_y^{(i)}\right)^2\right). \tag{16.11} \end{equation}\]</p>
+<p>由此得出的预测 \(\left\lbrace Y_{\text{new},j}^{(1)}, Y_{\text{new},j}^{(2)}, \ldots, Y_{\text{new},j}^{(20000)} \right\rbrace\) 和相应的后期预测模型 将反映两个变异的来源, 从而反映不确定性,</p>
+<ul>
+<li><p>\(Y\) @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@</p></li>
+<li><p>模型参数 \(\mu_j\) 和 \(\sigma_y\) 的后置变异性,即整个海洋歌曲受欢迎程度的基本平均值和变异性不明,它们本身也各不相同。</p></li>
+</ul>
+<p>为了构建这组预测,我们首先获得了 Markov 链的QQ0QQ (mu ocean )通过将全球平均值XQ1@@(干扰)和艺术家调整(b[(干扰)艺术家:Frank Ocean])进行组合. 然后,我们模拟每个MCMC参数集中第1层模型的预测:</p>
+<div class="sourceCode" id="cb339">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 模拟海洋的后期预测模型
+rng = np.random.default_rng(84735)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>我们用下面的平均值来总结海洋的后期预测模型。 Ocean的下一首歌可能会在51.3至87.6之间获得受欢迎的好评。 这个范围远比海洋的QQ1@@参数(66.6,72.2)的80%可信间隔要宽得多. 当然,我们比任何一首海洋歌曲的受欢迎程度,更能肯定海洋的基本恶性歌曲的受欢迎程度。</p>
+<div class="sourceCode" id="cb340">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# Y new,j 的前言摘要
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>接下来考虑对一个尚未观察到的群体进行后期预测。 Mohsen Beats的歌曲没有观测到, 表示我们没有任何关于他们热衷的信息, 我们所知道的是:(1) Mohsen Beats是广大艺术家中一位艺术家, (2) 这些艺术家中间的受欢迎程度通常分布在 某些全球平均的 @@1 之间, 我们可以通过两步走来模拟两万人的预测:</p>
+<ul>
+<li><p>模拟Mohsen Beats的潜在平均受欢迎程度:</p>
+<p>\[\mu_{\text{mohsen}}^{(i)} | \mu, \sigma_\mu \; \sim \; N\left(\mu^{(i)}, \left(\sigma_\mu^{(i)}\right)^2\right).\]</p></li>
+<li><p>第2步:模拟对歌曲受欢迎程度的预测,</p>
+<p>\[Y_{\text{new},\text{mohsen}}^{(i)} | \mu_{\text{mohsen}}, \sigma_y \; \sim \; N\left(\mu_{\text{mohsen}}^{(i)}, \left(\sigma_y^{(i)}\right)^2\right).\]</p></li>
+</ul>
+<p>我们Mohsen Beats后期预测过程的附加步骤反映了可变性的第三个来源。 在预测新组合的歌曲受欢迎程度时,我们必须说明:</p>
+<ul>
+<li><p>Mohsen Beats的歌曲并非都同样流行;</p></li>
+<li><p>\(\mu_j\) @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@</p></li>
+<li><p>全球模型参数中的后变异性 \((\sigma_y, \mu, \sigma_\mu)\).</p></li>
+</ul>
+<p>我们实施这些想法来模拟下面的2万个Mohsen Beats的后期预测. 他们的下一首歌在25.</p>
+<div class="sourceCode" id="cb341">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+rng = np.random.default_rng(84735)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>最后,在下面,我们用后-预测()快捷函数来复制Frank Ocean和Mohsen Beats的这些“手动”模拟。 由此产生的后期预测模型的图解说明了我们对我们两个艺术家的理解的两个关键特征(图16.11)。 首先,我们预计Ocean的下一首歌的概率会更高。 这有道理 — — 由于海洋观测到的样曲很受欢迎,我们期望他的下一首歌比我们没有资讯的艺术家更受欢迎。 第二,我们对海洋的下一首歌有更大的后定性。 这同样也是有道理的 — — 由于我们实际上掌握了Ocean(而不是Mohsen Beats)的一些数据,我们应该更有信心地预测他下一首歌的受欢迎程度。 我们将继续在下一节进行分级预测,</p>
+<div class="sourceCode" id="cb342">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+rng = np.random.default_rng(84735)
+prediction_shortcut = posterior_predict(
+spotify_hierarchical,
+newdata = data.frame(artist = c("Frank Ocean", "Mohsen Beats")))
+# 后期预测模型图
+mcmc_areas(prediction_shortcut, prob = 0.8) +
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch16-ocean-mohsen" style="display:block;"></span>
+<img alt="有两块密度图的受欢迎度预测 一块是穆赫森·比特斯的 另一块是弗兰克·西恩的 海洋密度地块较窄,呈钟形,以70左右为中心,范围大约为15至125. 穆赫森的密度情节要广得多,要低得多. 它呈钟形,以50左右为中心,范围从大约-30到130不等." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch16-ocean-mohsen-1-adb0ef610fba.png" width="384"/>
+<p class="caption">FIGURE 16.11: Mohsen Beats和Frank Ocean为下几首歌的受欢迎程度的预测模型.</p>
+</div>
+<div style="page-break-after: always;"></div>
+</div>
+<div class="section level2" id="shrinkage-the-bias-variance-trade-off" number="16.6">
+<h2>缩小和偏差-差异权衡</h2>
+<p>在上一节中,我们只为一位被观察的艺术家弗兰克·奥克兰(Frank Ocean)构建了歌曲流行度的后期预测模型. 我们现在把这些技术应用到我们样本中的所有44位艺术家身上,并绘制出80%的后期预测间隔和手段(图16.12)。</p>
+<div class="sourceCode" id="cb343">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+rng = np.random.default_rng(84735)
+predictions_hierarchical = posterior_predict(spotify_hierarchical,
+newdata = artist_means)
+# 前景预测图
+ppc_intervals(artist_means$popularity, yrep = predictions_hierarchical,
+prob_outer = 0.80) +
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch16-hier-pred" style="display:block;"></span>
+<img alt="每个艺术家(x轴)的受欢迎情节(y轴). 暗蓝色点代表观测到的艺术家受欢迎程度,受欢迎程度从15到80不等. 受欢迎程度为58.4. 与每个数据点相对应的是狭小的浅蓝色垂直条,短而宽的浅蓝色条,代表后期预测间隔的浅蓝色点. 这些间隔往往跨越40个受欢迎的级别。 它们以相对应的深蓝色点为中心,但略接近水平破折线. 深蓝色的点越是来自58.4,它与其间隔中心的差距就越大." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch16-hier-pred-1-7100a9a06701.png" width="768"/>
+<p class="caption">FIGURE 16.12: 艺术家歌曲受欢迎程度的前期预测间隔,按等级模型计算. 水平折叠线代表了所有歌曲的平均受欢迎程度.</p>
+</div>
+<p>在这个情节中,我们可以观察到一种叫做收缩的现象。</p>
+<div class="quiz">
+<p>在这个Spotify的例子中,“收缩”可能意味着什么,为什么会发生?</p>
+</div>
+<p>为了理解萎缩,我们首先需要记住我们曾经去过的地方。 在16.1节中,我们用一个完整的集合模型开始我们的Spotify分析,这个模型完全忽略了我们的数据被艺术家分组(16.1)的事实。 因此,其后期对歌曲受欢迎程度的预测与每位艺术家相同(图16.3). 当使用微弱的信息前科时,这个共享的预测大致相当于全球平均受欢迎程度,遍及所有 0@@=标本中的350首歌曲,忽略了艺术家:</p>
+<p>\[\overline{y}_{\text{global}} = \frac{1}{n}\sum_{\text{all } i,j }y_{ij}.\]</p>
+<p>我们用一个没有集合模型来分析每个艺术家(16.3), 因此,在使用资料不足的前科时,没有集合后预测手段大致相当于每个艺术家的样本平均受欢迎程度(图16.6)。 对于任何艺术家,这个样本的平均值是,</p>
+<p>\[\overline{y}_j = \frac{1}{n_j}\sum_{i=1}^{n_j} y_{ij}.\]</p>
+<p>图16.12对比了分级模型后期平均预测与完整的集合模型预测(dashed 水平线)和没有集合模型预测(暗蓝色点). 总的来说,我们对艺术家的分级认识在这两个极端之间达成了平衡 — — 分级预测被拉近或缩小到完全集合模型的全球趋势,并远离了没有集合模型的地方趋势。 因此,这个术语缩水。</p>
+<div class="describe">
+<p>缩水</p>
+<p>缩水是指一种等级模型中特定群体的地方趋势向全球趋势拉动或缩水的现象。</p>
+</div>
+<p>在使用信息不足的前言时,后传指从分级模式对歌曲受欢迎程度的预测是(粗略)完全集合( 0@@)模式的加权平均值,没有集合(\(\overline{y}_j\))模式:</p>
+<p>\[\frac{\sigma^2_y}{\sigma^2_y + n_j \sigma^2_\mu} \overline{y}_{\text{global}} + \frac{n_j\sigma^2_\mu}{\sigma^2_y + n_j \sigma^2_\mu} \overline{y}_j.\]</p>
+<p>在对艺术家的后期预测中, 给予全球和地方含义的权重取决于我们对艺术家的权重(QQ1), 这些权重凸显了个人主义逐渐消退的几种情景,即我们的分级后期预测从特定组别(\(\overline{y}_j\))到全球平均值(\(\overline{y}_\text{global}\))的缩水:</p>
+<ul>
+<li><p>缩水量随着组的观测次数增加, 也就是说,我们越来越依赖全球趋势来理解一个我们几乎没有数据的群体。</p></li>
+<li><p>当群体内部的变异性( 0@@)与群体之间的变异性(\(\sigma_\mu\))相比, 也就是说,我们越来越依赖全球趋势来理解一个群体,而各群体之间的格局几乎没有区别(见图16.8)。</p></li>
+</ul>
+<p>在图16.12中我们可以看到这些动态 — — 一些艺术家比其他艺术家更倾向于全球平均受欢迎程度。 缩水最多的艺术家是样本尺寸较小的艺术家。 想想最受欢迎的两位艺术家:卡米拉·卡韦略和丽尔·斯基斯. Cabello的受欢迎程度略低于Lil Skies,</p>
+<div class="sourceCode" id="cb344">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>因此,Lil Skies的后期预测意味着受欢迎程度更接近全球的平均值 — — 我们样本中其他艺术家的数据表明,Lil Skies可能拥有初学者的运气,因此他们的下一首歌可能低于他们目前的三弦平均率。 这有道理,是等级模式的一个令人信服的特征。 在完全和不集中之间求得平衡,等级模型使我们能够:</p>
+<ol style="list-style-type: decimal">
+<li>(c) 将关于我们抽样调查的人群的观察结果推广到更广泛的人群;</li>
+<li>在了解任何个别抽样群体时,借用所有抽样群体的力量或信息。</li>
+</ol>
+<p>等级模式也为我们在第十一章中讨论的偏差-差异权衡提供了平衡。 在详细阐述之前,先进行一个快速的测验.</p>
+<div class="quiz">
+<p>考虑本章中的三种模式方法:不集合、完整集合和分级模式。</p>
+<ol style="list-style-type: decimal">
+<li>假设不同的研究者会用不同的艺术家和歌曲样本进行自己的Spotify分析. 从抽样到抽样,哪一种方法是最易变的? 最小的变数?</li>
+<li>在估计艺术家平均受欢迎程度时,哪一种方法最有偏见? 也就是说,哪个模型的后期估计往往最接近观测到的手段? 哪个偏差最小?</li>
+</ol>
+</div>
+<p>完全集合模式和没有集合模式所呈现的极端与偏差-差异权衡的极端对应. 考虑完整的集合模式。 这个模式非常僵硬, 如果基于不同的Spotify艺术家样本, 但是,它也往往过于简单,并忽略了艺术家们中间流行的细微差别(图16.3)。 因此,完整的集合模型往往具有较高的偏差和较低的差异。</p>
+<p>没有集合模式有相反的问题。 有了内在的灵活性来检测特定群体的趋势,它们往往比完整的集合模型具有更少的偏差. 但是,由于它们适合我们样本中的艺术家, 如果我们对一组不同的Spotify艺术家进行抽样, 我们所有的集合模型都不可能改变很多, 从而产生不稳定的结论。 因此,没有一个集合模型往往具有较低的偏差和更大的差异。</p>
+<p>等级模型提供了一个平衡的替代办法。 与完整的集合模型不同的是,分级模型会考虑特定群体的趋势,从而减少偏见. 与没有集合模型不同的是,分级模型考虑到全球趋势,因此变化较小。 等级模型!</p>
+</div>
+<div class="section level2" id="ch-16-nonhierarchical" number="16.7">
+<h2>不是一切都是等级的</h2>
+<p>现在我们看到等级模型的力量, 你可能会质疑我们是否应该一直使用它们。 答曰无. 为了确定分级模型何时合适,我们必须了解我们的数据是如何收集的 — — 它是否包括一些自然的分组结构? 回答这个问题往往是为了理解一个绝对变量在数据集中的作用。 我们基本上把绝对艺术家变量当作预测器。 在等级模型中,我们把艺术家视为组合变量。</p>
+<div class="describe">
+<p>分组变量对预测器</p>
+<p>假设我们的数据集包含一个绝对的变量\\\\\\\\\\\\\\\\\\\\\这个我们有多个观测的类别。 为了确定QQ1@@是否编码了某些分组结构或者是我们变量QQ2@@的潜在预测器,以下区分可以帮助:</p>
+<ul>
+<li><p>如果观测到的QQ0QQ的数据涵盖所有利益类别,它可能不是一个分组变量,而是潜在的预测器.</p></li>
+<li><p>如果在QQ0QQ上观察到的类别仅仅是来自许多利益的随机样本,那它就是一个潜在的分组变量.</p></li>
+</ul>
+</div>
+<p>让我们把这个想法运用到艺术家的绝对变量上。 我们的样本数据包括了对Spotify上数千名艺术家中44名艺术家的随机抽样的多重观测。 因此,将艺术家当作一个预测器(如没有集合模型),将把我们的理解仅限于这些艺术家。 与此相对照,把它当作一个分组变量(如等级模型),让我们不仅可以了解我们数据中的44位艺术家,还可以了解他们从中取样的更广泛的艺术家群体.</p>
+<p>看看另一个例子。 重新审视第9章的自行车数据, 每500天记录首都自行车俱乐部成员乘坐的车次,</p>
+<div class="sourceCode" id="cb345">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+data(bikes)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="quiz">
+<p>在骑马模式中,周末变量是潜在的组合变量还是预测变量?</p>
+</div>
+<p>周末变量只有两种可能的类别:每一天要么落在周末(TRUE),要么没有(FALSE). 我们的数据集涵盖两种情况:</p>
+<div class="sourceCode" id="cb346">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>因为观察的周末值涵盖所有利益类别, 也可以帮助我们探究骑手在周末与工作日是否不同。</p>
+<p>想想另一个例子。 为了解决来自不同收入水平家庭的儿童在词汇水平上的差距,Abdul Latif Jameel贫困行动实验室(J-PAL)评价了数字词汇学习方案 " 大字俱乐部 " (Kalil, Mayer, 和Oreopoulos 2020)的有效性. 为此,他们为47所不同学校的818名学生进行了词汇学研究。 通过大学间政治和社会研究联合会(ICPSR)获取了完成此计划后学生的词汇水平数据(分数 a2),并存储在bayesrules软件包中的big word club数据集中. 我们只保留有词汇分数的学生:</p>
+<div class="sourceCode" id="cb347">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+data(big_word_club)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="quiz">
+<p>在分数 a2的模型中,学校 id变量是潜在的分组变量还是预测变量?</p>
+</div>
+<p>在此设置中, school  id 是组合变量。 想想两个线索: 我们观察到47所学校中的多名学生 而这47所学校仅仅是 几千所学校的一小部分样本。 在这种情况下,将学校-id作为分数的预测者a2(不集合)只会让我们了解我们小的学校样本,而将学校-id作为分数-a2的分级模型中的分组变量,则使我们能够将我们的结论扩展到所有学校的广大人口。</p>
+</div>
+<div class="section level2" id="chapter-summary-15" number="16.8">
+<h2>章节摘要</h2>
+<p>在第16章中,我们探讨了如何模拟等级数据。 假设我们有多个数据点 关于每个XQ0QQ组。 对于每组的XQ1@@,请XQ2@@表示QQ3@@的观察,而QQ4@@表示样本大小. 因此,我们关于变数QQ5@@的数据是收集每个XQ6@@组的较小样本:</p>
+<p>\[Y := \left((Y_{11}, Y_{21}, \ldots, Y_{n_1,1}), (Y_{12}, Y_{22}, \ldots, Y_{n_2,2}), \ldots, (Y_{1,m}, Y_{2,m}, \ldots, Y_{n_m,m})\right) .\]</p>
+<p>由三层组成:</p>
+<p>\[\begin{equation} \begin{array}{rll} Y_{ij} | \mu_j, \sigma_y &amp; \sim N(\mu_j, \sigma_y^2) &amp; \text{model of individual observations within group $j$} \\ \mu_j | \mu, \sigma_\mu &amp; \stackrel{ind}{\sim} N(\mu, \sigma_\mu^2) &amp; \text{model of how parameters vary between groups}\\ \mu &amp; \sim N(m, s^2) &amp; \text{prior models on global parameters} \\ \sigma_y &amp; \sim \text{Exp}(l_y) &amp; \\ \sigma_\mu &amp; \sim \text{Exp}(l_{\mu}). &amp; \\ \end{array} \tag{16.12} \end{equation}\]</p>
+<p>并模拟其中的变化:</p>
+<p>\[\begin{split} Y_{ij} | \mu_j, \sigma_y &amp; \sim N(\mu_j, \sigma_y^2) \;\; \text{ with } \mu_j = \mu + b_j \\ b_j | \mu, \sigma_\mu &amp; \stackrel{ind}{\sim} N(0, \sigma_\mu^2) \\ \mu &amp; \sim N(m, s^2) \\ \sigma_y &amp; \sim \text{Exp}(l_y) \\ \sigma_\mu &amp; \sim \text{Exp}(l_{\mu}). \\ \end{split}\]</p>
+<p>以下是关于这个模型的很酷之处:</p>
+<ul>
+<li>它承认,虽然对某一组的意见独立于对另一组的意见,但任何特定组的意见都是相互关联的;</li>
+<li>组别或组别特定参数为了解组别特定趋势提供了见解;</li>
+<li>全球参数( 0@@)使人们深入了解更广泛的人口;</li>
+<li>为了了解任何一个群体的情况,这一模式借用了其他群体的信息的力量,从而缩小了群体特有的地方现象走向全球趋势;</li>
+<li>这一模式的变数小于无集合法,偏差小于完整的集合法.</li>
+</ul>
+</div>
+<div class="section level2" id="exercises-15" number="16.9">
+<h2>练习</h2>
+<div class="section level3" id="conceptual-exercises-10" number="16.9.1">
+<h3>概念练习</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-695"><strong>Exercise 16.1  (Shrinkage)  </strong></span>The plot below illustrates the distribution of critic ratings for 7 coffee shops. Suppose we were to model coffee shop ratings using three different approaches: complete pooled, no pooled, and hierarchical. For each model, sketch what the posterior mean ratings for the 7 coffee shops might look like on the plot below.
+</div>
+<p><img loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-696-1-ee7a5fbb32ee.png" style="display: block; margin: auto;" width="480"/></p>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-697"><strong>Exercise 16.2  (Grouping variable or predictor?)  </strong></span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>Baylesrules包中的登山者 子数据包含了2076名登山者寻求登上喜马拉雅山峰的结果. 在登山成功模式中,探险是潜在预测器还是组合变量? 解释一下</li>
+<li>在登山成功模式中,季节是潜在的预测器还是组合变量? 解释一下</li>
+<li>Bayesrules套装中的咖啡 正版数据包含1339个不同咖啡批次的收视率. 在咖啡评分模式(total cup points)中,加工 方法是一个潜在的预测器还是组合变量? 解释一下</li>
+<li>在咖啡评分模式(total cup points)中,farm name是潜在的预测器还是组合变量? 解释一下</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-699"><strong>Exercise 16.3  (Speed typing: interpret the coefficients)  </strong></span>Alicia loves typing. To share the appreciation, she invites four friends to each take 20 speed-typing tests. Let <span class="math inline">\(Y_{ij}\)</span> be the time it takes friend <span class="math inline">\(j\)</span> to complete test <span class="math inline">\(i\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>说明为何必须用观察每个朋友多次的方式,</li>
+<li>假设我们在16点5分之前 模拟结果 将所有模型系数的含义解释为它们可能显示的打字速度:\\\\\\\\\\\\。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-700"><strong>Exercise 16.4  (Speed typing: sketch the data)  </strong></span>In the spirit of Figure <a href="/bayes-rules-python-cn/chapter-16/#fig:btwn-within">16.8</a>, sketch what density plots of your four friends’ typing speed outcomes <span class="math inline">\(Y_{ij}\)</span> might look like under each scenario below.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>20项定时测试的总体结果在四个朋友中非常相似。</li>
+<li>每个人的打字时间都相当一致,但人与人之间却有很大的差别——有些人的打字速度往往比其他人快得多.</li>
+<li>从测试到测试,</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-701"><strong>Exercise 16.5  (Speed typing: connecting to the model)  </strong></span>For each scenario in the above exercise, indicate the corresponding relationship between <span class="math inline">\(\sigma_y\)</span> and <span class="math inline">\(\sigma_\mu\)</span>: <span class="math inline">\(\sigma_y &lt; \sigma_\mu\)</span>, <span class="math inline">\(\sigma_y \approx \sigma_\mu\)</span>, or <span class="math inline">\(\sigma_y &gt; \sigma_\mu\)</span>.
+</div>
+</div>
+<div class="section level3" id="applied-exercises-8" number="16.9.2">
+<h3>应用练习</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-702"><strong>Exercise 16.6  (Big words: getting to know the data)  </strong></span>Recall from Section <a href="/bayes-rules-python-cn/chapter-16/#ch-16-nonhierarchical">16.7</a> the Abdul Latif Jameel Poverty Action Lab (J-PAL) study into the effectiveness of a digital vocabulary learning program, the <em>Big Word Club</em> (BWC) <span class="citation">(<a href="#ref-words" role="doc-biblioref">Kalil, Mayer, and Oreopoulos 2020</a>)</span>. In our analysis of this program, we’ll utilize weakly informative priors with a baseline understanding that the average student saw 0 change in their vocabulary scores throughout the program. We’ll balance these priors by the <code>big_word_club</code> data in the <strong>bayesrules</strong> package. For each student participant, <code>big_word_club</code> includes a <code>school_id</code> and the <em>percentage change</em> in vocabulary scores over the course of the study period (<code>score_pct_change</code>). We keep only the students that participated in the BWC program (<code>treat == 1</code>), and thus eliminate the control group.
+</div>
+<div class="sourceCode" id="cb348">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+data("big_word_club")
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>有多少学校参加了大字社?</li>
+<li>每所学校的学生人数是多少?</li>
+<li>平均来说,在哪个学校,学生的词汇有了最大的改善? 起码?</li>
+<li>构建和讨论一个说明校内和校际分数变化的图案。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-704"><strong>Exercise 16.7  (Big words: setting up the model)  </strong></span>In the next exercises you will explore a hierarchical one-way ANOVA model <a href="/bayes-rules-python-cn/chapter-16/#eq:hierarchical-general-ch16">(16.12)</a> of <span class="math inline">\(Y_{ij}\)</span>, the percentage change in vocabulary scores, for student <span class="math inline">\(i\)</span> in school <span class="math inline">\(j\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>在我们分析《生物武器公约》方案时,为什么一个等级模型,相对于一个完整的或没有集合模型是适当的?</li>
+<li>比较和对比本词汇研究中模型参数 0@@和\(\mu_j\)的意义.</li>
+<li>比较和对比本词汇研究中模型参数 0@@和\(\sigma_\mu\)的意义.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-705"><strong>Exercise 16.8  (Big words: simulating the model)  </strong></span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>使用4条链,每条长度1000.</li>
+<li>构建和讨论马可夫链痕,密度,和自动对映图.</li>
+<li>构建和讨论链输出的 pp  check ()。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-706"><strong>Exercise 16.9  (Big words: global parameters)  </strong></span>In this exercise, we’ll explore the global parameters of our BWC model: (<span class="math inline">\(\mu,\sigma_y,\sigma_\mu\)</span>).
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>构造和解释 &amp; #% 0 的95% 可信间隔。。。</li>
+<li>是否有充分证据表明,在整个词汇计划中,学生的词汇水平平均有所改善? 解释一下</li>
+<li>哪个似乎更大:学校之间或学校内部词汇表现的差异? 提供后证据,并在分析中解释这一结果的含义。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-707"><strong>Exercise 16.10  (Big words: focusing on schools)  </strong></span>Next, let’s dig into the school-specific means, <span class="math inline">\(\mu_j\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>构建并讨论研究中所有学校词汇分数平均百分比变化的80%后可信间隔图,</li>
+<li>构造和解释 {0} 的 80% 后可信间隔。。。</li>
+<li>是否有充分证据表明,在整个词汇方案期间,10年级的词汇分数平均提高了5%以上? 提供后证.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:ch16-predict"><strong>Exercise 16.11  (Big words: predicting vocab levels)  </strong></span>Suppose we <em>continue</em> the vocabulary study at each of Schools 6 and 17 (which participated in the current study) and Bayes Prep, a school which is new to the study. In this exercise you’ll make predictions about <span class="math inline">\(Y_{\text{new},j}\)</span>, the vocabulary performance of a student that’s <em>new</em> to the study from each of these three schools <span class="math inline">\(j\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>在不使用后预告()快捷键功能的情况下,模拟后预预测模型的XQ0XX,用于学校6和Bayes Prep. 显示两校的前6个后期预测.</li>
+<li>使用您来自(a)部分的模拟,构建、解释和比较学校6和Bayes预科80%的后预测间隔。</li>
+<li>这次使用后预告(), 使用 mcmc  areas () 显示您的模拟结果, 并讨论您的发现。</li>
+<li>最后,构建、绘制和讨论原始研究中所有学校80%的后期预测间隔。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-708"><strong>Exercise 16.12  (Big words: shrinkage)  </strong></span>Re-examine the posterior predictive plots from Exercise <a href="/bayes-rules-python-cn/chapter-16/#exr:ch16-predict">16.11</a>. Would you say that there is a little or a lot of shrinkage in this analysis? Provide evidence and explain why you think this is the case.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-709"><strong>Exercise 16.13  (Open exercise: voices)  </strong></span>The <code>voices</code> data in the <strong>bayesrules</strong> package contains the results of an experiment in which subjects participated in role-playing dialog under various conditions. Of interest to the researchers was the subjects’ voice pitches (in Hz). In this open-ended exercise, complete a hierarchical analysis of voice pitch, without any predictors.
+</div>
+</div>
+</div>
+</div>
+<h3>参考资料</h3>
+<div class="references csl-bib-body hanging-indent" id="refs">
+<div class="csl-entry" id="ref-words">
+Kalil, Ariel, Susan Mayer, and Philip Oreopoulos. 2020. <span>“Closing the Word Gap with <span>B</span>ig <span>W</span>ord <span>C</span>lub: Evaluating the Impact of a Tech-Based Early Childhood Vocabulary Program.”</span> <em>Ann Arbor, MI: Inter-University Consortium for Political and Social Research [Distributor]</em>. <a href="https://doi.org/10.3886/E117330V1">https://doi.org/10.3886/E117330V1</a>.
+</div>
+<div class="csl-entry" id="ref-spotify">
+Pavlik, Kaylin. 2019. <span>“Understanding Classifying Genres Using <span>S</span>potify Audio Features.”</span> <em>Pop Culture Data Science</em>. <a href="https://www.kaylinpavlik.com/classifying-songs-genres/">https://www.kaylinpavlik.com/classifying-songs-genres/</a>.
+</div>
+<div class="csl-entry" id="ref-spotifytidy">
+———. 2020d. <span>“Spotify Songs.”</span> <em>TidyTuesday Github Repostitory</em>. <a href="https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-01-21/readme.md">https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-01-21/readme.md</a>.
+</div>
+<div class="csl-entry" id="ref-R-forcats">
+———. 2021. <em>Forcats: Tools for Working with Categorical Variables (Factors)</em>. <a href="https://CRAN.R-project.org/package=forcats">https://CRAN.R-project.org/package=forcats</a>.
+</div>
+</div>
+</section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-15/">上一节：第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-17/">下一节：第 17 章 含预测变量的正态分层模型</a></nav>
+</article>
+</div>
+</main>
+<footer class="site-footer">
+<div>
+<strong>AI 提效研究笔记</strong>
+<p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+</div>
+<div class="footer-links">
+<a href="/feed.xml">RSS</a>
+<a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+</div>
+</footer>
+<script src="/assets/js/site.js"></script>
+</body>
+</html>

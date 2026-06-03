@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="第 2 章 贝叶斯公式 | Bayes Rules! 中文 Python 改写教程" name="description"/>
+<title>第 2 章 贝叶斯公式 | Chandler's AI Productivity Notes</title>
+<link href="/assets/img/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="/assets/css/styles.css" rel="stylesheet"/>
+<script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#content">跳到正文</a>
+<header class="site-header">
+<a aria-label="Chandler's AI Productivity Notes 首页" class="brand" href="/">
+<span class="brand-mark">C</span>
+<span class="brand-name">Chandler's AI Productivity Notes</span>
+</a>
+<nav aria-label="主导航" class="site-nav">
+<a href="/">首页</a>
+<a aria-current="page" href="/posts/">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+</nav>
+</header>
+<main class="tutorial-page" id="content">
+<div class="tutorial-layout">
+<aside class="tutorial-sidebar">
+<h2>教程目录</h2>
+<nav><a href="/bayes-rules-python-cn/">首页</a><a href="/bayes-rules-python-cn/foreword/">前言</a><a href="/bayes-rules-python-cn/preface/">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a><a aria-current="page" href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a href="/bayes-rules-python-cn/references/">参考文献</a></nav>
+</aside>
+<article class="tutorial-content">
+<section class="normal" id="section-">
+<div class="section level1" id="chapter-2" number="2">
+<h1>第 2 章 贝叶斯公式</h1>
+<div class="tutorial-note">
+<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
+</div>
+<p>柯林斯词典将2017年任期命名为"假新闻". 而为善根故. 网络新闻和社交媒体平台让用户发布文章, 帮助读者将文章标为“真实的”或“假的”越来越重要。 在第二章中,您将探讨第1章的巴耶斯哲学如何帮助我们作出这种区分。 在Facebook上张贴了150篇文章, 每篇文章的信息都存储在bayesrules包中的假新闻数据集中. 要了解更多关于此数据集的信息, 请在您的控制台中输入 ? fake  news。</p>
+<div class="sourceCode" id="cb2">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python"># 原书 bayesrules 数据包中的数据需改用 CSV/本地数据文件读取
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+# pandas 通常可以覆盖 janitor 的表格清理任务
+
+# 装入软件包
+# 导入文章数据
+data(fake_news)</code></pre>
+</div>
+<div class="warning">
+<p>假新闻数据包含真实新闻文章的全文,既有真实的也有假的. 因此,其中一些条款含有令人不安的语言或专题。 虽然我们认为提供原始资源很重要,</p>
+</div>
+<p>下表使用清洁工包(Firke 2021)中的Tayl()功能构建,显示该特定收藏中40%的文章是假的,60%是真实的:</p>
+<div class="sourceCode" id="cb3">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>仅利用这些信息,我们可以建立一个非常简单的新闻过滤器,它使用以下规则:由于大多数文章都是真实的,我们应该阅读和相信所有的文章. 这个过滤器肯定会解决错误地忽略真实文章的问题,但代价是读了很多假新闻. 它还只考虑真实和虚假新闻的总体比率,而不是其典型特征。 例如,假设最近张贴在社交媒体平台的文章的标题是“总统有个有趣的秘密!” 这个头衔的一些特征可能会引发一些红旗. 例如,对真正的新闻文章来说,使用感叹点似乎是一种奇怪的选择。 我们的数据支持了这种本能 — — 在我们的文章集中,26.67%(60分之16)的假新闻标题,但只有2.22%(90分之2)的真实新闻标题使用了感叹语:</p>
+<div class="sourceCode" id="cb4">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 图表解说用法和文章类型
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>因此,我们有两个相互矛盾的信息。 我们以前的资料显示,收到的文章很可能是真的。 然而,感叹点数据更符合假新闻. 我们像贝叶斯人一样思考,我们知道平衡这两条信息对于事后了解文章是否是假的很重要(图2.1)。</p>
+<div class="figure" style="text-align: center"><span id="fig:fakenewsdiagram" style="display:block;"></span>
+<img alt='图像顶部有两个椭圆形. 第一个椭圆读作"Prior:只有40%的文章是假的". 第二部椭圆读"数据:感叹点在假新闻中更为常见". 上两椭圆各有两个箭头,导致图像下部有第三个椭圆. 第三个椭圆读作"后面:文章是假的吗?"' loading="lazy" src="/assets/img/bayes-rules-python-cn/fake_news_diagram-cfdc238060d7.png" width="80%"/>
+<p class="caption">图2.1:关于文章是否是假的贝叶斯知识积累图.</p>
+</div>
+<p>将你自己的贝叶斯人思想 运用在你现在的直觉中 关于最近的文章是否是假的。</p>
+<div class="quiz">
+<p>你对这篇文章的最新了解是什么?</p>
+<ol style="list-style-type: lower-alpha">
+<li>文章假冒的似然从40%下降到20%. 标题中的感叹点可能只是反映了作者的热情。</li>
+<li>这篇文章假冒的机会从40%跳到大约90%. 但不要忘记只有40%的文章是假的。</li>
+<li>这篇文章假冒的机会从40%跳到大约98%. 鉴于很少有真正的文章使用感叹点,这篇文章肯定是假的。</li>
+</ol>
+</div>
+<p>正确答复见下文脚注。 如果你的直觉不对, 到第2章末期, 你将学会如何用严格的贝叶斯计算来支持贝叶斯思想, 注意:在本书其他章节中,第2章引入了贝叶斯语中大多数的概念、符号和词汇。 无论你之前的概率程度如何, 此外,我们的治疗重点是贝叶斯分析所必需的概率工具。 我们建议有兴趣的读者访问Blitzstein和Hwang(2019年)的第1至3章和第7.1节。</p>
+<div class="goals">
+<ul>
+<li><p>探索边际,有条件,联合概率模型和双米模型等基础概率工具.</p></li>
+<li><p>进行你第一次正式的巴耶斯分析! 您将构建您的第一个前置模型和数据模型,并通过这些模型构建您的第一个后置模型。</p></li>
+<li><p>练习你的巴耶斯语法 Imagnie,如果验尸官不拼写 或使用适当的语法和! 依据此精神,您将练习巴耶斯语语法中的核心形式标记和术语。</p></li>
+<li><p>模拟贝叶斯模型. 模拟对于建立贝叶斯分析的直觉和支持这种分析是不可或缺的。 使用R统计软件进行首次模拟。</p></li>
+</ul>
+</div>
+<div class="section level2" id="building-a-bayesian-model-for-events" number="2.1">
+<h2>建立贝叶斯活动模式</h2>
+<p>我们的假新闻分析概括为研究两个变量:一篇文章的假象与真实状况, 这些特点因条款而异。 有些是假的, 有些人使用感叹点, 我们可以用概率模型来表示这些变量的随机性。 在本节中,我们将建立一个先验的概率模型,以便我们事先了解最近的文章是否是假的;一个解释感叹点数据的模型;以及一个最终总结文章是否是假的后期概率模型。</p>
+<div class="section level3" id="prior-probability-model" number="2.1.1">
+<h3>先验概率模型</h3>
+<p>作为贝叶斯分析的第一步, 我们将正式确定我们先验对新文章是否是假的的理解。 依据我们假新闻数据, 我们将假设这是一个相当有代表性的样本, 在读完新文章之前, 我们可以用数学符号来表示这个信息. 让 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #</p>
+<p>\[P(B) = 0.40 \;\; \text{ and } \;\; P(B^c) = 0.60 .\]</p>
+<p>在表2.1中, 作为一种有效的概率模型,它必须:(1) 说明所有可能的事件(所有条款都必须是假的或真实的);(2) 将每个事件事先的概率分配;(3) 这些概率和1。</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:fakeprior">TABLE 2.1: </span>Prior model of fake news.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">事件</th>
+<th style="text-align:center;">\(B\)</th>
+<th style="text-align:center;">\(B^c\)</th>
+<th style="text-align:center;">共计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">概率</td>
+<td style="text-align:center;">
+0.4
+</td>
+<td style="text-align:center;">
+0.6
+</td>
+<td style="text-align:center;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level3" id="conditional-probability-likelihood" number="2.1.2">
+<h3>有条件的概率( P)</h3>
+<p>在贝叶斯分析的第二步中, 我们将总结我们收集的新文章数据的见解。 更符合假新闻, 如果文章是假的, 在标题中大概有26.67%的机会。 反之,如果文章是真的,那么只有2.22%的机会使用感叹点。 当这样表述时,显然,开脱点的出现取决于或取决于文章是否是假的。 基于文章的假状态( 1@@或\(B^c\)):</p>
+<p>\[P(A | B) = 0.2667 \;\; \text{ and } \;\; P(A | B^c) = 0.0222.\]</p>
+<div class="describe">
+<p>有条件与无条件概率</p>
+<p>让~0@@和~1@@成为两件大事.  unconditional2@@, 3@@的无条件概率,测量观测\(A\)的概率,毫不知情\(B\). 对比之下,QQ6QQ给QQ7QQ,XQ8XX的有条件概率,根据QQ10QQ发生的信息,测量观测XQ9X的概率.</p>
+</div>
+<p>有条件的概率对于贝叶斯人的分析是根本的,因此为了吸收这一概念而短暂的暂停是值得的. 比较条件与无条件概率, 在某些情况下,活动QQ4@@的确定性可能会随着新数据QQ5@@的出现而增加. 例如,如果有人每天练习单簧管,那么他们加入管弦乐队单簧管部分的概率就高于普通人群中的概率 12:</p>
+<p>\[P(\text{orchestra} \; | \; \text{practice}) &gt; P(\text{orchestra}) .\]</p>
+<p>相反,根据新的数据,事件的确定性可能会下降。 例如,如果你是一个紧身手洗手,那么你不太可能患上流感:</p>
+<p>\[P(\text{flu} \; | \; \text{wash hands}) &lt; P(\text{flu}) .\]</p>
+<p>调节的顺序也很重要. 由于它们衡量两种不同的现象, 例如,大约100%的小狗是可爱的。 因此,如果你在街上传递的下一个物体是一只小狗,XQ1@@. 然而,情况并非如此。 并不是每个可爱的物体都是一只小狗,</p>
+<p>最后, 有关\(B\)的信息并不总是改变我们对\(A\)的理解。 例如,假设你的朋友有一双黄色的鞋子和一双蓝色的鞋子,因此总共有四双鞋子. 他们随意选择一只鞋, 在没有看到鞋的情况下, 即使他们告诉你他们碰巧买了两双黄鞋之一, 也就是说,关于鞋的颜色的信息并没有告诉我们它适合哪个脚 — — 鞋的颜色和脚是独立的。</p>
+<div class="describe">
+<p>独立活动</p>
+<p>若且只有在「QQ2」事件不告诉我们「QQ3」事件的发生时,</p>
+<p>\[P(A|B) = P(A) .\]</p>
+</div>
+<p>让我们用这些有条件的概念来重新审视我们的假新闻例子。 上面我们得出的条件概率, 0. 由于感叹点的使用在假新闻中比真实新闻更可能,因此这个数据提供了一些证据证明文章是假的. 将有条件的概率(QQ2+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 例如,在它的表面, 有条件的概率 QQQ 测量了 QQ5@@的不确定性, 然而,我们发现自己处于相反的状况。 我们知道即将到来的文章使用了感叹点, 我们不知道这篇文章是否是假的, 因此,在此情况下,我们比较了XQ10XX和XQ11XXXXX,以确定在不确定文章状态的不同情况下观测数据XX12XX的相对似然. 为了帮助区分条件概率计算和XQ13XX不确定和XQ14XXX知道时的这种应用,我们将使用以下概率函数标记XQ15XX:</p>
+<p>\[L(B|A) = P(A|B) \;\; \text{ and } \;\; L(B^c|A) = P(A|B^c).\]</p>
+<p>下面我们提出一个一般定义,但在这里要耐心。 这种区别是微妙的,特别是因为人们在临时交谈中互换地使用“可能”和“可能”这两个术语。</p>
+<div class="describe">
+<p>概率与似然</p>
+<p>当QQ0@@知道时, 有条件的概率函数QQ1@@让我们可以比较一个未知事件的概率,</p>
+<p>\[P(A|B) \; \text{ vs } \; P(A^c|B).\]</p>
+<p>当QQ0@@知道时,概率函数QQ1@@让我们能够评价数据QQ2@@与事件QQ3@@或QQ4@@的相对兼容性:</p>
+<p>\[L(B|A) \; \text{ vs } \; L(B^c|A).\]</p>
+</div>
+<p>表2.2总结了我们迄今所收集的信息, 包括新文章假的或真实的, 通知先验的概率加起来最多为1,但似然并非如此。 同样,概率函数不是一个概率函数,而是提供了一个框架来比较我们感叹点数据的相对兼容性与QQ2@@和QQ3@@. 因此,虽然先验的证据表明这一条最有可能是真实的(XQ4@@),但数据与文章是假的(XX5@@)更为一致.</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:fakelike">TABLE 2.2: </span>Prior probabilities and likelihoods of fake news.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">事件</th>
+<th style="text-align:left;">\(B\)</th>
+<th style="text-align:left;">\(B^c\)</th>
+<th style="text-align:left;">共计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">前一个概率</td>
+<td style="text-align:left;">
+0.4
+</td>
+<td style="text-align:left;">
+0.6
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">似然</td>
+<td style="text-align:left;">
+0.2667
+</td>
+<td style="text-align:left;">
+0.0222
+</td>
+<td style="text-align:left;">
+0.2889
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level3" id="normalizing-constants" number="2.1.3">
+<h3>常数正常化</h3>
+<p>虽然表2.2中的似然功能很好地总结了真实新闻对假新闻的感叹点用法, 在计算这个常数时, 13个我们将首先使用我们之前的模型和概率函数填写下表。 本表总结了假新闻和感叹点变量可能共同出现的情况. 我们鼓励大家在阅读之前,</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">\(B\)</th>
+<th style="text-align:right;">\(B^c\)</th>
+<th style="text-align:center;">共计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">\(A\)</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:center;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">\(A^c\)</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:right;">
+</td>
+<td style="text-align:center;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">共计</td>
+<td style="text-align:right;">
+0.4
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+<td style="text-align:center;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<p>首先,关注将假文章分成两组的QQ0@@栏:(1) 假文章和使用感叹点的,表示QQ1@@;(2) 假文章不使用感叹点的,表示QQ2@@. 14,为了确定这些联合事件的概率,请注意40%的文章是假的,26.67%的假文章使用感叹点, 3@@0.4和 4@@0.2667. 因此,在所有条款中,40%的26.67%,即10.67%,都是带有感叹点的假货。 也就是说,观测 + 5 + 和 + 6 + 的共同概率是</p>
+<p>\[P(A \cap B) = P(A|B)P(B) = 0.2667 \cdot 0.4 = 0.1067.\]</p>
+<p>此外,由于26.67%的假文章使用感叹点,73.33%没有。 因为文章是假的(QQ1@@),</p>
+<p>\[P(A^c|B) = 1 - P(A|B) = 1 - 0.2667 = 0.7333.\]</p>
+<p>因此,在所有文章中,有40%,即29.33%的73.33%是假的,没有感叹点:</p>
+<p>\[P(A^c \cap B) = P(A^c|B)P(B) = 0.7333 \cdot 0.4 = 0.2933 .\]</p>
+<p>简而言之,观察假文章的总概率是其各部分的总和:</p>
+<p>\[P(B) = P(A \cap B) + P(A^c \cap B) = 0.1067 + 0.2933 = 0.4 .\]</p>
+<p>我们同样可以把真实的文章 分解成那些有和没有使用感叹点的文章。 在所有文章中,只有1.33%(占60%的2.22%)是真实的,使用感叹点,而58.67%(占60%的97.78%)是真实的,没有感叹点:</p>
+<p>\[\begin{split} P(A \cap B^c) &amp; = P(A|B^c)P(B^c) = 0.0222 \cdot 0.6 = 0.0133 \\ P(A^c \cap B^c) &amp; = P(A^c|B^c)P(B^c) = 0.9778 \cdot 0.6 = 0.5867.\\ \end{split}\]</p>
+<p>因此,观察一个真实文章的总概率是这两个部分的总和:</p>
+<p>\[P(B^c) = P(A \cap B^c) + P(A^c \cap B^c) = 0.0133 + 0.5867 = 0.6 .\]</p>
+<p>在这些计算中,我们输入了一个计算连带概率的通用公式,并通过重排,输入了有条件概率的公式。</p>
+<div class="describe">
+<p>计算连带和有条件的概率</p>
+<p>对事件++0+++++++++1+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</p>
+<p>\[\begin{equation} P(A \cap B) = P(A | B)P(B). \tag{2.1} \end{equation}\]</p>
+<p>因此,当\(A\)和\(B\)独立时,</p>
+<p>\[P(A \cap B) = P(A)P(B).\]</p>
+<p>将2.1的两面分解 by QQ0@@, 并假设 QQ1@@, 校对:Soup</p>
+<p>\[\begin{equation} P(A | B) = \frac{P(A \cap B)}{P(B)}. \tag{2.2} \end{equation}\]</p>
+<p>因此,为了评估QQ0的发生机率,我们可以考虑它们一起发生的机率,XQ2@@,相对于XQ3@@发生的机率,QQ4@@.</p>
+</div>
+<p>表2.3总结了我们对两个文章变量的共同行为的新理解. 本表的总金额证实了我们的计算是合理的。 表2.3还提供了我们所寻求的比较点:12%的新闻文章使用感叹点,\(P(A) =\)0.12。 因此,我们不必总是从零开始建立类似的边际概率,让我们考虑这一计算背后的理论。 与往常一样,我们可以从承认文章可以使用感叹点的两种方式开始:如果是假的( 1@@),如果不是假的(\(A \cap B^c\)). 因此,观测QQ3QQ的总概率是这些不同部分的综合概率:</p>
+<p>\[P(A) = P(A \cap B) + P(A \cap B^c).\]</p>
+<p>使用假新闻与真实新闻的感叹点用法,</p>
+<p>\[\begin{equation} \begin{split} P(A) &amp; = P(A \cap B) + P(A \cap B^c) = P(A|B)P(B) + P(A|B^c)P(B^c) . \end{split} \tag{2.3} \end{equation}\]</p>
+<p>大约12%的文章使用感叹点: 我们计算QQ1的公式是一个特例,</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:jointfake">TABLE 2.3: </span>A joint probability model of the fake status and exclamation point usage across all articles.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">\(B\)</th>
+<th style="text-align:right;">\(B^c\)</th>
+<th style="text-align:center;">共计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">\(A\)</td>
+<td style="text-align:right;">
+0.1067
+</td>
+<td style="text-align:right;">
+0.0133
+</td>
+<td style="text-align:center;">
+0.12
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">\(A^c\)</td>
+<td style="text-align:right;">
+0.2933
+</td>
+<td style="text-align:right;">
+0.5867
+</td>
+<td style="text-align:center;">
+0.88
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">共计</td>
+<td style="text-align:right;">
+0.4
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+<td style="text-align:center;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level3" id="posterior-probability-model-via-bayes-rule" number="2.1.4">
+<h3>通过Bayes规则的后验概率模型 !</h3>
+<p></p>
+<p>我们现在可以回答一个最终的问题:最新文章是假的概率有多大? 我们打算计算文章是否是假的, 让我们重新审视表2.3。 由于我们的文章使用感叹点, 我们可以放大12%的文章 属于QQ1@@行。 在这些文章中,88.9%(0.1067/0.12)是假的,11.1%(0.0133/0.12)是真实的. 虽然这或许是反气候的, 但这正是我们所寻求的答案:88.</p>
+<p>我们从细节上退后, 简言之,贝叶斯规则提供了我们实施巴叶斯思想所需的机制。 它定义了一个事件 QQ0 QQ的后置模型,它来自两个片段: QQ1 QQ的前置概率 和 如果 QQ3 QQ 发生的话观测数据的似然。</p>
+<div class="describe">
+<p>Bayes 事件规则</p>
+<p>对事件++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</p>
+<p>\[\begin{equation} P(B |A) = \frac{P(A \cap B)}{P(A)} = \frac{P(B)L(B|A)}{P(A)} \tag{2.4} \end{equation}\]</p>
+<p>根据《总概率法》(2.3)</p>
+<p>\[\begin{equation} P(A) = P(B)L(B|A) + P(B^c)L(B^c|A) . \tag{2.5} \end{equation}\]</p>
+<p>更广泛地说,</p>
+<p>\[\text{posterior} = \frac{\text{prior } \cdot \text{ likelihood}}{\text{normalizing constant}} .\]</p>
+</div>
+<p>让自己相信贝叶斯规则是可行的, 在(2.4)中,我们可以插入先验的信息,即40%的文章是假的,26.67%的假文章使用感叹点的似然,12%的边际概率观察所有文章的感叹点. 正如我们从表2.3中计算的那样,由此得出的来品假冒概率约为0.889:</p>
+<p>\[P(B|A) = \frac{P(B)L(B|A)}{P(A)} = \frac{ 0.4 \cdot 0.2667}{0.12} = 0.889 .\]</p>
+<p>表2.4总结了我们从后验模型开始的新闻分析之旅。 我们开始之前就明白, 来的文章只有40%的假象。 然而,当人们在“总统有一个有趣的秘密! ”这个更常见于假新闻的标题上看到一个感叹点时,我们事后的理解就发生了相当大的变化 — — 文章假冒的机会跃升到88.9%。</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:fakeposterior">TABLE 2.4: </span>The prior and posterior models of fake news.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">事件</th>
+<th style="text-align:left;">\(B\)</th>
+<th style="text-align:left;">\(B^c\)</th>
+<th style="text-align:left;">共计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">前一个概率</td>
+<td style="text-align:left;">
+0.4
+</td>
+<td style="text-align:left;">
+0.6
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">后概率</td>
+<td style="text-align:left;">
+0.889
+</td>
+<td style="text-align:left;">
+0.111
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level3" id="posterior-simulation" number="2.1.5">
+<h3>后期模拟</h3>
+<p>我们为以上新闻分析构建的概率模型就是这个模型。 它们提供了我们在实践中观察到的理论表述。 为了建立可能贴在社交媒体上的文章与其基本模型之间的联系, 首先,定义可能的文章类型,真实的或假的,及其相应的先验概率:</p>
+<div class="sourceCode" id="cb5">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 定义可能的条款
+article = data.frame(type = c("real", "fake"))
+# 定义上一个模型
+prior = c(0.6, 0.4)</code></pre>
+</div>
+<p>为了模拟可能张贴在您的社交媒体上的文章,我们可以使用dplyr套件中的样本 n()功能(Wickham等人. 2021) 从文章数据框随机抽取各行样本. 在这样做时,我们必须具体说明样品的大小,并且应该用替换(替换=TRUE)来取样品。 以替代方式取样可以确保我们从每篇文章的新的似然开始 — — 任何文章都可能是假的或真实的。 最后,我们设定权重=确定文章有60%是真实的,40%是假的。 要尝试这个,请多次运行以下代码,每次模拟三篇文章.</p>
+<div class="sourceCode" id="cb6">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 模拟3篇文章
+sample_n(article, size = 3, weight = prior, replace = TRUE)</code></pre>
+</div>
+<p>注意,每次运行这个代码,都可以得到不同的结果. 因为模拟就像文章一样是随机的。 R幕后是一个随机数生成器(RNG), 每次我们要求一个新的样本,RNG“开始”在一个新的地方:随机种子。 因此,从不同的种子开始,可以产生不同的样品。 总的来说,这是件大事 — — 随机样本应该是随机的。 然而,在单一的分析中,我们希望能够复制我们的随机模拟结果,即我们不希望每次重播我们的代码时,结果的精细点都会改变. 为了实现这种可复制性,我们可以通过将 set.seed () 函数应用到正整数(这里是84735)来指定或设定种子. 运行以下代码几次并注意结果总是相同的——前两条是假的,第三条是真实的:15</p>
+<div class="sourceCode" id="cb7">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 设种. 模拟三篇.
+rng = np.random.default_rng(84735)
+sample_n(article, size = 3, weight = prior, replace = TRUE)
+type
+1 fake
+2 fake
+3 real</code></pre>
+</div>
+<div class="warning">
+<p>我们将会在整个书中使用 set. 但必须记住这些结果仍然是随机的。 在模拟中反映潜在的错误和可变性,不同的种子通常会通过类似的结论得出不同的数值结果。</p>
+</div>
+<p>现在,我们明白如何模拟几篇文章,让我们做一个更大的梦想:模拟一万篇文章,并将结果储存在文章中。</p>
+<div class="sourceCode" id="cb8">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 模拟一万篇文章.
+rng = np.random.default_rng(84735)
+article_sim = sample_n(article, size = 10000,
+weight = prior, replace = TRUE)</code></pre>
+</div>
+<p>1万件模拟文章的构成由下面的条形图概括,用ggplot()函数在ggplot2套件(Wickham 2016)中构建:</p>
+<div class="sourceCode" id="cb9">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-61" style="display:block;"></span>
+<img alt="一种假的或真实的酒吧图案 上面有Y轴 假新闻的酒吧里有大约4000个 真正新闻的酒吧里有大约6000个" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-61-1-5a495cb315bd.png" width="240"/>
+<p class="caption">图2.2: 假象对阵真实状态的酒吧情节 假象一万篇</p>
+</div>
+<p>下表提供了更为详尽的摘要。 反映这10 000篇文章的生成模式,大约(但并非完全)40%是伪造的:</p>
+<div class="sourceCode" id="cb10">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>接下来,让我们模拟一下这10000篇文章中的感叹点。 数据 模型变量规定26.67%的假文章和2.22%的假文章使用感叹点:</p>
+<div class="sourceCode" id="cb11">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>从这个数据 模型,我们可以模拟每篇文章是否包含一个感叹点. 这种语法比较复杂. 首先,Group by()语句规定,感叹点模拟将分别对万篇中的每一篇进行. 第二,我们使用样本()模拟根据数据 模型得出的感叹点数据(否或是),并将结果存储为用法。 注意样本()与样本 n()相似,但样本值来自矢量而不是数据框的行.</p>
+<div class="sourceCode" id="cb12">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 定义是否有感叹点
+data = c("no", "yes")
+# 模拟感叹点使用
+rng = np.random.default_rng(3)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>文章 sim数据框现在包含10,000篇具有不同特性的模拟文章,摘要见下表. 这里的规律反映了大约28%(1070/4031)的假物品和2%(136/5969)的实际物品使用感叹点的潜在似然。</p>
+<div class="sourceCode" id="cb13">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>图2.3提供了这些条款特征的视觉摘要。 左图反映了真实和假新闻中感叹点的使用相对的分解,而右图则将这种信息设定在常态化背景下,所有文章中只有大约12%(1206/1000)使用感叹点.</p>
+<div class="sourceCode" id="cb14">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch2-bars-articles" style="display:block;"></span>
+<img alt="左边是条形图案,类型,真实或假. 两条栏杆的高度均为1. 每个栏都用旧的遮蔽,是或否。 在假新闻的酒吧里,使用=是大约占25%。 在真实新闻的栏目中,使用=是占5%以下。 右边是条形的用法图案,没有或有,在y轴上有原始的计数. 使用量=无的计数要高得多,超过7500. 使用量=是,低于1250。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch2-bars-articles-1-935672359627.png" width="480"/>
+<p class="caption">FIGURE 2.3: 酒吧的感叹点使用, 无论是在假新闻还是总体新闻中。</p>
+</div>
+<p>我们的一万篇模拟文章现在反映了假新闻的先行模式,以及假新闻与真新闻之间使用感叹点的似然. 反过来,我们可以用它们来估计最新文章是假的后期概率. 为此,我们可以筛选出与我们的数据相匹配的模拟文章(即使用感叹点的文章),并检查假文章的百分比:</p>
+<div class="sourceCode" id="cb15">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>在1206年的模拟文章中使用了感叹点,大约是 0@@. %是伪造的。 这一近似值与0.889的实际后期概率相当接近. 当然,如果我们看到不同的数据, 图2.4显示了一条简单的规则: 若文章使用感叹点, 否则, 注: 同样的规则并不适用于这本真正的书,其中自由使用感叹点只是传达了我们的热情!</p>
+<div class="sourceCode" id="cb16">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch2-bars" style="display:block;"></span>
+<img alt="有两块形似真假的条形地块,一个用于无,一个用于有。 两块地都靠Y轴 对于用法=没有,真实新闻的栏杆约为6000,假新闻的栏杆约为3000. 对于用法=是,真实新闻的栏杆约为100条,假新闻的栏杆约为1000条." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch2-bars-1-3c2b0ff2d3f7.png" width="288"/>
+<p class="caption">FIGURE 2.4:真实与假新闻的巴图,按感叹点用法细分.</p>
+</div>
+</div>
+</div>
+<div class="section level2" id="michelle-simple" number="2.2">
+<h2>例:流行对苏打对可乐</h2>
+<p>让我们用另一个例子来实施贝叶斯规则。 我们的文字选择可以反映我们生活的地方。 例如,假设你正在观看一个对住在美国的人的采访。 美国人口普查数字在不知情的情况下提供他们可能居住的地区:中西部( 0@@)、东北部(\(N\))、南部(\(S\))、西部(\(W\))。 第 16 条 表2.5概述了这一先验的模式。 17,关于南方人口最多,东北人口最少的通知( Q\(P(S) &gt; P(N)\)). 因此,仅根据人口统计,受访者生活在南方的概率为38%:</p>
+<p>\[P(S) = 0.38 .\]</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:popprior">TABLE 2.5: </span>Prior model of U.S. region.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">区域</th>
+<th style="text-align:center;">管理人员</th>
+<th style="text-align:center;">无</th>
+<th style="text-align:center;">页:1</th>
+<th style="text-align:center;">维文</th>
+<th style="text-align:center;">共计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">概率</td>
+<td style="text-align:center;">
+0.21
+</td>
+<td style="text-align:center;">
+0.17
+</td>
+<td style="text-align:center;">
+0.38
+</td>
+<td style="text-align:center;">
+0.24
+</td>
+<td style="text-align:center;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<p>但随后,你看到那个人指着一个发抖的可乐饮料,并说“请通过我的流行。” 虽然该国一致热爱美味的饮料,但是在所谓的饮料方面却存在分歧,共同的区域术语包括“流行 ”、 “ 汽水 ” 和 “ 咖啡 ”。 这一数据,即个人使用 " 流行 " 的情况,提供了他们可能居住地点的进一步信息。 为了评价这些数据,我们可以检查Bayesrules软件包中的pop vs soda数据集(Dogucu, Johnson, 和Ott 2021),其中包括对在popvssoda.com进行的志愿者调查的374250个回复. 要了解更多关于此数据集的信息, 请输入您控制台中的 pop  vs  soda。 虽然调查参与者并不直接代表区域人口(表2.5),</p>
+<div class="sourceCode" id="cb17">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 装入数据
+data(pop_vs_soda)
+# 按区域汇总流行用途
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>使用“流行”一词,</p>
+<p>\[L(M|A) = 0.6447, \;\;\;\; L(N|A) = 0.2734, \;\;\;\; L(S|A) = 0.0792, \;\;\;\; L(W|A) = 0.2943\]</p>
+<p>例如,中西部有64.47%的人使用“流行”一词,但南方只有7.92%的人使用“流行”一词。 相对而言,如果受访者生活在中西部,“流行”数据就最有可能,如果他们生活在南方,则最不可能,因为西方和东北处于这两个极端之间:\\\\\}。</p>
+<p>用受访者使用“流行”一词的数据, 例如,考虑到38%的人生活在南方,但该地区相对罕见的“流行”现象,受访者在南方生活的后期概率是多少? Per Bayes规则(2.4),我们可以通过</p>
+<p>\[\begin{equation} P(S | A) = \frac{P(S)L(S|A)}{P(A)} . \tag{2.6} \end{equation}\]</p>
+<p>我们已经有了三个必要的谜题中的两个, 之前的概率 +++ 和概率 +++++。 想想第三个, 一个人在整个美国使用“流行”一词的边缘概率, 通过扩展总概率法(2.5),我们可以通过结合每个区域使用“流行”的似然来计算QQ3@@,同时计算区域人口。 因此,在美国有人使用“流行”一词的似然为28.26%:</p>
+<p>\[\begin{split} P(A) &amp; = L(M|A)P(M) + L(N|A)P(N) + L(S|A)P(S) + L(W|A)P(W) \\ &amp; = 0.6447 \cdot 0.21 + 0.2734 \cdot 0.17 + 0.0792 \cdot 0.38 + 0.2943 \cdot 0.24\\ &amp; \approx 0.2826 . \\ \end{split}\]</p>
+<p>大约10.65%的受访者生活在南方:</p>
+<p>\[P(S | A) = \frac{0.38 \cdot 0.0792}{0.2826}\; \approx 0.1065 .\] 我们同样可以更新我们对生活在中西部、东北部或西部的受访者的理解。 表2.6汇总了由此产生的区域后验模型和原先的模型。 浸入 it中. 我们听到受访者使用“流行”一词后,</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:poppost">TABLE 2.6: </span>Prior and posterior models of U.S. region.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">区域</th>
+<th style="text-align:left;">管理人员</th>
+<th style="text-align:left;">无</th>
+<th style="text-align:left;">页:1</th>
+<th style="text-align:left;">维文</th>
+<th style="text-align:left;">共计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">前一个概率</td>
+<td style="text-align:left;">
+0.21
+</td>
+<td style="text-align:left;">
+0.17
+</td>
+<td style="text-align:left;">
+0.38
+</td>
+<td style="text-align:left;">
+0.24
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">后概率</td>
+<td style="text-align:left;">
+0.4791
+</td>
+<td style="text-align:left;">
+0.1645
+</td>
+<td style="text-align:left;">
+0.1065
+</td>
+<td style="text-align:left;">
+0.2499
+</td>
+<td style="text-align:left;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section level2" id="cousin-cole" number="2.3">
+<h2>构建随机变量的贝叶斯模型</h2>
+<p>我们在上文的贝叶斯分析中,为绝对变量构建了后验模型. 在假新闻分析中,我们审查了文章的绝对地位:假的或真实的. 在流行与汽水的例子中, 然而,贝叶斯分析中常常会出现我们感兴趣的结果是数字的。 尽管有些细节会有所改变, 但我们所构建的贝叶斯规则原则,</p>
+<div class="section level3" id="prior-probability-model-1" number="2.3.1">
+<h3>先验概率模型</h3>
+<p>1996年,世界围棋冠军(和人类!). 加里·卡斯帕罗夫(英语:Gary Kasparov)在对阵IBM超级计算机深蓝的比赛中出场了一场意想不到的六局棋局. 6场比赛中,卡斯帕罗夫共获得3场,2场抽签,1场失利. 因此,卡斯帕罗夫赢得了总的比赛,保留了机器在围棋方面表现不如人类的观念. 然而卡斯帕罗夫和深蓝原本要再次见面,以参加1997年的六场比赛. 请将“pi”或“pie”改为“pie ” 表示卡斯帕罗夫在重赛中赢得任何特定比赛的机会。 18 因此,QQ1@@是衡量他相对于深蓝的整体技能. 鉴于国际象棋,机器,和人类的复杂性,QQ2@@是未知的,可以随时间而变化或波动. 简而言之,QQ3@@是一个随机变量。</p>
+<p>与假新闻分析一样,我们对随机变量XQ0XQX的分析将从一个前模型开始,该模型 (1) 确定QQ1XX的值可以采取什么, (2) 给每个值分配一个先验的权重或概率, 其中 (3) 这些概率和 1. 考虑表 2.7 定义的先验模型。 我们将会了解如何在后面的章节中建立这样一个机构。 现在,让我们集中解释并使用前面的段落。</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:chessprior">TABLE 2.7: </span>Prior model of <span class="math inline">\(\pi\)</span>, Kasparov’s chance of beating Deep Blue.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">\(\pi\)</th>
+<th style="text-align:center;">
+0.2
+</th>
+<th style="text-align:center;">
+0.5
+</th>
+<th style="text-align:center;">
+0.8
+</th>
+<th style="text-align:center;">共计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">\(f(\pi)\)</td>
+<td style="text-align:center;">
+0.10
+</td>
+<td style="text-align:center;">
+0.25
+</td>
+<td style="text-align:center;">
+0.65
+</td>
+<td style="text-align:center;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<p>你可能注意到的第一件事是 这个模型极大地简化了现实。 19 虽然卡斯帕罗夫的胜率概率在技术上是0比1,但这之前假设卡斯帕罗夫的胜率概率是20%、50%或80%。 接着,检查概率质量函数 (pmf) \(f(\cdot)\),指定每个可能的\(\pi\)值的前概率. 这个pmf反映了以前的认识,即卡斯帕罗夫从1996年的比对中吸取了教训,在1997年最有可能有所改进。 具体来说,这个pmf为卡斯帕罗夫的赢概率跳跃到QQ4Q,而他的赢概率只有10%的机会下降到QQ5Q,即XQ6+和QQ7+。</p>
+<div class="describe">
+<p>偏差概率模型</p>
+<p>让QQ0@@成为离散的随机变量. \(Y\)的概率模型由概率质量函数(pmf)\(f(y)\)指定. 此 pmf 定义了任何给定结果的概率 QQ 3@@,</p>
+<p>\[f(y) = P(Y = y)\]</p>
+<p>具有下列属性:</p>
+<ul>
+<li>\(0 \le f(y) \le 1\)  all1@@;</li>
+<li>===============================================================================================================================================================</li>
+</ul>
+</div>
+</div>
+<div class="section level3" id="chapter-2-binomial-likelihood" number="2.3.2">
+<h3>二元数据模型</h3>
+<p>在贝叶斯分析的第二步, 我们将收集并处理数据, 在这里,我们的数据QQ1@@是1997年卡斯帕罗夫夺冠的六场比赛的号码. 20, 由于国际象棋比赛结果没有预先确定, 也取决于卡斯帕罗夫的获胜概率。 卡斯帕罗夫的胜利也往往很高。 如果QQ8@@是0.20,QQ9@@会倾向于低调. 在贝叶斯官方分析中, 我们必须开发一个有条件的概率模型,说明QQ12QQ如何取决于或取决于QQ13QQ的值.</p>
+<div class="describe">
+<p>数据有条件概率模型 {}}</p>
+<p>让QQ0@@成为离散的随机变量,而QQ1@@成为QQ2@@所依赖的参数. 然后由有条件的 pmf QQ5 指定 QQ3 QQ 给定的有条件概率模型。 此 pmf 指定了 QQ 6 QQ 的观测条件概率 ,</p>
+<p>\[f(y|\pi) = P(Y = y | \pi)\]</p>
+<p>具有下列属性:</p>
+<ul>
+<li>\(0 \le f(y|\pi) \le 1\)  all1@@;</li>
+<li>\(\sum_{\text{all } y} f(y|\pi) = 1\).</li>
+</ul>
+</div>
+<p>在模拟我们国际象棋例子中QQ0QQ对QQ1X的依赖性时,我们首先对国际象棋比赛提出两个假设:(1)任何一场比赛的结果并不影响另一场比赛的结果,即比赛是独立的;(2)卡斯帕罗夫在比赛中胜出任何一场比赛的概率是相等的,也就是他的机会不会随着比赛的继续而增加或减少. 这是统计分析的一个共同框架,可以用二元模型来表示。</p>
+<div class="describe">
+<p>二元模型</p>
+<p>让随机变量 QQ0 QQ 成为固定数试验中的成功数 QQ1。 假设审判是独立的, 然后,XQQ3@@对QQ4@@的有条件依赖,可以用参数XQ5@@和XQ6@@的Binomial模型来建模. 在数学符号中:</p>
+<p>\[Y | \pi \sim \text{Bin}(n,\pi) \]</p>
+<p>其中“\(\sim\) @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@  read  read  read  read 相应的,双米模型由条件 pmf 指定</p>
+<p>\[\begin{equation} f(y|\pi) = \left(\!\begin{array}{c} n \\ y \end{array}\!\right) \pi^y (1-\pi)^{n-y} \;\; \text{ for } y \in \{0,1,2,\ldots,n\} \tag{2.7} \end{equation}\]</p>
+<p>在哪里, \ \ \ \ \ \</p>
+</div>
+<p>我们现在可以说,卡斯帕罗夫在比赛中胜出++0++的依赖性,就是对他的胜出概率++2++的依赖性遵循了双米模式,</p>
+<p>\[Y | \pi \sim \text{Bin}(6,\pi)\]</p>
+<p>带有条件 pmf</p>
+<p>\[\begin{equation} f(y|\pi) = \left(\!\begin{array}{c} 6 \\ y \end{array}\!\right) \pi^y (1 - \pi)^{6 - y} \;\; \text{ for } y \in \{0,1,2,3,4,5,6\} . \tag{2.8} \end{equation}\]</p>
+<p>此 pmf 总结了观察任意赢 QQ0 QQ 任意给定赢 QQ1 概率的有条件概率。 如果Kasparov击败深蓝的绝好机会是2⁄4,</p>
+<p>\[f(y = 6 | \pi = 0.8) = \left(\!\begin{array}{c} 6 \\ 6 \end{array}\!\right) 0.8^6 (1 - 0.8)^{6 - 6} = 1 \cdot 0.8^6 \cdot 1 \approx 0.26 .\]</p>
+<p>他的六场比赛都输了,</p>
+<p>\[f(y = 0 | \pi = 0.8) = \left(\!\begin{array}{c} 6 \\ 0 \end{array}\!\right) 0.8^0 (1 - 0.8)^{6 - 0} = 1 \cdot 1 \cdot 0.2^6 \approx 0.000064 .\]</p>
+<p>图2.5 绘制了有条件的 pmfs +%0 +%, 以及 +%1 +% 的随机结果, 这些阴谋证实了我们的直觉:如果卡斯帕罗夫的胜利概率(远左)低, 如果卡斯帕罗夫的胜利(远右)低,</p>
+<div class="figure" style="text-align: center"><span id="fig:binom-chess" style="display:block;"></span>
+<img alt="图像由相邻的三块地块组成. 所有地块的x轴对y的值为0,1,2,3,4,5和6. y轴为y给定pi的f. 所有地块均采用双米模型,进行6次试验. 这三块地块在pi的可能值上分别是0.2,0.5和0.8. 三个地块对 Y 的每个值都有垂直线条. 垂直线为灰色,但Y=1时除外. 第一个情节(pi = 0.2)在y = 1.时黑线最高. 第二块地块(pi = 0.5)的黑线较低. 第三块地块(pi = 0.8)的黑线最低." loading="lazy" src="/assets/img/bayes-rules-python-cn/binom-chess-1-94bd74e0cc64.png" width="384"/>
+<p class="caption">图2.5:一个宾(6)的pmf(XQ0) ) 模型按每个可能值的% 1 绘制。 黑线标注的弥撒与最终观测到的数据相对应,QQ2@@胜.</p>
+</div>
+</div>
+<div class="section level3" id="the-binomial-likelihood-function" number="2.3.3">
+<h3>二进制概率函数</h3>
+<p>Binomial提供了我们可能观测到的数据的理论模型。 最终,卡斯帕罗夫只赢得了1997年对阵深蓝的六场比赛之一(QQ1@@). 因此,我们贝叶斯分析的下一步是确定这一特定数据与各种可能的数据的兼容性。 我们想评估卡斯帕罗夫在每场比赛中胜出的似然。 原来答案是直视着我们的脸 只提取图2.5中与我们观测到的数据对应的质量,</p>
+<div class="figure" style="text-align: center"><span id="fig:binom-chess-like" style="display:block;"></span>
+<img alt="x轴上为pii,值为0.2,0.5和0.8. 在y轴上是pi给y=1的似然函数. pi=0.2,pi=0.5,pi=0.8的垂直线的高度分别约为0.4,0.1和0.05." loading="lazy" src="/assets/img/bayes-rules-python-cn/binom-chess-like-1-b810a7e40993.png" width="240"/>
+<p class="caption">图2.6: 在6场比赛中观察QQ1+X的概率函数QQ0+X在任意胜概率QQ2+X中获胜.</p>
+</div>
+<p>正如我们假新闻例子中的似然是通过翻转其头部的有条件概率获得的一样,概率函数的公式来自于在观测到的数据中评价条件pmf \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 对于 2@@,</p>
+<p>\[L(\pi | y = 1) = f(y=1 | \pi) = \left(\!\begin{array}{c} 6 \\ 1 \end{array}\!\right) \pi^1 (1-\pi)^{6-1} = 6\pi(1-\pi)^5 . \]</p>
+<p>表2.8总结了按每个可能值======================================================================================================================================================================================================================================================== 例如,如果卡斯帕罗夫是优等球员,那么卡斯帕罗夫赢得一场比赛的似然就很低,即QQ1@@:</p>
+<p>\[L(\pi = 0.8 | y = 1) = 6\cdot 0.8 \cdot (1-0.8)^5 \approx 0.0015 . \]</p>
+<p>这里有一些不漏的细节。 首先,虽然公式上它相当于条件pmf的 \(Y\) , QQ1@@, 我们用QQ2@@的注解来重申, 似然是未知的赢概率XQ3@@的函数, 事实上,由此产生的概率公式只取决于QQ5@@. 此外,概率函数并不等于XQ6XX,因此不是一个概率模型。 (男子体操! 相反,它提供了一种机制,用以比较观测到的数据的兼容性QQ7@@与不同的XQ8@@.</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:chesslike">TABLE 2.8: </span>Likelihood function of <span class="math inline">\(\pi\)</span> given Kasparov won 1 of 6 games.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">\(\pi\)</th>
+<th style="text-align:center;">
+0.2
+</th>
+<th style="text-align:center;">
+0.5
+</th>
+<th style="text-align:center;">
+0.8
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">\(L(\pi | y=1)\)</td>
+<td style="text-align:center;">
+0.3932
+</td>
+<td style="text-align:center;">
+0.0938
+</td>
+<td style="text-align:center;">
+0.0015
+</td>
+</tr>
+</tbody>
+</table>
+<p>图2.6和表2.8总结了这些似然函数,这些函数表明卡斯帕罗夫的一场比赛获胜最符合他是较弱的球员,也最不符合他是较强的球员:\(L(\pi = 0.2 | y = 1) &gt; L(\pi = 0.5 | y = 1) &gt; L(\pi = 0.8 | y = 1)\). 事实上,如果卡斯帕罗夫对深蓝的胜负概率高达QQ1+++++++========================================================================================================================================================================================================================================</p>
+<div class="describe">
+<p>概率质量函数与概率函数</p>
+<p>当QQ0@@知道时,有条件的pmf\(f(\cdot | \pi)\)可以让我们比较数据XQ2@@的不同可能值的概率(例如XQ3@@或XQ4@@)与XQ5@@发生:</p>
+<p>\[f(y_1|\pi) \; \text{ vs } \; f(y_2|\pi) .\]</p>
+<p>当知道QQ0@@时,概率函数QQ1@@允许我们在XQ3@@的不同可能值下比较XQ2@@观测数据的相对似然(例如XQ4@@或XQ5@@):</p>
+<p>\[L(\pi_1|y) \; \text{ vs } \; L(\pi_2|y) .\]</p>
+<p>因此,QQ0QQ提供了评估数据XQ1Q与各种XQ2QQ的相对兼容性所需要的工具.</p>
+</div>
+</div>
+<div class="section level3" id="normalizing-constant" number="2.3.4">
+<h3>常数正常化</h3>
+<p>想想我们在哪里。 与我们之前的型号相比 (表2.7),我们的1997年国际象棋比对数据提供了证据,证明深蓝目前是主力棋手(表2.8). 作为贝叶斯人,我们想平衡 预先和可能的信息。 我们这样做的机制,贝耶斯规则(Bayes Rule),需要三条信息:先期信息、似然和常数正常化。 我们已解决前两个问题, 为此,我们必须确定卡斯帕罗夫在所有可能的胜负概率上赢得QQ1QQ的总概率,QQ3Q. 正如我们在其他例子中所做的那样,我们可以呼吁“完全概率法”来计算QQ4Q。 想法是这样的。 卡斯帕罗夫一个赢结果(QQ5@@)的总概率是其各部分的总和:用QQ6@@的赢概率XQ7@@的观察概率为0.2,0.5,或用这些QQ8@@值的先验概率加权0.8. 从LTP中跳过一点,</p>
+<p>\[f(y = 1) = \sum_{\pi \in \{0.2,0.5,0.8\}} L(\pi | y=1) f(\pi)\]</p>
+<p>或,从表2.7和2.8中扩展总和++++并插入先验的概率和似然:</p>
+<p>\[\begin{equation} \begin{split} f(y = 1) &amp; = L(\pi = 0.2 | y=1) f(\pi = 0.2) + L(\pi = 0.5 | y=1) f(\pi = 0.5) \\ &amp; \hspace{.2in} + L(\pi = 0.8 | y=1) f(\pi = 0.8) \\ &amp; \approx 0.3932 \cdot 0.10 + 0.0938 \cdot 0.25 + 0.0015 \cdot 0.65 \\ &amp; \approx 0.0637 . \\ \end{split} \tag{2.9} \end{equation}\]</p>
+<p>卡斯帕罗夫只赢一场比赛, 当然,如果所有这一切都点击的话,那将是伟大的。 但若不如此, 不要让这种计算阻碍你前进。 我们将在第2.3.6节中学习一个神奇的捷径,</p>
+</div>
+<div class="section level3" id="posterior-probability-model" number="2.3.5">
+<h3>后验概率模型</h3>
+<p>图2.7总结了我们迄今所了解的情况和我们尚未去的地方。 卡斯帕罗夫的获胜概率很高(左图), 不过! 然后他只赢得了六场比赛中的一场,这一结果在卡斯帕罗夫获胜概率低(中场)时最有可能出现. 我们更新的卡斯帕罗夫获胜概率的后验模型(右图)将平衡这一先期和似然。 具体地说,我们下面的正式计算将证实卡斯帕罗夫在1996年至1997年期间击败深蓝的几率最有可能下降至0. 他的一九九七年的输掉是一场暴风雨, 与此相对照,卡斯帕罗夫仍然极不可能成为超级球员( 2@@).</p>
+<div class="figure" style="text-align: center"><span id="fig:chesssummary" style="display:block;"></span>
+<img alt="在相邻的3块地块中,x轴有pi,3个可能的值为0.2,0.5,0.8,每个地块中每个y值有3条垂直线. 第一个情节在y轴上有fy. 每个y的y值在不断增长. 第二幅图有l的pi给y等于y轴上的1. y值呈下降趋势。 最终的图案有 f pi 给 y 等于 y 轴上的 1。 每个y值的y值随着y的增加而减少." loading="lazy" src="/assets/img/bayes-rules-python-cn/chesssummary-1-9511457bc9cd.png" width="432"/>
+<p class="caption">FIGURE 2.7:前(左),概率(中),和后(右)型的\(\pi\). 为便于比较,省略了y轴的鳞片.</p>
+</div>
+<p>图2.7绘制的后验模型由后期 pmf 指定</p>
+<p>\[f(\pi | y = 1) .\]</p>
+<p>因为卡斯帕罗夫只赢得了六场比赛中的一场, 定义后缀与我们先验的例子并无多大不同。 正如你所希望的,贝叶斯的统治仍然坚持:</p>
+<p>\[\text{ posterior } = \; \frac{\text{ prior } \cdot \text{ likelihood }}{\text{normalizing constant}} .\]</p>
+<p>在棋局里,我们可以把这译作</p>
+<p>\[\begin{equation} f(\pi | y=1) = \frac{f(\pi)L(\pi|y=1)}{f(y = 1)} \;\; \text{ for } \pi \in \{0.2,0.5,0.8\} . \tag{2.10} \end{equation}\]</p>
+<p>其余的只是一点“插点和插点”:前面的XQ0XX是由表2.7定义的,XX1XX的概率是由表2.8定义的,而XX2XX的常数则是由表2.9规范的。 之后的概率如下:</p>
+<p>\[\begin{equation} \begin{split} f(\pi = 0.2 | y = 1) &amp; = \frac{0.10 \cdot 0.3932}{0.0637} \approx 0.617 \\ f(\pi = 0.5 | y = 1) &amp; = \frac{0.25 \cdot 0.0938}{0.0637} \approx 0.368 \\ f(\pi = 0.8 | y = 1) &amp; = \frac{0.65 \cdot 0.0015}{0.0637} \approx 0.015 \\ \end{split} \tag{2.11} \end{equation}\]</p>
+<p>表2.9汇总了这一后期概率模型以及先验的比较概率模型。 这些细节证实了图2.7背后的趋势和直觉。 主要是,虽然我们相当相信卡斯帕罗夫在只赢得一场比赛后,在1996年到1997年的表现会有所好转,但卡斯帕罗夫成为主力球员( 0@@)的机会却从0.65降至0.015. 事实上,获得最大后卫支持的情景是卡斯帕罗夫是较弱的球员,获胜概率只有0.2. 对机器来说是个好消息 人类的坏消息</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:chesspost-tab">TABLE 2.9: </span>Prior and posterior probability models of <span class="math inline">\(\pi\)</span>, Kasparov’s chance of beating Deep Blue in chess.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">\(\pi\)</th>
+<th style="text-align:left;">
+0.2
+</th>
+<th style="text-align:left;">
+0.5
+</th>
+<th style="text-align:left;">
+0.8
+</th>
+<th style="text-align:center;">共计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">\(f(\pi)\)</td>
+<td style="text-align:left;">
+0.10
+</td>
+<td style="text-align:left;">
+0.25
+</td>
+<td style="text-align:left;">
+0.65
+</td>
+<td style="text-align:center;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">\(f(\pi | y=1)\)</td>
+<td style="text-align:left;">
+0.617
+</td>
+<td style="text-align:left;">
+0.368
+</td>
+<td style="text-align:left;">
+0.015
+</td>
+<td style="text-align:center;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<p>我们通过概括我们为国际象棋分析开发的工具来结束这一节。</p>
+<div class="describe">
+<p>Bayes 变量规则</p>
+<p>用于任何变量 QQ0QQ 和 QQ1@@ , 让 QQ2@@ 表示 QQ3@@ 的前 pmf , 和 QQ4@@ 表示 QQ5@@ 的概率函数 给观察数据 QQ6@@。 然后,后pmf QQ7QQ给定数据QQ8QQ是</p>
+<p>\[\begin{equation} f(\pi | y) = \frac{\text{ prior } \cdot \text{ likelihood }}{\text{ normalizing constant }} = \frac{f(\pi)L(\pi|y)}{f(y)} \tag{2.12} \end{equation}\]</p>
+<p>根据《完全概率法》,观测所有可能的数据的总体概率为:</p>
+<p>\[\begin{equation} f(y) = \sum_{\text{all } \pi} f(\pi)L(\pi|y). \tag{2.13} \end{equation}\]</p>
+</div>
+</div>
+<div class="section level3" id="shortcut-2" number="2.3.6">
+<h3>后端快捷键</h3>
+<p>我们现在兑现承诺, 继续前进, 在2.11中, 这就解释了常数正常化这一术语的唯一目的,就是使后机概率正常化,以便它们合为一个:</p>
+<p>\[f(\pi = 0.2 | y = 1) + f(\pi = 0.5 | y = 1) + f(\pi = 0.8 | y = 1) = 1 . \]</p>
+<p>但其实我们不需要计算 QQ0 , 相反,我们可以简单地指出,\(f(y=1)\)是某种恒定的\(1/c\),因此替换为 (2(2.11).</p>
+<p>\[\begin{split} f(\pi = 0.2 | y = 1) &amp; = c \cdot 0.10 \cdot 0.3932 \propto 0.039320 \\ f(\pi = 0.5 | y = 1) &amp; = c \cdot 0.25 \cdot 0.0938 \propto 0.023450 \\ f(\pi = 0.8 | y = 1) &amp; = c \cdot 0.65 \cdot 0.0015 \propto 0.000975 \\ \end{split}\]</p>
+<p>表示“比例”。 虽然这些不合常理的后遗症加起来并不等于一个,</p>
+<p><span class="math display">\[0.039320 + 0.023450 + 0.000975 = 0.063745,\]</span></p>
+<p>图2.8显示,它们保持了正常化后概率的比例关系。</p>
+<div class="figure" style="text-align: center"><span id="fig:ch2scaled" style="display:block;"></span>
+<img alt="两块地块相邻,x轴的pi有3个可能的值为0.2,0.5,0.8,每个地块中每个x值有3条垂直线. 第一个情节使y轴上的后pdf正常化. i值分别为0.6,0.8和0.2,0.5,0.8。 第二幅图的垂直线高度完全相同,然而y轴的尺度不同. y值分别为0.04,0.25和0." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch2scaled-1-c922da94c443.png" width="432"/>
+<p class="caption">FIGURE 2.8: \(\pi\)的正统后缀pmf. (左)和\(\pi\)(右)的未正常化后pmf,具有不同的y轴比例尺.</p>
+</div>
+<p>因此,为了使这些非正常的概率正常化,同时保持它们的相对关系,我们可以将每个概率与整体进行比较. 具体地说,我们可以将每个非正常概率除以它们的总和. 例如:</p>
+<p>\[f(\pi = 0.2 | y = 1) = \frac{0.039320}{0.039320 + 0.023450 + 0.000975} \approx 0.617 .\]</p>
+<p>虽然我们刚刚了解了这一结果,但它在数学上也采用了结合(2.12)和(2.13)的方法:</p>
+<p>\[f(\pi | y) = \frac{f(\pi)L(\pi|y)}{f(y)} = \frac{f(\pi)L(\pi|y)}{\sum_{\text{all } \pi} f(\pi)L(\pi|y)} .\]</p>
+<p>我们将在下文阐述这种相称性结果的一般形式,并将在今后各章中就这一概念获得大量实践。</p>
+<div class="describe">
+<p>相称性</p>
+<p>因为QQ0@@只是一个不依赖于QQ1@@的正态常数,</p>
+<p>\[f(\pi | y) = \frac{f(\pi)L(\pi|y)}{f(y)} \propto f(\pi)L(\pi|y) .\]</p>
+<p>这是,</p>
+<p>\[\text{ posterior } \propto \text{ prior } \cdot \text{ likelihood }.\]</p>
+<p>这种相称性的重要性在于,我们建立后验模型所需的所有信息都是在事先和可能情况下保存的。</p>
+</div>
+</div>
+<div class="section level3" id="chapter-2-simulation" number="2.3.7">
+<h3>后期模拟</h3>
+<p>提供对卡斯帕罗夫棋术的见解和支持。 最终我们将模拟一万场六局棋系列的情景。 开始, 设置赢概率 +% 0 +% 的可能值和相应的前一个模型 +% 1 +% :</p>
+<div class="sourceCode" id="cb18">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 定义可能的胜负概率
+chess = data.frame(pi = c(0.2, 0.5, 0.8))
+# 定义上一个模型
+prior = c(0.10, 0.25, 0.65)</code></pre>
+</div>
+<p>接下来,模拟前款模型的 QQ0@@的10,000 可能结果,并将结果存储在围棋 sim数据框中.</p>
+<div class="sourceCode" id="cb19">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 从上一个模拟 10000 pi 值
+rng = np.random.default_rng(84735)
+chess_sim = sample_n(chess, size = 10000, weight = prior, replace = TRUE)</code></pre>
+</div>
+<p>并记录卡斯帕罗夫的胜负。 由于y对pi的依赖遵循二元模型,我们可以直接使用rbinom()函数模拟y,大小=6,prob=pi.</p>
+<div style="page-break-after: always;"></div>
+<div class="sourceCode" id="cb20">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 模拟 10000 匹配结果
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>1万个模拟 pi 的组合值近似于前一个模型 {0}} (表2.7):</p>
+<div class="sourceCode" id="cb21">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 总结上一个
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>此外, 10,000个模拟匹配结果显示这些结果对Kasparov赢概率pi的依赖,</p>
+<div class="sourceCode" id="cb22">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 画你由Pi
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-77" style="display:block;"></span>
+<img alt="在x轴上有pi的条形图案,值0.25,0.5和0.75. y轴有数. Pi = 0.25的杠数约为400. Pi = 0.5的杠数约为250. Pi = 0.75的杠上有20以下的计数." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-77-1-3b01ec3ab7f6.png" width="360"/>
+<p class="caption">图2.9: 模拟胜负结果的巴图 在每种可能的胜负概率下,</p>
+</div>
+<p>最后,让我们关注与Kasparov赢得一场比赛的观察数据相匹配的模拟结果。 在这些模拟中,大多数(60.4%)与卡斯帕罗夫的胜概率为0.2的情景(0.0%)相对应,极少数(1.8%)与QQ1+0.8的情景相对应。 这些观察非常接近于上文我们正式构建的 2@@的后验模型(表2.9)。</p>
+<div class="sourceCode" id="cb23">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 专注于y=1的模拟
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-79" style="display:block;"></span>
+<img alt="" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-79-1-7d828e28b816.png" width="240"/>
+<p class="caption">图2.10: 1万块的条形图 模拟 QQ0 QQ值 近似后验模型。</p>
+</div>
+</div>
+</div>
+<div class="section level2" id="chapter-summary-1" number="2.4">
+<h2>章节摘要</h2>
+<p>在第二章中,你学会了贝叶斯规则和贝叶斯规则。 每一次贝叶斯分析都包含四个共同的步骤.</p>
+<ol style="list-style-type: decimal">
+<li><p>构造您感兴趣的变量的上一个模型,% 0。 之前的模型指定了两个重要的信息:XQ1@@的可能的值和每个的相对前置性.</p></li>
+<li><p>通过有条件的pmf QQ2@@来总结数据对QQ0@@的依赖性.</p></li>
+<li><p>观察数据时,定义将观测数据的相对似然编码为XQ0================================================================================================================================================================================================================================================</p></li>
+<li><p>透过Bayes规则,</p>
+<p>\[\begin{equation*} \text{posterior} = \frac{\text{prior} \cdot \text{likelihood}}{\text{normalizing constant}} \propto \text{prior} \cdot \text{likelihood}. \end{equation*}\]</p>
+<p>从技术上讲</p>
+<p>\[f(\pi|y) = \frac{f(\pi)L(\pi|y)}{f(y)} \propto f(\pi)L(\pi|y).\]</p></li>
+</ol>
+</div>
+<div class="section level2" id="exercises-1" number="2.5">
+<h2>练习</h2>
+<div class="section level3" id="building-up-to-bayes-rule" number="2.5.1">
+<h3>建立到贝叶斯统治</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-80"><strong>Exercise 2.1  (Comparing the prior and posterior)  </strong></span>For each scenario below, you’re given a pair of events, <span class="math inline">\(A\)</span> and <span class="math inline">\(B\)</span>. Explain what you believe to be the relationship between the posterior and prior probabilities of <span class="math inline">\(B\)</span>: <span class="math inline">\(P(B|A) &gt; P(B)\)</span> or <span class="math inline">\(P(B|A) &lt; P(B)\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>\(A\) 你刚刚读完Lambda文学奖获奖作家Nicole Dennis-Benn的第一部小说, 你也会欣赏本恩的最新小说。</li>
+<li>\(A\) 在明尼苏达州的华氏0度 明天会是60度</li>
+<li>\(A\) = 作者昨晚只睡了3小时. QQ1@@ = 作者在今天的写作中做了几个打字.</li>
+<li>\(A\) 你的朋友在他们的推特上写了三个标签 QQ1@@=微博被转发.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-81"><strong>Exercise 2.2  (Marginal, conditional, or joint?)  </strong></span>Define the following events for a resident of a fictional town: <span class="math inline">\(A\)</span> = drives 10 miles per hour above the speed limit, <span class="math inline">\(B\)</span> = gets a speeding ticket, <span class="math inline">\(C\)</span> = took statistics at the local college, <span class="math inline">\(D\)</span> = has used R, <span class="math inline">\(E\)</span> = likes the music of Prince, and <span class="math inline">\(F\)</span> = is a Minnesotan. Several facts about these events are listed below. Specify each of these facts using probability notation, paying special attention to whether it’s a marginal, conditional, or joint probability.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>73%的驾驶时速超过限速10英里的人获得超速罚单.</li>
+<li>20%的居民驾驶时速超过限速10英里.</li>
+<li>15%的居民使用R.</li>
+<li>当地学院91%的统计学生使用R.</li>
+<li>38%的居民是明尼苏达人,喜欢王子的音乐.</li>
+<li>95%的明尼苏达居民喜欢王子的音乐.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-82"><strong>Exercise 2.3  (Binomial practice)  </strong></span>For each variable <span class="math inline">\(Y\)</span> below, determine whether <span class="math inline">\(Y\)</span> is Binomial. If yes, use notation to specify this model and its parameters. If not, explain why the Binomial model is not appropriate for <span class="math inline">\(Y\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>在某家医院,平均每小时有6个婴儿出生. 让明天早上9点到10点的婴儿数量来决定吧</li>
+<li>秋季种植的郁金香在春季有90%的开花机会. 今年你种了27个郁金香 让"0"成为开花的号码.</li>
+<li>阿拉斯加有17%的成功概率。 阿拉斯加必须试一次,</li>
+<li>亨利迟到的午餐时间</li>
+<li>尽管你说过你讨厌成为关注的中心 只想出去吃饭 但你的朋友会给你开个惊喜生日派对的</li>
+<li>你邀请了60人参加你的“##########日”派对,没有人认识对方,每个人都有80%的出现机会。 让 1@@成为你派对的客人总数.</li>
+</ol>
+<!-- $Y$ the number of the eight co-workers that Leslie has made a scrapbook for if she has a 88% chance of making one for each co-worker. -->
+<!-- In a 40 person class, each student has a 40% chance of speaking in class period, independent of the other students in class.  Let $Y$ be the number of students who speak during the next class period. -->
+</div>
+<div class="section level3" id="practice-bayes-rule-for-events" number="2.5.2">
+<h3>赛事惯例规则</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-83"><strong>Exercise 2.4  (Vampires?)  </strong></span>Edward is trying to prove to Bella that vampires exist. Bella thinks there is a 0.05 probability that vampires exist. She also believes that the probability that someone can sparkle like a diamond if vampires exist is 0.7, and the probability that someone can sparkle like a diamond if vampires don’t exist is 0.03. Edward then goes into a meadow and shows Bella that he can sparkle like a diamond. Given that Edward sparkled like a diamond, what is the probability that vampires exist?
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:exSickTrees"><strong>Exercise 2.5  (Sick trees)  </strong></span>A local arboretum contains a variety of tree species, including elms, maples, and others. Unfortunately, 18% of all trees in the arboretum are infected with mold. Among the infected trees, 15% are elms, 80% are maples, and 5% are other species. Among the uninfected trees, 20% are elms, 10% are maples, and 70% are other species. In monitoring the spread of mold, an arboretum employee randomly selects a tree to test.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>被选中的树有模具的前几率是多少 ?</li>
+<li>树巧为枫. 员工选择枫叶的似然有多大?</li>
+<li>后期的概率是多少?</li>
+<li>比较树有模具的前期和后期概率. 鉴于这棵树是枫树,你的理解有什么变化?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-84"><strong>Exercise 2.6  (Restaurant ratings)  </strong></span>The probability that Sandra will like a restaurant is 0.7. Among the restaurants that she likes, 20% have five stars on Yelp, 50% have four stars, and 30% have fewer than four stars. What other information do we need if we want to find the posterior probability that Sandra likes a restaurant given that it has fewer than four stars on Yelp?
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-85"><strong>Exercise 2.7  (Dating app)  </strong></span>Matt is on a dating app looking for love. Matt swipes right on 8% of the profiles he views. Of the people that Matt swipes right on, 40% are men, 30% are women, 20% are non-binary, and 10% identify in another way. Of the people that Matt does not swipe right on, 45% are men, 40% are women, 10% are non-binary, and 5% identify in some other way.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>在这个约会应用上随机选择的人,</li>
+<li>鉴于马特正在研究非二进制人物的特征,</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-86"><strong>Exercise 2.8  (Flight delays)  </strong></span>For a certain airline, 30% of the flights depart in the morning, 30% depart in the afternoon, and 40% depart in the evening. Frustratingly, 15% of all flights are delayed. Of the delayed flights, 40% are morning flights, 50% are afternoon flights, and 10% are evening flights. Alicia and Mine are taking separate flights to attend a conference.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>我的在早上的飞机上 她的航班会推迟,</li>
+<li>Alicia的航班没有延误。 她上早班机的似然有多大?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-87"><strong>Exercise 2.9  (Good mood, bad mood)  </strong></span>Your roommate has two moods, good or bad. In general, they’re in a good mood 40% of the time. Yet you’ve noticed that their moods are related to how many text messages they receive the day before. If they’re in a good mood today, there’s a 5% chance they had 0 texts, an 84% chance they had between 1 and 45 texts, and an 11% chance they had more than 45 texts yesterday. If they’re in a bad mood today, there’s a 13% chance they had 0 texts, an 86% chance they had between 1 and 45 texts, and a 1% chance they had more than 45 texts yesterday.
+</div>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:center;">心情不错</th>
+<th style="text-align:center;">伤风败俗</th>
+<th style="text-align:center;">共计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">0个文本</td>
+<td style="text-align:center;">
+</td>
+<td style="text-align:center;">
+</td>
+<td style="text-align:center;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">1-45条案文</td>
+<td style="text-align:center;">
+</td>
+<td style="text-align:center;">
+</td>
+<td style="text-align:center;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">46+ 法规</td>
+<td style="text-align:center;">
+</td>
+<td style="text-align:center;">
+</td>
+<td style="text-align:center;">
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">共计</td>
+<td style="text-align:center;">
+</td>
+<td style="text-align:center;">
+</td>
+<td style="text-align:center;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<ol style="list-style-type: lower-alpha">
+<li>使用所提供的信息填写上表。</li>
+<li>今天是新的一天。 为何室友心情良好? 贝叶斯规则方程的哪一部分是:先验的,似然的,常数的正常化的,或者后验的?</li>
+<li>你偷偷地偷看了你室友的手机(我们正试图不判断这种卑鄙的手法), 如果他们今天心情好, 这是贝耶斯规则公式的哪一部分?</li>
+<li>你室友昨天收到50条短信 心情好 后期的似然是什么?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-88"><strong>Exercise 2.10  (LGBTQ students: rural and urban)  </strong></span>A recent study of 415,000 Californian public middle school and high school students found that 8.5% live in rural areas and 91.5% in urban areas.<a class="footnote-ref" href="#fn21" id="fnref21"><sup>21</sup></a> Further, 10% of students in rural areas and 10.5% of students in urban areas identified as Lesbian, Gay, Bisexual, Transgender, or Queer (LGBTQ). Consider one student from the study.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>他们认定LGBTQ的似然有多大?</li>
+<li>若他们认同为LGBTQ,</li>
+<li>若他们不认同LGBTQ,</li>
+</ol>
+</div>
+<div class="section level3" id="practice-bayes-rule-for-random-variables" number="2.5.3">
+<h3>随机变量练习 Bayes 规则</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-89"><strong>Exercise 2.11  (Internship)  </strong></span>Muhammad applies for six equally competitive data science internships. He has the following prior model for his chances of getting into any given internship, <span class="math inline">\(\pi\)</span>:
+</div>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">\(\pi\)</th>
+<th style="text-align:center;">
+0.3
+</th>
+<th style="text-align:center;">
+0.4
+</th>
+<th style="text-align:center;">
+0.5
+</th>
+<th style="text-align:right;">共计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">\(f(\pi)\)</td>
+<td style="text-align:center;">
+0.25
+</td>
+<td style="text-align:center;">
+0.60
+</td>
+<td style="text-align:center;">
+0.15
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<ol style="list-style-type: lower-alpha">
+<li>让穆罕默德得到的实习机会数成为[0]。 指定QQ1@@对QQ2@@的依赖模式以及相应的pmf,QQ3@@.</li>
+<li>默罕默德得到了一些相当惊人的消息。 他得到了六次实习中的四次! 如果真有这个可能呢?</li>
+<li>根据穆罕默德的实习消息,</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-91"><strong>Exercise 2.12  (Making mugs)  </strong></span>Miles is learning how to make a mug in his ceramics class. A difficult part of the process is creating or “pulling” the handle. His prior model of <span class="math inline">\(\pi\)</span>, the probability that one of his handles will actually be good enough for a mug, is below:
+</div>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">\(\pi\)</th>
+<th style="text-align:center;">
+0.1
+</th>
+<th style="text-align:center;">
+0.25
+</th>
+<th style="text-align:center;">
+0.4
+</th>
+<th style="text-align:right;">共计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">\(f(\pi)\)</td>
+<td style="text-align:center;">
+0.2
+</td>
+<td style="text-align:center;">
+0.45
+</td>
+<td style="text-align:center;">
+0.35
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<ol style="list-style-type: lower-alpha">
+<li>迈尔斯的粘土足够七把 让####### 成为手柄的数量 足够一个杯子。 指定QQ1@@对QQ2@@的依赖模式以及相应的pmf,QQ3@@.</li>
+<li>迈尔斯拉7把手柄,只有1把手柄够杯子了.  What0@@,\(f(\pi|y=1)\)的pmf是什么?</li>
+<li>将后期模式与前期的 0@@模型比较. 你会如何描述他们之间的区别?</li>
+<li>迈尔斯 教官克里斯在拉手柄的能力(下)上有一个不同的前身. 找到Kris的后台,                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:exLactose"><strong>Exercise 2.13  (Lactose intolerant)  </strong></span>Lactose intolerance is an inability to digest milk, often resulting in an upset stomach. Fatima wants to learn more about the proportion of adults who are lactose intolerant, <span class="math inline">\(\pi\)</span>. Her prior model for <span class="math inline">\(\pi\)</span> is:
+</div>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">\(\pi\)</th>
+<th style="text-align:center;">
+0.4
+</th>
+<th style="text-align:center;">
+0.5
+</th>
+<th style="text-align:center;">
+0.6
+</th>
+<th style="text-align:center;">
+0.7
+</th>
+<th style="text-align:right;">共计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">\(f(\pi)\)</td>
+<td style="text-align:center;">
+0.1
+</td>
+<td style="text-align:center;">
+0.2
+</td>
+<td style="text-align:center;">
+0.44
+</td>
+<td style="text-align:center;">
+0.26
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<ol style="list-style-type: lower-alpha">
+<li>法蒂玛随机抽查80名成年人,47人耐乳糖. 在不做任何数学的情况下,对 0@@的后验模型进行猜测,并解释你的推理.</li>
+<li>计算后验模型. 这与你A部分的猜测有何比较?</li>
+<li>如果法蒂玛收集了800个成年人的样本,470个(样本比例与上述相同)是乳糖不耐症,那会如何改变后验模型?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-95"><strong>Exercise 2.14  (Late bus)  </strong></span>Li Qiang takes the 8:30am bus to work every morning. If the bus is late, Li Qiang will be late to work. To learn about the probability that her bus will be late (<span class="math inline">\(\pi\)</span>), Li Qiang first surveys 20 other commuters: 3 think <span class="math inline">\(\pi\)</span> is 0.15, 3 think <span class="math inline">\(\pi\)</span> is 0.25, 8 think <span class="math inline">\(\pi\)</span> is 0.5, 3 think <span class="math inline">\(\pi\)</span> is 0.75, and 3 think <span class="math inline">\(\pi\)</span> is 0.85.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>将20名被调查的通勤者的信息转换为 \\\\\\\\\\\\\\\\\\\\\\\之前的模型。。。</li>
+<li>李强想用她收集的数据更新之前的模型:13天后,8:30公交3次晚点. 寻找 {0} 的后置模型。。。</li>
+<li>比较和评论前作和后作的模型. 李Q对公交了解多少?.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:exCuckoo"><strong>Exercise 2.15  (Cuckoo birds)  </strong></span>Cuckoo birds are <em>brood parasites</em>, meaning that they lay their eggs in the nests of other birds (hosts), so that the host birds will raise the cuckoo bird hatchlings. Lisa is an ornithologist studying the success rate, <span class="math inline">\(\pi\)</span>, of cuckoo bird hatchlings that survive at least one week. She is taking over the project from a previous researcher who speculated in their notes the following prior model for <span class="math inline">\(\pi\)</span>:
+</div>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">\(\pi\)</th>
+<th style="text-align:center;">
+0.6
+</th>
+<th style="text-align:center;">
+0.65
+</th>
+<th style="text-align:center;">
+0.7
+</th>
+<th style="text-align:center;">
+0.75
+</th>
+<th style="text-align:right;">共计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">\(f(\pi)\)</td>
+<td style="text-align:center;">
+0.3
+</td>
+<td style="text-align:center;">
+0.4
+</td>
+<td style="text-align:center;">
+0.2
+</td>
+<td style="text-align:center;">
+0.1
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<ol style="list-style-type: lower-alpha">
+<li>如果之前的研究人员更确信一只幼崽会存活下来,那么之前的模型会有什么不同呢?</li>
+<li>如果之前的研究人员不太确定一只幼崽会存活下来,那么之前的模型会有什么不同呢?</li>
+<li>Lisa收集了一些数据. 在她研究的15只幼崽中,有10只至少存活了一个星期.  poster0@@的后期模式是什么? ?。。。</li>
+<li>Lisa需要在一篇针对鸟类学家的研究论文中解释XQ0@@的后验模型, 简要总结后期模式上下文.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-97"><strong>Exercise 2.16  (Fake art)  </strong></span>An article in <em>The Daily Beast</em> reports differing opinions on the proportion (<span class="math inline">\(\pi\)</span>) of museum artworks that are fake or forged.<a class="footnote-ref" href="#fn22" id="fnref22"><sup>22</sup></a>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li><p>在阅读文章后,定义您自己在QQ0@@的先验模式,并提供文章中的证据来证明您选择的理由.</p></li>
+<li><p>比较你之前的下面。 类似情况如何? 不一样?</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">\(\pi\)</th>
+<th style="text-align:center;">
+<p>0.2</p>
+</th>
+<th style="text-align:center;">
+<p>0.4</p>
+</th>
+<th style="text-align:center;">
+<p>0.6</p>
+</th>
+<th style="text-align:right;">共计</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">\(f(\pi)\)</td>
+<td style="text-align:center;">
+<p>0.25</p>
+</td>
+<td style="text-align:center;">
+<p>0.5</p>
+</td>
+<td style="text-align:center;">
+<p>0.25</p>
+</td>
+<td style="text-align:right;">
+<p>1</p>
+</td>
+</tr>
+</tbody>
+</table></li>
+<li><p>假设你随机选择10件艺术品。 假设在b部分的前一个部分,那么需要铸造的作品数量是多少? ?。。。</p></li>
+</ol>
+</div>
+<div class="section level3" id="simulation-exercises" number="2.5.4">
+<h3>模拟练习</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-99"><strong>Exercise 2.17  (Sick trees redux)  </strong></span>Repeat Exercise <a href="/bayes-rules-python-cn/chapter-2/#exr:exSickTrees">2.5</a> utilizing simulation to <em>approximate</em> the posterior probability that a randomly selected maple tree has mold. Specifically, simulate data for 10,000 trees and remember to set your random number seed.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-100"><strong>Exercise 2.18  (Lactose intolerant redux)  </strong></span>Repeat Exercise <a href="/bayes-rules-python-cn/chapter-2/#exr:exLactose">2.13</a> utilizing simulation to <em>approximate</em> the posterior model of <span class="math inline">\(\pi\)</span> corresponding to Fatima’s survey data. Specifically, simulate data for 10,000 people and remember to set your random number seed.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-101"><strong>Exercise 2.19  (Cuckoo birds redux)  </strong></span>Repeat Exercise <a href="/bayes-rules-python-cn/chapter-2/#exr:exCuckoo">2.15</a> utilizing simulation to <em>approximate</em> the posterior model of <span class="math inline">\(\pi\)</span>.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-102"><strong>Exercise 2.20  (Cat image recognition)  </strong></span>Whether you like it or not, cats have taken over the internet.<a class="footnote-ref" href="#fn23" id="fnref23"><sup>23</sup></a> Joining the craze, Zainab has written an algorithm to detect cat images. It correctly identifies 80% of cat images as cats, but falsely identifies 50% of non-cat images as cats. Zainab tests her algorithm with a new set of images, 8% of which are cats. What’s the probability that an image is actually a cat if the algorithm identifies it as a cat? Answer this question by simulating data for 10,000 images.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-103"><strong>Exercise 2.21  (Medical tests)  </strong></span>A medical test is designed to detect a disease that about 3% of the population has. For 93% of those who have the disease, the test yields a positive result. In addition, the test falsely yields a positive result for 7% of those without the disease. What is the probability that a person has the disease given that they have tested positive? Answer this question by simulating data for 10,000 people.
+</div>
+<!-- AJ: the count data makes it tougher to fit this with our simulation  -->
+<!-- The `titanic` package provides data on 891 of roughly 2400 Titanic passengers. Among these passengers, 216 had first class tickets, 184 had second class tickets, and 491 had third class tickets. Among those with first class tickets, 136 survived and among those with third class tickets, 119 survived. Utilize simulation to calculate the following probabilities of interest. -->
+<!-- a) What is the probability that a passenger survived given that they had a first class ticket? -->
+<!-- a) What is the probability that a passenger survived given that they had a third class ticket? -->
+</div>
+</div>
+</div>
+<h3>参考资料</h3>
+<div class="references csl-bib-body hanging-indent" id="refs">
+<div class="csl-entry" id="ref-blitz">
+Blitzstein, Joseph, and Jessica Hwang. 2019. <em>Introduction to Probability</em>. Second. Chapman &amp; Hall / CRC Texts in Statistical Science.
+</div>
+<div class="csl-entry" id="ref-bayesrules">
+Dogucu, Mine, Alicia Johnson, and Miles Ott. 2021. <em>Bayesrules: Datasets and Supplemental Functions from the Bayes Rules! Book</em>. <a href="https://github.com/bayes-rules/bayesrules">https://github.com/bayes-rules/bayesrules</a>.
+</div>
+<div class="csl-entry" id="ref-R-janitor">
+Firke, Sam. 2021. <em>Janitor: Simple Tools for Examining and Cleaning Dirty Data</em>. <a href="https://github.com/sfirke/janitor">https://github.com/sfirke/janitor</a>.
+</div>
+<div class="csl-entry" id="ref-shu2017fake">
+Shu, Kai, Amy Sliva, Suhang Wang, Jiliang Tang, and Huan Liu. 2017. <span>“Fake News Detection on Social Media: A Data Mining Perspective.”</span> <em>ACM SIGKDD <span>E</span>xplorations <span>N</span>ewsletter</em> 19 (1): 22–36.
+</div>
+<div class="csl-entry" id="ref-ggplot22016">
+Wickham, Hadley. 2016. <em>Ggplot2: Elegant Graphics for Data Analysis</em>. Springer-Verlag New York. <a href="https://ggplot2.tidyverse.org">https://ggplot2.tidyverse.org</a>.
+</div>
+<div class="csl-entry" id="ref-R-dplyr">
+Wickham, Hadley, Romain François, Lionel Henry, and Kirill Müller. 2021. <em>Dplyr: A Grammar of Data Manipulation</em>. <a href="https://CRAN.R-project.org/package=dplyr">https://CRAN.R-project.org/package=dplyr</a>.
+</div>
+</div>
+</section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-1/">上一节：第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-3/">下一节：第 3 章 Beta-二项贝叶斯模型</a></nav>
+</article>
+</div>
+</main>
+<footer class="site-footer">
+<div>
+<strong>AI 提效研究笔记</strong>
+<p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+</div>
+<div class="footer-links">
+<a href="/feed.xml">RSS</a>
+<a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+</div>
+</footer>
+<script src="/assets/js/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="第 6 章 近似后验分布 | Bayes Rules! 中文 Python 改写教程" name="description"/>
+<title>第 6 章 近似后验分布 | Chandler's AI Productivity Notes</title>
+<link href="/assets/img/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="/assets/css/styles.css" rel="stylesheet"/>
+<script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#content">跳到正文</a>
+<header class="site-header">
+<a aria-label="Chandler's AI Productivity Notes 首页" class="brand" href="/">
+<span class="brand-mark">C</span>
+<span class="brand-name">Chandler's AI Productivity Notes</span>
+</a>
+<nav aria-label="主导航" class="site-nav">
+<a href="/">首页</a>
+<a aria-current="page" href="/posts/">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+</nav>
+</header>
+<main class="tutorial-page" id="content">
+<div class="tutorial-layout">
+<aside class="tutorial-sidebar">
+<h2>教程目录</h2>
+<nav><a href="/bayes-rules-python-cn/">首页</a><a href="/bayes-rules-python-cn/foreword/">前言</a><a href="/bayes-rules-python-cn/preface/">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a aria-current="page" href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a href="/bayes-rules-python-cn/references/">参考文献</a></nav>
+</aside>
+<article class="tutorial-content">
+<section class="normal" id="section-">
+<div class="section level1" id="chapter-6" number="6">
+<h1>第 6 章 近似后验分布</h1>
+<div class="tutorial-note">
+<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
+</div>
+<div class="describe">
+<p>欢迎来到第二小队!</p>
+<p>第二股是把第一股的基本概念应用到第三股及以后更复杂的模型环境中的关键桥梁。 在第一单元中,我们学会了像贝叶斯人一样思考,并以此精神建立一些基本的贝叶斯模式. 此外,通过Bayes规则将这些模型推开,我们得以在数学上具体说明相应的后方。 那些日子结束了。 分析模型会变得过于复杂, 永远不要害怕 — — 数据分析师们并不知道会面对未知人物吐出双手. 当我们无法知道或说明某件事时, 将探索马可夫连锁蒙特卡洛模拟技术,</p>
+<p>不论我们能够或必须大致确定后期模式, 为此,我们学会了如何利用第一单元的中心倾向和可变性等模式来描述我们的后期理解。 但实际上,我们通常希望进行更深入的后期分析。 问“这到底意味着什么?” 这个过程围绕三个要点展开,我们将在第二单元中探讨。</p>
+</div>
+<p>学习需要偶尔跳跃。 你们已经拿了几个。 从第2章到第3章,你从使用简单的离散前科到使用连续的Beta前科的飞跃。 从第3章到第5章,你从Beta-Binomial模型的工程学跳跃到一个可以应用到更广泛的环境的巴耶斯模型家族. 每一次跳跃,你的贝叶斯工具包就变得更加灵活和强大,但代价却是基本的数学变得更加复杂。 在你继续将你的贝叶斯方法概括到更复杂的环境中时,这种复杂性将继续增长.</p>
+<p>以米歇尔竞选总统为例。 在第三章中,你根据明尼苏达州的民调数据,建立了一个米歇尔支持的模型。 你可以继续完善你对米歇尔成为总统的机会的分析。 首先,你可以在50个州和华盛顿特区建立Michelle的支持模式。 更好的是,这一模式可以包含有关以往州级投票趋势和人口统计的数据。 换句话说,增加你模型的灵活性也使得它更加复杂。 您的明尼苏达州模式只依赖于一个参数, 米歇尔在那个州的支持程度, 在这里,让我们XQ1@@表示一个贝叶斯模型所依赖的XQ2@@参数的通用集. 在你不断增长的贝叶斯人米歇尔选举机会模式中, QQ3@@包含51个参数, 代表她在各州的支持, 因此,我们的后期分析依赖于建立 pdf的后期 \(\theta\), 以一组观测到的数据 \(y\) 关于州一级的民调,人口, 和投票趋势,</p>
+<p>\[f(\theta | y) = \frac{f(\theta)L(\theta | y)}{f(y)} \propto f(\theta)L(\theta | y) .\]</p>
+<p>虽然这个公式看起来很熟悉,但复杂性潜伏在下面. 由于 0@@是一个具有\(k\)元素的矢量,\(f(\theta)\)和\(L(\theta|y)\)是复杂的多变函数. 如果我们重视我们的时间, 我们可以忘记计算所有可能的 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\</p>
+<p>\[f(y) = \int_{\theta_1}\int_{\theta_2} \cdots \int_{\theta_k} f(\theta)L(\theta | y) d\theta_k \cdots d\theta_2 d\theta_1 .\]</p>
+<p>幸运的是,当一个巴耶斯人的后台要么不可能,要么难以形容时,我们并非不走运。 我们必须简单地改变我们的策略:我们不是具体说明后方,而是可以通过模拟来大致了解后方。 我们将探索两种模拟技术:网格近似和马可夫链式蒙特卡洛(MCMC). 完成后,两种技术都生成了XQ0@@的样本. 数值</p>
+<p>\[\left\lbrace \theta^{(1)}, \theta^{(2)}, \ldots, \theta^{(N)} \right\rbrace ,\]</p>
+<p>带有反映后验模型的属性。 在第六章中,我们将在熟悉的Beta-Binomial和Gamma-Poisson模型背景下探索这些模拟技术。 虽然这些模型不需要模拟(我们可以并且确实在第一单元中具体说明它们的后身),但是在这些熟悉的环境下探索模拟将有助于我们为这一过程建立直觉,并让我们在最终确实需要它时能够真正发挥作用。</p>
+<div class="goals">
+<ul>
+<li>实施并审查使用网格近似模拟后验模型的局限性.</li>
+<li>探索MCMC后期模拟技术的基本特性,以及这些技术与网格近似有何不同.</li>
+<li>在R中实施MCMC模拟.</li>
+<li>学习一些Markov 链诊断,以检查MCMC后期模拟的质量.</li>
+</ul>
+</div>
+<p>但首先, 其中Rstan相当独特,因此要重新审视安装这个软件包的方向序言。</p>
+<div class="sourceCode" id="cb56">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+# pandas 通常可以覆盖 janitor 的表格清理任务
+import pymc as pm
+import arviz as az
+
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# 装入软件包</code></pre>
+</div>
+<div class="section level2" id="grid-approximation" number="6.1">
+<h2>网格近似</h2>
+<p>想象一下,有一个无法完整查看的图像 — — 你只观察到一个从左到右横扫图像的网格上的片段。 网格越细,图像越清晰. 如果网格足够精细,结果是完整图像的极佳近似:</p>
+<p><img alt="彩虹三图. 第一个图像只显示彩虹的几个垂直片段,第二个图像为彩虹的更完整图像显示更多的垂直片段,第三个则显示完整的彩虹." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-177-1-1e9e26af6548.png" style="display: block; margin: auto;" title="彩虹三图. 第一个图像只显示彩虹的几个垂直片段,第二个图像为彩虹的更完整图像显示更多的垂直片段,第三个则显示完整的彩虹." width="384"/></p>
+<p>这是贝叶斯网格近似背后的大图谋, 我们不需要在每一个可能的地方观察, 以一定的、离散的数值计算。 接下来,我们可以从这个磁盘化的pdf中随机抽取样本,以近似于完整后的pdf \(f(\theta | y)\). 我们在此正式提出这些想法,并在下文加以应用。</p>
+<div class="describe">
+<p>网格近似</p>
+<p>Grid 近似化从一个盘状近似化的 pdf → 3 → 生成一个 → 0 → 独立的 → → → 1 → 值, → 2 →。 这个算法在四个步骤中演化:</p>
+<ol style="list-style-type: decimal">
+<li>定义一个可能的 QQ0QQ 值的离散网格。</li>
+<li>以每%%% 2 个网格值来评价 pdf +% 0 +% 和概率函数 +% 1 +%。</li>
+<li>获得一个离散的近似 pdf \(f(\theta |y)\) 通过:(a) 计算每XX2@@的电网值的产品XX1@@;然后(b) 使产品正常化,使其与所有XX3@@的总和为1。</li>
+<li>随机抽样 ++1++ 网格值与相应的常态后概率。</li>
+</ol>
+</div>
+<div class="section level3" id="beta-binomial-grid" number="6.1.1">
+<h3>β- Binomial 示例</h3>
+<p>为了将网格近似技术引入生命,让我们探索以下通用的Beta-Binomial模型(一个没有相应的数据故事):</p>
+<p>\[\begin{equation} \begin{split} Y|\pi &amp; \sim \text{Bin}(10, \pi) \\ \pi &amp; \sim \text{Beta}(2, 2) . \\ \end{split} \tag{6.1} \end{equation}\]</p>
+<p>我们可以在这里将`0@@'解释为10个独立审判的成功数目。 每一个试验都有成功的概率。 假设我们观测到成功。 然后通过我们第3章的工作,我们知道X\(\pi\)的更新后模型是Beta,参数为11(X\(Y + \alpha = 9 + 2\))和3(X\(n - Y + \beta = 10 - 9 + 2\)):</p>
+<p>\[\pi | (Y = 9) \sim \text{Beta}(11, 3) .\]</p>
+<p>我们现在要你忘记, 我们能够说明这个后遗症。 将使用网格近似法, 作为步骤1,我们需要将0到1上可能的QQ0QQ值的连续体分成一个有限的网格. 我们首先要用一个只有6××××1×的值的教学网格,</p>
+<div class="sourceCode" id="cb57">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 步骤1: 定义 6 pi 值的网格
+grid_data = data.frame(pi_grid = seq(from = 0, to = 1, length = 6))</code></pre>
+</div>
+<p>在步骤2中,我们分别使用dbeta()和dbinom()来评价在pi grid中每个 2@@的 \(\text{Beta}(2,2)\)前pdf和 \(\text{Bin}(10, \pi)\)概率函数:</p>
+<div class="sourceCode" id="cb58">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 步骤2: 在每个 pi 上评价先验的似然( P)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>在步骤3中,我们计算每个网格值的概率和之前的产物。 这为后pdf提供了非常态的离散近似, 我们随后将这一近似值正常化,将每个非常态后值除以其集体总和:</p>
+<div class="sourceCode" id="cb59">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 第3步: 近似后卫
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>由此产生的盘状后卫pdf,四舍五入到小数点后2位并绘制在下面,对实际后卫pdf的透视非常僵硬. 大约99%的机率为 0.6 或 0.8,1%的机率为 0.4, 近0%的机率为 其他 3 的机率:</p>
+<div class="sourceCode" id="cb60">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 检查网格近似后
+round(grid_data, 2)
+pi_grid prior likelihood unnormalized posterior
+1     0.0  0.00       0.00         0.00      0.00
+2     0.2  0.96       0.00         0.00      0.00
+3     0.4  1.44       0.00         0.00      0.01
+4     0.6  1.44       0.04         0.06      0.18
+5     0.8  0.96       0.27         0.26      0.81
+6     1.0  0.00       0.00         0.00      0.00
+# 绘制网格近似后缀
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch6-grid-1" style="display:block;"></span>
+<img alt="x轴的pi grid值在0到1.的递增值为0.2,y轴的后置值在0到0.8之间. 在每个 pi grid 值上是一个垂直的线条,末端有一个点. 线条的高度在pi grid值为0,0.2,0.4和1. 线条在pi grid值0.8是最高的,大约为0.8. pi grid值0.6的线大约为0.2." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch6-grid-1-1-d529513f07bd.png" width="240"/>
+<p class="caption">FIGURE 6.1:仅以6格值表示的QQ0@@的盘状后pdf.</p>
+</div>
+<p>你可能会预料到当我们用这个近似值 模拟第四步的后方样本时会发生什么 每个样本抽图只有6个可能的结果,极有可能是0.6或0.8. 让我们试试看:用样本 n()从6长网格 数据中取出10000个大小的样本,用替换,并以盘状后验概率作为样本权重。</p>
+<div class="sourceCode" id="cb61">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 设定种子
+rng = np.random.default_rng(84735)
+# 步骤4:从盘状后置样本
+post_sample = sample_n(grid_data, size = 10000,
+weight = posterior, replace = TRUE)</code></pre>
+</div>
+<p>如所料,我国10 000个样本值的QQ0@@大部分为0.6或0.8,少数为0.4,没有低于0.4或高于0.8:</p>
+<div class="sourceCode" id="cb62">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 1万个样本值的表格
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>这是对真实的"\(\text{Beta}(11, 3)\)"(\(\text{Beta}(11, 3)\) @@ @@ @@ or or or or or or or or or or or @@ @@ or or @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@  如果还需要更多的说服力,图6.2将真实的后缀pdf \(f(\pi|y)\)在10,000个样本值的缩放直方图上叠加. 如果这是一个很好的近似,直方图将模仿光滑的pdf的形状,位置,和扩散. 没有。</p>
+<div class="sourceCode" id="cb63">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 使用 pdf 进行网格模拟的直方图
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch6-grid-2" style="display:block;"></span>
+<img alt="pi grid值的直方图,在pi grid值为0.6和0.8时有两个突起. 直方图的上方是密度曲线,形状非常不同,比直方图要光滑得多." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch6-grid-2-1-81cb1a468c71.png" width="240"/>
+<p class="caption">图6.2: 一个只使用6个网格值的 0@@的后pdf的网格近似. 实际的pdf以曲线为代表.</p>
+</div>
+<p>还记得彩虹的影像 以及我们如何通过在更细的网格上看到片段 获得一个更完整的图片? 让我们试试101个值的更合理的网格:QQ1+。 使用这种精细网格的前三个网格近似步骤如下:</p>
+<div class="sourceCode" id="cb64">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 第1步:定义101pii值的网格
+grid_data  = data.frame(pi_grid = seq(from = 0, to = 1, length = 101))
+# 步骤2: 在每个 pi 上评价先验的似然( P)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>特别是我们只使用6个网格值时,</p>
+<div class="sourceCode" id="cb65">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch6-grid-3" style="display:block;"></span>
+<img alt="x轴的pi grid值在0到1的递增值为0.01,y轴的后置值在0到0.04之间. 这些垂直点合在一起形成一个左侧扭曲的形状,对于接近0.8的pi grid值来说,这个形状最高,对于低于0.5和高于0.95的pi grid值来说,这个形状下降到0。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch6-grid-3-1-8e45f992bc41.png" width="312"/>
+<p class="caption">图6.3: (原始内容存档于2019-09-09). Disretized assidor pdf of QQ0@@ at 101 glad value.</p>
+</div>
+<p>最后,在电网近似化的第4步,我们从磁盘化后pdf中抽取了10,000个样本.</p>
+<div class="sourceCode" id="cb66">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 设定种子
+rng = np.random.default_rng(84735)
+# 步骤4:从盘状后置样本
+post_sample = sample_n(grid_data, size = 10000,
+weight = posterior, replace = TRUE)</code></pre>
+</div>
+<p>图6.4显示了所得出的样本值的直方图。 这些值的形状、位置和分布模仿了以平滑曲线为代表的真正目标后pdf \(f(\pi|y)\)。 令人兴奋! 以欣赏我们刚刚取得的成就。 我们从一个光碟化的近似数字中提取了一个独立样本, 这个算法相当直观, 最重要的是,结果是一个样本,其行为很像一个直接从QQ3@@自己身上提取的随机样本. 因此,电网近似可以在后期难以承受的情景中成为生命线,提供近似,与“真实事物”几乎无法区分。</p>
+<div class="sourceCode" id="cb67">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch6-grid-4" style="display:block;"></span>
+<img alt="pi grid 值的直方图。 x轴的pi grid值从0到1. Y轴的密度值从0到4. 直方图的形状与覆盖的密度曲线紧密匹配. 密度曲线为左下斜线,对接近0.8的pi grid值最高,对低于0.5和高于0.95的pi grid值则降至0." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch6-grid-4-1-a780bb16db55.png" width="312"/>
+<p class="caption">图6.4: 使用101个网格值对 0@@的后pdf进行网格近似. 实际的pdf以曲线为代表.</p>
+</div>
+</div>
+<div class="section level3" id="Gamma-Poisson-grid" number="6.1.2">
+<h3>Gamma- Poisson 实例</h3>
+<p>使用网格近似技术来模拟另一个贝叶斯模型的后期, 让QQ0QQ成为1小时之内发生的事件数量,事件平均发生时间为QQ1~每小时. 且在QQ4前放置一个:</p>
+<p>\[\begin{equation} \begin{split} Y_i|\lambda &amp; \stackrel{ind}{\sim} \text{Pois}(\lambda) \\ \lambda &amp; \sim \text{Gamma}(3, 1) . \\ \end{split} \tag{6.2} \end{equation}\]</p>
+<p>如果在第一个一小时的观察期和下一个小时的观察期观察XQ0@@事件,那么通过我们在第五章中的工作,XQ2@@事件的最新后验模型是Gamma,参数为13(XQ3@@)和3(XQ4@@):</p>
+<p>\[\lambda | ((Y_1,Y_2) = (2,3)) \sim \text{Gamma}(13, 3) .\]</p>
+<p>为了利用网格近似来模拟这个后缀,步骤1是指定一个合理QQ0QQ值的离散网格. 与Beta-Binomial中限制在限值0比1间隔的QQ1@@参数不同,Poisson参数QQ2@@在技术上可以承担任何非负性的实际值(QQ3@@). 然而,在Gamma Perforce pdf和Poisson概率函数的图中,似乎尽管有可能,但15岁以上QQ4@@的值是不可信的(图6.5)。 考虑到这一点,我们将在0至15之间建立一个离散的网格,基本上缩短后方的尾巴。 在完成相应的网格近似之前,我们鼓励你们首先尝试下面的测试来挑战自己.</p>
+<div style="page-break-after: always;"></div>
+<div class="sourceCode" id="cb68">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+plot_gamma_poisson(s = 3, r = 1, sum_y = 10, n = 2, posterior = FALSE)</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch6-gam-pois" style="display:block;"></span>
+<img alt="羊肉之前的型号是右倾的,从大约0到10,峰值大约为2.5。 羊肉的概率函数略为右倾,从大约0到15,峰值为5。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch6-gam-pois-1-aeb940f8e7bd.png" width="432"/>
+<p class="caption">FIGURE 6.5:一个Gamma前 pdf 并缩放 Poisson 概率函数,用于 \\\\\\\\\\\\\ n。。。</p>
+</div>
+<div class="quiz">
+<p>填写下面的代码来构造一个对应于(6.2)的Gamma-Poisson后缀的网格近似. 在这样做时,使用501 \(\lambda\)值的网格在0到15之间.</p>
+<div class="sourceCode" id="cb69">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 第1步:定义501羊肉达值的网格
+grid_data   = data.frame(
+lambda_grid = seq(from = ___, to = ___, length = ___))
+# 步骤2: 在每个羊肉田评估先验的似然( P)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+</div>
+<p>看看下面的完整代码. 这和Beta-Binomial模型差不多。 有两个关键区别。 首先,我们使用 dgamma() 和 dpois() 而不是 dbeta() 和 dbinom() 来评价 \(\lambda\) 的 pdf 和 position 函数。 第二,由于我们有2个数据点的样本,故\(\lambda\)的Poisson概率函数必须由边际Poisson pdfs的产物计算,\(L(\lambda | y_1,y_2) = f(y_1,y_2|\lambda) = f(y_1|\lambda) f(y_2|\lambda)\).</p>
+<div class="sourceCode" id="cb70">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 第1步:定义501羊肉达值的网格
+grid_data   = data.frame(lambda_grid = seq(from = 0, to = 15, length = 501))
+# 步骤2: 在每个羊肉田评估先验的似然( P)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>最重要的是,网格的近似再次 产生了一个体面的近似 我们的目标后:</p>
+<div class="sourceCode" id="cb71">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 使用 pdf 进行网格模拟的直方图
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch6-grid-5" style="display:block;"></span>
+<img alt="Lambda grid值的直方图。 x轴的lambda grid值从0到15不等. Y轴的密度值从0到大约0.3. 直方图的形状与覆盖的密度曲线紧密匹配。 密度曲线略偏右,对近4的羊肉达 网格值最高,对低于2和7.5的羊肉达 网格值下降至0." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch6-grid-5-1-bdcc994d14c4.png" width="312"/>
+<p class="caption">图6.6: 使用101个网格值对 0@@的后pdf进行网格近似. 实际的pdf以曲线为代表.</p>
+</div>
+</div>
+<div class="section level3" id="limitations" number="6.1.3">
+<h3>限制</h3>
+<p>有人说一切善根必得灭. 虽然我们一般不同意这个说法, 网格近似方法的局限性随着我们的模型变得更加复杂而迅速显现出来. 例如,在第4单元结束时,我们将与具有许多模型参数的模型合作。 在这样的环境下,网格近似受到维度的诅咒。 让我们回到我们的形象上, 上面,我们假设,我们只能看到图像的片段沿着一个网格沿X轴从左到右横扫. 这类似于使用网格近似来模拟一个参数的模型. 假设我们的模型有两个参数 或者,就图像近似而言,我们只能看到沿着一个网格从左到右沿X轴扫荡,从上到下沿y轴扫荡的片段:</p>
+<p><img alt="彩虹三图. 第一张图像只显示彩虹的几个纵向和横向切片,第二张图像为彩虹的更完整图像显示更多的纵向和横向切片,第三张则显示完整的彩虹." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-187-1-01010b850679.png" style="display: block; margin: auto;" title="彩虹三图. 第一张图像只显示彩虹的几个纵向和横向切片,第二张图像为彩虹的更完整图像显示更多的纵向和横向切片,第三张则显示完整的彩虹." width="384"/></p>
+<p>当我们把x轴和y轴都切成网格时,图像近似值有更大的缺口. 为了实现更精细的近似,我们需要一个更精细的网格,比仅仅把x轴切成网格时还要精细. 类似地,在使用网格近似来模拟多变量后缀时,我们需要将QQ0@@的多维样本空间划分为非常,非常精细的网格,以防止我们的近似值出现大缺口. 在实践中,这可能不可行。 在对较细和较细的网格进行评估时,网格近似法变得计算昂贵. 你不能只是开始模拟, 起来喝杯咖啡, 您可能必须开始模拟并前往长达一个月的冥想退场(以练习您需要的网格近似的耐心 )。 MCMC方法提供了一个更灵活的替代品.</p>
+</div>
+</div>
+<div class="section level2" id="markov-chains-via-rstan" number="6.2">
+<h2>马可夫链通过rstan</h2>
+<p>MCMC方法及其硬币具有一定的历史意义. MCMC的Markov 链元件以俄罗斯数学家安德烈·马尔科夫(1856–1922)命名. 蒙特卡洛部分的病理比较可疑。 作为其1940年代绝密核武器项目的一部分,斯坦尼斯拉夫·乌拉姆,约翰·冯·诺伊曼和他们在洛斯阿拉莫斯国家实验室的合作者利用Markov 链来模拟和更好地理解中子旅行(埃克哈特,1987年). 洛斯阿拉莫斯小组提到他们的工作时代号为“Monte Carlo”,这一选择据说受到法国里维埃拉丰盛的Monte Carlo赌场的启发。 什么启发了随机模拟方法和赌场之间的联系? 我们无法帮你。</p>
+<div class="figure" style="text-align: center"><span id="fig:alamos" style="display:block;"></span>
+<img alt="告示牌显示三只猴子和文字读数: 你在这里看到什么,你在这里做什么,你在这里听到什么, 当你离开这里,让它留在这里。 在告示牌上方是一位长着灰色头发,长着灰色胡子和黑色和白色垂直条纹的衬衫的老人,旁边的帽子也有同样的图案." loading="lazy" src="/assets/img/bayes-rules-python-cn/alamos-8f77f2506003.jpg" width="60%"/>
+<p class="caption">图6.7: 在Oak Ridge的一家铀加工厂的广告牌,TN,洛斯阿拉莫斯的姊妹地点. 图片: QQ0@@</p>
+</div>
+<p>今天,“Markov 链蒙特卡洛”是指使用蒙特卡洛项目所开创的方法来模拟概率模型的Markov 链的应用。 相对于网格近似,MCMC模拟方法为更为复杂的贝叶斯模型放大. 但这种灵活性并不是免费的。 与网格近似标本一样,MCMC标本也不直接取自后pdf \(f(\theta|y)\). 但与网格近似标本不同,MCMC标本甚至不独立 — — 每一个后续标本值直接取决于先验的标本值. " 链 " 名词引出了这一特点。 具体来说,让 1@@成为\(N\)-长MCMC样本,或Markov 链. 在构建这个链条时,QQ3@@来自一些依赖于QQ4@@的模型,QQ5@@来自一些依赖于QQ6@@的模型,QQ7@@来自一些依赖于QQ8@@的模型,等等在链条上增长. 一般来说,QQ9+Qst链值QQ10+X来自一个依赖于数据QQ11+X和前一个链值QQ12+X与有条件pdf的模型.</p>
+<p>\[f\left(\theta^{(i + 1)} \; | \; \theta^{(i)}, y\right) .\]</p>
+<p>关于链条价值之间的依赖性,有几个问题需要注意。 首先,通过Markov 属性, \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\</p>
+<p>\[f\left(\theta^{(i + 1)} \; | \; \theta^{(1)}, \theta^{(2)}, \ldots, \theta^{(i)}, y\right) = f\left(\theta^{(i + 1)} \; | \; \theta^{(i)}, y\right) .\]</p>
+<p>由於############################################################################################################################################################################################################################################################# 但是,如果我们知道QQ5@@,那么QQ6@@对QQ7@@没有影响——我们需要模拟QQ8@@的唯一信息是QQ9@@的值. 此外,每个链条值都可以从不同的模型中抽取,这些模型都不是目标后缀. 即模拟马尔可夫链值的pdf不等同于后pdf:</p>
+<p>\[f\left(\theta^{(i + 1)} \; | \; \theta^{(i)}, y\right) \ne f\left(\theta^{(i + 1)} \; | \; y\right) .\]</p>
+<div class="describe">
+<p>马可夫链 蒙特卡洛</p>
+<p>MCMC模拟产生一个链条,由 0@@依附的 1@@值,\(\left\lbrace \theta^{(1)}, \theta^{(2)}, \ldots, \theta^{(N)} \right\rbrace\),并非从后pdf\(f(\theta|y)\)引出.</p>
+</div>
+<p>使用一个连后台都没有的依赖性样本, 但是,Mathemasically,有了合理的MCMC算法,它可以工作。 擦擦是这些算法的学习曲线比网格近似技术更陡峭. 我们提供第7章的细节。 尽管对第七章的回顾和对这些细节的牢牢把握将是理想的,但越来越多的MCMC计算资源能够为我们做举重的工作. 在这本书中,我们将使用Rstan软件包进行MCMC模拟(Guo等人)。 2020),结合了R的功率和斯坦引擎. 你将进入第六章中的rstan的nitty gritty, 逐行建立代码线, 从第9章开始,您将使用互补的 Rstanarm 软件包,它为模拟贝叶斯应用回归模型(arm ) 的广泛框架提供了快捷键。</p>
+<div class="section level3" id="a-beta-binomial-example" number="6.2.1">
+<h3>β- Binomial 示例</h3>
+<p>所有 Rstan 分析有两个基本步骤:(1) 在 Rstan Notation 中定义 Bayesian 模型结构和(2) 模拟后缀。 让我们从第1步开始,结合(6.1)所界定的Beta-Binomial模式来审视这些步骤。 在界定这一模式的结构时,我们必须具体说明它所依赖的三个方面:</p>
+<ul>
+<li><p>Data QQ0QQ是10次试验中观察到的成功次数。 既然Rstan不是读心者,我们必须具体说明,QQ1@@是一个0到10的整数.</p></li>
+<li><p>参数 该模型取决于参数 \\\\\\\,或者pi在rstan Notation中. 我们必须具体说明,QQ1@@可以是0到1之间的任何真实数字.</p></li>
+<li><p>模型 该模型由数据QQ0XX的模型XQ1X和Beta QQ2XX在XQ3XX前定义. 我们使用二进制()和β()来指定。</p></li>
+</ul>
+<p>下面我们把这个Beta-Binomial结构翻译为rstan语法,并将其作为字符串 bb model存储. 我们鼓励你们暂停研究这个代码,指出它如何与上述三个方面相匹配。</p>
+<div class="sourceCode" id="cb72">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 步骤1: 保护模型
+bb_model = "
+data {
+int&lt;lower = 0, upper = 10&gt; Y;
+}
+parameters {
+real&lt;lower = 0, upper = 1&gt; pi;
+}
+model {
+Y ~ binomial(10, pi);
+pi ~ beta(2, 2);
+}
+"</code></pre>
+</div>
+<p>在步骤2中,我们使用stan()函数模拟后置函数. 十分松散的说,stan()设计并运行了MCMC算法,以产生Beta-Binomial后期的大致样本.</p>
+<div class="warning">
+<p>由于stan()必须履行双重职责,即确定一个适当的MCMC算法来模拟给定模型,然后将这个算法应用到我们的数据中,对于每个新模型来说,模拟将相当缓慢.</p>
+</div>
+<div class="sourceCode" id="cb73">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# 第2步: 将后台剪掉
+bb_sim = stan(model_code = bb_model, data = list(Y = 9),
+chains = 4, iter = 5000*2, seed = 84735)</code></pre>
+</div>
+<p>注意stan()需要两种参数. 首先,我们必须通过下列方式具体说明示范信息:</p>
+<ul>
+<li>model code = 定义模型的字符串(此处为 bb model )</li>
+<li>数据=观测到的数据列表(此处Y=9)。</li>
+</ul>
+<p>第二,我们必须利用三个补充论点,具体说明所希望的Markov 链条信息:</p>
+<ul>
+<li><p>链条参数指定了要运行的多个平行的Markov 链条. 我们在这里运行四条链, 从而获得四个不同的样本 QQ0QQ值。 我们将在第6.3节讨论这一选择。</p></li>
+<li><p>更长时间的参数指定了每个Markov 链条中想要重复的次数或长度. 默认情况下,这些迭代的前半部分被抛出作为“燃烧”或“温暖”样本(详情见下文)。 后半部分保存为最终的Markov 链样本.</p></li>
+<li><p>为 Rstan 模拟设定随机数生成种子, 我们利用 stan () 函数中的种子参数。</p></li>
+</ul>
+<p>结果,存储于 bb sim 中,是一个 stanfit 对象. 这个对象包括四个平行的马尔可夫链条运行,每个链条重复1万次. 在抛出所有四条链条的前5000个迭代后,我们最终有4个独立的5000个大小的Markov 链样本,或者一个2万个合并的Markov 链样本.</p>
+<div class="describe">
+<p>燃烧 - 进来</p>
+<p>如果你做过一整批煎饼或煎饼,你知道第一个煎饼总是最糟糕的 — — 锅还没有达到完美的温度,你还不知道要用多少击球手,你需要更多的时间练习翻球技巧。 MCMC链类似. 马尔科夫连锁店可能开始采样我们感兴趣的参数的不合理值, 最终,它学习并开始产生 模仿后期随机样本的值。 正如我们可能需要抛出第一个煎饼一样,我们也许想要抛出这个学习期间产生的Markov 链条价值 — — 把它们留在我们的样本中可能会导致一个糟糕的后期近似。 因此,“burn-in”是抛弃Markov链值的第一部分的做法。</p>
+</div>
+<p>以下提取并显示四个平行链头四个 QQ0QQ值:</p>
+<div class="sourceCode" id="cb74">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>这些马可夫链条的值不是事后的随机样本, 4个平行链中每个链都组成一个依附的5000个长度的马可夫链, 例如,在迭代1中,链:1的起始值大约为 2@@=0.9403. 重复2的值 = = 3 = 取决于 = 4 =。 在这种情况下,链条从0.9403移到0.9301。 同样,链条也从0.9301移动到0.9012,从0.9012移动到0.9224等. 因此,链条横跨了样本空间或后置值的范畴。 一个Markov 链痕图说明了这个曲面图,绘制了每个迭代(x轴)的QQ6@@值(y轴). 在 bayesplot 套件中使用 mcmc trace() 函数( Gabry et al. 2019),以构建所有四条马可夫链的痕量地块:</p>
+<div class="sourceCode" id="cb75">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+mcmc_trace(bb_sim, pars = "pi", size = 0.1)</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch-6-trace-2" style="display:block;"></span>
+<img alt="共有4个线块,每个线块的颜色不同. x轴从0到5000. y轴的pi值从0.3到1. 四行图在从左向右穿过图案时,呈现出随机的噪音." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-6-trace-2-1-3ff9e930921b.png" width="480"/>
+<p class="caption">FIGURE 6.8:追踪4个平行的马可夫链的图案 \(\pi\).</p>
+</div>
+<p>图6.9 对链条1的痕量图进行放大。 在前20个迭代(左)中,链条大致探索值在0.57到0.94之间. 经过200次迭代(右),Markov 链开始探索新领域,在0.49到0.96之间的数值范围略宽. 两个痕量图还显示出Markov 链值之间有轻微的依赖性,这些地方的链条倾向于向上浮,进行多个迭代,然后向下浮,进行多个迭代.</p>
+<div class="figure" style="text-align: center"><span id="fig:ch-6-trace-1" style="display:block;"></span>
+<img alt="共有两条线路。 在左图中,x轴从0到20不等,y轴上的pi值从0.3到1. 该线在从左到右移动到整个地块时表现得像随机噪声一样,并且有Pi值在大约0.6到1. 正确的图案相似,但有较宽的x轴在0到200之间,并有一个曲线可以探索略宽的pi值范围." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-6-trace-1-1-b06f0c44286d.png" width="480"/>
+<p class="caption">图6.9: 首个Beta-Binomial Markov链的前20个迭代(左)和200个迭代(右)的痕跡圖.</p>
+</div>
+<p>图6.9中的痕量图显示了Markov 链条的纵向行为。 我们还想审查这些链条在旅途中的价值分布情况,而无视这些访问的顺序。 图6.10中的直方图和密度图提供了2万个连锁值的这种分布图的快照,这四个独立的连锁值各有5 000个。 注意这里的重要的冲锋线: Markov 链值的分布是目标Beta(11, 3) 后置型号的极佳近似值 QQ0@@(上加黑). 这是个解脱,</p>
+<div class="warning">
+<p>和一些在 bayesplot 软件包中的其它绘图函数一样, mcmc hist () 和 mcmc dens () 函数不会自动包含轴标签和缩放。 使用 yaxis text(TRUE) 和 ylab() 添加标签和比例尺。 随着我们对这些阴谋越来越自在,</p>
+</div>
+<div class="sourceCode" id="cb76">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# Markov 链值的直方图
+mcmc_hist(bb_sim, pars = "pi") +
+yaxis_text(TRUE) +
+ylab("count")
+# 马可夫链值的密度图
+mcmc_dens(bb_sim, pars = "pi") +
+yaxis_text(TRUE) +
+ylab("density")</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch-6-sim" style="display:block;"></span>
+<img alt="有两块地 左图为皮氏直方图. 右图为pi的密度曲线. 两块地块都有一个x轴,pi值从0到1. 此外,两块地块的形状都相似. 它们略为左倾,Pi值峰值接近0.8,Pi值低于0.5,则降至约0." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-6-sim-1-185cee3ec746.png" width="480"/>
+<p class="caption">图6.10: 4个平行链的2万马可夫链的集合值的直方图(左)和密度图(右). 目标pdf是用黑色叠加的.</p>
+</div>
+<div style="page-break-after: always;"></div>
+</div>
+<div class="section level3" id="a-gamma-poisson-example" number="6.2.2">
+<h3>Gamma- Poisson 实例</h3>
+<p>更多 Rstan 和 MCMC 模拟的练习, 让我们使用这些工具, 在观测数据时, 回顾这涉及两个步骤。 在步骤1中,我们定义了Gamma-Poisson模型结构,具体说明它所依赖的三个方面:数据、参数和模型。 第二步 我们模拟后期 我们鼓励你挑战自己,先自己试一下。 您的代码需要两个你还没有见过的术语, 但你可能猜到如何使用: poisson( ) 和 γ( )。 此外, 您的代码将包含一个 QQ1@@ 变量和观测的矢量, 而不是单个变量 QQ2@@。</p>
+<div class="quiz">
+<p>填写下面的代码来构造一个相当于(6.2)的伽玛-波森后验的MCMC近似值. 在这样做时,运行4个平行链,每个10 000个迭代(每个链的样本大小为5 000个)。</p>
+<div class="sourceCode" id="cb77">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 步骤1: 保护模型
+gp_model = "
+data {
+int&lt;___&gt; Y[2];
+}
+parameters {
+real&lt;___&gt; lambda;
+}
+model {
+Y ~ ___(___);
+lambda ~ ___(___, ___);
+}
+"
+# 第2步: 将后台剪掉
+gp_sim = ___(model_code = ___, data = list(___),
+chains = ___, iter = ___, seed = 84735)</code></pre>
+</div>
+</div>
+<div style="page-break-after: always;"></div>
+<p>在确定步骤1中的模式时,注意到它所依赖的三个方面。</p>
+<ul>
+<li><p>数据 Y[2] 代表事件计数的矢量, \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\</p></li>
+<li><p>参数 该模型依赖于速率参数QQ0QQ,这可以是任何非负数的真实数字.</p></li>
+<li><p>模型 该模型由Pois( 0@@)模型用于数据\(Y\)和Gamma(3,1)在\(\lambda\)之前定义. 我们使用 poisson() 和 γ() 来说明这些。</p></li>
+</ul>
+<p>在步骤2中,我们必须在两个数据点的矢量中输入,Y=c(2,8). 因此:</p>
+<div class="sourceCode" id="cb78">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# 步骤1: 保护模型
+gp_model = "
+data {
+int&lt;lower = 0&gt; Y[2];
+}
+parameters {
+real&lt;lower = 0&gt; lambda;
+}
+model {
+Y ~ poisson(lambda);
+lambda ~ gamma(3, 1);
+}
+"
+# 第2步: 将后台剪掉
+gp_sim = stan(model_code = gp_model, data = list(Y = c(2,8)),
+chains = 4, iter = 5000*2, seed = 84735)</code></pre>
+</div>
+<p>图6.11显示了模拟结果。 首先,微量地块(上方)说明了这些链条穿过QQ0QQ样本空间的路径. 为此,请注意,QQ1QQ链值在0至10之间的粗略范围上行走,但大多保持在7.5以下。 此外,直方图和密度图(下方)提供了对QQ2QQMarkov 链值总体分布的更好观察。 冲线:这种分布提供了一种出色的Gamma(13,3)后缀的近似(上加黑色).</p>
+<div class="sourceCode" id="cb79">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 4个Markov 链的追踪图
+mcmc_trace(gp_sim, pars = "lambda", size = 0.1)
+# Markov 链值的直方图
+mcmc_hist(gp_sim, pars = "lambda") +
+yaxis_text(TRUE) +
+ylab("count")
+# 马可夫链值的密度图
+mcmc_dens(gp_sim, pars = "lambda") +
+yaxis_text(TRUE) +
+ylab("density")</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch6-mcmc-1" style="display:block;"></span>
+<img alt="有三块地 顶部图案为痕量图案,x轴值从0到5000,y轴值为lambda值从2.5到12. 有四条线的地块 像是随机的噪音 左下方的图案是羊肉达的直肠图案. 右下方的图案是羊肉达的密度曲线. 两块地块的X轴均具有羊肉达值,介于2.5到12之间. 此外,两者的形状都相似。 它们略微为右侧扭曲,羊肉达值最高接近4,羊肉达值低于2和7,则降到约0。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch6-mcmc-1-1-e0188f50bbfd.png" width="480"/>
+<p class="caption">FIGURE 6.11: 4个平行的Markov 链的追踪图 \(\lambda\)(上). 2万加起来的马可夫链值的直方图和密度图(下方). 黑色曲线代表实际的\(\lambda\)的后pdf.</p>
+</div>
+</div>
+</div>
+<div class="section level2" id="diagnostics" number="6.3">
+<h2>马可夫链诊断</h2>
+<p>模拟是惊人的。 即使我们能够获得贝叶斯语的后遗症, 更为重要的是,当我们无法获取后遗症时,模拟样本提供了关键的近似效果。 在以上MCMC的例子中,我们看到Markov 链穿过了我们的参数的样本空间( 0@@). 或 1@@),最后模仿一个最终与后or汇合的随机样本. “接近”和“集合”是关键词, 这引起了以下问题:</p>
+<ul>
+<li>一个很好的马可夫链是什么样子?</li>
+<li>我们如何判断我们的马可夫链样本 是否产生一个合理的近似 后期?</li>
+<li>我们的马可夫链样本尺寸应该有多大?</li>
+</ul>
+<div style="page-break-after: always;"></div>
+<p>回答这些问题既是艺术,也是科学. 这里没有一刀切的魔方能提供明确的答案. 而是通过经验来感受什么是“好” 马可夫铁链的外观和如何修复“坏”的马可夫铁链。 我们将关注几款视觉诊断工具, 这些分析可辅以一些数字诊断:有效的样本大小、自动脉冲和R-hat(XQ0XX)。 应综合利用这些诊断。 由于没有一个单一的视觉或数字诊断是一刀切的,因此它们一起考虑时更全面地描述了Markov 链的质量. 此外,还有其他出色的诊断。 我们在此集中关注那些常见且易于在我们将要使用的软件包中实施的软件包。</p>
+<div class="section level3" id="chapter-6-trace" number="6.3.1">
+<h3>检查跟踪图</h3>
+<p>重新审视图6.8中Beta-Binomial模拟的痕量图. 这些都是教科书上的例子 我们希望微量的图案看起来像什么。 主要是,它们看起来像一群白色的噪音,没有明显的趋势或显著的现象. 连锁店是稳定的。 相比之下,图6.12中显示的同一β-比诺米亚模型的假设Markov 链说明了潜在的链行为,应该让我们暂停.</p>
+<div class="figure" style="text-align: center"><span id="fig:bad-trace" style="display:block;"></span>
+<img alt="左上方的微量图显示了随机的外观噪声,y值介于0.6至0.95之间,但明显呈下降趋势. 右上方相应的密度图比目标后pdf要窄得多,其密度图从0.4到1. 左下方的痕量图显示了随机的外观噪音,但有两个区域是链状高原。 这些高原在右下方产生一个坎坷的对应密度图,与目标后pdf不匹配." loading="lazy" src="/assets/img/bayes-rules-python-cn/bad-trace-1-d96e24f70c37.png" width="528"/>
+<p class="caption">FIGURE 6.12:两个假想的Markov 链的追踪地块(左)和相应的密度地块(右). 这些例子说明马可夫铁链“坏”可能是什么样子。 叠加的黑线(右)代表目标Beta(11,3)后pdf.</p>
+</div>
+<p>首先,考虑图6.12(左)中的痕量图。 A链的下降趋势表明,在5 000个迭代之后,它还没有稳定下来——它还没有“找到”或者还没有知道如何探索后期可信的[0]值的范围。 下行趋势也暗示了链条值之间的紧密关联, 这一切都是为了说链子 A正在缓慢混合。 这是不好的。 虽然Markov 链是内在的依赖,但它们的行为越像快速混合(噪音)的独立样本,由此产生的后期近似(粗略地说)的错误就越小. 链B显示了另一个问题。 微量图中的两条完全平直的线条证明,当它访问XQ1@@的较小值时,往往会卡住.</p>
+<p>图6.12(右)中的密度图证实,这两条愚蠢的链条都造成了一个严重问题:它们对Beta(11,3)后体产生差的近似值(用黑色叠加),从而误导后体结论. 就当是链条A。 由于链条的混合速度如此缓慢,它只探索了0.6到0.9的粗略值。 因此,它的后置近似高估了这个范围内的QQ1@@值的可信度,同时完全低估了这个范围之外的数值的可信度. 接下来考虑B链 在被卡住时,链B对后座QQ2@@值左尾的一些值进行了超标. 这种现象在后期近似中产生了错误的尖峰.</p>
+<p>在实际操作中, 这意味着我们没有特权将模拟结果与“真正的”后台进行比较。 这就是为什么诊断如此重要。 如果我们看到图6.12中那样的不良追踪图案,我们可以立即采取一些步骤:</p>
+<ol style="list-style-type: decimal">
+<li>检查模型。 假定的先验模型和数据模型是否合适?</li>
+<li>运行链为更多的迭代。 一些不可取的短期连锁趋势可能从长远来看被打破。</li>
+</ol>
+<p>整个书中, 步骤2虽然需要额外的计算时间,但很容易.</p>
+</div>
+<div class="section level3" id="chapter-6-parallel" number="6.3.2">
+<h3>比较平行链</h3>
+<p>回忆一下,我们对Beta-Binomial模型的stan()模拟产生了四个平行的Markov链. 我们不仅希望看到每一条链条的稳定(如上所述),而且希望看到四条链条的一致性。 主要是,虽然我们期望不同的链条走不同的路径,但它们应该表现出相似的特征,产生相似的后象. 例如,图6.8中四个平行链的痕量图在随机性上显得相似. 此外,在图6.13密度图中,我们看到这四条链条产生了几乎无法区分的后遗症。 这证明我们的模拟是稳定且足够长的 — — 运行链条以进行更多的迭代可能不会产生巨大的差异或改进后的近似。</p>
+<div class="sourceCode" id="cb80">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 单个链条密度图
+mcmc_dens_overlay(bb_sim, pars = "pi") +
+ylab("density")</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch6-dens-overlay" style="display:block;"></span>
+<img alt="pi有四种密度曲线,每种颜色不同. 密度曲线都非常相似. 它们被左键扭曲,Pi值的峰值接近0.8,而Pi值的峰值则在0.5至0.95之间降至0。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch6-dens-overlay-1-741cb9dcabb2.png" width="240"/>
+<p class="caption">图6.13:4个平行的Markov 链的密度图。。。</p>
+</div>
+<div style="page-break-after: always;"></div>
+<p>比较一下,让我们对同一模型进行较短的马可夫链模拟。 4个平行链用于10 000个迭代,产生的样本大小为5 000个,而仅用于100个迭代,产生的样本大小为50个:</p>
+<div class="sourceCode" id="cb81">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# 第2步: 将后台剪掉
+bb_sim_short = stan(model_code = bb_model, data = list(Y = 9),
+chains = 4, iter = 50*2, seed = 84735)</code></pre>
+</div>
+<p>短的Markov 链的痕量图和相应的密度图如下所示. 虽然链条的痕量图显示出相似的随机行为,但它们相应的密度图不尽相同,因此会产生差异性的后遗症。 面对这种不稳定和混乱,对于这四个近似中哪一个是最准确的,在只有100次重复之后就停止我们的模拟是错误的.</p>
+<div class="sourceCode" id="cb82">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 追踪短链图
+mcmc_trace(bb_sim_short, pars = "pi")
+# 单个短链的密度地块
+mcmc_dens_overlay(bb_sim_short, pars = "pi")</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch6-short-chains" style="display:block;"></span>
+<img alt="有两块地 左边的地块包含四个微量的Pi地块,每个地方都有不同的颜色. x轴从0到50,Y轴的pi值从0.4到1. 虽然微量地块是不同的,但它们都表现得像随机噪声. 右图中包含四个密度曲线的pi,每个颜色不同. 虽然都是左侧的,峰值接近比值0.8,但密度曲线却大不相同." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch6-short-chains-1-c074207176d0.png" width="576"/>
+<p class="caption">FIGURE 6.14:追踪四个短平行的Markov 链的图案和密度图,每条长度50.</p>
+</div>
+</div>
+<div class="section level3" id="calculating-effective-sample-size-autocorrelation" number="6.3.3">
+<h3>计算有效样本量和自动连接</h3>
+<p>从6.3.1节中回顾,一个依赖的Markov 链越像一个独立的样本,由此产生的后期近似(loosely speaking)的错误就越小. 虽然痕量图对这种行为提供了一些视觉洞察,但补充数字评估可以提供更细微的信息. 首先,回顾一下我们的Markov 链模拟 bb sim 产生了2万个依赖性值的组合,它们来自后验模型以外的模型。 然后我们用这个链条 来大致模拟XQ1@@的后验模型。 知道这个近似值的误差可能比我们使用直接从后方提取的2万个独立样本值要大,所以提出以下问题: 相对而言,产生一个等效准确的后方近似值需要多少个独立样本值? 有效的样本大小比率提供了一个答案。</p>
+<div class="describe">
+<p>有效样本量比率</p>
+<p>让\\\\\\\\\\\表示一个依赖的Markov 链的实际样本大小或长度. 这个链条的有效样本量,QQ1@@,量化了独立样本的数量,以产生相当准确的后近似值. 马可夫连锁近似物的精度只有较小的独立样本。 因此,有效样本比例低于1:</p>
+<p>\[\frac{N_{eff}}{N}\]</p>
+<p>也没有解释这个比例的神奇规则, 也就是说,我们可能怀疑马可夫链,其有效样本量比小于0.1,即有效样本量小于实际样本大小的10%。</p>
+</div>
+<p>快速调用在 bayesplot 包中的 neff  ratio () 函数可以提供我们马可夫链样 pi 值的估计有效样本量比。 在这里,使用我们2万条长的马可夫链 来近似于 0@@的后缀的准确性 大致相当于我们只使用了34%的独立值。 换句话说,我们的2万马可夫链值和6800个独立样本一样有用(0.34 \(\cdot\)20000). 因为这个比例超过0.1,</p>
+<div class="sourceCode" id="cb83">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 计算有效的样本大小比
+neff_ratio(bb_sim, pars = c("pi"))
+[1] 0.3361</code></pre>
+</div>
+<p>Autocorrection提供了另一个度量,通过它来评价我们的马可夫链是否足够模仿独立样本的行为. 强烈的自发性或依赖性是件坏事 — — 它与小型有效样本量比率并存,从而提供了一个警告信号,即我们由此产生的后遗症近似可能不可靠。 我们在图6.12的A链中看到了一些证据。 现在,通过简单的构建马可夫链,链值之间自然会有某种自动关系 — — 一个链值( 0@@)取决于之前的链值(\(\pi^{(i-1)}\)),它取决于之前的链值(\(\pi^{(i-2)}\)),它取决于之前的链值(\(\pi^{(i-3)}\)),等等。 这种依存链还意味着每个依存链的值在某种程度上依赖于所有之前的依存链值. 例如,由于QQ4+@@依赖于QQ5+@@,所以QQ7+@@也依赖于QQ8+@@. 然而,这种依赖性,或自动性关系,逐渐消失。 这就像托布勒的第一个地理学定律:一切都与其它事物相关,但近乎事物比远近事物更相关. 因此,通常的情况是,链值QQ9QQ与前一个值(XQ10XQ)的关系比链值100退步(XQ11X)更紧密.</p>
+<div class="describe">
+<p>自动连接</p>
+<p>lag 1 自动校准测量了相隔一个“步骤”的马尔可夫链值的对数之间的关联性(例如 \(\pi^{(i)}\)和 1@@)。 lag 2 自动校对度量了相隔两个“步骤”的马尔可夫链值的对数之间的关联性(例如, \(\pi^{(i)}\)和 3@@)。 及诸众生.</p>
+</div>
+<p>让我们把这些概念运用到我们的bb sim分析中。 查看图6.15中我们模拟结果的痕量图和自动脉冲图。 (简而言之,我们只展示我们四个平行链条中的一个结果。 )</p>
+<div class="sourceCode" id="cb84">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+mcmc_trace(bb_sim, pars = "pi")
+mcmc_acf(bb_sim, pars = "pi")</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch6-acf-1" style="display:block;"></span>
+<img alt="有两块地 在左图中,x轴从0到5000不等,y轴上的pi值从0.3到1. 线在从左到右移动到整个情节时,表现得像随机噪声. 右图有一个X轴,Lag值从0到20,Y轴的自动对映值从0到1. 有一条线从左向右移动,从一个0的拉格时的1自动脉冲值开始,然后快速下降到拉格5及以后的0." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch6-acf-1-1-b2b540ea6d94.png" width="480"/>
+<p class="caption">图6.15: 从 bb sim 分析中为单一的Markov 链条绘制的痕量图(左)和自动对映图(右).</p>
+</div>
+<p>注意追踪图案没有明显的图案 这提供了一条视觉线索,即虽然链条值在本质上是依赖性的,但这种依赖性相对薄弱,仅限于小的滞后值或只相隔几步的值. 这一观测得到自动对流图的支持,该图将自动对流图(y-axis)标记为0至20(x-axis). 0 自动脉冲的滞后是自然的 1 – 它测量Markov 链值与自身之间的关联性. 从那里看,1号线的自动脉冲大约为0.5,表明只有1个步骤的链条值之间有中度的相关性. 但随后自动脉冲迅速下降, 并且实际是0 by low5. 也就是说,Markov 链的值之间几乎没有关联,它们之间相隔几步以上。 这都是好消息。 我们的马可夫连锁店正在迅速混合, 即迅速绕着后置值范围移动,</p>
+<p>我们假设图6.15中的情节是“好”的, 对比之下,考虑对不健康的马可夫链的结果(图6.16)。 微量图显示了Markov 链条值的强劲趋势,并因此显示出了自动化关系。 这一观察得到共鸣,并被自动脉冲图案进一步正式化. 自动脉冲曲线的缓慢下降表明链值之间的依赖性不会很快消失. 事实上,Markov 链条值之间有大约0.9个关联,它们之间是完全相隔20步的! 因为它的链式值与之前的值紧密相连,所以这个链式的混合速度很慢 — — 它需要很长时间才能充分探索后期的全部范围. 因此,正如图6.12中的缓慢混合链A一样,我们应当警惕利用这一链来近似于后端。 让我们把这些想法结合起来。</p>
+<div class="figure" style="text-align: center"><span id="fig:ch6-acf-2" style="display:block;"></span>
+<img alt="有两块地 左侧是一个X轴从0到5000的微量图,以及Y轴从pi值从0到1的图. 线条显示出许多关联性, 上下浮动,上下浮动, 当它从左到右移动到整个地块。 右图有一个X轴,Lag值从0到20,Y轴的自动对映值从0到1. 有一条线从左向右移动, 一直朝着整个阴谋的顶端。 它在Lag 0. 时以 1 开始,然后慢慢下降到大约0.9 的值,由Lag 等于 20." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch6-acf-2-1-ddb23347edfb.png" width="480"/>
+<p class="caption">图6.16: 一个微量的图案(左)和自动对映图案(右),用于慢速混合的马可夫链( 0@@).</p>
+</div>
+<div class="describe">
+<p>快对慢混合马可夫链</p>
+<p>快速混合链表现出类似独立样本的行为:链条将“快速”移动到后置可信值范围,链条值之间的自动对接迅速下降,有效的样本大小比例相当大。 缓慢的混合链不具有独立样本的特征:链子围绕后视似值的范围“缓慢”移动,链子值之间的自旋关系下降非常缓慢,有效的样本大小比例很小。</p>
+</div>
+<p>那么,如果我们的 是一个可怕的慢混合链? 我们认为,第一个而且最可行的解决办法是经过考验的真正“运行更长的链条”。 即使是一个缓慢的混合链,如果我们运行它以进行足够的迭代,最终也会产生良好的后近似. 另一种常见的方法是削弱Markov 链. 例如,从我们原来的5000 \(\pi\)值链中,我们可能保留每秒值,抛出其余值:\(\left\lbrace \pi^{(2)}, \pi^{(4)}, \pi^{(6)}, \ldots, \pi^{(5000)} \right\rbrace\). 或者,我们可能保持每10个连锁值:XQ2@@. 通过丢弃间隙,我们消除了低落后时的强烈关联. 例如,XQ3@@与稀疏链中的前一个值(XQ4@@)的关联性比与原链中的前一个值(XQ5@@)的关联性要小.</p>
+<p>仅举一例, 我们用stan( ) 中的细参数, 将原始 bb  sim 链条缩小到每十分之一。 因此,在1落后而不是5后(图6.17),自动脉冲稍早点下降. 但是,由于这已经是一个快速混合的模拟, 与迅速下降的自摄性关系, 现在,我们只有500个值来估计后期。</p>
+<div class="sourceCode" id="cb85">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# 模拟稀疏的MCMC样本
+thinned_sim = stan(model_code = bb_model, data = list(Y = 9),
+chains = 4, iter = 5000*2, seed = 84735, thin = 10)
+# 看看结果
+mcmc_trace(thinned_sim, pars = "pi")
+mcmc_acf(thinned_sim, pars = "pi")</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch6-acf-3" style="display:block;"></span>
+<img alt="有两块地 在左图中,x轴从0到500不等,y轴上的pi值从0.4到1. 线在从左到右移动到整个情节时,表现得像随机噪声. 右图有一个X轴,Lag值从0到20,Y轴的自动对映值从0到1. 有一条波音线从左向右移动,从一个0的拉格时的1自动脉冲值开始,然后快速下降到拉格1及以后的0." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch6-acf-3-1-3a3eb597b557.png" width="480"/>
+<p class="caption">图6.17: 从 bb sim 分析中为单一的Markov 链条绘制的痕量图(左)和自动对映图(右),细化到每第十个值.</p>
+</div>
+<p>我们同样将缓慢的混合链缩小到每10个值(图6.18)。 由此产生的链条仍然显示出微量图中缓慢的混合趋势,但自旋的下降速度比预断链快. 这很好,但值得失去90%的原始样本值吗? 我们不太确定。</p>
+<div class="figure" style="text-align: center"><span id="fig:ch6-acf-4" style="display:block;"></span>
+<img alt="有两块地 左边是一个有x轴从0到500的微量图,还有y轴,pi值从0到1不等. 线条显示出许多关联性, 上下浮动,上下浮动, 当它从左到右移动到整个地块。 右图有一个X轴,Lag值从0到20,Y轴的自动对映值从0到1. 有一条线从左向右移动。 它在Lag为0时先以1的自动脉冲值开始,然后由Lag等于20降至约0.25的值." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch6-acf-4-1-f2f797da537d.png" width="480"/>
+<p class="caption">图6.18: 一个微量的图案(左)和自动对映图案(右),用于缓慢混合的马可夫链的 0@@,细化到每第十个值.</p>
+</div>
+<div class="warning">
+<p>在决定是否细化马可夫链时,有一条小心的行走. 减少自体关系的好处并不一定大于宝贵链条价值的损失。 即5000马可夫链值具有较强的自旋性,可以产生优于500个自旋性较弱的链值的后近似. 稀释的效果也部分取决于用来构建Markov 链的算法. 例如,本书通篇使用的rstan和rstanarm包采用了高效的汉密尔顿蒙特卡洛算法. 因此,在当前 stan () 帮助文件中, 软件包作者建议不要稀释, 除非模拟猪在您的机器上存储过多。</p>
+</div>
+</div>
+<div class="section level3" id="calculating-r-hat" number="6.3.4">
+<h3>计算 R-hat</h3>
+<p>有效的样本大小和自动吸附为视觉微量图解析在评估马可夫链条行为像独立样本的程度时提供了数字补充,同样,分裂-\(\hat{R}\)度量衡(或简称为"R-hat")为平行链条的视觉比较提供了数字补充. 从第6.3.2节回顾,我们不仅希望模拟中每个单独的Markov 链是稳定的,而且希望平行链之间有一致性。 R级 -hat通过比较所有链条中抽样的QQ1@@值的可变性与每个链条中的可变性,来解决这种一致性问题。 在提出更正式的定义之前 请检查你的直觉 第40条</p>
+<div class="quiz">
+<p>图6.19提供了bb sim(上行)的模拟结果以及一个糟糕的假设替代(下行). 根据这些图案,你认为什么是“好”的标记。 马可夫链模拟?</p>
+<ol style="list-style-type: lower-alpha">
+<li>任何单个链条中的QQ0QQ值的可变性小于所有链条组合的QQ1QQ值的可变性.</li>
+<li>任何单个链条中的QQ0QQ值的可变性可与所有链条组合的QQ1QQ值的可变性相比.</li>
+</ol>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:rhat-ch6" style="display:block;"></span>
+<img alt="在上行有四条链条,其纵向行为与线状或微量图(左)显示的非常相似,密度曲线(中)显示的分布几乎相同,以及一个与四个单个密度曲线非常相似的合并密度曲线。 在下行有四条带微量地块的链条,它们几乎没有相互重叠(左),分布很不相同(中),而且密度曲线非常悬殊,显示出四条链条的不同趋势。" loading="lazy" src="/assets/img/bayes-rules-python-cn/rhat-ch6-1-b4fd3295a11f.png" width="768"/>
+<p class="caption">FIGURE 6.19: bb sim(上行)和假设替代(下行)的模拟结果. 其中包括四个平行链的痕量图(左),每个单个链的密度图(中),以及组合链的密度图(右)。</p>
+</div>
+<p>回答这个问题, 基于我们在6.3.2节中学到的知识,我们可以看到bb sim优于替代品 — — 它的平行链条表现出相似的特征,并产生类似的后近似. 尤其是,QQ0QQ值的可变性在每一个链条(顶部中间图)中几乎相同. 因此,所有链条(右上图)的QQ1@@值的可变性与单个链条相似. 相比之下,注意在替代模拟中的四个平行链会产生相互冲突的后近似(下中图),因此在我们结合这些链时会产生不稳定和差的后近似(下右图). 因此,所有链条的QQ2+Q值的幅度和可变性远远大于任何单个链条的QQ3+Q值的幅度和可变性.</p>
+<p>将这一分析结合起来,我们探究了所有链条以及单个平行链条内价值的变异关系的重要性。 具体而言:</p>
+<ul>
+<li><p>在“好”中 Markov链模拟,所有平行链的变异性加起来,将大致与任何单个链内的变异性相当;</p></li>
+<li><p>在“坏”的Markov链模拟中,所有平行链的可变性加在一起可能超过每个链中的典型可变性。</p></li>
+</ul>
+<p>我们可以使用R-hat来量化综合链变异性和链内变异性之间的关系. 我们为R -hat提供了直观的定义。 关于更详细的定义,见Vehtari等人。 (2021) (中文(简体) ). 更多了解有效样本量与R-hat之间令人兴奋的联系,参见Vats和Knudson(2018)!</p>
+<div class="describe">
+<p>R级 -对</p>
+<p>考虑使用四个平行链的 Markov 链模拟参数 {0}。 让QQ1@@表示所有四条链的XQ2@@中的变异性,而XQ3@@表示任何单个链中的典型变异性. R-hat 度量计算出这两个可变源之间的比率:</p>
+<p>\[\text{R-hat} \approx \sqrt{\frac{\text{Var}_\text{combined}}{\text{Var}_\text{within}}} .\]</p>
+<p>理想的, \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 与此相对照,QQ1@@表示不稳定,而合并链中的可变性超过了链内的可变性. 虽然不存在金色规则,但大于1.05的R-hat比对模拟的稳定性提出了一些红旗.</p>
+</div>
+<p>为了计算我们模拟的R-hat比,我们可以应用Bayesplot包中的Rhat()函数:</p>
+<div class="sourceCode" id="cb86">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+rhat(bb_sim, pars = "pi")
+[1] 1</code></pre>
+</div>
+<p>Bb sim反映了我们的观点,即我们四个平行链条之间和内部的变异性是可比较的,Bb sim的R-hat值实际上等于1. 相比之下,图6.19所示的糟糕的假设模拟值为5.35。 也就是说,所有链条值的总差异是每个链条内典型差异的5倍以上。 这远远超出了1.05红旗标记,提供了大量证据证明假设的平行链不会产生一致的后照率,因此模拟不稳定.</p>
+</div>
+</div>
+<div class="section level2" id="chapter-summary-5" number="6.4">
+<h2>章节摘要</h2>
+<p>随着我们的贝叶斯模型变得更加精密,它们的后期会变得太难,甚至不可能,难以具体指明. 在第六章中,你学到了两种模拟技术,用于在这样的情景中近似后期:网格近似和马可夫链式蒙特卡洛. 这两种技术都产生了一个样本,即: 数值</p>
+<p>\[\left\lbrace \theta^{(1)}, \theta^{(2)}, \ldots, \theta^{(N)} \right\rbrace .\]</p>
+<p>然而,这些样品的性质不同:</p>
+<ul>
+<li>Grid 近似化从一个盘状近似化的 pdf QQ1@@ 中取出一个独立的 \(\theta^{(i)}\)的样本. 这种方法非常直截了当,但在更为复杂的模式环境中被打破。</li>
+<li>马可夫链式蒙特卡洛提供了更灵活的替代品. 虽然MCMC产生一个依赖性样本的QQ0@@没有从后验pdf \(f(\theta|y)\)抽取,但只要链长XQ2@@足够大,这个样本就会模仿后验模型.</li>
+</ul>
+<p>最后,你学到了一些MCMC的诊断方法,用于检查所得出的模拟质量. 简而言之,我们可以目视地检查多条平行链的痕迹图和密度图,以便在模拟中实现稳定性和混合:</p>
+<div class="sourceCode" id="cb87">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 诊断图
+mcmc_trace(my_sim, pars = "___")
+mcmc_dens_overlay(my_sim, pars = "___")</code></pre>
+</div>
+<p>我们可以用数字诊断来补充这些视觉诊断, 如有效的样本大小比, 自动脉冲,</p>
+<div class="sourceCode" id="cb88">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+neff_ratio(my_sim, pars = "___")
+mcmc_acf(my_sim, pars = "___")
+rhat(my_sim, pars = "___")</code></pre>
+</div>
+<div style="page-break-after: always;"></div>
+</div>
+<div class="section level2" id="exercises-5" number="6.5">
+<h2>练习</h2>
+<div class="section level3" id="conceptual-exercises" number="6.5.1">
+<h3>概念练习</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-210"><strong>Exercise 6.1  (Steps for grid approximation)  </strong></span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>确定后验模型的网格近似步骤。</li>
+<li>您要改变哪个步骤来使近似更准确? 你怎么改变他们?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-211"><strong>Exercise 6.2  (Trace plot diagnostics)  </strong></span>For each MCMC simulation scenario described below, sketch by hand what a single chain trace plot might look like for each simulation.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>链子混合得太慢了</li>
+<li>链条的关联性很高.</li>
+<li>连锁店有“被困”的倾向。</li>
+<li>铁链没有问题!</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-212"><strong>Exercise 6.3  (MCMC woes)  </strong></span>For each MCMC simulation scenario described below, describe how the scenario could impact the posterior approximation.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>链子混合得太慢了</li>
+<li>链条的关联性很高.</li>
+<li>连锁店有“被困”的倾向。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-213"><strong>Exercise 6.4  (MCMC simulation: thank you for being a friend)  </strong></span>Your friend missed class this week and they are allergic to reading textbooks (a common affliction). Since you are a true friend, you decide to help them out and answer their following questions:
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>为什么看MCMC诊断很重要?</li>
+<li>为什么MCMC模拟有帮助?</li>
+<li>使用RStan有什么好处?</li>
+<li>你对这章有什么不明白?</li>
+</ol>
+</div>
+<div class="section level3" id="practice-grid-approximation" number="6.5.2">
+<h3>实践:网格近似</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-214"><strong>Exercise 6.5  (Beta-Binomial grid approximation)  </strong></span>
+Consider the Beta-Binomial model for <span class="math inline">\(\pi\)</span> with <span class="math inline">\(Y | \pi \sim \text{Bin}(n, \pi)\)</span> and <span class="math inline">\(\pi \sim \text{Beta}(3,8)\)</span>. Suppose that in <span class="math inline">\(n = 10\)</span> independent trials, you observe <span class="math inline">\(Y = 2\)</span> successes.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>使用网格值的网格近似值 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\</li>
+<li>重复一段,使用201个相等空格值的网格在0到1之间。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-215"><strong>Exercise 6.6  (Gamma-Poisson grid approximation)  </strong></span>
+Consider the Gamma-Poisson model for <span class="math inline">\(\lambda\)</span> with <span class="math inline">\(Y_i | \lambda \sim \text{Pois}(\lambda)\)</span> and <span class="math inline">\(\lambda \sim \text{Gamma}(20,5)\)</span>. Suppose you observe <span class="math inline">\(n=3\)</span> independent data points <span class="math inline">\((Y_1,Y_2,Y_3) = (0,1,0)\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>使用网格值的网格近似值 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\</li>
+<li>重复一段,使用201个等距值的网格在0到8之间。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-216"><strong>Exercise 6.7  (Normal-Normal grid approximation)  </strong></span>Consider the Normal-Normal model for <span class="math inline">\(\mu\)</span> with <span class="math inline">\(Y_i | \mu \sim N(\mu, 1.3^2)\)</span> and <span class="math inline">\(\mu \sim N(10, 1.2^2)\)</span>. Suppose that on <span class="math inline">\(n = 4\)</span> independent observations, you observe data <span class="math inline">\((Y_1,Y_2,Y_3,Y_4) = (7.1, 8.9, 8.4, 8.6)\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>使用网格值的网格近似值 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\</li>
+<li>重复一段,使用201个相等空格值的网格在5至15之间。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-217"><strong>Exercise 6.8  (The Curse of Dimensionality)  </strong></span>As we note in this chapter, grid approximation suffers from <strong>the curse of dimensionality</strong>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>描述我们希望对多个参数(即高维贝叶斯模型)进行推断的情况.</li>
+<li>用你自己的话来说,解释维度如何会影响网格近似,为什么这是诅咒.</li>
+</ol>
+</div>
+<div class="section level3" id="practice-mcmc" number="6.5.3">
+<h3>实践:MCMC</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-218"><strong>Exercise 6.9  (Comparing MCMC to Grid Approximation)  </strong></span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>MCMC和网格近似共享的缺点是什么?</li>
+<li>MCMC和网格近似共享哪些优势?.</li>
+<li>网格近似于MCMC有什么好处?</li>
+<li>MCMC比电网近似有什么好处?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-219"><strong>Exercise 6.10  (Is it a Markov Chain?)  </strong></span>Below are examples of “chains” <span class="math inline">\(\left\lbrace \theta^{(1)}, \theta^{(2)},\ldots,\theta^{(N)} \right\rbrace\)</span>, for different probability parameters <span class="math inline">\(\theta\)</span>. For each example, determine whether the given chain is a <em>Markov</em> chain. Explain.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>你出去吃一连串晚饭,</li>
+<li>你一连打彩票一连串地打彩票,</li>
+<li>你一连串在棋局里玩你的室友 和XQ1的概率 你赢得了我的室友。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-220"><strong>Exercise 6.11  (MCMC with RStan: Step 1)  </strong></span>Use the given information to define the Bayesian model structure using the correct RStan syntax. You don’t need to run the code, just provide the syntax.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>########与#######################################################################################################################################################################################################################################################</li>
+<li>########与#######################################################################################################################################################################################################################################################</li>
+<li>########与#######################################################################################################################################################################################################################################################</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-221"><strong>Exercise 6.12  (MCMC with RStan: Steps 1 and 2)  </strong></span>Use the given information to (1) define the Bayesian model structure, and (2) simulate the posterior using the correct RStan syntax. You don’t need to run the code, just provide the syntax.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>与 QQ0+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</li>
+<li>与 QQ0+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</li>
+<li>与 QQ0+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:ch6-bb"><strong>Exercise 6.13  (MCMC with RStan: Beta-Binomial)  </strong></span>Consider the Beta-Binomial model for <span class="math inline">\(\pi\)</span> with <span class="math inline">\(Y | \pi \sim \text{Bin}(n, \pi)\)</span> and <span class="math inline">\(\pi \sim \text{Beta}(3,8)\)</span>. Suppose that in <span class="math inline">\(n = 10\)</span> independent trials, you observe <span class="math inline">\(Y = 2\)</span> successes.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>模拟 QQ0 的后置模式 RStan使用3个链和每条链的12000个迭代.</li>
+<li>制作三条链条中的每条的痕量地块.</li>
+<li>微量图x轴上的数值范围是什么? 为什么这个区域的最大值不是12000?</li>
+<li>为三条链中的每一条链创建一个值的密度图。</li>
+<li>写回第5章, 你的MCMC近似值如何比较?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-222"><strong>Exercise 6.14  (MCMC with RStan: once more with feeling)  </strong></span>Repeat Exercise <a href="/bayes-rules-python-cn/chapter-6/#exr:ch6-bb">6.13</a> for the Beta-Binomial model with <span class="math inline">\(Y | \pi \sim \text{Bin}(n, \pi)\)</span> and <span class="math inline">\(\pi \sim \text{Beta}(4,3)\)</span>, where you observe <span class="math inline">\(Y = 4\)</span> successes in <span class="math inline">\(n = 12\)</span> independent trials.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:mcmcsim"><strong>Exercise 6.15  (MCMC with RStan: Gamma-Poisson)  </strong></span>Consider the Gamma-Poisson model for <span class="math inline">\(\lambda\)</span> with <span class="math inline">\(Y_i | \lambda \sim \text{Pois}(\lambda)\)</span> and <span class="math inline">\(\lambda \sim \text{Gamma}(20,5)\)</span>. Suppose that you observe <span class="math inline">\(n=3\)</span> independent data points <span class="math inline">\((Y_1,Y_2,Y_3) = (0,1,0)\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>模拟 QQ0 的后置模式 RStan使用4个链条,每条链条使用1000次迭代.</li>
+<li>制作所有四条链的痕量和密度图。</li>
+<li>从密度图看,什么似乎是最 后似值的QQ0QQ ?。。。</li>
+<li>写回第5章, 你的MCMC近似值如何比较?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-223"><strong>Exercise 6.16  (MCMC with RStan: Gamma-Poisson again)  </strong></span>Repeat exercise <a href="/bayes-rules-python-cn/chapter-6/#exr:mcmcsim">6.15</a> using a <span class="math inline">\(\lambda \sim \text{Gamma}(5,5)\)</span> prior model.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-224"><strong>Exercise 6.17  (MCMC with RStan: Normal-Normal)  </strong></span>Repeat exercise <a href="/bayes-rules-python-cn/chapter-6/#exr:mcmcsim">6.15</a> for the Normal-Normal model of <span class="math inline">\(\mu\)</span> with <span class="math inline">\(Y_i | \mu \sim N(\mu, 1.3^2)\)</span> and <span class="math inline">\(\mu \sim N(10, 1.2^2)\)</span>. Suppose that on <span class="math inline">\(n = 4\)</span> independent observations, you observe data <span class="math inline">\((Y_1,Y_2,Y_3,Y_4) = (7.1, 8.9, 8.4, 8.6)\)</span>.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-225"><strong>Exercise 6.18  (MCMC with RStan: Normal-Normal part deux)  </strong></span>Repeat exercise <a href="/bayes-rules-python-cn/chapter-6/#exr:mcmcsim">6.15</a> for the Normal-Normal model of <span class="math inline">\(\mu\)</span> with <span class="math inline">\(Y_i | \mu \sim N(\mu, 8^2)\)</span> and <span class="math inline">\(\mu \sim N(-14, 2^2)\)</span>. Suppose that on <span class="math inline">\(n = 5\)</span> independent observations, you observe data <span class="math inline">\((Y_1,Y_2,Y_3,Y_4,Y_5) = (-10.1, 5.5, 0.1, -1.4, 11.5)\)</span>.
+</div>
+</div>
+</div>
+</div>
+<h3>参考资料</h3>
+<div class="references csl-bib-body hanging-indent" id="refs">
+<div class="csl-entry" id="ref-MC">
+Eckhardt, Roger. 1987. <span>“Stan <span>U</span>lam, <span>J</span>ohn <span>V</span>on <span>N</span>eumann, and the <span>M</span>onte <span>C</span>arlo Method.”</span> <em>Los Alamos Science Special Issue</em>.
+</div>
+<div class="csl-entry" id="ref-bayesplotpackage">
+Gabry, Jonah, Daniel Simpson, Aki Vehtari, Michael Betancourt, and Andrew Gelman. 2019. <span>“Visualization in <span>B</span>ayesian Workflow.”</span> <em>J. R. Stat. Soc. A</em> 182: 389–402. <a href="https://doi.org/10.1111/rssa.12378">https://doi.org/10.1111/rssa.12378</a>.
+</div>
+<div class="csl-entry" id="ref-R-rstan">
+Guo, Jiqiang, Jonah Gabry, Ben Goodrich, and Sebastian Weber. 2020. <em>Rstan: R Interface to Stan</em>. <a href="https://CRAN.R-project.org/package=rstan">https://CRAN.R-project.org/package=rstan</a>.
+</div>
+<div class="csl-entry" id="ref-vats">
+Vats, Dootika, and Christina Knudson. 2018. <span>“Revisiting the <span>G</span>elman-<span>R</span>ubin Diagnostic.”</span> <em>arXiv Preprint arXiv:1812.09384</em>.
+</div>
+<div class="csl-entry" id="ref-vehtari">
+Vehtari, Aki, Andrew Gelman, Daniel Simpson, Bob Carpenter, and Paul-Christian Bürkner. 2021. <span>“<span class="nocase">Rank-normalization, folding, and localization: An improved <span class="math inline">\(\widehat{R}\)</span> for assessing convergence of MCMC</span>.”</span> <em>Bayesian Analysis</em> 16: 667–718.
+</div>
+</div>
+</section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-5/">上一节：第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-7/">下一节：第 7 章 MCMC 的底层机制</a></nav>
+</article>
+</div>
+</main>
+<footer class="site-footer">
+<div>
+<strong>AI 提效研究笔记</strong>
+<p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+</div>
+<div class="footer-links">
+<a href="/feed.xml">RSS</a>
+<a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+</div>
+</footer>
+<script src="/assets/js/site.js"></script>
+</body>
+</html>

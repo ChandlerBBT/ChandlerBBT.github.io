@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="第 11 章 扩展正态回归模型 | Bayes Rules! 中文 Python 改写教程" name="description"/>
+<title>第 11 章 扩展正态回归模型 | Chandler's AI Productivity Notes</title>
+<link href="/assets/img/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="/assets/css/styles.css" rel="stylesheet"/>
+<script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#content">跳到正文</a>
+<header class="site-header">
+<a aria-label="Chandler's AI Productivity Notes 首页" class="brand" href="/">
+<span class="brand-mark">C</span>
+<span class="brand-name">Chandler's AI Productivity Notes</span>
+</a>
+<nav aria-label="主导航" class="site-nav">
+<a href="/">首页</a>
+<a aria-current="page" href="/posts/">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+</nav>
+</header>
+<main class="tutorial-page" id="content">
+<div class="tutorial-layout">
+<aside class="tutorial-sidebar">
+<h2>教程目录</h2>
+<nav><a href="/bayes-rules-python-cn/">首页</a><a href="/bayes-rules-python-cn/foreword/">前言</a><a href="/bayes-rules-python-cn/preface/">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a aria-current="page" href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a href="/bayes-rules-python-cn/references/">参考文献</a></nav>
+</aside>
+<article class="tutorial-content">
+<section class="normal" id="section-">
+<div class="section level1" id="chapter-11" number="11">
+<h1>第 11 章 扩展正态回归模型</h1>
+<div class="tutorial-note">
+<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
+</div>
+<p>第9章和第10章中的巴耶斯语简单的普通线性回归模型就像一碗平原米 — — 自己是美味的,同时也为发展提供了坚实的基础. 在第十一章中,您将考虑扩展这一模式,以大大扩大其在更广泛的建模环境中的灵活性。 最终目标是根据我们早上得到的信息预测下午天气会有多热。 我们之前对此有一个模糊的理解,即在澳大利亚平均每天,典型的下午温度在15至35摄氏度之间。 然而,除了这一基线假设之外,我们不熟悉澳大利亚的天气模式,因此我们将在分析过程中利用资料不足的前科。</p>
+<p>以我们先验对澳大利亚天气的微弱了解为基础, 在响尾蛇包(Williams 2011)中, 这个被扭曲的天气AUS数据子集包含了澳大利亚两个城市的100天天气数据:Uru和Wollongong。 {\fn黑体\fs22\bord1\shad0\3aHBE\4aH00\fscx67\fscy66\2cHFFFFFF\3cH808080}呼叫控制台的Weather WU {\fn黑体\fs22\bord1\shad0\3aHBE\4aH00\fscx67\fscy66\2cHFFFFFF\3cH808080}会调出详细的代码簿</p>
+<div class="sourceCode" id="cb182">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python"># 原书 bayesrules 数据包中的数据需改用 CSV/本地数据文件读取
+import pymc as pm
+import arviz as az
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# 装入一些软件包
+# 装入数据
+data(weather_WU)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>我们只保留下午温度的变数,</p>
+<div class="sourceCode" id="cb183">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>以摄氏度测量的晨温Time9am。 你可能预料到, 这两个变量之间有着积极的联系, 越是温暖,</p>
+<div class="sourceCode" id="cb184">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-425" style="display:block;"></span>
+<img alt="这是带有200个数据点的Tem3pm(y轴)对Tem9am(x轴)的散射图。 积分在下午温度和早晨温度之间呈现出强烈的正面关系. 数据点似乎也有两组不同的数据点,一组的温度往往比另一组更冷。" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-425-1-7426cf33ac92.png" width="240"/>
+<p class="caption">图11.1: 以摄氏度计,在澳大利亚两个城市收集的散点温度为下午3时,上午9时。</p>
+</div>
+<p>要模拟这种关系,请 QQ0 = 表示下午3时的温度, QQ1 = 表示某一天的上午9时的温度。 请注意, 我们代表我们的预测器在这里, 由 ######========================================================================================================================================================================================================================================================</p>
+<p>\[\begin{equation} \begin{split} Y_i | \beta_0, \beta_1, \sigma &amp; \stackrel{ind}{\sim} N\left(\mu_i, \sigma^2\right) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1X_{i1} \\ \beta_{0c}&amp; \sim N\left(25, 5^2\right) \\ \beta_1 &amp; \sim N\left(0, 3.1^2\right) \\ \sigma &amp; \sim \text{Exp}(0.13) .\\ \end{split} \tag{11.1} \end{equation}\]</p>
+<p>考虑本模式使用的独立前科:</p>
+<ul>
+<li>0度的早晨在澳大利亚是罕见的, 通常的下午平均气温在15到35度之间。</li>
+<li>\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 以及这些参数的合理范围。</li>
+<li>QQ0@@的正常前置在0左右的事实反映了一种默认,保守的前置假设,即下午3时至9时的温度关系可能是正值(QQ1@@),负值(XQ2@@),甚至不存在(XQ3@@).</li>
+</ul>
+<p>我们模拟下方的模型后缀, 并鼓励你跟进,</p>
+<div class="sourceCode" id="cb185">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>模拟结果对下午和早晨温度之间的关联提供了更细微的见解。 在80%的可信时间间隔(QQ0 QQ)中, 此外,按照标准偏差的80%的可信间隔(QQ1),这种关系相当强烈 — — 观测到的下午气温往往比我们预计的晨温低3.87至4.41度。</p>
+<div class="sourceCode" id="cb186">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 可能的可信间隔
+posterior_interval(weather_model_1, prob = 0.80)
+10%   90%
+(Intercept) 2.9498 5.449
+temp9am     0.9803 1.102
+sigma       3.8739 4.409</code></pre>
+</div>
+<p>但这是否是一个“好”模式? 我们将在第11.5节更仔细地讨论这个问题。 说明我们能做得更好(图11.2)。 尽管50套下午温度数据从天气 模型 1后(浅蓝色)模拟, 往往能捕捉我们实际观察到的下午温度(深蓝色)的总中心与分布, 也就是说,没有一点能反映一个事实,即20度左右有一批温度,35度左右有另一批温度。</p>
+<div class="sourceCode" id="cb187">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+pp_check(weather_model_1)</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch11-pp-1" style="display:block;"></span>
+<img alt="有51个密度曲线的tem3pm——50个为浅蓝色,1个为深蓝色. 50浅蓝色曲线都相当相似——大致呈钟形,中心在25度附近,距离5到45度. 深蓝色曲线有一个相似的中心和分布,但显示出轻微的双向性,一个高峰靠近18度,另一个接近35度." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch11-pp-1-1-080d2cd96d8d.png" width="336"/>
+<p class="caption">FIGURE 11.2:50 后模拟的温度数据集(浅蓝色)与实际观测的温度数据(深蓝色)并列.</p>
+</div>
+<p>对观测到的和事后模拟的温度数据的比较表明,虽然Time9am包含一些有关Time3pm的有用信息,但它并没有告诉我们一切。 整个第11章, 主要想法是这个。 若我们早上9点在澳大利亚, 我们的模型可以通过纳入有关我们的位置或湿度或气压等信息来改进。 通过在同一模型中加入多个预测器,可以进一步改进它!</p>
+<div class="goals">
+<ul>
+<li>Extend the Normal linear regression model of a quantitative response variable <span class="math inline">\(Y\)</span> to settings in which we have:
+<ul>
+<li>一个绝对的预测器 QQ0QQ · ;</li>
+<li>多个预测器(XQ0X);或</li>
+<li>相互作用的预测器。</li>
+</ul></li>
+<li>比较并评价相竞模式的QQ0QQ,</li>
+<li>考虑在建立XQ0XX的回归模型时与多个预测器的偏差-变量权衡.</li>
+</ul>
+</div>
+<div class="section level2" id="utilizing-a-categorical-predictor" number="11.1">
+<h2>使用绝对的预测器</h2>
+<p>再说一遍,假设我们9点在澳大利亚 我们的确切位置可以揭示出我们下午3点能预期到的温度. 两地气温的密度表明,东南沿海城市沃尔隆贡的气温往往比乌鲁鲁沙漠气候更冷:</p>
+<div class="sourceCode" id="cb188">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-430" style="display:block;"></span>
+<img alt="在同一块地上绘制了两块密度图,标注为Uluru和Wollongong。 乌鲁鲁密度大致对称,以近30度为中心,在15至45度之间. 沃尔隆贡密度大致对称,以较冷的20度为中心,范围为10至30度." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-430-1-a4d68e75f776.png" width="360"/>
+<p class="caption">图11.3:乌鲁鲁和沃尔隆贡的下午温度密度地块。</p>
+</div>
+<p>我们想将位置纳入温度分析。 我们可以! 但在此过程中,必须认识到位置是一个绝对的预测变量。 我们在乌鲁鲁或沃尔隆贡。 虽然这影响了细节,但当我们模拟临时3pm和定量临时9am预测器之间的关系时,我们可以模拟临时3pm和地点之间的关系。</p>
+<p></p>
+<div class="section level3" id="building-the-model" number="11.1.1">
+<h3>建立模型</h3>
+<p>表示下午3时的温度, 如果我们在沃尔隆贡,</p>
+<p>\[X_{i2} = \begin{cases} 1 &amp; \text{ Wollongong} \\ 0 &amp; \text{ otherwise (i.e., Uluru).} \\ \end{cases}\]</p>
+<p>若我们身处乌鲁鲁, (Uluru是自首字母缩写以来的默认参考水平). 然后在下午3时温度和位置之间的贝叶斯正常回归模型与(11.1)具有相同的结构,有一个XQ1+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</p>
+<p>\[\begin{equation} \begin{array}{lcrl} \text{data:} &amp; \hspace{.05in} &amp; Y_i|\beta_0,\beta_1,\sigma &amp; \stackrel{ind}{\sim} N(\mu_i, \; \sigma^2) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1 X_{i2}\\ \text{priors:} &amp; &amp; \beta_{0c} &amp; \sim N\left(25, 5^2\right) \\ &amp; &amp; \beta_1 &amp; \sim N\left(0, 38^2 \right) \\ &amp; &amp; \sigma &amp; \sim \text{Exp}(0.13) .\\ \end{array} \tag{11.2} \end{equation}\]</p>
+<p>虽然模型结构不变, 该型号表示QQ1@@不再代表截取QQ2@@和斜度XQ3@@的线. 事实上,QQ4@@更简单地描述了典型的下午3时温度,只有两种情景. 设想1:对乌鲁鲁来说, +++++ 和典型的下午3时温度简化为</p>
+<p>\[\beta_0 + \beta_1 \cdot 0 = \beta_0 .\]</p>
+<p>假想2:对沃尔隆贡来说, 0@@和典型的下午3点温度是:</p>
+<p>\[\beta_0 + \beta_1 \cdot 1 = \beta_0 + \beta_1 .\]</p>
+<p>即Wollongong的典型下午3点温度等于Ururu( 0@@), 综上所述,我们可以将模型参数重新解释如下:</p>
+<ul>
+<li>阻塞系数 \(\beta_0\) 代表乌鲁鲁地区典型的下午3时温度(\(X_2 = 0\)).</li>
+<li>Wollongong系数 \(\beta_1\) 代表了在Wollongong( 1@@)与Ururu(\(X_2 = 0\))的下午3时温度的典型差异. 因此,在技术上, QQ3 仍然测量了下午3点温度的典型变化, 用于在QQ4 中增加1个单位,</li>
+<li>标准偏差参数 QQ0 QQ 仍然代表着在给定的 QQ2 值 QQ1 中的可变性. 因此,在这里,QQ3@@测量标准偏差在下午3时的Wollongong(当~4@@)和Uluru(当~5@@)的温度.</li>
+</ul>
+<p>我们现在可以铭记这一点,在(11.2)中解释我们以前的模型。 首先,在中心截取的QQ0@@的正常前期模型反映了先验的谅解,即乌鲁鲁的平均下午温度在15至35度之间。 此外,QQ1@@之前的微弱信息正常度以0左右为中心,反映了一种默认保守的先验假设,即沃尔隆贡的平均下午3点气温可能更大( 2@@),少(\(\beta_1 &lt; 0\)),甚至与乌鲁鲁的温度没有区别(\(\beta_1 = 0\)). 最后,在QQ5XX之前,信息很少,这表明我们对下午3时的气温在两个地点的差别程度缺乏了解。</p>
+</div>
+<div class="section level3" id="simulating-the-posterior" number="11.1.2">
+<h3>模拟后台</h3>
+<p>为了模拟11.2的后验模型,以微弱的信息前科,我们运行四个平行的Markov 链,每个长度为10,000. 除了将公式参数从tem3pm~tem9am改为tem3pm~位置之外,语法相当于天气 模型 1:</p>
+<div class="sourceCode" id="cb189">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>追踪地块和自动连接地块(此处为空间输入)以及密度地块(图11.4)表明我们的后期模拟已经足够稳定:</p>
+<div class="sourceCode" id="cb190">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# MCMC诊断
+mcmc_trace(weather_model_2, size = 0.1)
+mcmc_dens_overlay(weather_model_2)
+mcmc_acf(weather_model_2)</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch-11-mod-2-dens" style="display:block;"></span>
+<img alt='共有三块地块,标有"拦截"(Intercept),"临时9am"(Time9am)和"西格玛"(Sigma). 每个参数都有四个密度图用于相应的参数. 在每一种情况下,四个密度地块都非常相似。' loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-11-mod-2-dens-1-7573b8f469ee.png" width="576"/>
+<p class="caption">FIGURE 11.4:四个平行的马可夫链近似天气 模型 2后验模型.</p>
+</div>
+<div style="page-break-after: always;"></div>
+<p>这些密度图和XQ0@@的以下数字后缀摘要 (cept), \(\beta_1\)(地点Wollongong),和\(\sigma\)(sigma), 反映了我们对沃尔隆贡和乌鲁鲁的下午3点温度的后认识. 请考虑后置中位值 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 那么,我们可以说,沃尔隆贡的典型的下午3点温度约为19.4度(29.7-10.3)。 就背景而言,图11.5在观测到的数据中列出了乌鲁鲁和沃尔隆贡的下午3时温度的后期中位数估计数。</p>
+<div class="sourceCode" id="cb191">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 以后的简要统计
+tidy(weather_model_2, effects = c("fixed", "aux"),
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch11-post-med" style="display:block;"></span>
+<img alt="在同一块地上绘制了两块密度图,标注为Uluru和Wollongong。 乌鲁鲁密度大致对称,以近30度为中心,在15至45度之间. 沃尔隆贡密度大致对称,以较冷的20度为中心,范围为10至30度. 在两个密度地块的中心点附近,有两条垂直线,其倾角值分别为19.4和29.7。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch11-post-med-1-9e77d99ce159.png" width="336"/>
+<p class="caption">图11.5:乌鲁鲁和沃尔隆贡下午气温密度图,含气温的后期中位数估计值(干线)。</p>
+</div>
+<p>虽然后面的中位数可以快速比较我们两个地点的典型温度, 为此,我们可以将乌鲁鲁( 0@@)典型温度的整个后验模型与沃尔隆贡(\(\beta_0 + \beta_1\))进行比较. 2万(Intercept)的Markov 链式值提供了XQ2@@的近似值,XQ3@@. 至于QQ4@@,我们可以通过马尔可夫链的相应功能,来对模型参数的这一功能进行近似. 使用每对(Intercept)(XQ6)和位置Wollongong(XQ7)链值所生成的链条,</p>
+<p>\[\left\lbrace \beta_0^{(1)} + \beta_1^{(1)}, \beta_0^{(2)}+ \beta_1^{(2)}, \ldots, \beta_0^{(20000)} + \beta_1^{(20000)}\right\rbrace .\]</p>
+<p>下面的结果表明,典型的沃尔隆贡气温可能在17至22度之间,大大低于乌鲁鲁气温27至32度。</p>
+<div class="sourceCode" id="cb192">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-436" style="display:block;"></span>
+<img alt="有两块密度图,其中一块为Ururu,另一块为Wollongong。 沃尔隆贡密度曲线呈钟形,以近19.4度为中心,范围约为18至21度. 乌鲁鲁密度曲线也呈钟形,但以接近29.7度为中心,范围大约为28至32度. 这两个曲线没有重叠之处。" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-436-1-4ccfda3a7945.png" width="288"/>
+<p class="caption">FIGURE 11.6:乌鲁鲁和沃尔隆贡的典型下午3时温度的后验模型.</p>
+</div>
+</div>
+</div>
+<div class="section level2" id="ch-11-2-predictors" number="11.2">
+<h2>使用两个预测器</h2>
+<p>我们了解澳大利亚下午气温的几件事:(1) 与早晨气温有正面关系,(2) 沃尔隆贡的气温比乌鲁鲁低。 这让我们思考。 如果早上9点的温度和地点都告诉我们下午3点的温度, 那么也许他们一起会告诉我们更多! 事实上,样本数据的图示(图11.7)显示,无论位置如何,下午3点的温度以上午9点的温度线性上升。 此外,在任何给定的上午9时温度下,沃尔隆贡和乌鲁鲁的下午3时温度有一贯的差异。 下面,您将会将您已经研究过的一博士前常态回归模型扩展为下午3点温度的两博士前模型,同时使用临时9am和位置。</p>
+<div class="sourceCode" id="cb193">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch11-2-preds" style="display:block;"></span>
+<img alt="这是带有200个数据点的Tem3pm(y轴)对Tem9am(x轴)的散射图。 这些数据点按照相应的位置,乌鲁鲁或沃尔隆贡来配色. 在这两个地点,各点在下午和上午的温度之间呈现出强烈的正向关系。 然而,在那个位置反射温度较暖的乌鲁鲁点则分散在沃尔隆贡点上方." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch11-2-preds-1-51df74cc9574.png" width="336"/>
+<p class="caption">图11.7:乌鲁鲁和沃尔隆贡的温度比上午9时小3点,与观测到的线性关系(固体线)叠加。</p>
+</div>
+<div class="section level3" id="building-the-model-1" number="11.2.1">
+<h3>建立模型</h3>
+<p>Letting QQ0 表示上午9点的温度和 QQ1 表示当天的 QQ2 位置, 3 点温度的多变贝叶斯线性回归模型与这两个预测模型的对比, 是单前导模型的一个小延伸(11.2)。 我们在此声明这个模式, 并使用 stan  glm( ) 来调解信息薄弱的前科。</p>
+<p></p>
+<p>\[\begin{equation} \begin{array}{lcrl} \text{data:} &amp; \hspace{.05in} &amp; Y_i|\beta_0,\beta_1,\beta_2,\sigma &amp; \stackrel{ind}{\sim} N(\mu_i, \; \sigma^2) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1X_{i1} + \beta_2X_{i2} \\ \text{priors:} &amp; &amp; \beta_{0c} &amp; \sim N\left(25, 5^2 \right) \\ &amp; &amp; \beta_1 &amp; \sim N\left(0, 3.11^2 \right) \\ &amp; &amp; \beta_2 &amp; \sim N\left(0, 37.52^2 \right) \\ &amp; &amp; \sigma &amp; \sim \text{Exp}(0.13) .\\ \end{array} \tag{11.3} \end{equation}\]</p>
+<p>解释这个新模型中的上午9点温度和位置系数,\(\beta_1\)和\(\beta_2\),需要一定的注意. 我们无法像前两个模型(11.1)和(11.2)一样, 相反,我们的预测系数的含义会因模型中的其他预测因素而变化。 我们再考虑两种情况。 设想1:在乌鲁鲁语中,QQ4+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</p>
+<p>\[\beta_0 + \beta_1 X_{i1} + \beta_2 \cdot 0 = \beta_0 + \beta_1 X_{i1} .\]</p>
+<p>假想2:在Wollongong 中, \(X_{i2} = 1\) 和下午3时至上午9时的温度关系将不同线条的公式简化为:</p>
+<p>\[\beta_0 + \beta_1 X_{i1} + \beta_2 \cdot 1 = (\beta_0 + \beta_2) + \beta_1 X_{i1} .\]</p>
+<p>图11.8 将情景1和情景2合并为一个图,从而阐明我们回归系数的含义:</p>
+<ul>
+<li>阻塞系数++0++是乌鲁鲁线的截击. 因此, 1@@代表乌鲁鲁典型的下午3时温度在(理论)一天,即上午9时0度,即\(X_{1} = X_{2} = 0\)时.</li>
+<li>9am温度系数\(\beta_1\)是乌鲁鲁线和沃尔隆贡线的常见坡度. 因此, 1@@代表了下午3时温度的典型变化,乌鲁鲁和沃尔隆贡的温度在上午9时每上升1度.</li>
+<li>位置系数\(\beta_2\)是Wollongong线与Uluru线在任何上午9点温度下的垂直距离,或调整. 因此,在Wollongong( 2@@)和Ururu( they3@@)的温度等于上午9时的温度时, \(\beta_2\)代表了3时的典型差异。</li>
+</ul>
+<div class="figure" style="text-align: center"><span id="fig:ch11-graphical" style="display:block;"></span>
+<img alt="该地块在y轴上设有Tim3pm,在x轴上设有Tim9am. 有两条平行的正斜线,标注为乌鲁鲁和沃尔隆贡. 乌鲁鲁线的截击标记为β0. Wollongong线的拦截被标注为β 0+β 2." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch11-graphical-1-f0c1510e4510.png" width="360"/>
+<p class="caption">图11.8: 可变模型背后的假设图示(11.3). 向下箭头反映了QQ0@@系数的含义.</p>
+</div>
+</div>
+<div class="section level3" id="understanding-the-priors" number="11.2.2">
+<h3>理解前科</h3>
+<p>现在,我们更清楚地了解我们晚3点温度(11.3)的可变模型背后的整体结构和假设,让我们回顾一下我们以前在这方面的意义。 在澳大利亚, 典型的温度很可能在15到35度之间, 我们用stan glm()模拟下面的这些前科 — — 这和模拟后科的唯一区别是包含president PD=TRUE. 也注意到我们通过Timp3pm ~ Timp9am + 位置来代表可变模型结构:</p>
+<div class="sourceCode" id="cb194">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>从这些前科中,我们模拟并绘制100套不同的下午3时温度数据(图11.9)。 首先,从左侧图中注意到,我们合并的前科产生的温度是下午3时的一套,温度以25度左右为中心(每座前座),但往往范围很广,从大约-75度到125度不等。 这个范围很广, 是我们资料不足的前科的结果, 尽管它跨越不切实际的温度, 毕竟,如果我们使用模糊的而不是资料不足的前科,我们先验的模拟温度将跨越更大的范围,比如百万摄氏度。</p>
+<p>第二,右侧的地块显示了我们先验对每个地点下午3点到上午9点温度间关系的假设. 根据以0为中心点的上一个坡度的模型,这些模型线反映了一个保守的假设,即两个地点的下午3点的温度可能与上午9点的温度有正或负的联系. 此外,根据先验的Wollongong系数XQ1@@的模型以0为中心,两个地点的模型线之间缺乏区别反映了一种保守的假设,即Wollongong的典型的下午3点温度可能比Uluru的温度在9点温度相似的日子更热,更凉爽,或者没有什么不同. 简言之,这些先验的假设反映出,当涉及到澳大利亚的天气时,我们只是不知道发生了什么。</p>
+<div class="sourceCode" id="cb195">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+rng = np.random.default_rng(84735)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch11-prior-sim" style="display:block;"></span>
+<img alt="有两块地 左边的地块有100个密度的地块,每平方厘米。 密度地块中部和分布不一,尽管大多数以25度为中心. 收集密度图的数值范围为-100至200度。 在正确的地块中,有200行的Tim3pm对Tim9am,100对应乌鲁鲁,另外100对应沃尔隆贡. 乌鲁鲁对沃尔隆贡线的图案几乎没有区别. 它们反映多种斜坡和截流." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch11-prior-sim-1-38baf24fa7c2.png" width="528"/>
+<p class="caption">FIGURE 11.9:从以前的模型模拟了100个数据集. 对每种温度,我们只显示一个下午3时温度(左)的密度图,以及按地点(右)显示的下午3时与上午9时温度之间的关系。</p>
+</div>
+</div>
+<div class="section level3" id="simulating-the-posterior-1" number="11.2.3">
+<h3>模拟后台</h3>
+<p>最后,让我们把先验的假设与数据结合起来,以模拟11.3的后遗症。 而不是从零开始stan glm()语法,我们可以通过设置prefore PD=FALSE来更新()天气 model 3 profororor:</p>
+<div class="sourceCode" id="cb196">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+weather_model_3 = update(weather_model_3_prior, prior_PD = FALSE)</code></pre>
+</div>
+<p>这一模拟产生了20,000个后假的回归参数集 \(\beta_0\)(Intercept),9晨温度系数 \(\beta_1\)(tino9am),位置系数 \(\beta_2\)(location Wollogong),回归标准偏差 \(\sigma\)(sigma) :</p>
+<div class="sourceCode" id="cb197">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+head(as.data.frame(weather_model_3), 3)
+(Intercept) temp9am locationWollongong sigma
+1       13.05  0.8017             -7.663 2.392
+2       12.73  0.8174             -7.839 2.445
+3       11.81  0.8615             -7.648 2.414</code></pre>
+</div>
+<p>这两万个参数 给我们带来了两万个 温度和位置的后期关系 下面描述的100个关系提供了一个有代表性的透视。 在所有100种情况下,下午3点的温度与上午9点的温度呈正比关系,乌鲁鲁的温度往往高于沃尔隆贡的温度。 此外,相对于图11.9中之前的模拟关系,这些后期关系非常一致——我们根据天气 WU数据的信息对下午3点的温度有了更清楚的理解.</p>
+<div class="sourceCode" id="cb198">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-444" style="display:block;"></span>
+<img alt="由Time9am(x轴)制造的Tem3pm(y轴)的散射槽与200条正斜斜的模型线叠加,100条对应乌鲁鲁,另外100条对应沃尔隆贡. 在每一地点,这些线路的拦截和坡度略有不同. 数据点围绕这些线适度分散。 此外,所有乌鲁鲁线都低于沃尔隆贡线,反映出乌鲁鲁的温度更加温暖。" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-444-1-7156853a507e.png" width="336"/>
+<p class="caption">图11.10:乌鲁鲁和沃尔隆贡的温度比上午9时小3点,加上100个后期假模型。</p>
+</div>
+<p>检查参数本身提供必要的细节。 在Uluru和Wollongong, 也就是在控制位置时, 百分之八十的概率是, 当控制上午9点的温度时,沃尔隆贡典型的下午3点的温度可能比乌鲁鲁低6.6至7.51度。</p>
+<div class="sourceCode" id="cb199">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 前述摘要
+posterior_interval(weather_model_3, prob = 0.80,
+pars = c("temp9am", "locationWollongong"))
+10%     90%
+temp9am             0.8196  0.8945
+locationWollongong -7.5068 -6.5999</code></pre>
+</div>
+</div>
+<div class="section level3" id="posterior-prediction" number="11.2.4">
+<h3>预测</h3>
+<p>接下来,让我们用这个模型来预测特定时间下午3时的温度。 例如,在乌鲁鲁和沃尔隆贡都考虑在上午9时达到10度的一天。 为了模拟并随后绘制这些地点下午3时温度的后期预测模型,我们可以称为后期预测()和mcmc area(). 大致来说,我们可以预测乌鲁鲁的下午3点至25度的气温,沃隆贡的8点至18点的气温:</p>
+<div class="sourceCode" id="cb200">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 模拟一组预测
+rng = np.random.default_rng(84735)
+temp3pm_prediction = posterior_predict(
+weather_model_3,
+newdata = data.frame(temp9am = c(10, 10),
+location = c("Uluru", "Wollongong")))
+# 绘制后期预测模型
+mcmc_areas(temp3pm_prediction) +
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-448" style="display:block;"></span>
+<img alt="有两块密度图,其中一块为Ururu,另一块为Wollongong。 沃尔隆贡密度曲线呈钟形,中心位置接近12.5度,范围约为6至19度. 乌鲁鲁密度曲线也呈钟形,但以近20度为中心,范围约为12至28度. 重叠在两个曲线覆盖的Tim3pm值中。" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-448-1-c5e0e046facc.png" width="336"/>
+<p class="caption">FIGURE 11.11:当早9点温度为10度时,乌鲁鲁和沃尔隆贡的下午3点温度的后期预测模型.</p>
+</div>
+<div style="page-break-after: always;"></div>
+</div>
+</div>
+<div class="section level2" id="optional-utilizing-interaction-terms" number="11.3">
+<h2>可选: 使用交互术语</h2>
+<p>在11.2节中的双导体模型中,我们假设,在两个地点(XX2@@),下午3时温度(\(Y\))和上午9时温度(\(X_1\))之间的关系是相同的. 或者,视线上,QQ3@@和QQ4@@之间的关系在两个地点都有相等的坡度. 这一假设并不总是合适的,在某些情况下,我们的预测者相互影响。 但若您愿意, 可以跳过第11.4节。</p>
+<p>考虑下午3时温度( 0@@)与位置(\(X_2\))和上午9时湿度(\(X_3\))的关系. 从视觉上看,这些关系呈现出相当不同的坡度 — — 下午的温度和早晨的湿度在乌鲁鲁是负相关联的,但在沃尔隆贡则是微弱的正相关联.</p>
+<div class="sourceCode" id="cb201">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-449" style="display:block;"></span>
+<img alt="湿度9am(x轴)下的一个散点Tem3pm(y-轴)显示200个数据点,100个对应乌鲁鲁,另外100个对应沃尔隆贡. 对乌鲁鲁来说,这些点呈中度负关系,临时pm会随着湿度9am的升高而减少。 对沃尔隆贡来说,这些点表现出温和的,略显积极的关系. 在高湿度9am的温度下,Tim3pm在乌鲁鲁和沃尔隆贡都类似. 在低湿度9am水平下,乌鲁鲁比沃尔隆贡更温暖." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-449-1-5b8229ec9b95.png" width="336"/>
+<p class="caption">图11.12:乌鲁鲁和沃尔隆贡的湿度水平与观测到的线性关系(固线)相叠加,在下午3时温度比上午9时湿度。</p>
+</div>
+<p>想想这个动态的另一种方式:下午3点温度和上午9点湿度之间的关系因地点而异. 等效地,下午3时的温度和位置之间的关系在上午9时的湿度水平上有所不同. 更严格地说,我们说位置和湿度预测器相互作用。</p>
+<div class="describe">
+<p>互动</p>
+<p>如果XQ2++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</p>
+</div>
+<div class="section level3" id="building-the-model-2" number="11.3.1">
+<h3>建立模型</h3>
+<p>考虑按地点( 1@@)和湿度(\(X_3\))建模温度(\(Y\)). 如果我们假设位置和湿度没有相互作用, 然而,为了反映温度和湿度之间的关系因位置而改变这一事实,我们可以加入一个新的预测器:相互作用术语。 这个新预测器只是XQ4@@和XQ5@@的产物:</p>
+<p>\[\mu = \beta_0 + \beta_1 X_{2} + \beta_2 X_{3} + \beta_3 X_{2}X_{3} .\]</p>
+<p></p>
+<p>因此,我们具有交互词的多变贝叶斯线性回归模型的完整结构如下,其中关于非干扰参数的微弱信息前言由stan glm()自动缩放如下:</p>
+<p>\[\begin{equation} \begin{array}{lcrl} \text{data:} &amp; \hspace{.05in} &amp; Y_i|\beta_0,\beta_1,\beta_2,\beta_3,\sigma &amp; \stackrel{ind}{\sim} N(\mu_i, \; \sigma^2) \;\; \text{ with } \; \mu_i = \beta_0 + \beta_1X_{i2} + \beta_2X_{i3} + \beta_3X_{i2}X_{i3} \\ \text{priors:} &amp; &amp; \beta_{0c} &amp; \sim N\left(25, 5^2 \right) \\ &amp; &amp; \beta_1 &amp; \sim N\left(0, 37.52^2 \right) \\ &amp; &amp; \beta_2 &amp; \sim N\left(0, 0.82^2 \right) \\ &amp; &amp; \beta_3 &amp; \sim N\left(0, 0.55^2 \right) \\ &amp; &amp; \sigma &amp; \sim \text{Exp}(0.13) .\\ \end{array} \tag{11.4} \end{equation}\]</p>
+<p>要了解我们假设的零点结构如何匹配我们对上午9点湿度和位置之间相互作用的观察,让我们照常将这分为两种情况。 设想1:在乌鲁鲁语中, 1@@和温度与湿度之间的关系简化为:</p>
+<p>\[\mu = \beta_0 + \beta_2 X_{3} .\]</p>
+<p>设想2:在Wollongong, \(X_{2} = 1\)和温度与湿度之间的关系简化为</p>
+<p>\[\mu = \beta_0 + \beta_1 + \beta_2 X_{3} + \beta_3 X_{3} = (\beta_0 + \beta_1) + (\beta_2 + \beta_3) X_3 .\]</p>
+<p>因此,我们基本上有两类回归系数:</p>
+<ul>
+<li><p>Uluru 系数 将乌鲁鲁的气温和湿度之间的关系编码。</p></li>
+<li><p>对乌鲁鲁系数的修改 在将第2种情景与第1种情景相比较时, 位置和相互作用系数, \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 位置系数 QQ2 QQ捕捉截取量的差异,因此沃尔隆贡的典型气温与乌鲁鲁的气温相比,湿度为0%(QQ3 QX). 相互作用系数QQ4QQ捕捉了坡度的差异,因此与湿度的温度变化在两个城市之间有何不同.</p></li>
+</ul>
+</div>
+<div class="section level3" id="simulating-the-posterior-2" number="11.3.2">
+<h3>模拟后台</h3>
+<p>要模拟 (11.4) 使用微弱的信息前科, 我们可以通过 timp3pm ~ 位置 + 湿度9am + 位置 : 湿度9am 来代表可变模型结构, 这个公式中代表交互术语的最后一块:</p>
+<!-- AJ: moving fmla to line 1 goes into margins -->
+<div class="sourceCode" id="cb202">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>我们的回归参数( 0@@)的前方简要统计如下。 城市气温和湿度之间的相应后中位数关系反映了我们在数据中观察到的情况 — 气温和湿度之间的联系在乌鲁鲁是负的,在沃尔隆贡是略为正的:</p>
+<p>\[\begin{array}{lrl} \text{Uluru:} &amp; \mu &amp; = 37.586 - 0.19 \text{ humidity9am} \\ \text{Wollongong:} &amp; \mu &amp; = (37.586 - 21.879) + (-0.19 + 0.246) \text{ humidity9am}\\ &amp;&amp; = 15.707 + 0.056 \text{ humidity9am}\\ \end{array}\]</p>
+<div class="sourceCode" id="cb203">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 以后的简要统计
+tidy(interaction_model, effects = c("fixed", "aux"))
+# A:6×3
+term                           estimate std.error
+&lt;chr&gt;                             &lt;dbl&gt;     &lt;dbl&gt;
+1 (Intercept)                      37.6      0.910
+2 locationWollongong              -21.9      2.33
+3 humidity9am                      -0.190    0.0193
+4 locationWollongong:humidity9am    0.246    0.0375
+5 sigma                             4.47     0.227
+6 mean_PPD                         24.6      0.448
+posterior_interval(interaction_model, prob = 0.80,
+pars = "locationWollongong:humidity9am")
+10%    90%
+locationWollongong:humidity9am 0.1973 0.2941</code></pre>
+</div>
+<p>图11.13中的200个后期模拟模型抓住了我们这些关系中的后期不确定性,并提供了大量后期证据来证明位置和湿度之间的重大相互作用 — — 几乎所有的沃尔隆贡后验模型都是正面的,所有的乌鲁鲁后验模型都是负面的。 我们可以用数字证据来证明 后80%的相互作用系数\(\beta_3\)的可信间隔完全且远高于0,介于0.197到0.294之间,说明气温和湿度之间的关联在沃尔隆贡明显高于乌鲁鲁.</p>
+<div class="sourceCode" id="cb204">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch11-post-sim-2" style="display:block;"></span>
+<img alt="湿度9am(x轴)绘制的Tem3pm(y-轴)的图案显示200条模型线,100条对应乌鲁鲁,另外100条对应沃尔隆贡. 对乌鲁鲁来说,线条都呈负斜坡,相当相似. 对沃尔隆贡来说,线条都呈正斜坡,相当相似. 乌鲁鲁线在沃尔隆贡线上方落下,除了在高湿度9am时才穿过." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch11-post-sim-2-1-74e29182bdd4.png" width="312"/>
+<p class="caption">图11.13:下午3时气温与乌鲁鲁和沃尔隆贡的湿度水平相比,有200个后期关系。</p>
+</div>
+<div style="page-break-after: always;"></div>
+</div>
+<div class="section level3" id="do-you-need-an-interaction-term" number="11.3.3">
+<h3>你需要一个互动术语吗?</h3>
+<p>现在,你已经看到,互动术语 允许我们捕捉 更细微的 关系, 你可能会感到渴望将它们 纳入每一个模型。 不要这样。 一个充满不必要的预测器的模型, 虽然互动术语在某些场合相当有用,但在其他场合它们会使我们的模型过于复杂. 以下是在权衡是否走进互动术语的兔子洞时需要考虑的几点:</p>
+<ul>
+<li><p>内容。 在你的分析中,是否合理, \\\\\\和一个预测者\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\</p></li>
+<li><p>可视化. 与我们的例子一样, 互动可能暴露自己,</p></li>
+<li><p>假说试验. 如果我们在模型中包含一个互动术语, 如果有显著的后传证据, 否则,</p></li>
+</ul>
+<p>让我们用一些非正式的例子来实践前两个想法。 机车 用户数据与第9章中的机车数据来自同一来源. 和自行车数据一样,它还包括每日首都自行车赛骑手的资料. 然而自行车 用户包含了注册的,支付自行车股份的成员(他们往往骑车更频繁,并且使用自行车进行通勤)和临时骑手(他们往往经常只骑自行车):</p>
+<div class="sourceCode" id="cb205">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+data(bike_users)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>并单独审查临时骑手和注册骑手的格局:</p>
+<div class="sourceCode" id="cb206">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>首先,让我们表示临时骑手的人数,而XQ1则表示某一天注册骑手的人数。 与模型(11.4)一样,请考虑对骑行情况进行分析,我们有两个预测器,一个是量化的,另一个是绝对的:温度(XQ2@@)和周末状况(XQ3@@)。 兹将QQ4+和QQ5+和QQ6+和QQ7+的观测关系说明如下。 语法包含前者,后者类似.</p>
+<div class="sourceCode" id="cb207">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-457" style="display:block;"></span>
+<img alt="骑行(y-axis)对临时 实际(x-axis),标签为临时骑行者和注册骑行者两块地块. 两者都有对应周末和工作日的线路. 对临时骑手来说,周末和周日的线路都显示低温骑手。 然而,随着气温的升高,周末的骑手人数急剧增加,而平日只略有增加. 对于注册的骑手来说,周末和周日的线路呈正倾斜,大致平行 -- -- 周末和周日气温上升的骑手人数类似。" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-457-1-8813420e6f04.png" width="480"/>
+<p class="caption">图11.14: 对临时骑手(左)和注册骑手(右)按周末状况观察到的骑手和温度之间的关系.</p>
+</div>
+<p>在他们与临时骑师的关系中, 骑车率随着周末和工作日的气温上升而增加,然而这种上升的速度却有所不同,在周末速度更快。 相比之下,在他们与注册骑师QQ1@@(右)的关系中,温度和周末状态似乎没有相互作用. 骑车在周末和工作日的温度上升,大致相同。 两种观点都有道理。 虽然注册的骑车者往往在使用自行车时更具有实用性,但临时骑车者往往偶尔跳上车玩。 因此,临时骑师人数可能比登记骑师人数多,在温暖的周末骑师人数可能比在温暖的周日多。</p>
+<p>假设我们有两个量化预测器:温度(XQ1)和湿度(XX2), 图11.15 采用两种办法可视化这种关系。 左图利用了色彩,然而这种关系在三个维度中存在的事实使得识别任何趋势更具挑战性. 因此,为了可视化的目的,一种策略是“把”一个预测器(这里的湿度)根据其定量尺度(图11.15右方)分为几类(这里的高低)。 虽然“切开”或“分解”湿度大大地过度简化了我们最初变量之间的关系,但它确实揭示了\(X_1\)和\(X_2\)之间的潜在相互作用。 主要情况是,在湿度低时,带温度的骑手增加速度似乎略快。 如果你在温暖潮湿的天气中骑过自行车, 高湿度会使炎热的天气变得相当悲惨. 我们的阴谋提供了其他人可能同意的证据。</p>
+<div class="sourceCode" id="cb208">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch11-cut-color" style="display:block;"></span>
+<img alt="有两块地 左边的地块是散落的座骑(y-轴)对临时 实际(x-轴),颜色由湿度水平编码. 有200个数据点。 一般来说,骑行会随临时 实际增加,在湿度高时往往会更低. 右侧为骑行(y-轴)与临时 实际(x-轴)的关系的两条线,高湿度和低湿度. 两条线路都表现出骑手和温度之间的正关系. 然而,随着气温的升高,在低湿度日的骑行者增加得更剧烈." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch11-cut-color-1-7e11ee47dfc3.png" width="576"/>
+<p class="caption">图11.15: 按湿度水平(左)排列的散落的骑手相对温度. 骑手与温度在低和高(右)两个盘状湿度水平上的关系.</p>
+</div>
+<p>最后,考虑明确预测者互动的意义。 由3个潜在预测者组成:用户类型@###1(意外或注册)、天气类别###2+和周末状况###3+。 这里的三个天气类别从“1”到“3”更恶劣的天气。 图11.16 图QQQ4==================================================================================== 在检查结果后,进行以下测试。</p>
+<div class="quiz">
+<ol style="list-style-type: decimal">
+<li>在他们与骑手的关系中,用户类型和天气类别是否出现互动?</li>
+<li>在他们与骑手的关系中,用户类型和周末状态是否看起来相互影响?</li>
+<li>在我们的首都比克夏分析中 解释一下为什么你对1和2的回答有意义</li>
+</ol>
+</div>
+<div style="page-break-after: always;"></div>
+<div class="sourceCode" id="cb209">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 示例语法
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch11-boxes" style="display:block;"></span>
+<img alt="有两块地 左侧有6个盒子,每个组合一个天气猫(1,2或3)和用户(意外或注册). y轴的比值从0到4500不等. 临时用户的3个箱位基本低于1500架,因此低于注册用户的3个箱位,这些箱位基本低于1000架。 在临时骑手和注册骑手中,用于天气 猫1的盒式车厢反映了比用于天气 猫3的盒式车厢更高的车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车厢式车 右图有4个盒子,每个周末(TRUE或FALSE)和用户(意外或注册)的组合各一个. y轴的比值从0到4500不等. 临时用户的2个箱位基本低于1500座,因此低于注册用户的2个箱位,注册用户的箱位基本低于1000座。 在临时骑手中,周末的票房TRUE反映了周末比平日更高的骑手,中位骑手约1000对250. 在注册骑手中,周末的票房TRUE反映出周末的骑手比平日低,中位骑手大约2250对2750." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch11-boxes-1-659c205d7751.png" width="624"/>
+<p class="caption">FIGURE 11.16:每个用户状态和天气类别组合(左)和每个用户状态和周末状态组合(右)的骑手盒.</p>
+</div>
+<p>在他们与骑手的关系中,用户类型和天气类别似乎没有相互作用,至少没有显著的相互作用. 在临时骑手和注册骑手中,随着天气恶化,骑手往往会减少。 此外,从一个气候类别到另一个气候类别,这些减少的程度当然并不相等,但它们是类似的。 相比之下,在他们与骑手的关系上,用户类型和周末状态似乎确实有相互作用——骑手和周末状态之间的关系因用户状况而异. 周末临时骑手多于工作日,而登记骑手多于工作日。 鉴于临时和注册的骑手往往将自行车共享服务用于不同目的,我们本可以预见到这种互动。</p>
+<p>上述例子侧重于通过可视化和上下文审查互动。 还需要确定这些互动是实际重要的还是有意义的,因此,我们是否应将它们纳入相应的模式。 为此,我们可以模拟每个模型,正式测试相互作用系数的意义. 我们认为,在建立必要的直觉之后,这种形式是最容易的步骤。</p>
+</div>
+</div>
+<div class="section level2" id="ch11-more" number="11.4">
+<h2>梦想更大:使用两个以上的预测器!</h2>
+<p>让我们回到澳大利亚的天气分析。 我们可以继续前进! 为了增进我们对下午温度的理解和预测准确性,我们可以将越来越多的预测器纳入我们的模型。 现在,你已经探索了包括定量预测器、绝对预测器以及两者的模型,你有能力将回归模型概括为包括任何数量的预测器。 让我们重温天气数据:</p>
+<div class="sourceCode" id="cb210">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>除了Time9am( 0@@),地点(\(X_2\)),湿度9am(\(X_3\)),我们的样本数据包括另外两个可能的Time3pm预测器:风速9am(km/hr)和大气压9am(hpa)分别表示Xim3@@和Xim4@@. 包括所有五种可能的预测器, 仅仅为了保留空间, 我们的模型增长, 这些均为正常值,中心位置为0,先验的标准差可由以下前 摘要()获得:</p>
+<p>\[\begin{equation} \begin{array}{lcrl} \text{data:} &amp; \hspace{.05in} &amp; Y_i|\beta_0,\beta_1,\ldots,\beta_5,\sigma &amp; \stackrel{ind}{\sim} N(\mu_i, \; \sigma^2) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1X_{i1} + \cdots + \beta_5X_{i5} \\ \text{priors:} &amp; &amp; \beta_{0c} &amp; \sim N(25, 5^2) \\ &amp;&amp; \beta_1, \ldots, \beta_5 &amp; \sim N(0, \text{(some weakly informative sd)}^2) \\ &amp; &amp; \sigma &amp; \sim \text{Exp}(0.13) .\\ \end{array} \tag{11.5} \end{equation}\]</p>
+<p>对于我们之前的三种模型 Tim3pm, 我们暂停定义每一个模型参数。 这里有七个: (\(\beta_0, \beta_1, \ldots, \beta_5, \sigma\)). 定义每个字都过分, 相反,我们可以转向我们在前三个模型分析中制定的原则。</p>
+<div class="describe">
+<p>解释可变模式参数的原则</p>
+<p>在XQ0@@的可变回归模型中 由 QQ 1 预测器 QQ 2 ,</p>
+<p>\[\mu = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_p X_p ,\]</p>
+<p>我们可以将 QQ0QQ 回归系数解释如下。 首先,截取系数QQ1@@代表典型的XQ2@@结果,当所有预测器为0,XQ3@@. 此外,当控制或持有我们模型中其他的XQ4XX预测器时:</p>
+<ul>
+<li>相当于定量预测器的XQ0XX系数XQ1XX可以解释为XQ3XX每单位增加的XQ2XX的典型变化;</li>
+<li>相当于XQ1+的XQ0+系数可以解释为XQ3++的XQ2+X与参考或基线水平的典型差异。</li>
+</ul>
+<p>因此,我们对任何预测者系数的解释部分取决于我们模型中的其他预测者。</p>
+</div>
+<p>让我们在分析(11.5)时实践这些原则。 为了模拟模型后卫,我们用快捷键语法tem3pm~来定义模型结构. 而不是临时3pm~位置+风速9am+(其余的预测器!). 这表明我们希望在我们的模型中使用所有天气-WU预测器。 第53条</p>
+<div class="sourceCode" id="cb211">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>我们现在可以通过我们的七个模型参数的后期模拟结果, 简化到相应的95%的可信间隔:</p>
+<div class="sourceCode" id="cb212">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 前述摘要
+posterior_interval(weather_model_4, prob = 0.95)
+2.5%    97.5%
+(Intercept)        -23.92282 98.96185
+locationWollongong  -7.19827 -5.66547
+windspeed9am        -0.05491  0.02975
+humidity9am         -0.05170 -0.01511
+pressure9am         -0.08256  0.03670
+temp9am              0.72893  0.87456
+sigma                2.10497  2.57180</code></pre>
+</div>
+<p>这些间隔提供了对一些大问题的看法。 当控制其他模型预测器时,哪些预测器与tem3pm显著相关? 这些协会是积极还是消极的? 试着在下面的测验中回答这些大问题。 尽管有些灰色区域, 54个</p>
+<div class="quiz">
+<p>当控制天气 模型 4 中包含的其他预测器时,该预测器...</p>
+<ol style="list-style-type: decimal">
+<li>* 与Tim3pm有显著的正面联系?</li>
+<li>与Tim3pm有显著的负面关联?</li>
+<li>与临时下午3点无关?</li>
+</ol>
+</div>
+<div style="page-break-after: always;"></div>
+<p>让我们看看你表现如何。 首先,Time9am系数的95%的后可信间隔是完全高于0. 这为我们提供了确凿的证据, 即使在控制模型中的其他四个预测器时, 相形之下,Wollogong和湿度9am系数的95%的后可信间隔完全低于0,这表明这两个因素都与Tim3pm负相关。 例如,在控制其他模型因素时,沃尔隆贡的典型温度可能比乌鲁鲁低5.67至7.2度。 风速9am和气压9am系数是唯一具有95%的可信间隔跨度0. 虽然两个间隔大多在0以下,表明下午温度在控制其他模型预测器时与晨风速和大气压力有负联系,但华夫证据引起了一些怀疑和后续问题。</p>
+</div>
+<div class="section level2" id="ch11-model-comparison" number="11.5">
+<h2>示范评价和比较</h2>
+<p>整个第11章, 我们探索了五个不同的模型, 我们在此考虑其中四个:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">型号</th>
+<th align="left">公式</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">天气 模型  1</td>
+<td align="left">临时点~临时点</td>
+</tr>
+<tr class="even">
+<td align="left">天气  模式  2</td>
+<td align="left">临时时间 ~ 位置</td>
+</tr>
+<tr class="odd">
+<td align="left">天气  模式  3</td>
+<td align="left">临时点~临时点+位置</td>
+</tr>
+<tr class="even">
+<td align="left">天气  型号  4</td>
+<td align="left">临时点~.</td>
+</tr>
+</tbody>
+</table>
+<p>自然,你可能会想,这其中哪一个是临时下午的“最佳”模式。 为了解开这个谜题,我们可以从第十章探讨我们的三个模型评价问题:</p>
+<ol style="list-style-type: decimal">
+<li><p>每个模特儿有多公平? 由于分析和数据收集的背景相同,这四种模式同样公平。</p></li>
+<li><p>每个模特儿都错了吗? 视觉后期预测检查(图11.17)表明,假设的天气基本结构 模型 3和天气 模型 4更好地捕捉到临时3pm中的双模式性. 因此,这些模型不像天气 模型 1和天气 模型 2那样错误.</p></li>
+<li><p>每个模型的后期预测有多准确? 使用第十章所学的三种方法:视觉、交叉验证和ELPD。</p></li>
+</ol>
+<div class="sourceCode" id="cb213">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 后预测检查. 例如:
+pp_check(weather_model_1)</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch11-ppc-4" style="display:block;"></span>
+<img alt="有4块地标标标注天气 模型 1到天气 模型 4. 每一个都拥有50个淡蓝色密度曲线的模拟Templ3pm值和1个深蓝色密度曲线的观测Templ3pm数据. 这种深蓝色密度曲线大致介于10至50度之间,为双模式,一种模式为20度,另一种模式为35度. 对于weather model 1和weather model 2,50轻蓝线相互类似,介于约10度至50度之间,但都是单模式,因此与深蓝线不同. 对于weather model 3和weather model 4,50轻蓝线相互类似,介于约10度至50度之间,略呈双向排列,较好地匹配深蓝线." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch11-ppc-4-1-8015d12036b3.png" width="576"/>
+<p class="caption">图11.17: 下午3时温度的四种模型的预测检查。</p>
+</div>
+<div class="section level3" id="evaluating-predictive-accuracy-using-visualizations" number="11.5.1">
+<h3>利用可视化评估预测准确性</h3>
+<p>可视化提供了评估我们模型后期预测质量的强有力的第一种方法。 开始,我们将使用所有四个模型构建天气-WU数据集中每个案例的后期预测模型。 语法为天气 model 1提供,与其他模型类似.</p>
+<div class="sourceCode" id="cb214">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+rng = np.random.default_rng(84735)
+predictions_1 = posterior_predict(weather_model_1, newdata = weather_WU)</code></pre>
+</div>
+<p>图11.18显示了从天气 模型 1(左)和天气 模型 2(右)得出的天候后预测模型。 两者都精确地捕捉到在临时3pm中观察到的行为——所观测到的3m温度的大部分都属于仅基于9m温度(天气 模型 1)或仅基于位置(天气 模型 2)的预测模型的界限.</p>
+<div class="sourceCode" id="cb215">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 天气预测模型 模型 1
+ppc_intervals(weather_WU$temp3pm, yrep = predictions_1,
+x = weather_WU$temp9am, prob = 0.5, prob_outer = 0.95) +
+labs(x = "temp9am", y = "temp3pm")
+# 天气前预测模型 模型 2
+ppc_violin_grouped(weather_WU$temp3pm, yrep = predictions_2,
+group = weather_WU$location, y_draw = "points") +
+labs(y = "temp3pm")</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch11-ppc-1" style="display:block;"></span>
+<img alt="有两块地 左侧是Tem3pm(y-轴)对Tem9am(x-轴)的散片. 它显示200个深蓝色数据点,它们有着很强的正联. 与每个数据点相对应的是狭长的浅蓝色垂直条,短而宽的浅蓝色条,以及代表后期预测间隔的浅蓝色点. 深蓝色的点大部分属于浅蓝色的条形. 右边的情节有两个小提琴的图案为tem3pm(y-轴),为乌鲁鲁或沃尔隆贡(x-轴). 乌鲁鲁的小提琴情节以30度为中心,范围约为2至48度. 沃尔隆贡的小提琴情节更低,以20度为中心,从大约-8到30度不等. 每个小提琴情节上都有100个深蓝色的数据点。 它们基本上属于小提琴情节的中间." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch11-ppc-1-1-56a23ea94db9.png" width="480"/>
+<p class="caption">FIGURE 11.18:下午3时温度的预测模型,对应天气 模型 1(左)和天气 模型 2(右). 在这两个地块中,暗点代表观测到的下午3时温度。</p>
+</div>
+<div style="page-break-after: always;"></div>
+<p>此外,不仅天气 模型 3的后期预测模型也很好地预测了下午3时的观测温度(图11.19),它们比天气 模型 1和天气 模型 2的要窄得多。 基本上,使用Time9am和地点,而不是单独预测,对Time3pm作出更准确的后期预测。</p>
+<div class="sourceCode" id="cb216">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 天气前预测模型 模型 3
+ppc_intervals_grouped(weather_WU$temp3pm, yrep = predictions_3,
+x = weather_WU$temp9am, group = weather_WU$location,
+prob = 0.5, prob_outer = 0.95,
+facet_args = list(scales = "fixed")) +
+labs(x = "temp9am", y = "temp3pm")</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch11-ppc-2" style="display:block;"></span>
+<img alt="有两片散片为tem3pm(y-轴)对tem9am(x-轴),标签为Uluru和Wollongong. 两者都显示100个深蓝色数据点,它们具有很强的正联. 与每个数据点相对应的是狭长的浅蓝色垂直条,短而宽的浅蓝色条,以及代表后期预测间隔的浅蓝色点. 深蓝色的点大部分属于浅蓝色的条形. 此外,沃尔隆贡数据点往往低于乌鲁鲁数据点." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch11-ppc-2-1-68a5e11162fd.png" width="480"/>
+<p class="caption">图11.19:下午3时温度的预测模型与天气 模型 3相对应,与观测到的下午3时温度(暗点)并列。</p>
+</div>
+<p>4号天气怎么办? 有了五个预测器, 这个高维模型就太难想象了。 因此,我们有三种动机不能仅利用视觉证据来评估后期预测准确性:(1) 我们无法实际地将每个模型的后期预测质量进行可视化;(2) 即使我们能单独从视觉中确定我们模型的比较预测质量可能很难;(3) 上面的视觉可以说明我们的模型如何很好地预测我们用来构建这些模型的相同数据点(而不是在还没有观测到的日子里预测温度),从而可能对预测准确性作出过于乐观的评估。 这是交叉验证和ELPD数字摘要可以真正帮助的地方.</p>
+</div>
+<div class="section level3" id="evaluating-predictive-accuracy-using-cross-validation" number="11.5.2">
+<h3>利用交叉验证评估预测准确性</h3>
+<p>在数字上评估我们四个模型的后期预测质量时,我们将采用第十章的“0+++”倍交叉验证程序。 记得这一程序有效地将模型训练在一个数据集上,并在另一个数据集上进行测试(多次以上),对后期预测准确性作出估计,比我们使用同样的数据培训和测试模型更诚实. 为此,我们将对我们的四个气象模型进行10倍的交叉验证。 代码显示为weather model 1,可以扩展至其他三种模式:</p>
+<div class="sourceCode" id="cb217">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+rng = np.random.default_rng(84735)
+prediction_summary_cv(model = weather_model_1, data = weather_WU, k = 10)</code></pre>
+</div>
+<p>表11.1汇总了由此产生的交叉验证统计数据。</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:ch-11-summaries">TABLE 11.1: </span>Cross-validated posterior predictive summaries for four models of temp3pm.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">模型</th>
+<th style="text-align:left;">母亲</th>
+<th style="text-align:left;">mae 缩放</th>
+<th style="text-align:left;">50人之内</th>
+<th style="text-align:left;">95年之内</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">天气模式1</td>
+<td style="text-align:left;">
+3.285
+</td>
+<td style="text-align:left;">
+0.79
+</td>
+<td style="text-align:left;">
+0.405
+</td>
+<td style="text-align:left;">
+0.97
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">天气模式2</td>
+<td style="text-align:left;">
+3.653
+</td>
+<td style="text-align:left;">
+0.661
+</td>
+<td style="text-align:left;">
+0.495
+</td>
+<td style="text-align:left;">
+0.935
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">气象模式3</td>
+<td style="text-align:left;">
+1.142
+</td>
+<td style="text-align:left;">
+0.483
+</td>
+<td style="text-align:left;">
+0.67
+</td>
+<td style="text-align:left;">
+0.96
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">天气模式4</td>
+<td style="text-align:left;">
+1.206
+</td>
+<td style="text-align:left;">
+0.522
+</td>
+<td style="text-align:left;">
+0.64
+</td>
+<td style="text-align:left;">
+0.95
+</td>
+</tr>
+</tbody>
+</table>
+<div class="quiz">
+<p>利用表11.1来比较我们的四个模型。</p>
+<ol style="list-style-type: decimal">
+<li>如果你的目标是探索临时点和位置之间的关系,而不控制任何其他因素,你会使用哪种模式?</li>
+<li>如果你的目标是最大限度地提高模型的预测质量, 你只能选择一个在模型中使用的预测器, 你会选择临时9am还是位置 ?</li>
+<li>四个模型中哪一个得出了最佳的总体预测?</li>
+</ol>
+</div>
+<p>问题1至3提出了不同的框架,用以确定我们四个模式中哪一个是“最佳”的。 根据问题1的定义框架,weather model 2是最佳的,这是研究实际利益关系的唯一模式(Timp3pm对位置的关系)。 根据问题2中定义的框架,我们只能选择一个预测器,weather model 1似乎最好。 也就是说,单是Time9am似乎比单是地点更能预测Time3pm. 在所有试验案例中,从天气 模型 1计算出的天线3pm的后期预测往往与观测到的下午3时温度相差3.3度。 在根据weather model 2(3.7度)计算的后期平均预测中,误差较高. 第 55 条</p>
+<p>最后,根据问题3所定义的框架,我们假设我们能够利用现有预测器的任何数字或组合。 有了这种灵活性,weather model 3似乎提供了Tim3pm的“最佳”后期预测,在四种模型中,它拥有最小的mae和mae的尺度,在 50和 95覆盖统计中属于最高的。 让我们从背景入手。 在使用Time9am和位置预测器时,weather model 3令人信服地超过了单独使用预测器的模型(weather model 1和weather model 2)。 此外,weather model 3似乎比使用所有五个预测器(weather model 4)的性能要小。 在建模方面, 天气 模型 4的预测误差较高, 表明其另外三个预测器(风速9am、湿度9am、气压9am), 因此,以简单高效的名义,我们很乐意选择较小的天气 模型 3。</p>
+</div>
+<div class="section level3" id="evaluating-predictive-accuracy-using-elpd" number="11.5.3">
+<h3>使用ELPD评估预测准确性</h3>
+<p>在结尾部分,我们将比较我们四个模型的后期预测准确性与预期的日志密度。 回顾第10.3.3节的基本想法:通过新数据点的XQ0@@,XX1@@,XX2@@的预期记录后pdf越大,XX2@@的后预测越准确. 首先,计算每个模型的ELPD:</p>
+<div class="sourceCode" id="cb218">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 计算四个模型的ELPD
+rng = np.random.default_rng(84735)
+loo_1 = loo(weather_model_1)
+loo_2 = loo(weather_model_2)
+loo_3 = loo(weather_model_3)
+loo_4 = loo(weather_model_4)
+# 结果
+c(loo_1$estimates[1], loo_2$estimates[1],
+loo_3$estimates[1], loo_4$estimates[1])
+[1] -568.4 -625.7 -461.1 -457.6</code></pre>
+</div>
+<p>虽然ELPD并不为任何单一模型的后预测精度提供可解释的度量标准,但它们在比较多个模型的后预测精度方面是有用的. 我们可以使用loo compare()进行:</p>
+<div class="sourceCode" id="cb219">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 比较四个模型的ELPD
+loo_compare(loo_1, loo_2, loo_3, loo_4)
+elpd_diff se_diff
+weather_model_4    0.0       0.0
+weather_model_3   -3.5       4.0
+weather_model_1 -110.8      18.1
+weather_model_2 -168.1      21.5</code></pre>
+</div>
+<p>开始,loo compare()将模型按从最佳到最坏的顺序列出,或者从最高的ELPD到最低的顺序列出:weather model 4,weather model 3,weather model 1,weather model 2. 其余输出详细介绍了每个模型与最佳模型weather model 4的比较程度. 例如,用于天气 模型 3的ELPD估计比天气 模型 4(-461.1 - - -457.6)低3.5(软). 此外,ELPD的这一估计差异也存在相应的标准误差4.0. 也就是说,我们认为,气象-模型3和气象-模型4的ELPD中的真正差异大约在估计的-3.5差异的2个标准差或8个单位之内。</p>
+<p>ELPD模型比较与我们基于10倍交叉验证比较的结论是一致的. 主要表现为天气 模型 1优于天气 模型 2,天气 模型 3优于两者. 此外,天气 模型 3与天气 模型 4的区别也呈云状. 虽然气象 模型 4的ELPD比气象 模型 3稍高(更好),但并不明显更高. 0的ELPD差值在估计差值的两个标准差值之内: -3.5 \(\pm\). 2*4=(11.5,4.5). 因此,我们没有强有力的证据表明天气 模型 4的后期预测精度明显高于天气 模型 3,反之亦然。 因为天气 模型 3更简单, 也具有相似的预测精度,</p>
+<div class="describe">
+<p>通过ELPD比较模型</p>
+<p>让 @@ 0 @@ 和 @@ 1 @@ 表示两个不同模型,模型 1 和 2 的 ELPD 估计值。 然后,如果:</p>
+<ol style="list-style-type: decimal">
+<li>\(\text{ELPD}_1 &gt; \text{ELPD}_2\);</li>
+<li>QQ0@@至少是QQ1@@以下的两个标准错误. 等同地,QQ2@@和QQ3@@的区别至少是0以下的两个标准错误:QQ4@@.</li>
+</ol>
+</div>
+</div>
+<div class="section level3" id="the-bias-variance-trade-off" number="11.5.4">
+<h3>偏见-差异的权衡</h3>
+<p>我们的四种气象模型说明了我们在建立统计模型方面必须取得的良好平衡。 如果我们的目标是建立一个模型, 产生准确的预测 我们的响应变量\\\\\\\\\\\\, 我们希望包含足够的预测器, 这样我们有足够的信息\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\的预测器, 这个谜语被称为偏差-变异的权衡. 为了检查这种权衡,我们将取两个独立的40天沃尔隆贡天气样本:</p>
+<div class="sourceCode" id="cb220">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 取两个不同的样本
+rng = np.random.default_rng(84735)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>我们将利用这两个样本, 在样本 1数据中出现的规律是,你可能期望南半球的一座城市。 初末气温较高,中年气温较低:</p>
+<div class="sourceCode" id="cb221">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 稍后保存图案
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-478" style="display:block;"></span>
+<img alt="以 年 日(x轴)为单位的散射点。 y轴介于12至26度之间. x轴从0到365. 有40个数据点以抛物线形状中度分散. 数据点最高,在20度以上,在年初和年底,即当 年的日 年接近1或365时. 数据点最低,在20度以下,在年中,即当年的日数在100到200之间." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-478-1-656ad504dcba.png" width="240"/>
+<p class="caption">图11.20: 在沃尔隆贡,一年中的一天下午3点的散点温度。</p>
+</div>
+<p>考虑三种不同的多名模型,说明温度与年日之间的关系:</p>
+<p>\[\begin{array}{lrl} \text{model 1:} &amp; \mu &amp; = \beta_0 + \beta_1 X \\ \text{model 2:} &amp; \mu &amp; = \beta_0 + \beta_1 X + \beta_2 X^2\\ \text{model 3:} &amp; \mu &amp; = \beta_0 + \beta_1 X + \beta_2 X^2 + \beta_3 X^3 + \cdots + \beta_{12} X^{12}. \\ \end{array}\]</p>
+<p>别慌张, 我们并不期望你解释多名词或其系数。 我们想要你接受一个事实, 每个多名词, 一个XQ0的转换,是一个单独的预测器。 因此,模型1有1预测器,模型2有2,模型3有12. 在获得对这三种模式的后期估计时,我们从过去的讨论中知道两点。 第一,我们两个不同的数据样本将产生不同的估计(他们使用不同的信息)! 第二,模式1、2和3的质量各有不同——一个比另一个好。 在检查细微之处之前,先进行快速的测试. 联合国</p>
+<div class="quiz">
+<ol style="list-style-type: decimal">
+<li>从样本到样本中,哪一种模式1、2和3是最可变的? 也就是说,对哪个模型来说,对温度与年日之间关系的1和2的样本估计差异最大?</li>
+<li>哪一种模式1、2和3是最有偏见的? 也就是说,哪一个模型 往往最远离数据中观察到的行为?</li>
+</ol>
+</div>
+<p>图11.21显示了样本1和2估计的三个不同的模型。 关于抽样1,这些数字可以复制如下:</p>
+<div class="sourceCode" id="cb222">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>让我们用一些技术概念和术语来连接我们在这一数字中看到的情况。 从一个极端开始,模型1假设温度和年日之间的线性关系. 样本1和2对这一线性关系得出了类似的估计. 这种稳定性令人放心 — — 不管我们碰巧有什么数据,我们对模式1的后期理解将是相似的。 然而,模式1却过于简单和僵硬。 它系统地低估了夏季的气温,也高估了冬季的气温. 组合起来,我们说模式1 从样本到样本差异不大,但偏差很大。</p>
+<p>为了纠正这种偏差,我们可以在我们的模型中纳入更多的预测器,这里是多名词。 然而,我们却可以变得心烦意乱。 考虑3号模型的极端情况,它假定温度与年日之间的12阶多诺关系. 在这两个样本中,模式3似乎在跟踪关系趋势方面优于模式1,因此没有偏见。 然而,这种偏见的减少是有代价的。 由于模型3的结构是收集关系上细小,具体样本的细节,样品1和2对模型3或两条非常不同的摇摆模型线产生截然不同的估计. 在这种情况下,我们说,模型3具有较低的偏差,但从样本到样本差异很大。 利用这种高度可变的模式将产生两个严重后果。 首先,结果会很不稳定 — — 不同的数据可能会产生非常不同的模型估计,从而得出温度与年日关系的结论。 第二,结果将过于符合我们的样本数据 — — 我们样本中微小的局部趋势可能不会延伸到沃尔隆贡的一般日常天气模式。 因此,这个模型无法很好地预测未来几天的温度。</p>
+<div class="figure" style="text-align: center"><span id="fig:bias-variance-ch11" style="display:block;"></span>
+<img alt="到 年 月 日(x轴)时,有6个散点的Tim3pm(y轴). 前3块地块显示样本1的40个数据点,下3块地块显示样本2的40个数据点. 在每个图中,数据点以抛物线形状中度分散. 左上方的散点标注着高偏差,低偏差在样本1数据上方显示一条向上斜线(在数据中不捕捉抛物形状). 在它的下面,一个非常相似的向上斜线被绘制在样本2数据之上. 在顶部中间,撒布地标上一个良好的平衡,在1号样本数据上方显示一个抛物曲线. 在它下面,一个类似但明显不同的抛物曲线被绘制在样本2数据之上. 在右上方,被标记为低偏差的散点,高偏差在样本1数据上方显示一个非常摇摆的曲线(在数据中不捕捉抛物形状). 在它下面,一个非常不同的摇摆曲线 被绘制在样本2的数据之上。" loading="lazy" src="/assets/img/bayes-rules-python-cn/bias-variance-ch11-1-9f7b0d77fbd6.png" width="672"/>
+<p class="caption">FIGURE 11.21:样本1(上行)和样本2(下行)用于在三个假设下按年日模拟温度:关系为线性(左),四(中),或十二顺序多诺米(右).</p>
+</div>
+<p>将这一切结合起来,假设温度与年日之间的关系有四重结构,模式2提供了一些良好的中间基础。 它既不是太偏颇(简单),也不是太多变(过度). 也就是说,在偏差-偏差的权衡中取得了良好的平衡.</p>
+<div class="describe">
+<p>偏见 - 变异权衡</p>
+<p>据说,如果一个模型往往与所观察到的数据关系“相去甚远”,则具有很高的偏差;如果模型的估计因使用何种数据而有很大差异,则差异很大。 在模型建筑中,偏差和变异之间有权衡:</p>
+<ul>
+<li>过于简单的模型,没有或几乎没有预测器,往往具有很高的偏差,但可变性较低(稳定性高)。</li>
+<li>具有许多预测器的过于复杂的模型往往具有较低的偏差,但可变性很大(稳定性较低)。</li>
+</ul>
+<p>目标是建立一个保持良好平衡的模式,享有相对较低的偏差和低差异。</p>
+</div>
+<p>虽然偏差-变异的权衡可以说明一个模型跨多个不同数据集的性能,但我们实际上并不需要去收集多个数据集来对抗偏差-变异的权衡的极端. 我们也不需要依靠直觉和猜测 我们在整个第十章和十一章中使用的原始和交叉验证的后期预测摘要可以帮助我们确定过于简单的模型和过于适合的模型。 为了探索这个过程,我们用三个模型,即天天下午3点,我们首先模拟每个模型的后期。 我们为模型1提供完整的语法. 型号 2和型号 3的语法相似,但会分别使用配方tem3pm~多(日 of 年,2)和tem3pm~多(日 of 年,12).</p>
+<div class="sourceCode" id="cb223">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>其次,我们计算每个模型的原始和交叉验证的后期预测摘要。 我们为模型 1提供语法 – 它与模型 2和模型 3相似.</p>
+<div class="sourceCode" id="cb224">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+rng = np.random.default_rng(84735)
+prediction_summary(model = model_1, data = sample_1)
+prediction_summary_cv(model = model_1, data = sample_1, k = 10)$cv</code></pre>
+</div>
+<p>查看表11.2中的结果。 通过原始和交叉验证的两种测量,模型 1往往有最大的预测错误. 这表明模型 1与其他两种模型相比过于简单,或可能存在偏颇. 在另一个极端,注意模型 3(2.12度)的交叉验证预测错误大约是原始预测错误(1.06度)的两倍. 因此,模型 3在预测我们尚未观测到的几天的温度时比样本 1数据中的几天温度还要糟糕。 这表明,模型 3与我们用来构建的样本 1数据过于匹配或过于优化。 因此,其原始和交叉验证的预测误差向我们提示了该模型 3的偏差较小,但差异很大 — — 一个不同的数据样本可能导致非常不同的后期结果。 在模型 1和模型 3的极端之间,模型 2以相对较低的原始预测误差和最低的交叉验证的预测误差呈现出最好的选择.</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+<span id="tab:ch-11-b-v-table">TABLE 11.2: </span>Raw and cross-validated posterior predictive summaries for three models of temp3pm.
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">模型</th>
+<th style="text-align:right;">生枫</th>
+<th style="text-align:right;">交叉验证的 mae</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">模型 页:1</td>
+<td style="text-align:right;">
+2.79
+</td>
+<td style="text-align:right;">
+2.83
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">模式2</td>
+<td style="text-align:right;">
+1.53
+</td>
+<td style="text-align:right;">
+1.86
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">模式 3</td>
+<td style="text-align:right;">
+1.06
+</td>
+<td style="text-align:right;">
+2.12
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section level2" id="chapter-summary-10" number="11.6">
+<h2>章节摘要</h2>
+<p>在第11章中,我们扩展了回归工具包,纳入了多变量的贝叶斯正常线性回归模型。 Letting QQ0QQ表示一个定量响应变量和(XQ1@@)一组XQ2QQ预测变量,这些变量可以是定量的,绝对的,交互的术语,或其中的任何组合:</p>
+<p>\[\begin{array}{lcrl} \text{data:} &amp; \hspace{.05in} &amp; Y_i|\beta_0,\beta_1,\ldots,\beta_p,\sigma &amp; \stackrel{ind}{\sim} N(\mu_i, \; \sigma^2) \;\; \text{ with } \; \mu_i = \beta_0 + \beta_1X_{i1} + \cdots + \beta_p X_{ip} \\ \text{priors:} &amp; &amp; \beta_{0c} &amp; \sim N\left(m_0, s_0^2 \right) \\ &amp; &amp; \beta_{1} &amp; \sim N\left(m_1, s_1^2 \right) \\ &amp;&amp; \vdots &amp; \\ &amp; &amp; \beta_{p} &amp; \sim N\left(m_p, s_p^2 \right) \\ &amp; &amp; \sigma &amp; \sim \text{Exp}(l) .\\ \end{array}\]</p>
+<p>多变回归可以改善我们的预测, 然而,我们可以走得太远。 这个难题被称为偏差-变异权衡。 如果我们的模型过于简单或僵硬(包括,比如说,只有一个预测器),它对于模型的估计表示QQ1@@,可能带有偏颇性,或者远离数据中实际观察到的关系. 如果我们贪婪地将越来越多的预测器纳入回归模型中,那么它的XQ2@@的估算值会变得与我们的样本数据过于吻合,并且从样本到样本都有很大的可变性. 因此,在模型建设中,我们的目标是求得平衡 — — 这种模式具有相对较低的偏差和较低的可变性。</p>
+</div>
+<div class="section level2" id="exercises-10" number="11.7">
+<h2>练习</h2>
+<div class="section level3" id="conceptual-exercises-5" number="11.7.1">
+<h3>概念练习</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-484"><strong>Exercise 11.1  (Why multiple predictors?)  </strong></span>Briefly explain why we might want to build a regression model with more than one predictor.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-485"><strong>Exercise 11.2  (Categorical predictors: cars)  </strong></span>Let’s say that you want to model a car’s miles per gallon in a city (<span class="math inline">\(Y\)</span>) by the make of the car: Ford, Kia, Subaru, or Toyota. This relationship can be written as <span class="math inline">\(\mu = \beta_0 + \beta_1X_{1} + \beta_2X_{2}+\beta_3X_{3}\)</span>, where <span class="math inline">\(X_1, X_2, X_3\)</span> are indicators for whether or not the cars are Kias, Subarus, or Toyotas, respectively:
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>解释为什么福特类没有指标术语.</li>
+<li>解释回归系数 \\\ 0\\。</li>
+<li>解释回归系数 \\\ 0\\。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-486"><strong>Exercise 11.3  (Categorical and quantitative predictors: tomatoes)  </strong></span>You have recently taken up the hobby of growing tomatoes and hope to learn more about the factors associated with bigger tomatoes. As such, you plan to model a tomato’s weight in grams (<span class="math inline">\(Y\)</span>) by the number of days it has been growing (<span class="math inline">\(X_1\)</span>) and its type, Mr. Stripey or Roma. Suppose the expected weight of a tomato is a linear function of its age and type, <span class="math inline">\(\mu = \beta_0 + \beta_1X_{1} + \beta_2X_{2}\)</span>, where <span class="math inline">\(X_2\)</span> is an indicator for Roma tomatoes.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>解释每个回归系数, \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\</li>
+<li>如果QQ0=0,那意味着什么?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-487"><strong>Exercise 11.4  (Interactions: tomatoes)  </strong></span>Continuing your quest to understand tomato size, you incorporate an interaction term between the tomato grow time (<span class="math inline">\(X_1\)</span>) and type (<span class="math inline">\(X_2\)</span>) into your model: <span class="math inline">\(\mu = \beta_0 + \beta_1X_{1} + \beta_2X_{2}+ \beta_3X_{1}X_{2}\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>解释一下背景,它意味着什么? 和QQ1@@ 互动。</li>
+<li>解说 0@@.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-488"><strong>Exercise 11.5  (Interaction terms)  </strong></span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>绘制一个模型,从列入一个绝对预测器和定量预测器之间的相互作用术语中获益。</li>
+<li>绘制一个无法在绝对预测器和定量预测器之间加入交互词的模型。</li>
+<li>除了可视化外,还有两种方法可以决定你是否应该将交互术语包含在你的模型中?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-489"><strong>Exercise 11.6  (Improving your model: shoe size)  </strong></span>Let’s say you model a child’s shoe size (<span class="math inline">\(Y\)</span>) by two predictors: the child’s age in years (<span class="math inline">\(X_1\)</span>) and an indicator of whether the child knows how to swim (<span class="math inline">\(X_2\)</span>).
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>一般而言,为什么在模型中添加预测器是有好处的?</li>
+<li>一般来说,从模型中去掉预测器有什么好处?</li>
+<li>你能为这个模型增加什么来改进你对鞋尺寸的预测? 为什么?</li>
+<li>你能从这个模型中删除什么来改进它? 为什么?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-490"><strong>Exercise 11.7  (What makes a good model?)  </strong></span>We don’t expect our regression models to be perfect, but we do want to do our best. It can be helpful to think about what we want and expect from our models.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>一个好模型的品质是什么?</li>
+<li>坏模型的品质是什么?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-491"><strong>Exercise 11.8  (Is our model good / better?)  </strong></span>What techniques have you learned in this chapter to assess and compare your models? Give a brief explanation for each technique.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-492"><strong>Exercise 11.9  (Bias-variance trade-off)  </strong></span>In your own words, briefly explain what the bias-variance tradeoff is and why it is important.
+</div>
+</div>
+<div class="section level3" id="applied-exercises-3" number="11.7.2">
+<h3>应用练习</h3>
+<p>在接下来的练习中, 您将使用 balesrules 包中的企鹅  bayes 数据来构建企鹅体的各种模型  mass  g。 并基本理解企鹅平均体重在3500至4500克之间。 此外,一个令人感兴趣的预测者是企鹅物种:阿德利、钦斯特拉或根图。 在第12章中, 如果你想像第11章那样只使用两个关卡, 你可以使用只包括Adelie和Gentoo企鹅的企鹅数据:</p>
+<div class="sourceCode" id="cb225">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 替代性企鹅数据
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-494"><strong>Exercise 11.10  (Penguins! Main effects)  </strong></span>Let’s begin our analysis of penguin <code>body_mass_g</code> by exploring its relationship with <code>flipper_length_mm</code> and <code>species</code>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>绘制和总结观察到的这三个变量之间的关系。</li>
+<li>使用stan glm()来模拟机体 mas g的后回归模型通过flipper 长 mm和物种,没有交互术语.</li>
+<li>创建和解释您的MCMC模拟的视觉和数字诊断.</li>
+<li>制作该模型的完整摘要。 按上下文解释非插入系数的后中位数。</li>
+<li>模拟,绘图,并描述Adelie企鹅体积的后期预测模型,其翻转长度为197.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-495"><strong>Exercise 11.11  (Penguins! Interaction)  </strong></span>Building from the previous exercise, our next goal is to model <code>body_mass_g</code> by <code>flipper_length_mm</code> and <code>species</code> <em>with</em> an interaction term between these two predictors.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>使用stan glm()来模拟此模型的后置,每条有1万次迭代的4个链条.</li>
+<li>模拟并绘制50条后验模型线. 简单描述一下你从这个情节中学到了什么</li>
+<li>制作该模型的整理摘要。 基于总结,你是否有证据表明互动术语是这个模型所必需的? 解释你的推理。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-496"><strong>Exercise 11.12  (Penguins! 3 predictors)  </strong></span>Next, let’s explore a model of <code>body_mass_g</code> by <strong>three</strong> predictors: <code>flipper_length_mm</code>, <code>bill_length_mm</code>, and <code>bill_depth_mm</code>. Do not use any interactions in this model.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>使用stan glm()来模拟此模型的后缀。</li>
+<li>使用后 interval()为模型参数生成95%的可信间隔。</li>
+<li>基于这95%的可信间隔,当控制模型中的其他预测器时,哪些预测器与体质有显著的正相关联,哪些与体质有显著的负相关联,哪些没有显著的关联?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-497"><strong>Exercise 11.13  (Penguins! Comparing models)  </strong></span>Consider 4 separate models of <code>body_mass_g</code>:
+</div>
+<table>
+<thead>
+<tr class="header">
+<th align="left">模型</th>
+<th align="left">公式</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="left">车体 质量 g ~翻转器 长度 mm</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="left">体积 质量 g~物种</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="left">体积 质量 g ~ 翻转器 长度 mm + 物种</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="left">车体 质量 g ~ 翻转器 长度 mm + 比尔 长度 mm + 比尔  深度 mm</td>
+</tr>
+</tbody>
+</table>
+<ol style="list-style-type: lower-alpha">
+<li><p>使用 stan  glm () 函数模拟这四个模型。</p></li>
+<li><p>制作和比较四种模型的 pp  check() 地块。</p></li>
+<li><p>使用10倍的交叉验证来评估和比较使用预测 summary cv()的四种模型的后期预测质量. 注: 我们只能预测企鹅的体积 它们的模型预测器上有完整的信息 然而两只企鹅对多种预测器有NA值. 要删除这两个企鹅,我们在删除带有NA值的企鹅之前会选择感兴趣的列(). 我们不会因为企鹅缺少关于我们不在乎的变量的信息而把企鹅扔出去:</p>
+<div class="sourceCode" id="cb226">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div></li>
+<li><p>评价和比较四个模型的ELPD后预测精度.</p></li>
+<li><p>总之,这四个模式中哪一个是“最佳?” 解释一下</p></li>
+</ol>
+</div>
+<div class="section level3" id="open-ended-exercises-1" number="11.7.3">
+<h3>不限成员名额的工作</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-499"><strong>Exercise 11.14  (Penguins on your own)  </strong></span>Build three different models of penguin <code>bill_length_mm</code>. <em>You</em> get to choose which predictors to use, and whether to include interaction terms. Evaluate and compare these models. Which do you prefer and why?
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-500"><strong>Exercise 11.15  (Weather on your own)  </strong></span>Use the <code>weather_perth</code> data in the <strong>bayesrules</strong> package to develop a “successful” model of afternoon temperatures (<code>temp3pm</code>) in Perth, Australia. <em>You</em> get to choose which predictors to use, and whether to include interaction terms. Be sure to evaluate your model and explain your modeling process.
+</div>
+</div>
+</div>
+</div>
+<h3>参考资料</h3>
+<div class="references csl-bib-body hanging-indent" id="refs">
+<div class="csl-entry" id="ref-rattle">
+Williams, Graham J. 2011. <em>Data Mining with <span>Rattle</span> and <span>R</span>: The Art of Excavating Data for Knowledge Discovery</em>. Use r! Springer. <a href="https://www.amazon.com/gp/product/1441998896/ref=as_li_qf_sp_asin_tl?ie=UTF8&amp;tag=togaware-20&amp;linkCode=as2&amp;camp=217145&amp;creative=399373&amp;creativeASIN=1441998896">https://www.amazon.com/gp/product/1441998896/ref=as_li_qf_sp_asin_tl?ie=UTF8&amp;tag=togaware-20&amp;linkCode=as2&amp;camp=217145&amp;creative=399373&amp;creativeASIN=1441998896</a>.
+</div>
+</div>
+</section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-10/">上一节：第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-12/">下一节：第 12 章 泊松回归与负二项回归</a></nav>
+</article>
+</div>
+</main>
+<footer class="site-footer">
+<div>
+<strong>AI 提效研究笔记</strong>
+<p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+</div>
+<div class="footer-links">
+<a href="/feed.xml">RSS</a>
+<a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+</div>
+</footer>
+<script src="/assets/js/site.js"></script>
+</body>
+</html>

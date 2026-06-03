@@ -6,6 +6,13 @@
     <description>记录我在工作与学习中，围绕 AI 提升效率的探索、实践与复盘。</description>
 
     <item>
+      <title>Bayes Rules! 中文 Python 改写教程</title>
+      <link>https://chandlerbbt.github.io/posts/bayes-rules-python-cn/</link>
+      <guid>https://chandlerbbt.github.io/posts/bayes-rules-python-cn/</guid>
+      <pubDate>Wed, 03 Jun 2026 00:00:00 +0800</pubDate>
+      <description>把 Bayes Rules! 在线教程改编为简体中文，并将 R/rstan/rstanarm 示例转写为 Python/PyMC/ArviZ 生态。</description>
+    </item>
+    <item>
       <title>30 人部门 AI 助理部署手册：飞书入口、Hermes 实例、Mac Studio 承载</title>
       <link>https://chandlerbbt.github.io/posts/feishu-lobster-deployment-guide/</link>
       <guid>https://chandlerbbt.github.io/posts/feishu-lobster-deployment-guide/</guid>

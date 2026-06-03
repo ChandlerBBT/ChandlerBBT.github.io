@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="把 Bayes Rules! 在线教程改编为简体中文，并将 R/rstan/rstanarm 示例转写为 Python/PyMC/ArviZ 生态。">
+  <meta property="og:title" content="Bayes Rules! 中文 Python 改写教程 | Chandler&#x27;s AI Productivity Notes">
+  <meta property="og:description" content="把 Bayes Rules! 在线教程改编为简体中文，并将 R/rstan/rstanarm 示例转写为 Python/PyMC/ArviZ 生态。">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="/assets/img/hero-workspace.png">
+  <title>Bayes Rules! 中文 Python 改写教程 | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="alternate" type="application/rss+xml" title="Chandler&#x27;s AI Productivity Notes" href="/feed.xml">
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body class="article-page">
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content">
+
+<article class="article-shell">
+  <header class="article-header">
+    <div class="article-kicker"><a class="tag" href="/tags/贝叶斯统计/">贝叶斯统计</a><a class="tag" href="/tags/python/">Python</a><a class="tag" href="/tags/教程/">教程</a></div>
+    <h1>Bayes Rules! 中文 Python 改写教程</h1>
+    <div class="post-meta">
+      <time datetime="2026-06-03">2026.06.03</time>
+
+      <span>1 分钟读完</span>
+    </div>
+  </header>
+  <img class="article-cover" src="/assets/img/hero-workspace.png" alt="">
+  <div class="article-body">
+    <p>这篇博客是一份可点击的教程入口：我把公开在线教材 <a href="https://www.bayesrulesbook.com/">Bayes Rules! An Introduction to Applied Bayesian Modeling</a> 改编为简体中文，并把原教程里的 R 代码转写为 Python 生态示例。</p>
+<blockquote>
+<p>原作作者为 Alicia A. Johnson、Miles Q. Ott、Mine Dogucu。原作采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a> 授权；本改写版按相同授权共享，仅用于非商业学习。</p>
+</blockquote>
+<h2 id="_1">教程入口</h2>
+<p><a href="/bayes-rules-python-cn/">打开完整教程</a></p>
+<h2 id="_2">目录</h2>
+<ul>
+<li><a href="/bayes-rules-python-cn/foreword/">前言</a></li>
+<li><a href="/bayes-rules-python-cn/preface/">序言</a></li>
+<li><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a></li>
+<li><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a></li>
+<li><a href="/bayes-rules-python-cn/references/">参考文献</a></li>
+</ul>
+<h2 id="python">Python 生态约定</h2>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+import matplotlib.pyplot as plt
+import seaborn as sns
+</code></pre>
+<h2 id="_3">质量说明</h2>
+<p>这是离线批量翻译和代码迁移的第一版。数学公式、图片和章节结构已经保留；统计术语做了一轮校正。个别长段落和复杂 R 管道代码仍建议继续人工复核。</p>
+  </div>
+</article>
+
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js"></script>
+</body>
+</html>

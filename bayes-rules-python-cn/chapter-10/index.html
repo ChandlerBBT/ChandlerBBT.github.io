@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="第 10 章 回归模型评估 | Bayes Rules! 中文 Python 改写教程" name="description"/>
+<title>第 10 章 回归模型评估 | Chandler's AI Productivity Notes</title>
+<link href="/assets/img/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="/assets/css/styles.css" rel="stylesheet"/>
+<script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#content">跳到正文</a>
+<header class="site-header">
+<a aria-label="Chandler's AI Productivity Notes 首页" class="brand" href="/">
+<span class="brand-mark">C</span>
+<span class="brand-name">Chandler's AI Productivity Notes</span>
+</a>
+<nav aria-label="主导航" class="site-nav">
+<a href="/">首页</a>
+<a aria-current="page" href="/posts/">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+</nav>
+</header>
+<main class="tutorial-page" id="content">
+<div class="tutorial-layout">
+<aside class="tutorial-sidebar">
+<h2>教程目录</h2>
+<nav><a href="/bayes-rules-python-cn/">首页</a><a href="/bayes-rules-python-cn/foreword/">前言</a><a href="/bayes-rules-python-cn/preface/">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a aria-current="page" href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a href="/bayes-rules-python-cn/references/">参考文献</a></nav>
+</aside>
+<article class="tutorial-content">
+<section class="normal" id="section-">
+<div class="section level1" id="chapter-10" number="10">
+<h1>第 10 章 回归模型评估</h1>
+<div class="tutorial-note">
+<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
+</div>
+<p>想象一下,我们,作者,邀请你过来吃饭。 我们花了几小时 才给蘑菇饲料 煮成美味的东西 把好东西放在一边,你可能会有 几个问题给我们: 你知道自己在做什么吗? 这些蘑菇可以吃吗? 晚餐后,我们提议开车送你回家 我们刚造的一辆车。 这辆车安全吗? 在坠机测试中表现如何? 正如人们不应该在不质疑其安全性的情况下就吃一个古老的蘑菇或坐进一辆新车一样,人们不应该在不首先评估其质量的情况下就应用一个模型。 无论我们谈论的是经常还是巴耶斯模式,“简单”还是“大”模式,都有三个关键问题要问。 审查这些问题是第十章的目标。</p>
+<div class="goals">
+<ol style="list-style-type: decimal">
+<li><p>模特儿有多公平? 如何收集数据? 由谁和出于什么目的? 分析结果或数据收集本身如何影响个人和社会? 这种分析可能包含哪些偏见或权力结构?</p></li>
+<li><p>模特儿怎么错了? 乔治·博克斯(George Box)著名地说:“所有模型都是错误的,但有些模型是有用的。” 我们的模特儿怎么错了? 我们的模型假设合理吗?</p></li>
+<li><p>后期预测模型有多准确?. 后期预测模型离现实有多远?.</p></li>
+</ol>
+</div>
+<div class="sourceCode" id="cb160">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python"># 原书 bayesrules 数据包中的数据需改用 CSV/本地数据文件读取
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import arviz as az
+import pymc as pm
+
+with pm.Model() as model:
+    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
+    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
+    # sigma = pm.HalfNormal('sigma', sigma=10)
+    # mu = beta_0 + beta_1 * x
+    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
+    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
+az.summary(idata)
+# 装入软件包</code></pre>
+</div>
+<div class="section level2" id="is-the-model-fair" number="10.1">
+<h2>模特儿公平吗?</h2>
+<p>我们将结合第9章的正常回归分析来探讨模型评估过程。 我们建造并模拟了以下模型:</p>
+<p>\[\begin{split} Y_i | \beta_0, \beta_1, \sigma &amp; \stackrel{ind}{\sim} N\left(\mu_i, \sigma^2\right) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1X_i \\ \beta_{0c} &amp; \sim N\left(5000, 1000^2 \right) \\ \beta_1 &amp; \sim N\left(100, 40^2 \right) \\ \sigma &amp; \sim \text{Exp}(0.0008) .\\ \end{split}\]</p>
+<p>在评价这一模式或任何其他巴耶斯模式时,第一个问题是具体背景,并了解基本的道德影响:模式公平吗? 我们必须总是问这个问题,即使考虑是不平衡的,正如我们自行车的例子那样。 让我们把问题分为几个小问题:</p>
+<ul>
+<li><p>如何收集数据? 假定每辆自行车都以电子方式记录数据,不会对骑车者造成任何伤害。 当数据进入我们手中时,它已经被匿名化了。 看起来很公平</p></li>
+<li><p>数据由谁收集,目的为何? 一家像Capital Bikeshare这样的公司追踪自己的数据,以更好地为客户服务并告知其商业决策.</p></li>
+<li><p>分析结果或数据收集本身如何影响个人和社会? 我们无法想象数据收集过程或分析会如何对个人或社会产生负面影响。 事实上,帮助改善Capital Bikeshare的服务可能有助于让一些汽车下车。 然而,仅仅因为我们作者们无法想象负面的社会影响并不意味着不存在。 在任何分析中,承认自己的观点至关重要,任何观点都不是自然或中立的。 你可能不会觉得任何负面后果不会影响你, 为了真正确定我们分析的影响,我们需要与受首都比克沙尔决定影响的特区居民,尤其是那些没有参与决策进程的居民接触并合作。</p></li>
+<li><p>分析中有什么偏见? 我们只掌握了使用Capital Bikeshare服务的人乘车的数据。 因此,我们的分析可以更好地说明如何在不为他人服务的情况下为这些人服务。</p></li>
+</ul>
+<p>从这些反思来看,我们并不认为在道德上对华盛顿特区自行车骑手的数据收集或分析有任何怀疑或偏见。 我们认为这种分析是公平的。</p>
+<div class="describe">
+<p>模式并不总是公平</p>
+<p>不幸的是,不公平的模式是丰富的。 想想最近的三个例子。 这些复杂的例子在这里过于简化,因此我们鼓励你们在本书之外多读一些.</p>
+<ol style="list-style-type: decimal">
+<li><p>最近到2015年,据称一家大公司利用一个模型来评价技术职位的申请人简历。 他们发现,通过使用现有技术雇员(主要是男性)的简历数据建立这一模型,加强了对男性求职者的偏好(Dastin 2018年)。</p></li>
+<li><p>在警方监控中越来越多地使用的面部识别模型,往往使用不代表整个社会的研究人员的图像数据构建。 因此,在实际应用时,在研究进程中代表性不足的人中,误认现象更为普遍。 鉴于包括假逮捕在内的错误身份认定的严重后果,公民们正在推动社区使用这一技术(Harmon 2019).</p></li>
+<li><p>2020年,纽约公民自由联盟起诉美国移民和海关执法部门(ICE)使用"风险分类评估"模式,评价一个主体是否应当被拘留或释放(Hadavas 2020). 这种模式明显不公平,几乎在所有案件中都建议实行拘留。</p></li>
+</ol>
+</div>
+</div>
+<div class="section level2" id="chapter-10-wrong-model" number="10.2">
+<h2>模特儿怎么错了?</h2>
+<p>所有模型都错了 统计模型主要是比较复杂的现实的理想化表述. 即使如此,良好的统计模式仍然有用,并使我们了解世界的复杂性。 因此,在评价我们的模型时,下一个问题不是,模型是错的,而模型又有多错? 具体来说,我们贝叶斯线性回归模型(9.6)背后的假设在多大程度上符合现实?</p>
+<div class="section level3" id="checking-the-model-assumptions" number="10.2.1">
+<h3>检查模型假设</h3>
+<p>回顾第9章 三个假设 烤成数据模型,</p>
+<p>\[Y_i | \beta_0, \beta_1, \sigma \stackrel{ind}{\sim} N(\mu_i, \sigma^2) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1 X_i .\]</p>
+<ol style="list-style-type: decimal">
+<li>与其他案例的观测数据无关。</li>
+<li>典型的 0@@结果可以写成\(X\),\(\mu = \beta_0 + \beta_1 X\)的线性函数.</li>
+<li>在任何 QQ0 QQ值上, QQ1 通常在 QQ2 左右变化,</li>
+</ol>
+<p>尽管假设1确实存在正式的假设测试,但我们通常可以通过数据收集的背景来评价其适当性。 在我们的自行车分析中,我们在2011年至2012年的两年内每天有500次观测. 单枪匹马时, 骑师人数可能随时间推移而相应 — — 今天的骑师人数可能告诉我们明天的骑师人数。 然而,这种关联性,或者说依赖性,在很大程度上可以用年份的时间和与年份相关的特征来解释 — — 如温度QQ1Q。 因此,了解其后两天的温度很可能“消除”其骑行数据的时间相关性。 例如,如果我们知道今天是70度,明天是75度,那么关于今天的骑手的信息可能不会告诉我们明天的骑手。 简言之,可以合理地假设,根据温度XQ2@@,骑手数据XQ3@@是天天独立的. (“可接受”并非指“完美”,而是指“足以进行”。 )</p>
+<p>重新审视原始数据的散点,可深入了解假设2和3。 骑手和温度之间的关系似乎是线性的。 此外,除了较寒冷的日子里骑手人数统一小外,骑手的变异性在温度范围内似乎大致一致。 编号 :</p>
+<div class="sourceCode" id="cb161">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-375" style="display:block;"></span>
+<img alt="这是按温度(x轴)划分的散射带(y轴),有500个数据点。 积分显示骑手与温度之间温和,积极的关系. 典型的关系被一条向上的斜线所捕捉." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-375-1-b5c43cd7d031.png" width="240"/>
+<p class="caption">FIGURE 10.1:每日单车摩托车对温度的散列.</p>
+</div>
+<p>现在,人们不仅知道有人会误解可视化,依靠这样的可视化的XQ0@@ vs \(X\)来评价假设,对于拥有一个以上预测器的更复杂的模型来说,已经不可能了. 为了严格评价假设2和假设3, 以达到其他模型设置, 我们可以进行后期预测检查。 但基本想法是: 如果组合模型假设合理,那么我们的后验模型应该能够模拟与最初500骑观测相似的骑手数据. 为了评估情况是否如此, 对于我们从第9章模拟Markov 链的2万个后置参数, 最终结果是20,000套独特的预测骑手数据,每套大小500,这里以右矩阵的行表示:</p>
+<p>\[\begin{array}{lll} \text{Markov chain parameter sets} &amp; &amp; \text{Simulated samples} \\ \left[ \begin{array}{lll} \beta_0^{(1)} &amp; \beta_1^{(1)} &amp; \sigma^{(1)} \\ \hline \beta_0^{(2)} &amp; \beta_1^{(2)} &amp; \sigma^{(2)} \\ \hline \vdots &amp; \vdots &amp; \vdots \\ \hline \beta_0^{(20000)} &amp; \beta_1^{(20000)} &amp; \sigma^{(20000)} \\ \end{array} \right] &amp; \; \longrightarrow \; &amp; \left[ \begin{array}{llll} Y_1^{(1)} &amp; Y_2^{(1)} &amp; \cdots &amp; Y_{500}^{(1)} \\ \hline Y_1^{(2)} &amp; Y_2^{(2)} &amp; \cdots &amp; Y_{500}^{(2)} \\ \hline \vdots &amp; \vdots &amp; &amp; \vdots \\ \hline Y_1^{(20000)} &amp; Y_2^{(20000)} &amp; \cdots &amp; Y_{500}^{(20000)} \\ \end{array} \right] \end{array}\]</p>
+<p>我们从正常数据模型中, 来预测当天的骑手:</p>
+<p>\[Y_{i}^{(j)} | \beta_0, \beta_1, \sigma \; \sim \; N\left(\mu^{(j)}, \left(\sigma^{(j)}\right)^2\right) \;\; \text{ with } \;\; \mu^{(j)} = \beta_0^{(j)} + \beta_1^{(j)} X_i .\]</p>
+<p>对于自行车 model df中的第一个参数集,考虑这个过程,这个数据框架与我们在第9章中模拟的Markov 链值:</p>
+<div class="sourceCode" id="cb162">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+first_set = head(bike_model_df, 1)
+first_set
+(Intercept) temp_feel sigma
+1       -2657     88.16  1323</code></pre>
+</div>
+<p>从自行车数据500天的观测到的Time feel中,我们模拟了从正常数据模型调制到这个第一个参数集的骑车结果:</p>
+<div class="sourceCode" id="cb163">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+beta_0 = first_set$`(Intercept)`
+beta_1 = first_set$temp_feel
+sigma  = first_set$sigma
+rng = np.random.default_rng(84735)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>请检查access-date=中的日期值 (帮助) 前两个数据点的模拟乘车次数:</p>
+<div class="sourceCode" id="cb164">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+head(one_simulation, 2)
+temp_feel rides simulated_rides
+1     64.73   654            3932
+2     49.05  1229            1503</code></pre>
+</div>
+<p>当然,在任何给定的一天,模拟的骑手比赛都取消了(在数据集的第一天的情况下非常取消了). 问题是,总的来说,模拟数据是否类似于观测到的数据。 为此,图10.2比较了模拟骑行500天(浅蓝色)和观察骑行(暗蓝色)的密度图:</p>
+<div class="sourceCode" id="cb165">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch10-1-ppc" style="display:block;"></span>
+<img alt="模拟 骑行有两种密度曲线. 淡蓝线呈钟形,以约4000为中心,从0到8000骑不等. 暗蓝线有一个相似的中心和分布,然而展现出轻微的双车道,一个高峰接近4000骑,另一个接近1750骑." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch10-1-ppc-1-7c289522c7f7.png" width="240"/>
+<p class="caption">图10.2: 一个后模拟了骑手(浅蓝色)的数据集以及实际观测到的骑手数据(深蓝色).</p>
+</div>
+<p>虽然模拟数据并没有完全复制所有原始的骑手特征,但它确实能够捕捉到诸如一般中心之类的大东西并传播。 在进一步分解这段情节之前, 记得我们从两万个后置参数中 仅生成了一个模拟数据。 rstanarm和bayesplot包使得每个参数集的数据模拟过程容易重复. pp check () 函数绘制了这20,000个模拟数据集中的50个(标签为 \(\text{y}_\text{rep}\) ) , 以对应原始骑师数据中的图(标签为 \(\text{y}\) )。 (从计算和逻辑上来说,检查所有20 000套是过分的。 )</p>
+<div class="sourceCode" id="cb166">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 检查20000年模拟样本中的50份
+pp_check(bike_model, nreps = 50) +
+xlab("rides")</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-379" style="display:block;"></span>
+<img alt="有51个密度曲线的模拟 rides. 这50条浅蓝色的线路都相当相似——大致呈钟形,以约4000为中心,从0到8000骑不等. 暗蓝线有一个相似的中心和分布,然而展现出轻微的双车道,一个高峰接近4000骑,另一个接近1750骑." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-379-1-5d87a635be44.png" width="288"/>
+<p class="caption">FIGURE 10.3:50套骑师数据从后座模拟(浅蓝色)与实际观测到的骑师数据(深蓝色).</p>
+</div>
+<p>这个情节凸显出两件事来欢呼和感叹. 为何欢呼? 这50套预测 很好地捕捉了典型的骑术 以及骑术中观察到的射程 不过, 大部分机车都无法从原始机车数据中找到明显的双式。 这并不一定意味着我们的自行车骑手模式很糟糕 — — 我们当然比以前更了解自行车股市需求。 它只是表示它可能更好, 或更少错误。 我们在本节最后概述了后期预测检查过程。</p>
+<div class="describe">
+<p>后期预测检查</p>
+<p>考虑一个响应变量XQ0@@的回归模型,预测器XQ1@@,以及一组回归参数XQ2@@. 例如,在上方的型号中,QQ3@@. 假设基于XQQ4XX的数据样本, 然后一个"好" 贝叶斯模型产生后预测的XQ8XXX9XX值集,其特征与最初的XQ10XX数据类似. 为了评估您的模式是否达到这一目标,请做以下工作:</p>
+<ol style="list-style-type: decimal">
+<li>模拟数据模型中的QQ1+Q值样本, 这产生了大小的XQ4XX 单独的样本。</li>
+<li>将XQ0@@模拟的XQ1@@样本的特征,或这些样本的一个子集,与XQ2@@原始数据的特征进行比较.</li>
+</ol>
+</div>
+</div>
+<div class="section level3" id="dealing-with-wrong-models" number="10.2.2">
+<h3>处理错误的模型</h3>
+<p>迄今为止,我们的讨论集中于一个理想的环境,使我们的模式假设合理。 停下来就像一个汽车机械师 只了解薄荷条件汽车。 不是一个好主意。 虽然无法列举一切在建模中可能出错的东西, 让我们从独立这一假设开始。 有一些共同的假设,这种假设是不合理的。 在第四单元中,我们处理的是XQ0XQ值在同一个“组”或主题上观察到的多个数据点之间相互关联的情况。 例如,为了探索记忆和年龄之间的联系,研究人员可能给每个 1@@的成年人三个测试,要求他们回忆10个词的顺序:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">主题</th>
+<th align="right">年龄(                                                                 </th>
+<th align="right">被记住的字数 (\\\\\\\\\)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="right">51</td>
+<td align="right">9</td>
+</tr>
+<tr class="even">
+<td align="left">1</td>
+<td align="right">51</td>
+<td align="right">7</td>
+</tr>
+<tr class="odd">
+<td align="left">1</td>
+<td align="right">51</td>
+<td align="right">10</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="right">38</td>
+<td align="right">6</td>
+</tr>
+<tr class="odd">
+<td align="left">2</td>
+<td align="right">38</td>
+<td align="right">8</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="right">38</td>
+<td align="right">8</td>
+</tr>
+</tbody>
+</table>
+<p>自然,任何特定的成年人在一次审判中的表现如何 告诉我们他们在另一次审判中的表现如何 因此,在任何特定学科中,观测到的QQ0QQ值是依赖的. 您将学习如何使用第4单元的分级贝叶斯模型纳入和处理这种依赖性分类数据。</p>
+<p>与Cor相关的数据也可以在建模时随时间,空间,或时空变化而出现. 例如,我们可以研究世界不同地区气温的历史性变化。 如果假设一个地点的温度独立于邻近地点的温度, 虽然运用我们正常的贝叶斯回归模型来研究这些spatiotal动态可能会产生误导性的结果,但确实存在贝叶斯模型,这些模型是专门为这个任务量身定制的:时间序列模型,空间回归模型,以及它们的组合,spatiotal模型. 我们鼓励有兴趣的读者检查Blangiardo和Cameletti(2015年),</p>
+<p>接下来,让我们来考虑违反假设2和假设3的问题,这些假设和假设往往同时存在。 图10.4提供了一个例子。 \(Y\)和\(X\)的关系是非线性(viviolate assignation 2),\(Y\)中的可变性随着\(X\)(viviriate assign 3)而增加.</p>
+<div class="figure" style="text-align: center"><span id="fig:nonlinear-1-ch10" style="display:block;"></span>
+<img alt="有两块地 左边是Y对X的散点。 数据点显示出正的,非线性的关系,y的变异性随着x的增加而增加. 右边是51个密度曲线 50浅蓝色曲线都相当相似——大致呈钟形,中心约2.5,范围从-2.5到7.5. 反之,暗蓝色线是正Y值的右切线." loading="lazy" src="/assets/img/bayes-rules-python-cn/nonlinear-1-ch10-1-5d6476ab9382.png" width="480"/>
+<p class="caption">FIGURE 10.4:以相应的贝叶斯后期预测模型检查模拟数据.</p>
+</div>
+<p>即使我们没有看到这些原始数据, pp check() (右) 也会证实这种关系的正常回归模型是错误的 — — \(Y\)的后期模拟显示出比观测到的\(Y\)值更高的中心倾向和可变性. 处理这种违反假设2和3的情况有几种共同办法:</p>
+<ul>
+<li><p>假设不同的数据结构. 并非所有的数据和关系都是正常的. 在第十二章和第十三章中,我们将探索一个回归模型的数据结构 被一个Poisson, Nenic Binomial, 或 Binomial 而不是一个 Normal 所描述的模型。</p></li>
+<li><p>作转法轮. 当数据模型结构不是问题时,我们可能做如下工作:</p>
+<ul>
+<li><p>变身~~~~~~. 对于一些函数 QQ1@@, 假设 QQ2@@ 与 QQ3@@。</p></li>
+<li><p>变身~~~~~~. 对于QQ1@@的一些功能,假设XQ2@@与QQ3@@.</p></li>
+<li><p>变形 0@@和 1@@. 假设 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #</p></li>
+</ul></li>
+</ul>
+<p>在我们模拟的例子中,第二种方法证明是赢家。 基于原始数据中扭曲的规律,我们采用XQ0@@的日志转换. 编号 :</p>
+<p>\[\log(Y_i) | \beta_0, \beta_1, \sigma \stackrel{ind}{\sim}N(\mu_i, \sigma^2) \;\; \text{ with } \; \mu_i = \beta_0 + \beta_1 X_i .\]</p>
+<p>图10.5证实,这一转变解决了对假设2和3的违反:\(\text{log}(Y)\)和\(X\)的关系是线性的,\(Y\)的变异在\(X\)的值范围上是一致的. 理想的 pp  check( ) at right 进一步证实, 这种转变把我们的模式从错误变为好的。 我们仍可使用这个模式来了解QQ4+和QQ5+之间的关系。</p>
+<div class="figure" style="text-align: center"><span id="fig:nonlinear-2-ch10" style="display:block;"></span>
+<img alt="有两块地 左边是一条散点的log(y) vs x. 数据点显示出与变异性的正中线性关系. 右侧为51个密度曲线的log(y)——50个为浅蓝色,1个为深蓝色. 全部大致呈钟形,中心位置约为0,范围为-3-3." loading="lazy" src="/assets/img/bayes-rules-python-cn/nonlinear-2-ch10-1-23514e5f1201.png" width="480"/>
+<p class="caption">FIGURE 10.5:模拟数据,经过Y的对数变换,并有相应的贝叶斯后期预测模型检查.</p>
+</div>
+<p>当你发现自己身处这样的境地时,就没有可遵循的转变方法. 适当的转变取决于分析的背景。 然而,log和polynomial变换提供了一个流行的起点(例如 0@@).</p>
+<div style="page-break-after: always;"></div>
+</div>
+</div>
+<div class="section level2" id="chapter-10-train-test" number="10.3">
+<h2>后期预测模型有多准确?.</h2>
+<p>在理想的世界中,不仅我们的贝叶斯模型是公平的,也不是太错误的,还可以用来准确预测新数据的结果。 也就是说,一个很好的模型 将超越我们用来构建它的数据。 我们将探索三种评估预测质量的方法,</p>
+<div class="section level3" id="simple-summary-10" number="10.3.1">
+<h3>预测摘要</h3>
+<p>我们的最终目标是确定我们的巴耶斯模式 对未来骑手的预测如何 然而,我们首先可以评估它如何预测我们用来构建这个模型的样本数据点。 首先考虑2012年10月22日的样本数据点:</p>
+<div class="sourceCode" id="cb167">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>在75度的这一天,首都比克夏尔恰好看到6228骑. 看这个观察如何与今天的骑手的后期预测相比较, 我们可以用9.5节的同一代码模拟和绘制后期预测模型。</p>
+<div class="sourceCode" id="cb168">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 模拟后期预测模型
+rng = np.random.default_rng(84735)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch10-post-pred-1" style="display:block;"></span>
+<img alt="y new的密度图大致呈钟形,以4000左右为中心,范围从1000到7000不等. 有一条竖线绘制为y 新值6228." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch10-post-pred-1-1-011d9aaf8ee5.png" width="240"/>
+<p class="caption">图 10.6:2012年10月22日的后期预测型号为骑手,为75度日. 当日实际观测到的6228名骑手以竖线为标志.</p>
+</div>
+<div style="page-break-after: always;"></div>
+<p>这个预测模型在预测我们实际观察到的东西方面有多好? 答此问有多种法. 首先,在检查图10.6时,注意到观测到的XQ0XX的距离有多远. 6228骑从预测模型的中心落下,即QQ1@@的预期结果. 我们可以通过后期预测的平均值来衡量预期结果, 后期预测误差:</p>
+<p>\[Y - Y' .\]</p>
+<p>比如说,我们的模式是 预想的骑师。 我们所观察到的乘车人数为2261人,</p>
+<div class="sourceCode" id="cb169">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>观察值与其后期预测平均值之间的相对距离,</p>
+<div class="quiz">
+<p>图10.7将2012年10月22日的" 0@@"( 0@@)的后期预测模型,从我们的贝叶斯模式比作另一种贝叶斯模式. 在这两种情况下,后期预测平均值为3967. 哪个模型能产生我们10月22日实际观察到的6228骑的更好的后期预测模型?</p>
+<ol style="list-style-type: lower-alpha">
+<li>我们的贝叶斯模式</li>
+<li>替代的贝叶斯模式</li>
+<li>这些模型的预测质量相当</li>
+</ol>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch-10-prediction-alternative" style="display:block;"></span>
+<img alt="有两种密度图 y 新,标签 我们的模型和替代模型。 左密度图大致呈钟形,以4000左右为中心,范围从1000到7000不等. 右侧密度图也大致呈钟形,以4000左右为中心,但范围较窄,从3000到5000. 在两块地块中都有一条竖线,绘制的y 新值为6228." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-10-prediction-alternative-1-afa83a62d94b.png" width="576"/>
+<p class="caption">FIGURE 10.7:2012年10月22日的骑术前预测模型显示于我们的贝叶斯回归模型(左)和一个替代模型(右),两者的平均值均为3967. 当日实际观测到的6228骑以黑线为代表.</p>
+</div>
+<p>如果你回答一个,你是正确的。 虽然观察到的骑手( 0@@=6228)与后期预测平均值(\(Y'\)=3967)在两种情景中都相当远,但对于替代模型来说,这一错误的规模要大得多 — — 观察到的骑手完全超出了其后期预测模型的可信范围. 我们可以通过将我们的后期预测错误标准化,使这一看法正式化。 为此,我们可以计算出我们观测到的后期标准值从后期预测值中跌落到什么程度:</p>
+<p>\[\frac{Y - Y'}{\text{sd}} .\]</p>
+<p>当一个后期预测模型大致对称时,在这个标准化尺度上超过2或3的绝对值表明,一个观测值与它的后期平均预测值相差相当远,超过2或3个标准差. 在我们10月22日的例子中,后期预测型号的骑手座标的偏差为1280骑. 因此,我们观察到的6228骑是2261骑,或1.767标准差,高于平均预测:</p>
+<div class="sourceCode" id="cb170">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>相比之下,图10.7中的替代模型标准偏差为500. 因此,观测到的6228次航程完全跌了4.5次标准差(距离!),超过了其平均预测. 这澄清了我们模式与替代模式的比较。 虽然两种模型的绝对预测误差相同,但缩放的预测误差表明我们的模型在10月22日提供了更准确的骑手后期预测.</p>
+<p>虽然我们现在有所进展, 它们只让我们意识到 观测距离其后期预测模型的中心有多远。 在巴耶斯统计中,整个后期预测模型都起到XQ0XX的预测作用. 因此,为了补充误差计算,我们可以跟踪一个观测到的QQ1@@值是否属于它的后期预测间隔,从而了解后期预测模型的一般范围. 对于我们10月22日的案子,我们的后期预测模型 给骑手的概率为3096到4831之间的0.5, 给骑手的概率为1500到6482之间的0.95。 观测到的6228次车程在50%的间隔之外,但在95%的间隔之内。 尽管我们不认为这很可能是骑马的结果,</p>
+<div class="sourceCode" id="cb171">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<p>好极了 — — 我们现在了解我们数据集中一个案例的后期预测准确性。 我们可以采取同样的方法 来评估我们自行车数据中 所有500个病例的准确性 正如第10.2节所讨论,在Markov 链中的每组模型参数中,我们可以从相应的温度数据中预测500个骑师的乘车值:</p>
+<p>\[\begin{array}{lll} \text{Markov chain parameter sets} &amp; &amp; \text{Simulated posterior predictive models} \\ \left[ \begin{array}{lll} \beta_0^{(1)} &amp; \beta_1^{(1)} &amp; \sigma^{(1)} \\ \hline \beta_0^{(2)} &amp; \beta_1^{(2)} &amp; \sigma^{(2)} \\ \hline \vdots &amp; \vdots &amp; \vdots \\ \hline \beta_0^{(20000)} &amp; \beta_1^{(20000)} &amp; \sigma^{(20000)} \\ \end{array} \right] &amp; \; \longrightarrow \; &amp; \left[ \begin{array}{l|l|l|l} Y_1^{(1)} &amp; Y_2^{(1)} &amp; \cdots &amp; Y_{500}^{(1)} \\ Y_1^{(2)} &amp; Y_2^{(2)} &amp; \cdots &amp; Y_{500}^{(2)} \\ \vdots &amp; \vdots &amp; &amp; \vdots \\ Y_1^{(20000)} &amp; Y_2^{(20000)} &amp; \cdots &amp; Y_{500}^{(20000)} \\ \end{array} \right] \end{array}\]</p>
+<p>结果表现为后期预测的XQ0@@矩阵(右矩阵). 虽然这个矩阵的20 000行提供了20 000套模拟骑车数据,使我们深入了解我们的模型假设的有效性(第10.2节),但500列中的每一列都为自行车数据中独一无二的一天提供了20 000个骑车后的预测。 也就是说,每栏都为相应日期提供一个大致的后期预测模型。 我们可以通过在整台机车数据集中应用后预估()来获得每天两万套预测:</p>
+<div class="sourceCode" id="cb172">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+rng = np.random.default_rng(84735)
+predictions = posterior_predict(bike_model, newdata = bikes)
+dim(predictions)
+[1] 20000   500</code></pre>
+</div>
+<p>bayesplot 包中的 ppc intervals () 函数提供了存储在预测中的500 个近似后期预测模型的快速视觉摘要。 对于机车数据中的每个数据点,ppc intervals()绘制95%的预测间隔(窄,长的蓝色条),50%的预测间隔(宽,短的蓝色条),以及后期预测中位数(浅的蓝色点)的界限. 这些信息可以窥见每个后期预测模型的中心和分布,以及每个模型与相应观测结果(暗蓝色点)的兼容性. 为了说明问题,数据集中仅25天的后期预测模型(图10.8右)提供了更清洁的图片. 一般来说,注意几乎所有观测到的骑行数据点都属于其95%的预测间隔的界限之内,较少属于其50%间隔的界限之内. 然而,95%的预测间隔相当宽 — — 对某一天骑手的后期预测跨度超过4000骑。</p>
+<div class="sourceCode" id="cb173">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+ppc_intervals(bikes$rides, yrep = predictions, x = bikes$temp_feel,
+prob = 0.5, prob_outer = 0.95)</code></pre>
+</div>
+<div class="figure" style="text-align: center"><span id="fig:ch10-ppc-intervals" style="display:block;"></span>
+<img alt="有两座散列车(y-axis)对Time feel(x-axis). 左图显示500个深蓝色数据点,而右图则显示25个深蓝色数据点的子集. 与每个数据点相对应的是狭长的浅蓝色垂直条,短而宽的浅蓝色条,浅蓝色点代表来自后期预测间隔的信息. 深蓝色的点大部分属于浅蓝色的条形." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch10-ppc-intervals-1-5342c42be5cd.png" width="768"/>
+<p class="caption">图10.8: 左边是机车数据集中每天的后期预测中位数(浅蓝色点),50%的预测间隔(宽,短蓝色条),95%的预测间隔(窄,长蓝色条),以及相应的观测数据点(暗蓝色点). 同一信息在数据集右侧仅显示25天.</p>
+</div>
+<p>海湾规则包中的预测 摘要()函数使这些视觉观测正式化,并附有四个数值后预测摘要.</p>
+<div class="describe">
+<p>预测摘要</p>
+<p>让 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 然后每个QQ2@@都有一个相应的后期预测模型,其平均值为XQ3@@,标准偏差为XQ4@@. 我们可以通过以下措施评估总体后期预测模型的质量:</p>
+<ul>
+<li><p>mae 中位绝对误差( MAE) 测量观测到的 @@0 @@与其后期预测的 @@1 @@ 的典型差异,</p>
+<p>\[\text{MAE} = \text{median}|Y_i - Y_i'|.\]</p></li>
+<li><p>mae 缩放 缩放的中位绝对误差测量了观测到的XQ0QQ从他们的后期预测中掉落的典型标准偏差数,意味着XQ1QQ:</p>
+<p>\[\text{MAE scaled} = \text{median}\frac{|Y_i - Y_i'|}{\text{sd}_i}.\]</p></li>
+<li><p>在 50和 95之内 在 50统计中,测量观测值%%%=%=%的50%后预测间隔内的比例。 95年内部的统计数据相似,但95%的后期预测间隔。</p></li>
+</ul>
+<p>注: 为了在可能扭曲的后方实现稳定性,我们可以用中位数(而不是中位数)和中位数绝对偏差(而不是标准偏差)来衡量后方模型的中心。 此选项是通过在预测  总结() 函数中设置稳定 = TRUE 提供, 尽管我们在这里没有使用它。</p>
+</div>
+<p>让我们来研究我们数据的后期预测摘要:</p>
+<div class="sourceCode" id="cb174">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 预测摘要
+rng = np.random.default_rng(84735)
+prediction_summary(bike_model, data = bikes)
+mae mae_scaled within_50 within_95
+1 989.7     0.7712     0.438     0.968</code></pre>
+</div>
+<p>在数据集的所有500天中,我们看到观测到的骑手座通常为990骑,即0.77标准差,与相应的后期预测平均值不同. 此外,只有43.8%的试验观测属于各自50%的预测间隔,96.8%属于95%的预测间隔。 这与我们在上面的 ppc intervals () 绘图中看到的一致:几乎所有深蓝色的点都在相应的95%的预测栏的间距内,在50%的栏(自然)内更少. 因此,根据这些观测结果,我们可以得出什么结论:我们的贝叶斯模型是否产生准确的预测? 对这一问题的答案取决于背景,有些主观。 例如,知道990骑的典型预测错误是否合理,需要与Capital Bikeshare交谈. 也没有答案。</p>
+</div>
+<div class="section level3" id="cross-validation" number="10.3.2">
+<h3>交叉验证</h3>
+<p>第10.3.1节的后期预测摘要可以使我们对巴耶斯模型的预测准确性提供宝贵的见解。 它们也可能有缺陷。 考虑类比。 假设你想打开一个新的玉米饼摊。 你把所有的食谱都建在里姆周围,你的朋友,他更喜欢每顿饭都包括cho鱼. 在她身上测试你最新的“Anchov-ladas”菜, 这是否意味着这道菜将在一般公众中获得广泛成功? 也许不是! 并不是每个人都喜欢Reem的口味。 51 同样,对一个模型进行了优化,以获取其培训或构建的数据中的特征。 因此,像我们上文所做的那样,在同样的数据上评价一个模型的预测准确性可以产生过于乐观的评估。 幸运的是,我们不必去收集新的数据, 相反,我们只能为了模型评估的目的,将现有的机车数据分成不同的部分,在分析中发挥不同的“培训”和“测试”作用。 基本思想是:</p>
+<ul>
+<li>训练模型。 随机选择我们500台机车数据点的90%(或450). 利用这些训练数据点来构建骑手的回归模式.</li>
+<li>测试模型。 使用其他10%(或50个)数据点测试或评价培训模式。 具体而言,使用训练模型来预测我们的测试数据点,并记录模型质量的相应度量(如MAE).</li>
+</ul>
+<p>图10.9提供了一个例子。 左边的散点显示了450个随机选定的训练数据点的骑手和温度之间的关系。 在从这些训练数据中建立模型后, 我们用它来预测我们留作测试的其他50个数据点。 右侧的 ppc intervals () 绘图提供了后期预测精度的视觉评价. 总的来说,我们的培训模式在预测测试数据的结果方面做了一个体面的工作 — — 所有50个测试数据点都位于95%的预测间隔之内。</p>
+<div class="figure" style="text-align: center"><span id="fig:ch10-cv-pic" style="display:block;"></span>
+<img alt="" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch10-cv-pic-1-da1bbcd64b1c.png" width="576"/>
+<p class="caption">图10.9: 左边是450个训练数据点的骑手和温度之间的关系的分散图。 根据50个测试数据点(正确)对使用这种培训数据建立的一个模型进行评价。</p>
+</div>
+<p>由于它利用机车数据的不同部分来训练和测试我们的车型,这一程序将提供一个更诚实或保守的估计,说明我们的车型在超出我们特定机车样本范围时的通用程度,即它对未来车型的预测程度。 但还是有收获的。 仅仅进行一回合的训练和测试就能产生一个不稳定的后期预测精度估计 — — 它只基于我们机车数据的一个随机的分割,并且只使用50个数据点进行测试. 不同的随机分裂可能描绘不同的画面. 下文概述的XQ0QQ-倍数交叉验证算法,通过多次重复训练/测试过程和平均结果,提供了一个更稳定的方法.</p>
+<div class="describe">
+<p>k倍的交叉验证算法</p>
+<ol style="list-style-type: decimal">
+<li><p>创建折叠. 让 0@@成为从2到我们原始样本大小的整数\(n\). 将数据分成大小大致相等的非重叠折叠。</p></li>
+<li><p>火车和测试模型。</p>
+<ul>
+<li>在首届QQ0@@折叠中使用综合数据来训练模型.</li>
+<li>在QQ0@@th数据折叠上测试此模型.</li>
+<li>测量预测质量(例如,按MAE)。</li>
+</ul></li>
+<li><p>复说. 重复第2步++0++次,每次会留下不同的折叠进行测试.</p></li>
+<li><p>计算交叉验证估计数。 第2步和第3步产生了不同的训练模式和相应的预测质量衡量标准。 平均这些XQ2@@度量,以获得单一的交叉验证估计预测质量.</p></li>
+</ol>
+</div>
+<p>考虑使用QQ0+Q折叠的交叉验证程序. 在这种情况下,我们的500台机车数据点将分成10个子集,每个子集50个大小. 然后我们将建立10个单独的训练模式。 每个模型将使用450天(9折)的数据构建,然后在其他50天(1折)进行测试. 说清楚,QQ1不是魔法号码 然而,这在金锁挑战中取得了良好的平衡。 只使用QQ2@@折数就可以将数据分成一半,分成两个子集,每个子集只有250天. 使用如此少的数据来训练我们的模型 很可能低估了我们使用所有500个数据点时 取得的后期预测精度 在另一个极端,假设我们使用QQ3@@折叠,每个折叠只包含一个数据点. 交叉验证程序的这个特例被称为“一停(LOO) ” — — 每一个培训模式都是使用499个数据点构建的,并用我们遗漏的数据点测试。 此外,由于我们不得不使用500倍数中的每一个进行测试,让一个出局的交叉验证要求我们训练500个不同的型号! 这需要很长时间。</p>
+<p>现在,我们已经用10倍的交叉验证方法解决了,我们就可以使用Bayesrules套件中的预测 摘要 cv()功能来实施这个程序。 注:由于这个程序训练了10种不同的骑手模式,所以你必须有点耐心.</p>
+<div class="sourceCode" id="cb175">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+rng = np.random.default_rng(84735)
+cv_procedure = prediction_summary_cv(
+model = bike_model, data = bikes, k = 10)</code></pre>
+</div>
+<p>下面是所得出的与这个交叉验证程序中10个测试折叠中每个折叠对应的后期预测度量. 由于拆分是随机的,因此培训模型在一些测试集上的表现优于其他测试集,这主要取决于测试数据与培训数据的相似程度. 例如,Mae低至786.8骑一叠,高至1270.9骑另一叠:</p>
+<div class="sourceCode" id="cb176">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+cv_procedure$folds
+fold    mae mae_scaled within_50 within_95
+1     1  990.2     0.7699      0.46      0.98
+2     2  963.8     0.7423      0.40      1.00
+3     3  951.3     0.7300      0.42      0.98
+4     4 1018.6     0.7910      0.46      0.98
+5     5 1161.5     0.9091      0.36      0.96
+6     6  937.6     0.7327      0.46      0.94
+7     7 1270.9     1.0061      0.32      0.96
+8     8 1111.9     0.8605      0.36      1.00
+9     9 1098.7     0.8679      0.40      0.92
+10   10  786.8     0.6060      0.56      0.96</code></pre>
+</div>
+<p>横跨每组10 mae, mae scaled, 在 50范围内, 并在 95值之内, 得出对后期预测准确性的最终交叉验证估计 :</p>
+<div class="sourceCode" id="cb177">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+cv_procedure$cv
+mae mae_scaled within_50 within_95
+1 1029     0.8015      0.42     0.968</code></pre>
+</div>
+<p>将数据分为不同的培训和测试作用, 这些交叉验证的总结可以更公平地评估我们的巴耶斯模型能如何预测新病例的结果, 为了进行比较,回顾一下我们利用全套机车数据集进行培训和测试的后期预测评估:</p>
+<div class="sourceCode" id="cb178">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 原始数据前预测摘要
+rng = np.random.default_rng(84735)
+prediction_summary(bike_model, data = bikes)
+mae mae_scaled within_50 within_95
+1 989.7     0.7712     0.438     0.968</code></pre>
+</div>
+<p>根据上面的原始和交叉验证的后期预测摘要,采取以下的测验. 第52条</p>
+<div class="quiz">
+<p>如果我们运用我们的模型来预测明天的骑师,我们应当期望我们的预测会通过:</p>
+<ol style="list-style-type: lower-alpha">
+<li>1029辆</li>
+<li>990辆</li>
+</ol>
+</div>
+<p>还记得里姆和海葵吗? 记得我们认为她比新顾客更喜欢你的安乔夫拉达食谱吗? 这里的情况也是如此。 我们最初的后台模型被优化到 我们的完整自行车数据集。 因此,在同一个数据集上评价它的后期预测准确性似乎产生了过于乐观的画面 — — 所描述的典型预测误差(990骑)比我们运用模型预测新数据结果(1029骑)要小。 因此,本着 " 安全胜过遗憾 " 的精神,明智的做法是与相互验证的对应方补充任何质量模式措施。</p>
+<!-- assume that the test metrics more accurately reflect the predictive accuracy of our model. -->
+<!-- In general, lest the model be __overfit__ or __overtrained__ to the original sample data, it's more _honest_ to evaluate and report _both_ its prediction accuracy on this same data as well as the cross-validation estimates. -->
+</div>
+<div class="section level3" id="chapter-10-elpd" number="10.3.3">
+<h3>预期日志预测密度</h3>
+<p>第10.3节的运行目标是评估贝叶斯回归模型的后期预测准确性。 令人感兴趣的是,在将来的某一天,XQ0XXX的无人观察的骑师与其相应的后期预测模型兼容. 此模式由 pdf 指定</p>
+<p>\[f\left(y' | \vec{y}\right) = \int\int\int f\left(y' | \beta_0,\beta_1,\sigma\right) f(\beta_0,\beta_1,\sigma|y) d\beta_0 d\beta_1 d\sigma\]</p>
+<p>代表我们最初的骑手观察。 在图10.10中, 虽然最终观测到的QQ5@@,QQ6@@, 完全在两个pdf的范围之内, 也就是说,QQ7@@更符合情景1.</p>
+<div class="figure" style="text-align: center"><span id="fig:post-example-ch9" style="display:block;"></span>
+<img alt="y's 标记的情景1和情景2有两个密度曲线. 密度曲线均为钟形. 每个曲线下方是一条折叠的垂直线,在y's等于ynew. 垂直线较长且靠近左曲线中心,右曲线右尾较短且接近." loading="lazy" src="/assets/img/bayes-rules-python-cn/post-example-ch9-1-7ac9ea26dc52.png" width="480"/>
+<p class="caption">图10.10: 两位假设的后导 pdfs for QQ0@@, 最终观测到的QQ1@@,QQ2@@,以虚线垂直表示.</p>
+</div>
+<p>还请注意,在情景1的XX0@@时,后期预测pdf比情景2要高,为情景1提供更多的证据。 更准确的预测。 更准确的预测。 以此,我们向大家介绍对后期预测准确性的最后数值评估。</p>
+<div class="describe">
+<p>预期日志预测密度(ELPD)</p>
+<p>ELPD 测量所有可能的新数据点的平均日志后期预测 pdf, \(\log(f(y_{\text{new}} | \vec{y}))\)。 ELPD越高越好 较高的ELPD表示,在使用我们的模型预测新的数据点时,后期预测精度更高.</p>
+</div>
+<p>rstanarm 包中的 loo () 功能使用留一出交叉验证来估计特定模型的ELPD :</p>
+<div class="sourceCode" id="cb179">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+model_elpd = loo(bike_model)
+model_elpd$estimates
+Estimate      SE
+elpd_loo  -4289.0 13.1186
+p_loo         2.5  0.1638
+looic      8578.1 26.2371</code></pre>
+</div>
+<p>从Loo()的输出中,我们得知我们拜仁自行车骑手的正常回归模型ELPD是 -4289. 这是什么意思? 根据我们先验的警告,这种评估后期预测的最后方法是最技术性的。 这很难解释。 与任何pdf一样,ELPD尺度在每次分析中都可能有所不同. 因此,尽管越高越好,但并没有一个解释我们ELPD的通用尺度 — — 4289的ELPD在某些场合可能是好的,在另一些场合则是坏的。 那么,有什么意义呢? 虽然ELPD是对任何特定骑术模式的预测精度的严格到解释性评估,但它为我们提供了一个有用的衡量标准,用以比较多种潜在骑术模式的预测精度。 将给ELPD另一次机会,</p>
+</div>
+<div class="section level3" id="improving-posterior-predictive-accuracy" number="10.3.4">
+<h3>提高后期预测准确性</h3>
+<p>你可能会质疑如何改进模型。 同样,我们可以提供一些共同的原则,但没有任何规则适用于所有情况:</p>
+<ol style="list-style-type: decimal">
+<li><p>收集更多数据。 尽管收集更多的数据无法改变\(Y\)和\(X\)之间的潜在弱关系,但它可以改善我们的模型或对这种关系的理解,从而改善模型的后期预测。</p></li>
+<li><p>使用不同的或更多的预测器. 如果你的贝叶斯分析的目标是准确预测 \\\\\\\\\\\,你可以玩 不同的预测器。 例如,在预测骑行时,湿度可能优于温度。 而且,你们将在第11章中了解到,我们不需要限制我们的模型只包括一个预测器。 相反,我们可以通过包括两个或更多的预测器(例如,我们可以通过温度和湿度来模拟骑手)来改进我们的模型及其预测。 尽管向模型中投放更多的预测器是共同的诱人策略,</p></li>
+</ol>
+<div style="page-break-after: always;"></div>
+</div>
+</div>
+<div class="section level2" id="how-good-is-the-mcmc-simulation-vs-how-good-is-the-model" number="10.4">
+<h2>MCMC模拟对模型有多好?</h2>
+<p>在第六章和第十章中, 我们学到两个大问题, MCMC模拟有多好,模型有多好? 这是两个不同的问题。 第一个问题是我们的MCMC模拟与模型的近似程度。 它思考我们的MCMC模拟是否足够长,并迅速混合,以产生一个可靠的模型图景. 第二个问题涉及我们的模特儿是否健康。 它思考我们模型的假设是否合理,模型是否公平,以及它是否产生良好的预测. 理想的情况是, 但情况并非总是如此。 我们可能有一个很好的模型框架, 但是一个不稳定的链 产生不准确的近似 这个模型。 或者,我们可能做一个好工作 近似一个坏模型。 请记住,前进。</p>
+</div>
+<div class="section level2" id="chapter-summary-9" number="10.5">
+<h2>章节摘要</h2>
+<p>在第十章中,你学会了如何严格评价贝叶斯回归模型:</p>
+<ol style="list-style-type: decimal">
+<li><p>确定一个模型是否公平取决于背景,需要认真注意你分析的潜在影响,从数据收集到结论.</p></li>
+<li><p>为了确定一个模型有多错误,我们可以使用 pp check () 进行后期预测检查. 如果从贝叶斯模型模拟的QQ0QQ值在特征上与最初的QQ1@@数据相似,我们有理由相信我们的模型假设是合理的.</p></li>
+<li><p>为了确定我们模型的后期预测精度,我们可以计算(a) 观测到的XX0QQ值与其后期预测值之间的典型距离;以及(b) 观测到的XX2QQ值的频率属于其后期预测模型的范围。 为了更诚实地评估我们的模型 在多大程度上概括到我们原始样本以外的新数据, 我们可以使用交叉验证技术来估计这些属性。</p></li>
+</ol>
+</div>
+<div class="section level2" id="exercises-9" number="10.6">
+<h2>练习</h2>
+<div class="section level3" id="conceptual-exercises-4" number="10.6.1">
+<h3>概念练习</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-400"><strong>Exercise 10.1  (The Big Three)  </strong></span>When evaluating a model, what are the big three questions to ask yourself?
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-401"><strong>Exercise 10.2  (Model fairness)  </strong></span>Give an example of a model that will <em>not</em> be fair for each of the reasons below. Your examples don’t have to be from real life, but try to keep them in the realm of plausibility.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>如何收集数据。</li>
+<li>数据收集的目的。</li>
+<li>分析对社会的影响。</li>
+<li>比亚斯在分析中烤了。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-402"><strong>Exercise 10.3  (Your perspective)  </strong></span>Everyone has a standpoint or perspective that influences how they perceive the world. Rather than pretend that our standpoint is neutral, it is important to recognize it and how it might limit our ability to perceive the potential harms or benefits of our analyses.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>找出你生活经历中 指导你观点或观点的两个方面 (例:比尔在美国东海岸马里兰州长大,享年45岁. )</li>
+<li>确定你生活经验中的这两个方面 如何限制你对未来分析的评价</li>
+<li>确定你生活经历的这两个方面 如何有利于你对未来分析的评价。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-403"><strong>Exercise 10.4  (Neutrality?)  </strong></span>There are several instances in which data scientists might falsely consider themselves neutral. In this exercise, you will practice how to challenge the false idea of neutrality, an underappreciated skill for data scientists.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>如果你的同事告诉你“我只是中立的观察者,</li>
+<li>你的同事现在承认他们并非个人中立,但他们说“我的模范是中立的”。 你现在怎么回应你的同事?</li>
+<li>举个例子说明您的个人经验或视角何时为数据分析提供了依据。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-404"><strong>Exercise 10.5  (That famous quote)  </strong></span>George Box famously said: “All models are wrong, but some are useful.” Write an explanation of what this quote means so that one of your non-statistical friends can understand.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-405"><strong>Exercise 10.6  (Assumptions)  </strong></span>Provide 3 assumptions of the Normal Bayesian linear regression model with <span class="math inline">\(Y_i | \beta_0, \beta_1, \sigma \stackrel{ind}{\sim} N(\mu_i, \sigma^2)\)</span> where <span class="math inline">\(\mu_i = \beta_0 + \beta_1 X_i\)</span>.
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-406"><strong>Exercise 10.7  (Mini posterior predictive check)  </strong></span>Suppose we have a small dataset where predictor <span class="math inline">\(X\)</span> has values <span class="math inline">\(\vec{x} = (12, 10, 4, 8, 6)\)</span>, and response variable <span class="math inline">\(Y\)</span> has values <span class="math inline">\(\vec{y} = (20, 17, 4, 11, 9)\)</span>. Based on this data, we built a Bayesian linear regression model of <span class="math inline">\(Y\)</span> vs <span class="math inline">\(X\)</span>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>在第一个模拟参数集中, 解释您将如何使用这些数值与数据相结合, 来生成对 QQ1 的预测。</li>
+<li>使用第一个参数集,生成QQ0@@的预测. 评论预测值和观测值的差 QQ1@@.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-407"><strong>Exercise 10.8  (Explain to a friend: posterior predictive check)  </strong></span>Congratulations! You have just completed a posterior predictive check for your regression model. Your friend Shefali has a lot of questions about this. Explain the following to Shefali in plain language:
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>后期预测检查的目标.</li>
+<li>如何解读后期预测检查结果.</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-408"><strong>Exercise 10.9  (Explain to a friend: posterior predictive summary)  </strong></span>Shefali really appreciated your explanations from the previous exercise. She now wants you to explain posterior predictive summaries. Explain the following in plain language:
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>中位数绝对误差告诉我们你的模型</li>
+<li>缩放的中位绝对错误是什么,为什么它可能比中位绝对错误有所改进.</li>
+<li>50码内的数据告诉我们 你的模型。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-409"><strong>Exercise 10.10  (Posterior predictive checks)  </strong></span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>在 pp check() 绘图中, 较暗的密度代表什么 ? 单一的浅色密度代表什么?</li>
+<li>若我们的模型适合, 请描述它的 pp  check() 将如何出现。 解释一下为什么一个合适的模型 会产生这样的情节</li>
+<li>如果我们的模型不合适, 请描述其 pp  check () 的出现方式。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-410"><strong>Exercise 10.11  (Cross-validation and tacos)  </strong></span>Recall this example from the chapter: <em>Suppose you want to open a new taco stand. You build all of your recipes around Reem, your friend who prefers that anchovies be a part of every meal. You test your latest “anchov-ladas” dish on her and it’s a hit.</em>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>这一类比中的“数据”是什么?</li>
+<li>这一类比中的“模式”是什么?</li>
+<li>你怎么能用交叉验证来评估一种新的玉米卷配方?</li>
+<li>为什么交叉验证会帮助你开发出成功的食谱?</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-411"><strong>Exercise 10.12  (Cross-validation)  </strong></span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>K倍交叉验证算法的四个步骤是什么?</li>
+<li>使用相同的精确数据来训练和测试一个模型会有什么问题?</li>
+<li>你对K倍交叉验证有什么疑问?</li>
+</ol>
+</div>
+<div class="section level3" id="applied-exercises-2" number="10.6.2">
+<h3>应用练习</h3>
+<p>有些人把咖啡当回事 并不是每个咖啡豆的质量都一样。 在接下来的一套练习中,您将使用刺刀规则包中的咖啡配制数据,在香味和余味等特征上按等级对豆类进行评级(0-100级)。 此数据最初由詹姆斯·勒杜(@jmzledoux)处理,并通过数据科学R(2020a)TidyTuesday项目发布:</p>
+<div class="sourceCode" id="cb180">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python"># 原书 bayesrules 数据包中的数据需改用 CSV/本地数据文件读取
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+data("coffee_ratings")
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-413"><strong>Exercise 10.13  (Getting started with coffee ratings)  </strong></span>Before doing any modeling, let’s get to know the <code>coffee_ratings</code> data.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li><p>咖啡 配料数据包括571个不同农场种植的1339个不同批次豆的收视率和特征. 解释为什么使用这些数据来模拟气味或余味的收视率(tal cup points)可能违反贝叶斯线性回归模型的独立性假设. 注: 检查数据集的头( )。</p></li>
+<li><p>你将学习如何在第四单元中利用这类数据。 但仅仅为了简化这里的东西, 每个农场只做一个观察。 余下练习使用此新  coffee 数据。</p>
+<div class="sourceCode" id="cb181">
+<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
+<pre><code class="language-python">import numpy as np
+import pandas as pd
+from scipy import stats
+import pymc as pm
+import arviz as az
+
+# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
+# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+rng = np.random.default_rng(84735)
+# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
+</div></li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-415"><strong>Exercise 10.14  (Coffee ratings: model it)  </strong></span>In this exercise you will build a Bayesian Normal regression model of a coffee bean’s rating (<span class="math inline">\(Y\)</span>) by its aroma grade (<span class="math inline">\(X\)</span>) with <span class="math inline">\(\mu = \beta_0 + \beta_1 X\)</span>. In doing so, assume that our only prior understanding is that the average cup of coffee has a 75-point rating, though this might be anywhere between 55 and 95. Beyond that, utilize weakly informative priors.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>写下并讨论咖啡评分(总 cup points)与其香气等级(越高越好)之间的关系。</li>
+<li>使用stan glm()模拟正常回归后模型.</li>
+<li>提供芳香系数的视觉和数字后总结。</li>
+<li>解释后中位数 {0}}。</li>
+<li>咖啡豆的香味越好, 解释一下</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-416"><strong>Exercise 10.15  (Coffee ratings: Is it wrong?)  </strong></span>Before putting too much stock into your regression analysis, step back and consider whether it’s <em>wrong</em>.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>您的后置模拟包含多组后置假参数集, 用其中第一种来模拟从观测到的香味分数中获得的572个新咖啡评分样本.</li>
+<li>构造一个模拟样本的密度图,并用一个实际观测到的总计 cup points数据的密度图叠加。 讨论。</li>
+<li>考虑一下吧 使用 pp  check () 执行更完整的后期预测检查。</li>
+<li>综合起来,你是否认为正常回归模型的假设2和3是合理的? 解释一下</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-417"><strong>Exercise 10.16  (Coffee ratings: Are the posterior predictions accurate? (Part 1))  </strong></span>Next, let’s explore how well our posterior model predicts coffee bean ratings.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>新咖啡馆的第一批咖啡豆的香味等级为7.67. 在不使用后预估()的情况下,模拟并绘制本批的评级后预估模型.</li>
+<li>实际上,这批豆类的评分是84分. 不使用预测 摘要(),计算和解释这批的后期预测误差的两个度量:原始误差和标准化误差.</li>
+<li>要了解新  咖啡中所有批次的后期预测精度, 构造并讨论 ppc intervals () 绘图。</li>
+<li>有多少批的收视率在50%的后期预测间隔内? (使用 R 代码回答这个问题; 不要试图在视觉上计数它! )</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-418"><strong>Exercise 10.17  (Coffee ratings: Are the posterior predictions accurate? (Part 2))  </strong></span>
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>使用 promision  summary cv( ) 来获取我们模型后期预测质量的十倍的交叉验证测量值。</li>
+<li>解释A部分中所报告的四个交叉验证的衡量标准中的每一个。</li>
+<li>使用十叠叠的信息验证所报告的交叉验证的MAE。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-419"><strong>Exercise 10.18  (Coffee ratings: Is it fair?)  </strong></span>Is our coffee bean analysis fair?
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-420"><strong>Exercise 10.19  (Coffee ratings now with aftertaste)  </strong></span>Aroma isn’t the only possible predictor of a coffee bean’s rating. What if, instead, we were to predict rating by a bean’s aftertaste? In exploring this relationship, continue to utilize the same prior models.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>使用 stan glm () 来模拟 talm  cup  points 的正常回归后模型。</li>
+<li>制作一个快速的图案来确定这个模型是否是错误的.</li>
+<li>对模型的后期预测质量进行10倍的交叉验证测量。</li>
+<li>如果你只能选一个咖啡豆的预测器, 为什么?</li>
+</ol>
+</div>
+<div class="section level3" id="open-ended-exercises" number="10.6.3">
+<h3>不限成员名额的工作</h3>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-421"><strong>Exercise 10.20  (Open-ended: more weather)  </strong></span>In this exercise you will use the <code>weather_perth</code> data in the <code>bayesrules</code> package to explore the Normal regression model of the maximum daily temperature (<code>maxtemp</code>) by the minimum daily temperature (<code>mintemp</code>) in Perth, Australia. You can either tune or utilize weakly informative priors.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>使用 stan glm () 匹配模型。</li>
+<li>总结您对最大时速和最小时速关系的理解。</li>
+<li>评估你的模型 总结你的发现。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-422"><strong>Exercise 10.21  (Open-ended: more bikes)  </strong></span>In this exercise you will use the <code>bikes</code> data in the <code>bayesrules</code> package to explore the Normal regression model of <code>rides</code> by <code>humidity</code>. You can either tune or utilize weakly informative priors.
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>使用 stan glm () 匹配模型。</li>
+<li>总结你对骑马和湿度的关系的理解。</li>
+<li>评估你的模型 总结你的发现。</li>
+</ol>
+</div>
+</div>
+</div>
+<h3>参考资料</h3>
+<div class="references csl-bib-body hanging-indent" id="refs">
+<div class="csl-entry" id="ref-spatial">
+Blangiardo, Marta, and Michela Cameletti. 2015. <em>Spatial and Spatio-Temporal <span>B</span>ayesian Models with <span>R</span> - <span>INLA</span></em>. Wiley.
+</div>
+<div class="csl-entry" id="ref-amazon">
+Dastin, Jeffrey. 2018. <span>“Amazon Scraps Secret <span>AI</span> Recruiting Tool That Showed Bias Against Women.”</span> <em>Reuters</em>. <a href="https://www.reuters.com/article/us-amazon-com-jobs-automation-insight/amazon-scraps-secret-ai-recruiting-tool-that-showed-bias-against-women-idUSKCN1MK08G">https://www.reuters.com/article/us-amazon-com-jobs-automation-insight/amazon-scraps-secret-ai-recruiting-tool-that-showed-bias-against-women-idUSKCN1MK08G</a>.
+</div>
+<div class="csl-entry" id="ref-aclu">
+Hadavas, Chloe. 2020. <span>“How Automation Bias Encourages the Use of Flawed Algorithms.”</span> <em>Slate</em>. <a href="https://slate.com/technology/2020/03/ice-lawsuit-hijacked-algorithm.html">https://slate.com/technology/2020/03/ice-lawsuit-hijacked-algorithm.html</a>.
+</div>
+<div class="csl-entry" id="ref-faceRecognition2">
+Harmon, Amy. 2019. <span>“As Cameras Track <span>D</span>etroit’s Residents, a Debate Ensues over Racial Bias.”</span> <em>New York Times</em>, July. <a href="https://www.nytimes.com/2019/07/08/us/detroit-facial-recognition-cameras.html">https://www.nytimes.com/2019/07/08/us/detroit-facial-recognition-cameras.html</a>.
+</div>
+<div class="csl-entry" id="ref-coffeetidy">
+———. 2020a. <span>“Coffee Ratings.”</span> <em>TidyTuesday Github Repostitory</em>. <a href="https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-07-07">https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-07-07</a>.
+</div>
+</div>
+</section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-9/">上一节：第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-11/">下一节：第 11 章 扩展正态回归模型</a></nav>
+</article>
+</div>
+</main>
+<footer class="site-footer">
+<div>
+<strong>AI 提效研究笔记</strong>
+<p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+</div>
+<div class="footer-links">
+<a href="/feed.xml">RSS</a>
+<a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+</div>
+</footer>
+<script src="/assets/js/site.js"></script>
+</body>
+</html>

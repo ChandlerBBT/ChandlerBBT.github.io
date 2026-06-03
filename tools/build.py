@@ -7,12 +7,17 @@ import shutil
 from pathlib import Path
 from xml.sax.saxutils import escape as xml_escape
 
+try:
+    import markdown as markdown_lib
+except ImportError:  # pragma: no cover - local fallback for minimal environments.
+    markdown_lib = None
+
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTENT_DIR = ROOT / "content" / "posts"
 SITE_URL = "https://chandlerbbt.github.io"
 SITE_TITLE = "Chandler's AI Productivity Notes"
-SITE_SUBTITLE = "AI 提效研究札记"
+SITE_SUBTITLE = "AI 提效研究笔记"
 SITE_DESCRIPTION = "记录我在工作与学习中，围绕 AI 提升效率的探索、实践与复盘。"
 
 
@@ -37,26 +42,22 @@ def parse_post(path: Path) -> dict:
     raw = path.read_text(encoding="utf-8")
     if not raw.startswith("---\n"):
         raise ValueError(f"{path.name} is missing front matter.")
-    meta: dict[str, object] = {}
-    body = raw
 
     _, front, body = raw.split("---\n", 2)
+    meta: dict[str, object] = {}
     for line in front.splitlines():
         if not line.strip() or line.strip().startswith("#"):
             continue
         key, _, value = line.partition(":")
         meta[key.strip()] = parse_value(value)
 
-    date_value = str(meta.get("date", "")).strip()
-    if not date_value:
-        date_value = path.stem[:10]
-
+    date_value = str(meta.get("date", "")).strip() or path.stem[:10]
     tags = meta.get("tags", [])
     if isinstance(tags, str):
         tags = [tags]
 
     slug = str(meta.get("slug", "")) or path.stem
-    post = {
+    return {
         "source": path,
         "slug": slugify(slug),
         "title": str(meta.get("title", path.stem)),
@@ -68,7 +69,6 @@ def parse_post(path: Path) -> dict:
         "draft": str(meta.get("draft", "false")).lower() == "true",
         "body": body.strip(),
     }
-    return post
 
 
 def inline_markdown(text: str) -> str:
@@ -95,7 +95,7 @@ def close_list(out: list[str], list_type: str | None) -> None:
         out.append(f"</{list_type}>")
 
 
-def markdown_to_html(markdown: str) -> str:
+def fallback_markdown_to_html(markdown: str) -> str:
     out: list[str] = []
     paragraph: list[str] = []
     list_type: str | None = None
@@ -134,12 +134,10 @@ def markdown_to_html(markdown: str) -> str:
             list_type = None
             alt = html.escape(image.group(1), quote=True)
             src = html.escape(image.group(2), quote=True)
-            caption = html.escape(image.group(1))
-            figcaption = f"\n  <figcaption>{caption}</figcaption>" if caption else ""
-            out.append(f'<figure class="article-figure">\n  <img src="{src}" alt="{alt}" loading="lazy">{figcaption}\n</figure>')
+            out.append(f'<figure class="article-figure"><img src="{src}" alt="{alt}" loading="lazy"></figure>')
             continue
 
-        heading = re.match(r"^(#{2,4})\s+(.+)$", line)
+        heading = re.match(r"^(#{1,4})\s+(.+)$", line)
         if heading:
             flush_paragraph(out, paragraph)
             close_list(out, list_type)
@@ -175,6 +173,17 @@ def markdown_to_html(markdown: str) -> str:
     flush_paragraph(out, paragraph)
     close_list(out, list_type)
     return "\n".join(out)
+
+
+def markdown_to_html(markdown: str) -> str:
+    if markdown_lib is None:
+        return fallback_markdown_to_html(markdown)
+    return markdown_lib.markdown(
+        markdown,
+        extensions=["extra", "toc", "sane_lists", "smarty"],
+        extension_configs={"toc": {"permalink": False}},
+        output_format="html5",
+    )
 
 
 def date_label(value: str) -> str:
@@ -221,8 +230,23 @@ def nav(active: str) -> str:
     return "\n".join(links)
 
 
+def mathjax_script() -> str:
+    return r"""
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>"""
+
+
 def base(title: str, description: str, active: str, content: str, body_class: str = "") -> str:
-    full_title = title if title == SITE_TITLE else f"{title} · {SITE_TITLE}"
+    full_title = title if title == SITE_TITLE else f"{title} | {SITE_TITLE}"
     return f"""<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -237,6 +261,7 @@ def base(title: str, description: str, active: str, content: str, body_class: st
   <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/assets/css/styles.css">
   <link rel="alternate" type="application/rss+xml" title="{html.escape(SITE_TITLE)}" href="/feed.xml">
+  {mathjax_script()}
 </head>
 <body class="{body_class}">
   <a class="skip-link" href="#content">跳到正文</a>
@@ -293,7 +318,10 @@ def post_card(post: dict, featured: bool = False) -> str:
 def render_home(posts: list[dict], all_tags: list[str]) -> str:
     latest = posts[0]
     other_posts = posts[1:6]
-    tag_buttons = "".join(f'<button type="button" class="filter-chip" data-filter="{html.escape(tag.lower(), quote=True)}">{html.escape(tag)}</button>' for tag in all_tags[:8])
+    tag_buttons = "".join(
+        f'<button type="button" class="filter-chip" data-filter="{html.escape(tag.lower(), quote=True)}">{html.escape(tag)}</button>'
+        for tag in all_tags[:8]
+    )
     list_items = "\n".join(post_card(post) for post in other_posts) or "<p>更多文章正在路上。</p>"
     content = f"""
 <section class="hero">
@@ -373,7 +401,7 @@ def render_tag_index(all_tags: list[str], posts: list[dict]) -> str:
 <section class="page-hero compact">
   <p class="section-label">主题</p>
   <h1>按问题域回看沉淀</h1>
-  <p>用标签把文章和长期研究线索连起来。</p>
+  <p>用标签把文章和长期研究线索连接起来。</p>
 </section>
 <section class="content-band">
   <div class="tag-grid">{''.join(tag_blocks)}</div>
@@ -398,7 +426,7 @@ def render_tag_page(tag: str, posts: list[dict]) -> str:
 
 
 def render_about() -> str:
-    content = f"""
+    content = """
 <section class="page-hero compact">
   <p class="section-label">关于</p>
   <h1>这不是一个教程站，而是一间公开的研究工作室</h1>
@@ -478,6 +506,12 @@ def render_sitemap(posts: list[dict], tags: list[str]) -> str:
     urls = ["/", "/posts/", "/tags/", "/about/"]
     urls.extend(post_url(post) for post in posts)
     urls.extend(f"/tags/{slugify(tag)}/" for tag in tags)
+    tutorial_root = ROOT / "bayes-rules-python-cn"
+    if tutorial_root.exists():
+        for index_file in sorted(tutorial_root.glob("**/index.html")):
+            rel = "/" + index_file.parent.relative_to(ROOT).as_posix().strip("/") + "/"
+            if rel not in urls:
+                urls.append(rel)
     entries = "\n".join(f"  <url><loc>{SITE_URL}{url}</loc></url>" for url in urls)
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
