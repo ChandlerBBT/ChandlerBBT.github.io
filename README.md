@@ -30,7 +30,30 @@
 - `assets/`: 样式、脚本和图片资源。
 - `tools/build.py`: 无第三方依赖的静态站点生成器。
 - `tools/new_post.py`: 新文章模板生成器。
+- `tools/import_bayes_rules.py`: Bayes Rules! 中文 Python 改写教程迁移脚本。
+- `tools/check_bayes_rules.py`: Bayes Rules! 教程页质量检查脚本。
+- `tools/deepseek_bayes_review.py`: DeepSeek 教程译文审校脚本。
 - `index.html`, `posts/`, `tags/`, `about/`: 生成后的 GitHub Pages 静态页面。
+
+## Bayes Rules! 教程维护
+
+迁移或调整教程页后，先生成博客索引，再做教程质量检查：
+
+```powershell
+python tools/build.py
+python tools/check_bayes_rules.py --strict
+```
+
+检查脚本会统计教程页、图片、代码块、剩余占位提示、疑似未完成代码块，以及本地链接和图片是否缺失。
+
+需要逐章重译或审校时，先在当前终端设置 `DEEPSEEK_API_KEY`，再运行：
+
+```powershell
+python tools/import_bayes_rules.py --translator deepseek --model deepseek-v4-pro --batch-size 8 --api-timeout 90
+python tools/deepseek_bayes_review.py --model deepseek-v4-pro --page chapter-2/index.html
+```
+
+DeepSeek 密钥只从环境变量读取，不写入仓库。
 
 ## 写作结构
 

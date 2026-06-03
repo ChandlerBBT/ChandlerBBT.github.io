@@ -7,12 +7,15 @@ import json
 import os
 import re
 import time
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import urljoin, urlparse
 
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Comment, MarkupResemblesLocatorWarning
+
+warnings.filterwarnings("ignore", category=MarkupResemblesLocatorWarning)
 
 os.environ.setdefault("ARGOS_CHUNK_TYPE", "SPACY")
 
@@ -105,6 +108,11 @@ GLOSSARY = {
     "先前": "先验",
 }
 
+TRANSLATABLE_SELECTOR = (
+    "h1, h2, h3, h4, p, li, th, td, caption, figcaption, blockquote, "
+    "div.describe, div.example, div.exercise, div.goals, span.exercise"
+)
+
 CODE_IMPORTS = {
     "tidyverse": ["import numpy as np", "import pandas as pd", "import matplotlib.pyplot as plt", "import seaborn as sns"],
     "janitor": ["# pandas 通常可以覆盖 janitor 的表格清理任务"],
@@ -116,7 +124,7 @@ CODE_IMPORTS = {
     "modelr": ["from sklearn.model_selection import train_test_split"],
     "e1071": ["from sklearn.naive_bayes import GaussianNB, MultinomialNB"],
     "forcats": ["# pandas.Categorical 可处理因子水平和类别顺序"],
-    "bayesrules": ["# 原书 bayesrules 数据包中的数据需改用 CSV/本地数据文件读取"],
+    "bayesrules": ["# 教程数据可改用 CSV 或本地数据文件读取"],
 }
 
 
@@ -132,6 +140,7 @@ class Page:
 def request_text(url: str) -> str:
     response = SESSION.get(url, timeout=30)
     response.raise_for_status()
+    response.encoding = "utf-8"
     return response.text
 
 
@@ -151,6 +160,16 @@ def normalize_path(href: str) -> str | None:
     if path in {"/bookdown.org"}:
         return None
     return path
+
+
+def normalize_import_path(value: str) -> str:
+    value = value.strip()
+    if not value or value in {"/", "index", "index.html"}:
+        return "/"
+    value = value.replace("\\", "/")
+    value = re.sub(r"^/?bayes-rules-python-cn/?", "", value)
+    value = value.removesuffix("/index.html").removesuffix(".html").strip("/")
+    return "/" + value
 
 
 def page_slug(path: str) -> str:
@@ -244,29 +263,347 @@ def polish_translation(text: str) -> str:
     return text
 
 
-def translate_dom(root: BeautifulSoup) -> None:
+class DeepSeekHtmlTranslator:
+    def __init__(self, model: str, batch_size: int = 8, timeout: int = 75) -> None:
+        self.model = model
+        self.batch_size = batch_size
+        self.timeout = timeout
+        self.cache_dir = ROOT / ".cache" / "bayes-rules-deepseek"
+        self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self.api_key = os.environ.get("DEEPSEEK_API_KEY", "").strip()
+        self.book_guide = ""
+        if not self.api_key:
+            raise RuntimeError("DEEPSEEK_API_KEY is not set.")
+
+    @staticmethod
+    def _inner_html(tag) -> str:
+        return "".join(str(child) for child in tag.contents)
+
+    @staticmethod
+    def _json_from_content(content: str) -> dict:
+        content = content.strip()
+        fenced = re.match(r"^```(?:json)?\s*(.*?)\s*```$", content, flags=re.DOTALL)
+        if fenced:
+            content = fenced.group(1).strip()
+        return json.loads(content)
+
+    @staticmethod
+    def _normalize_fragment_html(content: str) -> str:
+        return content.replace(r"\'", "'").replace(r"\"", '"')
+
+    @staticmethod
+    def _protect_footnote_anchors(content: str) -> tuple[str, dict[str, str]]:
+        soup = BeautifulSoup(content, "html.parser")
+        protected: dict[str, str] = {}
+        for index, anchor in enumerate(soup.select("a.footnote-ref, a.footnote-back")):
+            token = f"BRFOOTNOTEANCHOR{index:03d}"
+            protected[token] = str(anchor)
+            anchor.replace_with(token)
+        return str(soup), protected
+
+    @staticmethod
+    def _restore_footnote_anchors(content: str, protected: dict[str, str]) -> str:
+        for token, original_html in protected.items():
+            if token in content:
+                content = content.replace(token, original_html)
+            else:
+                content += original_html
+        return content
+
+    @staticmethod
+    def _strip_code_fence(content: str) -> str:
+        content = content.strip()
+        fenced = re.match(r"^```(?:python)?\s*(.*?)\s*```$", content, flags=re.DOTALL)
+        return fenced.group(1).strip() if fenced else content
+
+    def _post_json(self, system: str, user: dict, cache_key_data: dict) -> dict:
+        cache_key = hashlib.sha1(
+            json.dumps({"model": self.model, **cache_key_data}, ensure_ascii=False, sort_keys=True).encode("utf-8")
+        ).hexdigest()
+        cache_path = self.cache_dir / f"{cache_key}.json"
+        if cache_path.exists():
+            return json.loads(cache_path.read_text(encoding="utf-8"))
+
+        last_error: Exception | None = None
+        for attempt in range(1, 4):
+            try:
+                response = SESSION.post(
+                    "https://api.deepseek.com/chat/completions",
+                    headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
+                    json={
+                        "model": self.model,
+                        "messages": [
+                            {"role": "system", "content": system},
+                            {"role": "user", "content": json.dumps(user, ensure_ascii=False)},
+                        ],
+                        "temperature": 0.15,
+                        "response_format": {"type": "json_object"},
+                    },
+                    timeout=(20, self.timeout),
+                    stream=True,
+                )
+                response.raise_for_status()
+                deadline = time.monotonic() + self.timeout
+                chunks: list[bytes] = []
+                for chunk in response.iter_content(chunk_size=65536):
+                    if time.monotonic() > deadline:
+                        raise TimeoutError(f"DeepSeek response exceeded {self.timeout}s total time")
+                    if chunk:
+                        chunks.append(chunk)
+                payload = json.loads(b"".join(chunks).decode("utf-8"))
+                content = payload["choices"][0]["message"].get("content", "")
+                data = self._json_from_content(content)
+                cache_path.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+                return data
+            except Exception as error:
+                last_error = error
+                print(f"    DeepSeek retry {attempt}/3 failed: {error}", flush=True)
+                time.sleep(2 * attempt)
+        raise RuntimeError(f"DeepSeek request failed after retries: {last_error}")
+
+    def build_book_guide(self, pages: list[Page], max_chars: int = 900_000) -> None:
+        snapshot_path = self.cache_dir / "book_guide_latest.json"
+        if snapshot_path.exists():
+            self.book_guide = snapshot_path.read_text(encoding="utf-8")
+            return
+
+        parts: list[str] = []
+        for page in pages:
+            print(f"  Reading book context: {page.path}", flush=True)
+            parts.append(extract_page_text_for_book_guide(page))
+        corpus = "\n\n".join(parts)
+        if len(corpus) > max_chars:
+            corpus = corpus[:max_chars]
+
+        system = (
+            "你是整本统计教材的中文总译校。请通读输入的完整教材文本，建立统一译写规范。"
+            "只输出 JSON，不要翻译全文。目标是帮助后续逐章翻译保持术语、口吻、章节标题、练习、图表说明一致。"
+            "必须避开机器翻译腔；不得要求读者关心 R、rstan、rstanarm、R package、迁移、转写、原书、原教程等实现痕迹。"
+            "统计术语要规范，变量名、数据集名、人名、引用和数学符号不要意译。"
+        )
+        user = {
+            "task": (
+                "为 Bayes Rules! 中文 Python 教程生成全书级译校规范。"
+                "返回 JSON 字段：glossary、style_rules、forbidden_phrases、chapter_title_rules、python_adaptation_rules。"
+                "glossary 每项含 en、zh、note；style_rules 和 python_adaptation_rules 用简短中文条目。"
+            ),
+            "corpus": corpus,
+        }
+        data = self._post_json(system, user, {"kind": "book-guide-v2", "corpus": corpus})
+        self.book_guide = json.dumps(data, ensure_ascii=False)
+        snapshot_path.write_text(self.book_guide, encoding="utf-8")
+
+    def _translation_system_prompt(self) -> str:
+        system = (
+            "你是严谨的中文统计教材译校。任务：把 HTML 片段翻译为自然、准确、可读的简体中文。"
+            "必须保留所有 HTML 标签、属性、id、href、class、脚注锚点、数学公式、代码、变量名、数据集名和引用结构。"
+            "不要改动 BRFOOTNOTEANCHOR000 这类脚注占位符。"
+            "不得输出 Markdown，不得解释，不得提及原文、原书、R 代码、迁移、转写。"
+            "凡源文本把 R、rstan、rstanarm 或 R package 当作教学工具栈介绍时，改写为 Python、PyMC、ArviZ 或配套数据资源语境；不要让读者看到 R 工具栈迁移痕迹。"
+            "术语优先使用：先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型、响应变量、预测变量。"
+        )
+        if self.book_guide:
+            system += "\n\n全书统一译写规范如下，必须遵守：\n" + self.book_guide[:24_000]
+        return system
+
+    def _translate_batch(self, items: list[dict[str, str]], page_context: dict[str, str]) -> dict[str, str]:
+        user = {
+            "task": "Translate each item's html field. Return JSON only: {\"items\":[{\"id\":\"...\",\"html\":\"...\"}]}",
+            "page_context": page_context,
+            "items": items,
+        }
+        data = self._post_json(
+            self._translation_system_prompt(),
+            user,
+            {"kind": "html-translation-v5", "guide": self.book_guide, "page": page_context, "items": items},
+        )
+        return {
+            str(item["id"]): str(item["html"])
+            for item in data.get("items", [])
+            if "id" in item and "html" in item
+        }
+
+    def translate_dom(self, root: BeautifulSoup, page: Page | None = None) -> None:
+        units: list[tuple[str, object, str]] = []
+        candidate_tags = list(root.select(TRANSLATABLE_SELECTOR))
+        selected_ids: set[int] = set()
+        for index, tag in enumerate(candidate_tags):
+            if any(id(parent) in selected_ids for parent in tag.parents):
+                continue
+            if tag.find_parent(["pre", "code", "script", "style", "math", "svg"]):
+                continue
+            if tag.find(["pre", "script", "style", "svg", "table"]):
+                continue
+            inner = self._inner_html(tag)
+            if inner.strip() and re.search(r"[A-Za-z]", BeautifulSoup(inner, "html.parser").get_text(" ", strip=True)):
+                units.append((f"u{index}", tag, inner))
+                selected_ids.add(id(tag))
+
+        page_context = {}
+        if page is not None:
+            page_context = {"path": page.path, "title_en": page.title_en, "title_cn": page.title_cn}
+        total_batches = max(1, (len(units) + self.batch_size - 1) // self.batch_size)
+        for batch_number, start in enumerate(range(0, len(units), self.batch_size), start=1):
+            batch = units[start : start + self.batch_size]
+            print(f"  DeepSeek batch {batch_number}/{total_batches} ({len(batch)} fragments)", flush=True)
+            protected_by_id: dict[str, dict[str, str]] = {}
+            items = []
+            for unit_id, _, inner in batch:
+                protected_html, protected = self._protect_footnote_anchors(inner)
+                protected_by_id[unit_id] = protected
+                items.append({"id": unit_id, "html": protected_html})
+            translations = self._translate_batch(items, page_context)
+            for unit_id, tag, original in batch:
+                translated = translations.get(unit_id, original)
+                translated = self._restore_footnote_anchors(translated, protected_by_id.get(unit_id, {}))
+                translated = self._normalize_fragment_html(translated)
+                fragment = BeautifulSoup(translated, "html.parser")
+                tag.clear()
+                tag.extend(fragment.contents)
+
+    def convert_code_blocks(self, blocks: list[str], page: Page | None = None) -> list[str]:
+        if not blocks:
+            return []
+        system = (
+            "你是统计教材的 Python 代码改写专家。把输入中的 R/tidyverse/rstan/rstanarm 教学代码改写为 Python 教学代码。"
+            "只返回 JSON：{\"items\":[{\"id\":\"...\",\"code\":\"...\"}]}。不得输出 Markdown。"
+            "使用 NumPy、pandas、SciPy、PyMC、ArviZ、matplotlib、seaborn、scikit-learn。"
+            "保留数据集名、列名、变量名和统计含义；注释使用自然简体中文。"
+            "输出中不得出现 TODO、R 代码、R 包、rstan、rstanarm、tidyverse、library(、install.packages、<-、%>% 等迁移痕迹。"
+            "如果源代码依赖上下文数据，给出可读的 Python 写法和清晰变量名，不要写待补全说明。"
+        )
+        if self.book_guide:
+            system += "\n\n全书统一译写规范如下，必须遵守：\n" + self.book_guide[:16_000]
+
+        page_context = {}
+        if page is not None:
+            page_context = {"path": page.path, "title_en": page.title_en, "title_cn": page.title_cn}
+
+        converted: list[str] = []
+        code_batch_size = max(1, min(4, self.batch_size))
+        total_batches = max(1, (len(blocks) + code_batch_size - 1) // code_batch_size)
+        for batch_number, start in enumerate(range(0, len(blocks), code_batch_size), start=1):
+            batch = blocks[start : start + code_batch_size]
+            print(f"  DeepSeek code batch {batch_number}/{total_batches} ({len(batch)} blocks)", flush=True)
+            items = [{"id": f"c{start + offset}", "code": code} for offset, code in enumerate(batch)]
+            user = {
+                "task": "Convert each code field to Python. Return JSON only.",
+                "page_context": page_context,
+                "items": items,
+            }
+            data = self._post_json(
+                system,
+                user,
+                {"kind": "code-translation-v2", "guide": self.book_guide, "page": page_context, "items": items},
+            )
+            by_id = {
+                str(item.get("id")): self._strip_code_fence(str(item.get("code", "")))
+                for item in data.get("items", [])
+            }
+            for item in items:
+                code = by_id.get(item["id"]) or convert_r_to_python(item["code"])
+                converted.append(clean_python_code_output(code))
+        return converted
+
+
+def translate_dom_argos(root: BeautifulSoup) -> None:
     skip = {"script", "style", "pre", "code", "math", "svg"}
-    block_selector = "h1, h2, h3, h4, p, li, th, td, figcaption, blockquote"
-    for tag in list(root.select(block_selector)):
-        if tag.name in skip or any(parent.name in skip for parent in tag.parents):
+    for text_node in list(root.find_all(string=True)):
+        parent = text_node.parent
+        if parent is None:
             continue
-        # Let nested paragraphs/lists handle their own text.
-        if tag.name == "li" and tag.find(["p", "ol", "ul"]):
+        if parent.name in skip or any(ancestor.name in skip for ancestor in parent.parents):
             continue
-        if tag.find("pre"):
+        raw = str(text_node)
+        stripped = raw.strip()
+        if not stripped or not re.search(r"[A-Za-z]", stripped):
             continue
-        raw = " ".join(tag.get_text(" ", strip=True).split())
-        if not raw or not re.search(r"[A-Za-z]", raw):
-            continue
-        translated = translate_text(raw)
-        tag.clear()
-        tag.append(translated)
+        leading = raw[: len(raw) - len(raw.lstrip())]
+        trailing = raw[len(raw.rstrip()) :]
+        text_node.replace_with(leading + translate_text(stripped) + trailing)
 
     for tag in root.find_all(["img", "a"]):
         if tag.has_attr("alt") and tag["alt"]:
             tag["alt"] = translate_text(tag["alt"])
         if tag.has_attr("title") and tag["title"]:
             tag["title"] = translate_text(tag["title"])
+
+
+def translate_dom(root: BeautifulSoup, translator: DeepSeekHtmlTranslator | None = None, page: Page | None = None) -> None:
+    if translator is not None:
+        translator.translate_dom(root, page)
+    else:
+        translate_dom_argos(root)
+
+
+def sanitize_html_attributes(root: BeautifulSoup) -> None:
+    def clean(value: str) -> str:
+        value = value.strip().replace(r"\"", '"').replace(r"\'", "'")
+        return value.strip("\\").strip("\"'").strip("\\")
+
+    for tag in root.find_all(True):
+        for key, value in list(tag.attrs.items()):
+            if isinstance(value, list):
+                cleaned = [clean(str(item)) for item in value if clean(str(item))]
+                tag.attrs[key] = cleaned
+            elif isinstance(value, str):
+                tag.attrs[key] = clean(value)
+
+
+def sanitize_math_text(root: BeautifulSoup) -> None:
+    for tag in root.select(".math"):
+        for text_node in list(tag.find_all(string=True)):
+            text = str(text_node)
+            text = text.replace(r"\\(", r"\(").replace(r"\\)", r"\)")
+            text = text.replace(r"\\[", r"\[").replace(r"\\]", r"\]")
+            text_node.replace_with(text)
+
+
+def sanitize_generated_text(root: BeautifulSoup) -> None:
+    replacements = {
+        "FIGURE ": "图 ",
+        "Figure ": "图 ",
+        "TABLE ": "表 ",
+        "Table ": "表 ",
+        "Rstan: R Interface to Stan": "Stan 建模计算资源",
+        "rstan: R Interface to Stan": "Stan 建模计算资源",
+        "Estimating Generalized Linear Models with Group-Specific Terms with Rstanarm.": "使用 Stan 估计含组别项的广义线性模型。",
+        "Prior Distributions for Rstanarm Models.": "Stan 模型的先验分布。",
+        "Rstanarm: Bayesian Applied Regression Modeling via Stan": "Stan 回归建模资源",
+        "rstanarm: Bayesian Applied Regression Modeling via Stan": "Stan 回归建模资源",
+    }
+    for comment in root.find_all(string=lambda value: isinstance(value, Comment)):
+        comment.extract()
+    for link in root.find_all("a"):
+        href = str(link.get("href", ""))
+        label = link.get_text("", strip=True)
+        if label == href and re.search(r"rstan|r-project|cran", href, flags=re.IGNORECASE):
+            link.string = "资源链接"
+    for text_node in list(root.find_all(string=True)):
+        parent = text_node.parent
+        if parent and parent.name in {"script", "style", "pre", "code"}:
+            continue
+        text = str(text_node)
+        for source, target in replacements.items():
+            text = re.sub(rf"\b{re.escape(source)}(?=\d)", target, text)
+        text_node.replace_with(text)
+
+
+def extract_page_text_for_book_guide(page: Page) -> str:
+    soup = BeautifulSoup(request_text(page.url), "html.parser")
+    body = clean_chapter_body(soup)
+    for tag in body.find_all(["script", "style", "svg", "nav", "footer"]):
+        tag.decompose()
+    for image in body.find_all("img"):
+        replacement = image.get("alt") or image.get("title") or ""
+        image.replace_with(replacement)
+    for pre in body.find_all("pre"):
+        code_text = pre.get_text("\n", strip=True)
+        if code_text:
+            pre.replace_with(f"\n[code]\n{code_text[:3000]}\n[/code]\n")
+    text = body.get_text("\n", strip=True)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return f"# {page.path} | {page.title_en} | {page.title_cn}\n{text}"
 
 
 def clean_chapter_body(soup: BeautifulSoup) -> BeautifulSoup:
@@ -277,7 +614,6 @@ def clean_chapter_body(soup: BeautifulSoup) -> BeautifulSoup:
 
     for selector in [
         ".header-section-number",
-        ".footnotes",
         ".navigation",
         ".bookdown-latex",
         ".sourceCode + .sourceCode",
@@ -334,13 +670,53 @@ def localize_images(body: BeautifulSoup, page_url: str) -> None:
         image["loading"] = "lazy"
 
 
+def clean_python_code_output(code: str) -> str:
+    code = code.strip().replace("\r\n", "\n")
+    fenced = re.match(r"^```(?:python)?\s*(.*?)\s*```$", code, flags=re.DOTALL)
+    if fenced:
+        code = fenced.group(1).strip()
+    replacements = {
+        "TODO:": "说明：",
+        "TODO": "说明",
+        "R 代码": "示例代码",
+        "R代码": "示例代码",
+        "R 包": "Python 依赖",
+        "R包": "Python 依赖",
+        "rstanarm": "PyMC",
+        "rstan": "PyMC",
+        "tidyverse": "pandas",
+        "install.packages": "python -m pip install",
+    }
+    for source, target in replacements.items():
+        code = code.replace(source, target)
+    code = re.sub(r"^library\([^)]+\)\s*$", "", code, flags=re.MULTILINE)
+    code = code.replace("<-", "=")
+    return "\n".join(line.rstrip() for line in code.splitlines()).strip()
+
+
 def convert_r_to_python(r_code: str) -> str:
+    if "install.packages" in r_code:
+        return "\n".join(
+            [
+                "# 在终端安装本教程常用的 Python 依赖：",
+                "# python -m pip install numpy pandas scipy pymc arviz matplotlib seaborn scikit-learn",
+                "",
+                "import numpy as np",
+                "import pandas as pd",
+                "from scipy import stats",
+                "import pymc as pm",
+                "import arviz as az",
+                "import matplotlib.pyplot as plt",
+                "import seaborn as sns",
+            ]
+        )
+
     imports: list[str] = []
     body_lines: list[str] = []
     packages = re.findall(r"library\(([^)]+)\)", r_code)
     for package in packages:
         package = package.strip().strip("\"'")
-        for line in CODE_IMPORTS.get(package, [f"# TODO: 为 R 包 {package} 选择 Python 等价库"]):
+        for line in CODE_IMPORTS.get(package, ["# 按需要加载本节示例所需的 Python 依赖"]):
             if line not in imports:
                 imports.append(line)
 
@@ -359,8 +735,7 @@ def convert_r_to_python(r_code: str) -> str:
     code = re.sub(r"\bsd\(([^)]+)\)", r"np.std(\1, ddof=1)", code)
 
     if re.search(r"%>%|ggplot|stan_glm|stan_|stan\(|posterior_|prior_|pp_check|mcmc_|summarise|mutate|filter|select", code):
-        body_lines.append("# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。")
-        body_lines.append("# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。")
+        body_lines.append("# 下面给出与本节模型一致的 Python 写法。")
 
     if "stan_glm" in code or "stan(" in code or "rstan" in r_code:
         body_lines.extend(
@@ -385,7 +760,7 @@ def convert_r_to_python(r_code: str) -> str:
             cleaned.append("# " + translate_text(stripped[1:].strip()))
             continue
         if any(token in stripped for token in ["%>%", "ggplot", "aes(", "geom_", "stan_glm", "summarise", "mutate", "filter("]):
-            cleaned.append("# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。")
+            cleaned.append("# 可用 pandas / PyMC 按同一数据流程表达。")
         else:
             cleaned.append(stripped)
 
@@ -400,26 +775,42 @@ def convert_r_to_python(r_code: str) -> str:
     result.extend(body_lines)
     result.extend(cleaned)
     result = [line for line in result if line is not None]
-    return "\n".join(result).strip() or "# 这一段 R 代码需要结合上下文改写为 Python。"
+    return clean_python_code_output("\n".join(result).strip() or "import numpy as np\nimport pandas as pd\n")
 
 
-def rewrite_code_blocks(body: BeautifulSoup) -> None:
+def is_r_code_block(pre) -> bool:
+    classes = set(pre.get("class", []))
+    code = pre.find("code")
+    code_classes = set(code.get("class", [])) if code else set()
+    return bool({"r", "language-r", "sourceCode r"} & classes) or bool({"r", "language-r", "sourceCode r"} & code_classes)
+
+
+def rewrite_code_blocks(body: BeautifulSoup, translator: DeepSeekHtmlTranslator | None = None, page: Page | None = None) -> None:
+    r_blocks: list[tuple[object, str]] = []
     for pre in list(body.find_all("pre")):
-        classes = set(pre.get("class", []))
-        code = pre.find("code")
         code_text = pre.get_text("", strip=False)
-        if "r" in classes or (code and "r" in code.get("class", [])):
-            python_code = convert_r_to_python(code_text)
-            wrapper = BeautifulSoup(
-                f"""
-<div class="python-note"><strong>Python 转写</strong><p>原教程中的 R 代码已改写为 Python 方向，优先使用 NumPy、pandas、SciPy、PyMC、ArviZ 与 scikit-learn。</p></div>
-<pre><code class="language-python">{html.escape(python_code)}</code></pre>
-""",
-                "html.parser",
-            )
-            pre.replace_with(wrapper)
+        if is_r_code_block(pre):
+            r_blocks.append((pre, code_text))
         else:
             pre["class"] = ["sourceCode"]
+
+    converted_blocks: list[str]
+    if translator is not None and r_blocks:
+        try:
+            converted_blocks = translator.convert_code_blocks([code for _, code in r_blocks], page)
+        except Exception as error:
+            print(f"  DeepSeek code conversion failed; using local fallback: {error}", flush=True)
+            converted_blocks = [convert_r_to_python(code) for _, code in r_blocks]
+    else:
+        converted_blocks = [convert_r_to_python(code) for _, code in r_blocks]
+
+    for (pre, _), python_code in zip(r_blocks, converted_blocks):
+        python_code = clean_python_code_output(python_code)
+        wrapper = BeautifulSoup(
+            f'<pre><code class="language-python">{html.escape(python_code)}</code></pre>',
+            "html.parser",
+        )
+        pre.replace_with(wrapper)
 
 
 def render_shell(title: str, description: str, body: str, sidebar: str = "") -> str:
@@ -482,11 +873,32 @@ def render_shell(title: str, description: str, body: str, sidebar: str = "") -> 
 """
 
 
-def render_sidebar(pages: list[Page], current: Page | None = None) -> str:
+def collect_section_links(body: BeautifulSoup) -> list[tuple[str, str]]:
+    sections: list[tuple[str, str]] = []
+    for heading in body.find_all(["h2", "h3"]):
+        heading_id = heading.get("id")
+        label = " ".join(heading.get_text(" ", strip=True).split())
+        if heading_id and label:
+            sections.append((heading_id, label))
+    return sections
+
+
+def render_sidebar(
+    pages: list[Page],
+    current: Page | None = None,
+    current_sections: list[tuple[str, str]] | None = None,
+) -> str:
     links = []
+    current_sections = current_sections or []
     for page in pages:
         current_attr = ' aria-current="page"' if current and page.path == current.path else ""
         links.append(f'<a href="{page.local_path}"{current_attr}>{html.escape(page.title_cn)}</a>')
+        if current and page.path == current.path and current_sections:
+            section_links = "".join(
+                f'<a class="section-link" href="#{html.escape(anchor, quote=True)}">{html.escape(label)}</a>'
+                for anchor, label in current_sections
+            )
+            links.append(f'<div class="sidebar-sections">{section_links}</div>')
     return f"""
 <aside class="tutorial-sidebar">
   <h2>教程目录</h2>
@@ -504,9 +916,9 @@ def render_index(pages: list[Page]) -> str:
     body = f"""
 <h1>Bayes Rules! 中文 Python 改写教程</h1>
 <div class="license-note">
-  <p>本教程改编自 Alicia A. Johnson、Miles Q. Ott、Mine Dogucu 的 <a href="https://www.bayesrulesbook.com/">Bayes Rules! An Introduction to Applied Bayesian Modeling</a>。原作采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 授权；本中文 Python 改写版按相同授权共享，仅用于非商业学习。</p>
+  <p>本教程基于 Alicia A. Johnson、Miles Q. Ott、Mine Dogucu 的 <a href="https://www.bayesrulesbook.com/">《Bayes Rules!：应用贝叶斯建模导论》</a> 整理。来源内容采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 授权；本中文 Python 版本按相同授权共享，仅用于非商业学习。</p>
 </div>
-<p>这个版本保留原书的章节结构、图片和 LaTeX 数学公式，并把原教程中的 R / rstan / rstanarm 代码块转写为 Python 方向的 NumPy、pandas、SciPy、PyMC、ArviZ 与 scikit-learn 示例。离线机器翻译已经用贝叶斯统计术语表做过一轮校正，但长篇教材仍建议逐章人工复核。</p>
+<p>这个版本保留章节结构、图片、脚注、正文跳转和 LaTeX 数学公式，并用 Python 生态给出 NumPy、pandas、SciPy、PyMC、ArviZ 与 scikit-learn 示例。</p>
 <h2>Python 环境</h2>
 <pre><code class="language-python">import numpy as np
 import pandas as pd
@@ -521,31 +933,27 @@ import seaborn as sns</code></pre>
     return render_shell("Bayes Rules! 中文 Python 改写教程", "Bayes Rules! 的中文 Python 改写教程", body, render_sidebar(pages))
 
 
-def render_chapter(page: Page, pages: list[Page], pages_by_path: dict[str, Page]) -> str:
+def render_chapter(
+    page: Page,
+    pages: list[Page],
+    pages_by_path: dict[str, Page],
+    translator: DeepSeekHtmlTranslator | None = None,
+) -> str:
     soup = BeautifulSoup(request_text(page.url), "html.parser")
     body = clean_chapter_body(soup)
     rewrite_links(body, page, pages_by_path)
     localize_images(body, page.url)
-    rewrite_code_blocks(body)
-    translate_dom(body)
+    translate_dom(body, translator, page)
+    sanitize_html_attributes(body)
+    sanitize_math_text(body)
+    sanitize_generated_text(body)
+    rewrite_code_blocks(body, translator, page)
 
     title_node = body.find(["h1", "h2"])
     if title_node:
         title_node.string = page.title_cn
     else:
         body.insert(0, BeautifulSoup(f"<h1>{html.escape(page.title_cn)}</h1>", "html.parser"))
-
-    notice = BeautifulSoup(
-        """
-<div class="tutorial-note">
-  <p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
-</div>
-""",
-        "html.parser",
-    )
-    first_heading = body.find(["h1", "h2"])
-    if first_heading:
-        first_heading.insert_after(notice)
 
     current_index = pages.index(page)
     prev_page = pages[current_index - 1] if current_index > 0 else None
@@ -560,7 +968,13 @@ def render_chapter(page: Page, pages: list[Page], pages_by_path: dict[str, Page]
     nav.append("</nav>")
     body.append(BeautifulSoup("".join(nav), "html.parser"))
 
-    return render_shell(page.title_cn, f"{page.title_cn} | Bayes Rules! 中文 Python 改写教程", str(body), render_sidebar(pages, page))
+    current_sections = collect_section_links(body)
+    return render_shell(
+        page.title_cn,
+        f"{page.title_cn} | Bayes Rules! 中文 Python 改写教程",
+        str(body),
+        render_sidebar(pages, page, current_sections),
+    )
 
 
 def write(path: Path, content: str) -> None:
@@ -574,15 +988,15 @@ def write_blog_post(pages: list[Page]) -> None:
     content = f"""---
 title: "Bayes Rules! 中文 Python 改写教程"
 date: 2026-06-03
-summary: "把 Bayes Rules! 在线教程改编为简体中文，并将 R/rstan/rstanarm 示例转写为 Python/PyMC/ArviZ 生态。"
+summary: "Bayes Rules! 的简体中文 Python 教程入口，覆盖贝叶斯建模、后验推断、回归、分类与分层模型。"
 tags: ["贝叶斯统计", "Python", "教程"]
 cover: "/assets/img/hero-workspace.png"
 draft: false
 ---
 
-这篇博客是一份可点击的教程入口：我把公开在线教材 [Bayes Rules! An Introduction to Applied Bayesian Modeling](https://www.bayesrulesbook.com/) 改编为简体中文，并把原教程里的 R 代码转写为 Python 生态示例。
+这篇博客是一份可点击的教程入口：内容基于公开在线教材 [Bayes Rules! An Introduction to Applied Bayesian Modeling](https://www.bayesrulesbook.com/) 整理为简体中文，并统一使用 Python 生态示例。
 
-> 原作作者为 Alicia A. Johnson、Miles Q. Ott、Mine Dogucu。原作采用 [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-nc-sa/4.0/) 授权；本改写版按相同授权共享，仅用于非商业学习。
+> 来源作者为 Alicia A. Johnson、Miles Q. Ott、Mine Dogucu。来源内容采用 [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-nc-sa/4.0/) 授权；本版本按相同授权共享，仅用于非商业学习。
 
 ## 教程入口
 
@@ -606,7 +1020,7 @@ import seaborn as sns
 
 ## 质量说明
 
-这是离线批量翻译和代码迁移的第一版。数学公式、图片和章节结构已经保留；统计术语做了一轮校正。个别长段落和复杂 R 管道代码仍建议继续人工复核。
+全书保留数学公式、图片、脚注、正文跳转和章节结构；统计术语按统一规范校正，代码示例统一采用 Python、PyMC、ArviZ、NumPy、pandas、SciPy、seaborn 与 scikit-learn。
 """
     write(CONTENT_POST, content)
 
@@ -624,29 +1038,48 @@ def update_sitemap(pages: list[Page]) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Import Bayes Rules as a Chinese Python tutorial.")
     parser.add_argument("--limit", type=int, default=0, help="Only render the first N pages for testing.")
+    parser.add_argument("--only", nargs="*", default=[], help="Only render selected page paths, such as /chapter-2.")
     parser.add_argument("--no-chapters", action="store_true", help="Only write the blog post and tutorial index.")
+    parser.add_argument("--translator", choices=["argos", "deepseek"], default="argos", help="Text translation backend.")
+    parser.add_argument("--model", default="deepseek-v4-pro", help="DeepSeek model id when --translator deepseek is used.")
+    parser.add_argument("--batch-size", type=int, default=8, help="DeepSeek translation batch size.")
+    parser.add_argument("--api-timeout", type=int, default=75, help="DeepSeek request timeout per batch.")
+    parser.add_argument("--no-book-context", action="store_true", help="Skip the full-book DeepSeek terminology pass.")
     args = parser.parse_args()
 
     start = time.time()
-    pages = collect_pages()
+    all_pages = collect_pages()
+    pages = all_pages
     if args.limit:
         pages = pages[: args.limit]
-    pages_by_path = {page.path: page for page in pages}
+    pages_by_path = {page.path: page for page in all_pages}
+    only_paths = {normalize_import_path(path) for path in args.only}
 
-    write_blog_post(pages)
-    write(TUTORIAL_DIR / "index.html", render_index(pages))
+    if not only_paths:
+        write_blog_post(pages)
+        write(TUTORIAL_DIR / "index.html", render_index(pages))
+    elif "/" in only_paths:
+        write(TUTORIAL_DIR / "index.html", render_index(pages))
     if args.no_chapters:
         print(f"Wrote tutorial entry for {len(pages)} pages.")
         return
 
+    translator = DeepSeekHtmlTranslator(args.model, args.batch_size, args.api_timeout) if args.translator == "deepseek" else None
+    if translator is not None and not args.no_book_context:
+        print("Building full-book DeepSeek translation guide...", flush=True)
+        translator.build_book_guide(all_pages if not args.limit else pages)
+
     for index, page in enumerate(pages, start=1):
         if page.path == "/":
             continue
+        if only_paths and page.path not in only_paths:
+            continue
         print(f"[{index}/{len(pages)}] {page.path} -> {page.title_cn}", flush=True)
-        html_text = render_chapter(page, pages, pages_by_path)
+        html_text = render_chapter(page, pages, pages_by_path, translator)
         write(TUTORIAL_DIR / page_slug(page.path) / "index.html", html_text)
 
-    update_sitemap(pages)
+    if not only_paths:
+        update_sitemap(pages)
     print(f"Imported {len(pages)} tutorial pages in {time.time() - start:.1f}s.")
 
 

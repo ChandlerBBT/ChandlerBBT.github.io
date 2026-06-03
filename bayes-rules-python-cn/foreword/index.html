@@ -1,13 +1,13 @@
-<!doctype html>
+html
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="前言 | Bayes Rules! 中文 Python 改写教程">
-  <title>前言 | Chandler&#x27;s AI Productivity Notes</title>
-  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/assets/css/styles.css">
-  <script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="前言 | Bayes Rules! 中文 Python 改写教程" name="description"/>
+<title>前言 | Chandler's AI Productivity Notes</title>
+<link href="/assets/img/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="/assets/css/styles.css" rel="stylesheet"/>
+<script>
     window.MathJax = {
       tex: {
         inlineMath: [["$", "$"], ["\\(", "\\)"]],
@@ -17,61 +17,55 @@
       svg: { fontCache: "global" }
     };
   </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
-  <a class="skip-link" href="#content">跳到正文</a>
-  <header class="site-header">
-    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
-      <span class="brand-mark">C</span>
-      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
-    </a>
-    <nav class="site-nav" aria-label="主导航">
-      <a href="/">首页</a>
-      <a href="/posts/" aria-current="page">最新文章</a>
-      <a href="/tags/">主题</a>
-      <a href="/about/">关于</a>
-    </nav>
-  </header>
-  <main id="content" class="tutorial-page">
-    <div class="tutorial-layout">
-
+<a class="skip-link" href="#content">跳到正文</a>
+<header class="site-header">
+<a aria-label="Chandler's AI Productivity Notes 首页" class="brand" href="/">
+<span class="brand-mark">C</span>
+<span class="brand-name">Chandler's AI Productivity Notes</span>
+</a>
+<nav aria-label="主导航" class="site-nav">
+<a href="/">首页</a>
+<a aria-current="page" href="/posts/">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+</nav>
+</header>
+<main class="tutorial-page" id="content">
+<div class="tutorial-layout">
 <aside class="tutorial-sidebar">
-  <h2>教程目录</h2>
-  <nav><a href="/bayes-rules-python-cn/">首页</a><a href="/bayes-rules-python-cn/foreword/" aria-current="page">前言</a><a href="/bayes-rules-python-cn/preface/">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a href="/bayes-rules-python-cn/references/">参考文献</a></nav>
+<h2>教程目录</h2>
+<nav><a href="/bayes-rules-python-cn/">首页</a><a aria-current="page" href="/bayes-rules-python-cn/foreword/">前言</a><a href="/bayes-rules-python-cn/preface/">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a href="/bayes-rules-python-cn/references/">参考文献</a></nav>
 </aside>
-
-      <article class="tutorial-content">
-        <section class="normal" id="section-">
+<article class="tutorial-content">
+<section class="normal" id="section-">
 <div class="section level1 unnumbered" id="foreword">
 <h1>前言</h1>
-<div class="tutorial-note">
-<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
-</div>
-
-<p>即使经过几十年的思考,贝叶斯的统治也从未停止使我惊叹. 一个简单的公式怎么能有如此广泛的应用? 从天气预测到LGBTQQ反歧视法, 从谁称苏打“流行”(或称流行“Soda”)到如何分类企鹅物种, 最重要的是,仔细研究这本书将增强你的能力, 来进行深思熟虑的贝叶斯分析, 研究你关心的数据和应用。</p>
-<p>统计学和数据科学侧重于利用数据来了解世界并作出预测. 贝叶斯方法提供了一种有原则的、强有力的工具,以获得关于我们未知的兴趣数量(数据)的概率和预测。 它提供了易于解释的结果,可以直接量化我们的不确定性。 不幸的是,本科一级很少进行深入的教学,也许出于担心会有许多恐怖的外观构件不能做,或者写太多密码。</p>
-<p>Bayes Rules! 显示具有基本统计知识的学生和自学者事实上可以使用Bayesian方法,即使他们不擅长微积分衍生或从零开始编码奇异算法。 本书以许多方便读者的功能实现这一点,例如通过文字和图片进行清晰的解释,测试你的理解的测验,以及包含数据集和功能,便于尝试贝叶斯方法的Bayesrules R包.</p>
-<p>更好的办法是通过良好的教学方法实现无障碍,而不是通过对这一主题进行过度简化的审视。 例如,引入了称为等级模型的模型和称为rstan的R包,并有极具启发性的例子说明如何将这些模型应用于有趣的应用. 等级模型和rstan是现代贝叶斯数据分析中使用的最先进技术之一.</p>
-<p>蜘蛛侠漫画中的彼得·帕克(Peter Parker)原则说 : “ 有了强大的力量,就有了巨大的责任。 ” 同样,统计和数据科学的强大力量也伴随着考虑对社会的益处和风险、研究参与者的隐私权、数据集中的偏见以及拟议算法是否扩大这些偏见以及其他道德问题的巨大责任。 贝叶斯规则!强调公平和道德,而不是忽视这些关键问题.</p>
-<p>既然你读过贝叶斯规则! (积极 ) — — 确保用一些练习来尝试自我解答和实践!) , 在体验贝叶斯思想的喜悦的同时,你加强统计解决问题技能的似然很高。</p>
-<p>——约瑟夫·K·布莱茨斯坦,哈佛大学</p>
+<p>即便思考了几十年，贝叶斯规则仍然让我惊叹不已。一个简单的公式怎么能有如此广泛的应用？你将在本书中遇到一系列生动的应用实例，从天气预测到LGBTQ+反歧视法，从谁把苏打水叫作“pop”（或把“pop”叫作苏打水）到如何对企鹅物种进行分类。最重要的是，认真学习本书将使你能够对<em>你</em>关心的数据和应用进行深思熟虑的贝叶斯分析。</p>
+<p>统计学和数据科学专注于利用数据了解世界并进行预测。贝叶斯方法提供了一种严谨且强大的工具，能够在给定已知信息（数据）的情况下，对我们感兴趣的未知量进行概率推断和预测。它给出的结果易于解释，直接量化了我们的不确定性。遗憾的是，贝叶斯方法在本科阶段很少深入讲授，或许是担心会涉及太多看似吓人的积分运算，或需要编写太多晦涩的代码。</p>
+<p><em>Bayes Rules!</em> 表明，贝叶斯方法实际上可以被具备基础统计知识的学生和自学者所掌握，即使他们不擅长微积分推导或从头编写复杂的算法。本书通过许多读者友好的特色实现了这一目标，例如清晰的语言和图示解释、用来检验理解程度的测验，以及<strong>bayesrules</strong> 工具包，它包含了方便你尝试贝叶斯方法的数据集和函数。</p>
+<p>更棒的是，这种易用性是通过优秀的教学法实现的，而不是通过提供淡而无味、过度简化的内容。例如，书中介绍了名为<em>分层模型（hierarchical models）</em>的模型和一个称为<strong>PyMC</strong>的 Python 库，并通过极具启发性的例子展示了如何将它们应用于有趣的实际问题。分层模型和<strong>PyMC</strong>都是现代贝叶斯数据分析中使用的先进技术。</p>
+<p>蜘蛛侠漫画中的彼得·帕克原则说：“能力越大，责任越大。”同样，统计学和数据科学的巨大力量也伴随着巨大的责任，需要考虑对社会的利弊、研究中参与者的隐私权、数据集中的偏差以及所提算法是否会放大这些偏差，以及其他伦理问题。<em>Bayes Rules!</em> 强调<em>公平</em>和<em>伦理</em>，而不是忽视这些关键问题。</p>
+<p>只要你认真阅读<em>Bayes Rules!</em>（主动地——一定要尝试自测题并练习部分习题！），你极有可能在体验贝叶斯思维乐趣的同时，增强自己的统计问题解决能力。</p>
+<p> <span style="float:right">——<em>Joseph K. Blitzstein，哈佛大学</em></span></p>
 <div style="page-break-after: always;"></div>
 </div>
 </section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/">上一节：首页</a><a href="/bayes-rules-python-cn/preface/">下一节：序言</a></nav>
-      </article>
-    </div>
-  </main>
-  <footer class="site-footer">
-    <div>
-      <strong>AI 提效研究笔记</strong>
-      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
-    </div>
-    <div class="footer-links">
-      <a href="/feed.xml">RSS</a>
-      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
-    </div>
-  </footer>
-  <script src="/assets/js/site.js"></script>
+</article>
+</div>
+</main>
+<footer class="site-footer">
+<div>
+<strong>AI 提效研究笔记</strong>
+<p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+</div>
+<div class="footer-links">
+<a href="/feed.xml">RSS</a>
+<a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+</div>
+</footer>
+<script src="/assets/js/site.js"></script>
 </body>
 </html>

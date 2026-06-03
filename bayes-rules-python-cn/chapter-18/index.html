@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-
+html
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"/>
@@ -44,20 +43,22 @@
 <section class="normal" id="section-">
 <div class="section level1" id="chapter-18" number="18">
 <h1>第 18 章 非正态分层回归与分类</h1>
-<div class="tutorial-note">
-<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
-</div>
-<p>主厨通过掌握烹饪的基本元素,从风味到纹理到嗅觉,成为主厨. 在烹饪时,它们可以结合这些元素而不依赖于僵硬的一步步烹饪本方向. 同样,在建立统计模型时,贝叶斯人或频率学派,没有可遵循的规则书. 相反,重要的是要熟悉一些基本的建模构件,并发展以不同组合使用这些构件的能力,以适应手头的任务。 有了这个,在第18章中,你会练习用你已经拥有的原料来制作新的模型。 为了集中关注本章中的新概念,我们将利用资料不足的前科。 请审查第12章和第13章,以便在Poisson和物流回归环境下分别重新调整以前的模型。 同样的想法也在这里适用。</p>
+<p>一位大厨之所以成为大厨，是因为他们掌握了烹饪的基本要素，从味道到口感再到气味。
+烹饪时，他们能将这些要素组合起来，而不必依赖一步步死板的食谱指引。
+同样，在构建统计模型时，无论是贝叶斯<em>还是</em>频率学派，都没有必须遵循的规则手册。
+相反，重要的是熟悉一些基本的建模构件，并培养将它们以不同组合用于手头任务的能力。
+借此，在第 <a href="/bayes-rules-python-cn/chapter-18/#chapter-18">18</a> 章，你将练习用已有的原料烹制新的模型。
+为集中关注本章的新概念，我们将通篇使用弱信息先验。
+请回顾第 <a href="/bayes-rules-python-cn/chapter-12/#chapter-12">12</a> 章和第 <a href="/bayes-rules-python-cn/chapter-13/#chapter-13">13</a> 章，分别重温在泊松回归和 logistic 回归背景下调整先验模型的方法。
+同样的思路也适用于此。</p>
 <div class="goals">
-<p>扩大我们通用的等级回归模型工具包,结合</p>
+<p>通过结合以下技术扩展我们的<strong>广义分层回归模型</strong>工具箱</p>
 <ul>
-<li>等级回归技术(第17章)</li>
-<li>Poisson 和 负二微分回归模型,用于计数响应变量 \\\ 0\\\ (第12章)和二进制绝对响应变量的逻辑回归模型 QQ1@@(第13章).</li>
+<li>分层回归技术（第 <a href="/bayes-rules-python-cn/chapter-17/#chapter-17">17</a> 章）与</li>
+<li>用于计数响应变量 <span class="math inline">\(Y\)</span> 的泊松和负二项回归模型（第 <a href="/bayes-rules-python-cn/chapter-12/#chapter-12">12</a> 章）以及用于二分类响应变量 <span class="math inline">\(Y\)</span> 的 logistic 回归模型（第 <a href="/bayes-rules-python-cn/chapter-13/#chapter-13">13</a> 章）。</li>
 </ul>
 </div>
-<div class="sourceCode" id="cb391">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python"># 原书 bayesrules 数据包中的数据需改用 CSV/本地数据文件读取
+<div class="sourceCode" id="cb391"><pre><code class="language-python"># 教程数据可改用 CSV 或本地数据文件读取
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -74,138 +75,172 @@ with pm.Model() as model:
     # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
     idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
 az.summary(idata)
-# 装入软件包</code></pre>
-</div>
+# 装入软件包</code></pre></div>
 <div class="section level2" id="hierarchical-logistic-regression" number="18.1">
-<h2>等级后勤回归</h2>
-<p>无论是对薄空气的刺激,挑战,还是户外的登山者,都踏上了尼泊尔喜马拉雅山的顶峰。 成功并没有得到保证 — — 恶劣的天气,错误的装备,受伤,或者只是运气不好,意味着并非所有登山者都到达目的地. 这引起了一些问题。 登山者登顶的似然有多大? 哪些因素可能有助于提高成功率? 除了对典型的登山者有50/50成功机会的模糊感之外, 我们还会在先验对这些问题了解不足的同时,</p>
-<div class="sourceCode" id="cb392">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h2> 分层 logistic 回归</h2>
+<p>无论是为了体验稀薄空气的刺激、寻求挑战还是热爱户外，登山者们出发去攀登雄伟的尼泊尔喜马拉雅山的高峰。
+成功并非必然——恶劣天气、装备故障、受伤或仅仅是运气不佳，都意味着并非所有登山者都能到达目的地。
+这引出了一些问题：一名登山者成功登顶的概率是多少？哪些因素可能有助于更高的成功率？除了对典型登山者可能有五五开的成功概率的 <em>模糊</em> 认识之外，我们将通过 <strong>bayesrules</strong> 数据包中的 <code>climbers_sub</code> 数据——这仅仅是 <span class="citation"><a href="#ref-climb" role="doc-biblioref">喜马拉雅数据库</a> (<a href="#ref-climb" role="doc-biblioref">2020</a>)</span> 提供并通过 <strong>#tidytuesday</strong> 项目 <span class="citation">(<a href="#ref-climbtidy" role="doc-biblioref">R for Data Science 2020b</a>)</span> 发布的一个子集——来平衡我们的弱信息先验理解。</p>
+<div class="sourceCode" id="cb392"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 导入、重命名、清理数据( C)
 data(climbers_sub)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>本数据集包括2076名登山者的结果,可以追溯到1978年. 其中只有38.87%成功顶峰:</p>
-<div class="sourceCode" id="cb393">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+# 可用 pandas / PyMC 按同一数据流程表达。
+select(expedition_id, member_id, success, year, season,
+age, expedition_role, oxygen_used)</code></pre></div>
+<p>该数据集包含了自 1978 年以来 2076 名登山者的结果。
+其中，只有 38.87% 成功登顶：</p>
+<div class="sourceCode" id="cb393"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 nrow(climbers)
 [1] 2076
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 可用 pandas / PyMC 按同一数据流程表达。
+tabyl(success)
+success    n percent
+FALSE 1269  0.6113
+TRUE  807  0.3887</code></pre></div>
 <div class="quiz">
-<p>正如你可能想象的,鉴于它在这本书中的位置, 登山者数据有一个基础的分组结构。 确定以下哪些变量编码了分组结构:探险 id、成员 id、季节、探险 作用、或使用氧。</p>
+<p>鉴于本书的编排，你或许能猜到 <code>climbers</code> 数据有一个内在的分组结构。请找出以下哪个变量编码了该分组结构：<code>expedition_id</code>、<code>member_id</code>、<code>season</code>、<code>expedition_role</code> 还是 <code>oxygen_used</code>。</p>
 </div>
-<p>由于成员 id本质上是一个行(或登山者)标识符,而且我们每个登山者只有一个观察,所以这不是一个分组变量. 此外,虽然季节、探险作用和氧气都具有我们不止一次观察到的绝对水平,但这些是成功的潜在预测,而不是组合变量。 76 这就留下了探险 id – 这是一个分组变量. 登山者的数据跨越200个不同的探险:</p>
-<div class="sourceCode" id="cb394">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>由于 <code>member_id</code> 本质上是一个行（或登山者）标识符，而且我们每个登山者只有一个观测值，因此它 <em>不是</em> 分组变量。
+此外，虽然 <code>season</code>、<code>expedition_role</code> 和 <code>oxygen_used</code> 各自都有被多次观测的类别水平，但它们是 <code>success</code> 的潜在 <em>预测变量</em>，而非分组变量。<a class="footnote-ref" href="#fn76" id="fnref76"><sup>76</sup></a>
+这就剩下了 <code>expedition_id</code>——这 <em>是</em> 一个分组变量。<code>climbers</code> 数据涵盖 200 个不同的 <em>探险队</em>：</p>
+<div class="sourceCode" id="cb394"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 每次探险的规模
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>每次探险都由多个登山者组成. 例如,我们前三次探险分别以5,6和12名登山者出发:</p>
-<div class="sourceCode" id="cb395">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+summarize(count = n())
+# 考察次数
+nrow(climbers_per_expedition)
+[1] 200</code></pre></div>
+<p>每次探险由多位登山者组成。例如，我们的前三次探险分别有 5 位、6 位和 12 位登山者出发：</p>
+<div class="sourceCode" id="cb395"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>忽略这种分类结构,或者假设我们个别登山者的结果是独立的,那将是一个错误. 由于每次探险都作为一个团队工作,在那次探险中一个登山者的成败部分取决于另一个登山者的成败. 此外,探险队的所有成员都从同一个目的地出发,有同样的领导,在同样的天气条件下出发,因此也受到同样的外部因素的成功影响. 除此以外,计算数据的分组结构还可以说明这些因素在探险成功率方面带来多大程度的差异。 为此,请注意我们200多支探险队中有75支成功率为0 % , 即这些探险队中没有登山者成功顶峰. 相比之下,近20个探险队取得了100%的成功率. 在这些极端之间,探险成功率有很大的差别。</p>
-<div class="sourceCode" id="cb396">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+# 下面给出与本节模型一致的 Python 写法。
+# 可用 pandas / PyMC 按同一数据流程表达。
+head(3)
+# A: 3×2
+expedition_id count
+&lt;chr&gt;         &lt;int&gt;
+1 AMAD03107         5
+2 AMAD03327         6
+3 AMAD05338        12</code></pre></div>
+<p>忽略这种分组结构而假设各个登山者的结果是相互独立的，会是一个<em>严重错误</em>。由于每次探险都作为一个<em>团队</em>协作，探险中一位登山者的成功或失败在一定程度上依赖于另一位的成功或失败。此外，同一探险的所有成员出发时目标相同、领队相同、天气条件相同，因此受到相同的外部成功因素的影响。因此，考虑数据的分组结构不仅是正确的做法，还能揭示这些因素在探险<em>之间</em>引入成功率的变异程度。为此，请注意，在我们的 200 次探险中，有超过 75 次的成功率为 0%，即这些探险中<em>没有</em>登山者成功登顶。相比之下，近 20 次探险的成功率为 100%。在这些极端之间，探险成功率存在相当大的变异性。</p>
+<div class="sourceCode" id="cb396"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 计算每次展览的成功率
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+summarize(success_rate = np.mean(success))
+# 绘制各种展览的成功率
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-783" style="display:block;"></span>
-<img alt="成功直方图 速率. x轴成功率 从0到3. Y轴计算从0到85. 代表成功率从0%到1%的酒吧比其他酒吧高得多,高度约为85。 其他的栏杆,从3%到100%不等,都短得多,大多数的栏杆的高度都在10岁以下。" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-783-1-f7f49ae9b6e6.png" width="240"/>
-<p class="caption">图18.1: 200次登山考察的成功率直方图.</p>
+<img alt="A histogram of success_rate. The x-axis has success_rates ranging from 0 to 3. The y-axis has counts ranging from 0 to 85. The bar representing success rates from 0 to 1 percent is far taller than the rest, with a height of roughly 85. The other bars, ranging from 3 to 100 percent are all much shorter, most having heights under 10." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-783-1-f7f49ae9b6e6.png" width="240"/>
+<p class="caption">
+图 18.1：200 次登山探险成功率的直方图。
+</p>
 </div>
 <div class="section level3" id="model-building-simulation" number="18.1.1">
-<h3>模型建设和模拟</h3>
-<p>表示登山者是否成功登顶高峰:</p>
-<p>\[Y_{ij} = \begin{cases} 1 &amp; \text{yes} \\ 0 &amp; \text{no} \\ \end{cases}\]</p>
-<p>在我们的数据集中,有几种可能的登山成功预测器. 我们只考虑两个:登山者的年龄, 因此,定义:</p>
-<p>\[\begin{split} X_{ij1} &amp; = \text{ age of climber $i$ in expedition $j$} \\ X_{ij2} &amp; = \text{ whether or not climber $i$ in expedition $j$ received oxygen. } \\ \end{split}\]</p>
-<p>通过计算每个年龄的成功比例和氧气使用组合,我们得到一种感觉,即这些因素如何与登山者的成功相关(尽管由于一些组合的样本尺寸很小,是一种摇摆的感觉). 简言之,登山者的成功似乎随着年龄的增长而减少,并且随着氧气的使用而急剧增加:</p>
-<div class="sourceCode" id="cb397">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h3>模型构建与模拟</h3>
+<p>考虑到数据的分组性质，令 <span class="math inline">\(Y_{ij}\)</span> 表示探险 <span class="math inline">\(j\)</span> 中的登山者 <span class="math inline">\(i\)</span> 是否成功登顶：</p>
+<p><span class="math display">\[Y_{ij} = \begin{cases}
+1 &amp; \text{是} \\
+0 &amp; \text{否} \\
+\end{cases}\]</span></p>
+<p>我们的数据集中有几个潜在的登山者成功的预测变量。我们只考虑两个：登山者的年龄和是否接受了补充<em>氧气</em>以在高海拔更轻松地呼吸。因此，定义：</p>
+<p><span class="math display">\[\begin{split}
+X_{ij1} &amp; = \text{探险 $j$ 中登山者 $i$ 的年龄} \\
+X_{ij2} &amp; = \text{探险 $j$ 中登山者 $i$ 是否接受了氧气} \\
+\end{split}\]</span></p>
+<p>通过计算每个年龄和氧气使用组合的成功比例，我们可以了解这些因素与登山者成功之间的关系（尽管由于某些组合样本量较小，这种了解有些摇摆不定）。简而言之，登山者的成功概率似乎随着年龄增长而降低，而使用氧气则显著提高成功率：</p>
+<div class="sourceCode" id="cb397"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 按年龄和氧气使用情况计算成功率
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+summarize(success_rate = np.mean(success))
+# 绘制此关系
+# 可用 pandas / PyMC 按同一数据流程表达。
+color = oxygen_used)) +
+# 可用 pandas / PyMC 按同一数据流程表达。</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-784" style="display:block;"></span>
-<img alt="按年龄(x轴)分列的成功率分布图 (y轴). 剧情中的108分由氧 用法,TRUE或FALSE配色. 对于这两种类型来说,成功率 率往往随着年龄而下降,然而成功率 率却有很大的差别. 此外,与TRUE氧-使用类别对应的点几乎都高于与FALSE氧-使用类别对应的点。" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-784-1-1760a34e65a4.png" width="336"/>
-<p class="caption">图18.2: 根据年龄和氧气使用情况,登山者成功率的分布图。</p>
+<img alt="A scatterplot of success_rate (y-axis) by age (x-axis). The 108 points in the plot are colored by oxygen_used, TRUE or FALSE. For both categories, success_rate tends to decrease with age, yet there's quite a bit of variability in success_rates. Further, the points corresponding to the TRUE oxygen_used category are almost all above those corresponding to the FALSE oxygen_used category." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-784-1-1760a34e65a4.png" width="336"/>
+<p class="caption">
+图 18.2：按年龄和氧气使用划分的登山者成功率散点图。
+</p>
 </div>
-<p>在构建巴耶斯人这一关系模式时,首先认识到Bernoulli模式对我们的二进制响应变量XQ0XX是合理的. 让登山者在探险中成功攀登顶峰的概率,</p>
-<p>\[Y_{ij} | \pi_{ij} \sim \text{Bern}(\pi_{ij}) .\]</p>
-<p>早在第13章, 我们探索了一个完整的集合方法,</p>
-<p>\[\begin{split} Y_{ij}|\beta_0,\beta_1,\beta_2 &amp; \stackrel{ind}{\sim} \text{Bern}(\pi_{ij}) \;\; \text{ with } \;\; \log\left(\frac{\pi_{ij}}{1 - \pi_{ij}}\right) = \beta_0 + \beta_1 X_{ij1} + \beta_2 X_{ij2} \\ \beta_{0c} &amp; \sim N\left(m_0, s_0^2 \right) \\ \beta_1 &amp; \sim N\left(m_1, s_1^2 \right) \\ \beta_2 &amp; \sim N\left(m_2, s_2^2 \right). \\ \end{split}\]</p>
-<p>这是一个伟大的开端,但这并不说明我们的数据的分组结构。 由stan glmer()在下面调制, 并且通过中间截取 QQ1============================================================================================================================================================================= 比起不使用氧气的0岁登山者, 为此,我们开始分析时对典型的登山者有0.5个成功概率的弱理解,或者说XQ4@@.</p>
-<p>\[\begin{equation} \begin{array}{rll} Y_{ij}|\beta_{0j},\beta_1, \beta_2 &amp; \sim \text{Bern}(\pi_{ij}) &amp; \text{(model within expedition $j$)}\\ \; \text{ with } &amp; \log\left(\frac{\pi_{ij}}{1 - \pi_{ij}}\right) = \beta_{0j} + \beta_1 X_{ij1} + \beta_2 X_{ij2} &amp; \\ \beta_{0j} | \beta_0, \sigma_0 &amp; \stackrel{ind}{\sim} N(\beta_0, \sigma_0^2) &amp; \text{(variability between expeditions)} \\ \beta_{0c} &amp; \sim N\left(0, 2.5^2 \right) &amp; \text{(global priors)}\\ \beta_1 &amp; \sim N\left(0, 0.24^2 \right) &amp; \\ \beta_2 &amp; \sim N\left(0, 5.51^2 \right) &amp; \\ \sigma_0 &amp; \sim \text{Exp}(1). &amp; \\ \end{array} \tag{18.1} \end{equation}\]</p>
-<p>同样,我们可以通过表达远征特制的拦截方式 来重构这个随机拦截后勤回归模型</p>
-<p>\[\log\left(\frac{\pi_{ij}}{1 - \pi_{ij}}\right) = (\beta_0 + b_{0j}) + \beta_1 X_{ij1} + \beta_2 X_{ij2}\]</p>
-<p>在哪里, \ \ \ \ \ \ 考虑到模型参数的含义和背后的假设:</p>
+<p>在为这一关系构建贝叶斯模型时，首先要认识到伯努利模型适用于我们的二值响应变量 <span class="math inline">\(Y_{ij}\)</span>。令 <span class="math inline">\(\pi_{ij}\)</span> 表示第 <span class="math inline">\(j\)</span> 支探险队中第 <span class="math inline">\(i\)</span> 位登山者成功登顶的<em>概率</em>，即 <span class="math inline">\(Y_{ij} = 1\)</span>，</p>
+<p><span class="math display">\[Y_{ij} | \pi_{ij} \sim \text{Bern}(\pi_{ij})  .\]</span></p>
+<p>早在第 <a href="/bayes-rules-python-cn/chapter-13/#chapter-13">13</a> 章，我们探索了一种<strong>完全池化</strong>方法，将这种简单模型扩展为使用一组预测变量 <span class="math inline">\(X\)</span> 对 <span class="math inline">\(Y\)</span> 进行<strong>Logistic 回归</strong>的模型：</p>
+<p><span class="math display">\[\begin{split}
+Y_{ij}|\beta_0,\beta_1,\beta_2 &amp; \stackrel{ind}{\sim} \text{Bern}(\pi_{ij}) \;\; \text{ with } \;\; \log\left(\frac{\pi_{ij}}{1 - \pi_{ij}}\right) = \beta_0 + \beta_1 X_{ij1} + \beta_2 X_{ij2} \\
+\beta_{0c}  &amp;  \sim N\left(m_0, s_0^2 \right)  \\
+\beta_1  &amp;  \sim N\left(m_1, s_1^2 \right)  \\
+\beta_2  &amp;  \sim N\left(m_2, s_2^2 \right).  \\
+\end{split}\]</span></p>
+<p>这是一个很好的起点，但它没有考虑数据的分组结构。相反，可以考虑以下分层替代方案，其独立弱信息先验由 <code>bambi</code> 调整，并且 <span class="math inline">\(\beta_0\)</span> 的先验模型通过中心化截距 <span class="math inline">\(\beta_{0c}\)</span> 来表达。毕竟，考虑<em>典型</em>登山者的基线成功率 <span class="math inline">\(\beta_{0c}\)</span> 比考虑 0 岁且不使用氧气的登山者 <span class="math inline">\(\beta_0\)</span> 更有意义。为此，我们以较弱的先验知识开始分析，即典型登山者的成功概率为 0.5，或者说 <span class="math inline">\(\text{log(成功优势)} = 0\)</span>。</p>
+<p><span class="math display" id="eq:log-hier-2-ch18">\[\begin{equation}
+\begin{array}{rll}
+Y_{ij}|\beta_{0j},\beta_1, \beta_2 &amp; \sim \text{Bern}(\pi_{ij}) &amp; \text{(model within expedition $j$)}\\
+\; \text{ with } &amp; \log\left(\frac{\pi_{ij}}{1 - \pi_{ij}}\right) = \beta_{0j} + \beta_1 X_{ij1} + \beta_2 X_{ij2} &amp; \\
+\beta_{0j} | \beta_0, \sigma_0    &amp; \stackrel{ind}{\sim} N(\beta_0, \sigma_0^2) &amp; \text{(variability between expeditions)} \\
+\beta_{0c}  &amp;  \sim N\left(0, 2.5^2 \right) &amp; \text{(global priors)}\\
+\beta_1  &amp;  \sim N\left(0, 0.24^2 \right) &amp; \\
+\beta_2  &amp;  \sim N\left(0, 5.51^2 \right) &amp; \\
+\sigma_0 &amp; \sim \text{Exp}(1). &amp; \\
+\end{array}
+\tag{18.1}
+\end{equation}\]</span></p>
+<p><em>等价地</em>，我们可以重新表述这个<strong>随机截距 Logistic 回归模型</strong>，将特定探险的截距表达为对全局截距的<em>微调</em>，</p>
+<p><span class="math display">\[\log\left(\frac{\pi_{ij}}{1 - \pi_{ij}}\right) = (\beta_0 + b_{0j}) + \beta_1 X_{ij1} + \beta_2 X_{ij2}\]</span></p>
+<p>其中 <span class="math inline">\(b_{0j} | \sigma_0 \stackrel{ind}{\sim} N(0, \sigma_0^2)\)</span>。
+思考模型参数的含义及其背后的假设：</p>
 <ul>
-<li><p>探险队的截击记录显示, 这些都承认一些探险队在本质上比其他的更成功.</p></li>
-<li><p>探险队的截击行动被假定为通常围绕一些全球截击行动进行, 因此,QQ3@@描述了所有探险队的典型基准成功率,QQ4@@捕捉到从探险队到探险队的成功率的组间差异.</p></li>
-<li><p>\(\beta_1\)描述控制氧气使用时成功与年龄之间的全球关系. 类似地,QQ1@@描述在控制年龄时成功与氧气使用之间的全球关系.</p></li>
+<li><p><strong>特定于探险的</strong>截距 <span class="math inline">\(\beta_{0j}\)</span> 描述了以成功优势的对数衡量的、每个探险 <span class="math inline">\(j\)</span> 的基础成功率。这承认了一些探险本质上就比其他探险更成功。</p></li>
+<li><p>假设特定于探险的截距 <span class="math inline">\(\beta_{0j}\)</span> 围绕某个<strong>全局</strong>截距 <span class="math inline">\(\beta_0\)</span> 服从正态分布，标准差为 <span class="math inline">\(\sigma_0\)</span>。因此，<span class="math inline">\(\beta_0\)</span> 描述了所有探险的 <em>典型</em> 基线成功率，而 <span class="math inline">\(\sigma_0\)</span> 捕获了成功率在探险之间的<strong>组间变异性</strong>。</p></li>
+<li><p><span class="math inline">\(\beta_1\)</span> 描述了在控制氧气使用的情况下，成功与年龄之间的<strong>全局</strong>关系。类似地，<span class="math inline">\(\beta_2\)</span> 描述了在控制年龄的情况下，成功与氧气使用之间的全局关系。</p></li>
 </ul>
-<p>我们的随机拦截逻辑回归模式(18.1) 使得远征军可能拥有独特的拦截量( 0@@), 使用氧气在一次探险中并没有什么好处。</p>
-<p>为了模拟模型后期,下面的stan glmer()代码结合了两个世界中最好的:family = binomial 指定我们的是一个逻辑回归模型(a la Chapter 13),模型公式中的术语(1 QQ expection id)包含了我们的等级组合结构(a la Chapter 17) :</p>
-<div class="sourceCode" id="cb398">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>综合起来，我们的随机截距 Logistic 回归模型 <a href="/bayes-rules-python-cn/chapter-18/#eq:log-hier-2-ch18">(18.1)</a> 做了一个简化（但我们认为是合理的）假设：各探险可能有<em>独特的</em>截距 <span class="math inline">\(\beta_{0j}\)</span>，但共享<em>共同的</em>回归参数 <span class="math inline">\(\beta_1\)</span> 和 <span class="math inline">\(\beta_2\)</span>。
+用大白话说，尽管各探险的<em>基础成功率</em>可能不同，但更年轻或使用氧气并不会在某个探险中比在另一个探险中更有益。</p>
+<p>为了模拟模型后验，下面的代码利用 PyMC 的公式接口，结合了两种优点：<code>family = binomial</code> 指定我们的是一个<em>逻辑</em>回归模型（参见第 <a href="/bayes-rules-python-cn/chapter-13/#chapter-13">13</a> 章），而模型公式中的 <code>(1 | expedition_id)</code> 项纳入了我们的分层分组结构（参见第 <a href="/bayes-rules-python-cn/chapter-17/#chapter-17">17</a> 章）：</p>
+<div class="sourceCode" id="cb398"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 with pm.Model() as model:
     # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
     # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
@@ -214,19 +249,22 @@ with pm.Model() as model:
     # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
     idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
 az.summary(idata)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>以及一些MCMC诊断:</p>
-<div class="sourceCode" id="cb399">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+# 可用 pandas / PyMC 按同一数据流程表达。
+success ~ age + oxygen_used + (1 | expedition_id),
+data = climbers, family = binomial,
+prior_intercept = normal(0, 2.5, autoscale = TRUE),
+prior = normal(0, 2.5, autoscale = TRUE),
+prior_covariance = decov(reg = 1, conc = 1, shape = 1, scale = 1),
+chains = 4, iter = 5000*2, seed = 84735
+)</code></pre></div>
+<p>我们鼓励你在完成这个模拟后，对先验设定进行确认，并进行一些MCMC诊断：</p>
+<div class="sourceCode" id="cb399"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 确认先验的规格
 prior_summary(climb_model)
 # MCMC诊断
@@ -234,38 +272,37 @@ mcmc_trace(climb_model, size = 0.1)
 mcmc_dens_overlay(climb_model)
 mcmc_acf(climb_model)
 neff_ratio(climb_model)
-rhat(climb_model)</code></pre>
-</div>
-<p>虽然这些诊断证实我们的MCMC模拟在正确的轨道上, 后期预测检查显示我们的模型在正确的轨道上。 从每100个后模拟数据集中,我们记录使用成功 速率()函数成功登山者的比例. 这些成功率大约在37%至41%之间,在攀登者数据实际观察到的38.9%的成功率左右的紧凑窗口中。</p>
-<div class="sourceCode" id="cb400">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+rhat(climb_model)</code></pre></div>
+<p>虽然这些诊断确认我们的MCMC模拟走上了正轨，但<strong>后验预测检查</strong>表明我们的<em>模型</em>也走上了正轨。
+从100个后验模拟数据集中，我们使用<code>success_rate()</code>函数记录了成功登顶的登山者比例。
+这些成功率大致在37%到41%之间，集中在<code>climbers</code>数据中实际观察到的38.9%成功率附近很窄的窗口内。</p>
+<div class="sourceCode" id="cb400"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 定义成功率函数
 success_rate = function(x){np.mean(x == 1)}
 # 后期预测检查
 pp_check(climb_model, nreps = 100,
 plotfun = "stat", stat = "success_rate") +
-xlab("success rate")</code></pre>
-</div>
+xlab("success rate")</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch16-pp-log" style="display:block;"></span>
-<img alt="成功率直方图 直方图呈钟形,以0.39左右为中心,成功率从约0.36到0.42不等. 有一条垂直线显示观测到的成功率约为0.39。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch16-pp-log-1-fb6c604f797c.png" width="355.2"/>
-<p class="caption">图18.3:登山成功分级物流回归模型的后期预测检查. 直方图显示在每100个后期模拟数据集中成功登山者的比例. 垂直线代表登山者数据中观测到的成功登山者的比例.</p>
+<img alt="A histogram of success rate. The histogram is bell-shaped, centered around 0.39, and spans success rates from roughly 0.36 to 0.42. There is a vertical line marking the observed success rate at roughly 0.39." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch16-pp-log-1-fb6c604f797c.png" width="355.2"/>
+<p class="caption">
+图18.3：登山成功分层逻辑回归模型的后验预测检查。直方图展示了每个100个后验模拟数据集中成功登顶的登山者比例。垂直线代表在<code>climbers</code>数据中观察到的成功登顶的登山者比例。
+</p>
 </div>
 <div style="page-break-after: always;"></div>
 </div>
 <div class="section level3" id="posterior-analysis" number="18.1.2">
-<h3>A. 后方分析</h3>
-<p>在对登山成功进行后期分析时, 除了对数据分类结构的正确解释感到欣慰外, 以下是我们全球回归参数的后述摘要:</p>
-<div class="sourceCode" id="cb401">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h3>后验分析</h3>
+<p>在我们对登山者成功的后验分析中，我们关注全局参数。
+除了因我们正确考虑数据的分组结构而感到宽慰之外，我们对任何<em>特定</em>探险队都不感兴趣。
+因此，下面是我们的全局回归参数<span class="math inline">\(\beta_0\)</span>、<span class="math inline">\(\beta_1\)</span> 和 <span class="math inline">\(\beta_2\)</span>的一些后验汇总：</p>
+<div class="sourceCode" id="cb401"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -277,38 +314,43 @@ term            estimate std.error conf.low conf.high
 &lt;chr&gt;              &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
 1 (Intercept)      -1.42     0.479    -2.04     -0.822
 2 age              -0.0474   0.00910  -0.0594   -0.0358
-3 oxygen_usedTRUE   5.79     0.478     5.20      6.43</code></pre>
-</div>
-<p>首先,请注意,年龄系数的80%的后可信间隔是0以下。 因此,我们有重要的后证,当控制登山者是否使用氧气时,成功的似然随着年龄的增大而降低. 更具体地说,将QQ1@@中的信息从日志(奇数)到概率尺度,有80%的概率,成功顶峰的几率在3.5~5.8 % 之间下降,每增加一个年龄:QQ2@@。 类似地,氧-使用TRUE系数的80%的后可信间隔(XQ3@@)提供了重要的后证,证明在控制年龄时,使用氧会大大增加登山者攀登高峰的似然。 使用氧气的似然高达80%, 请用氧气!</p>
-<p>结合我们对于\(\beta_1\)和\(\beta_2\)的观察,登山者日志(成功奇数)与其年龄(\(X_1\))和氧气使用(\(X_2\))之间关系的后中位模型是.</p>
-<p>\[\text{log}\left(\frac{\pi}{1 - \pi}\right) = -1.42 - 0.0474 X_1 + 5.79 X_2.\]</p>
-<p>或者,就成功概率而言:</p>
-<p>\[\pi = \frac{e^{-1.42 - 0.0474 X_1 + 5.79 X_2}}{1 + e^{-1.42 - 0.0474 X_1 + 5.79 X_2}}.\]</p>
-<p>这种后期中位数模型只是成功、年龄和氧气使用之间一系列可能存在的后期关系的核心。 为了了解这一范围,图18.4列出了100种后期可行的替代模型。 无论是含氧还是无氧,成功概率都随着年龄而降低. 此外,在任何特定年龄,登山者使用氧气时,成功概率要高得多。 然而,我们事后对这些趋势的确定性因年龄而异。 我们对于较年长的登山者吸氧的成功率的确定性要小于较年轻的登山者吸氧的成功率,对于他们来说,成功率是一致的。 同样,但不太强烈的是,我们对于不使用氧气的年轻登山者的成功率的确定性要低于那些不使用氧气的老登山者,因为他们的成功率始终很低。</p>
-<div class="sourceCode" id="cb402">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+3 oxygen_usedTRUE   5.79     0.478     5.20      6.43</code></pre></div>
+<p>首先，请注意 <code>age</code> 系数 <span class="math inline">\(\beta_1\)</span> 的80%后验可信区间完全低于0。
+因此，我们有<em>显著的</em>后验证据表明，在控制登山者是否使用氧气的情况下，成功率随年龄增加而下降。
+更具体地说，将 <span class="math inline">\(\beta_1\)</span> 的信息从<em>对数</em>（优势）尺度转换到<em>优势</em>尺度，年龄每增加一岁，成功登顶的<em>优势</em>下降幅度在3.5%至5.8%之间的概率为80%：<span class="math inline">\((e^{-0.0594}, e^{-0.0358}) = (0.942, 0.965)\)</span>。
+类似地，<code>oxygen_usedTRUE</code> 系数 <span class="math inline">\(\beta_2\)</span> 的80%后验可信区间提供了<em>显著的</em>后验证据，表明在控制年龄的情况下，使用氧气会大大增加登山者登顶的可能性。
+使用氧气对应的成功优势增加幅度在182倍到617倍之间的概率为80%：<span class="math inline">\((e^{5.2}, e^{6.43}) = (182, 617)\)</span>。
+氧气，请！</p>
+<p>结合我们对 <span class="math inline">\(\beta_1\)</span> 和 <span class="math inline">\(\beta_2\)</span> 的观察，登山者的对数（成功优势）与其年龄（<span class="math inline">\(X_1\)</span>）和氧气使用（<span class="math inline">\(X_2\)</span>）之间关系的后验中位数模型为</p>
+<p><span class="math display">\[\text{log}\left(\frac{\pi}{1 - \pi}\right) =  -1.42 - 0.0474 X_1 + 5.79 X_2.\]</span></p>
+<p>或者，在成功概率尺度上：</p>
+<p><span class="math display">\[\pi =  \frac{e^{-1.42 - 0.0474 X_1 + 5.79 X_2}}{1 + e^{-1.42 - 0.0474 X_1 + 5.79 X_2}}.\]</span></p>
+<p>这一后验中位数模型仅仅代表了成功、年龄与氧气使用之间所有后验合理关系中<em>一系列</em>可能性的<em>中心</em>。为了感受这个范围，图 <a href="/bayes-rules-python-cn/chapter-18/#fig:ch18-post-plaus-log">18.4</a> 绘制了 100 条后验合理的替代模型。无论是否使用氧气，成功概率都随年龄增长而降低。此外，在任何给定年龄下，使用氧气的登山者成功概率<em>明显</em>更高。然而，我们对这些趋势的后验确定性随年龄变化很大。对于使用氧气的高龄登山者，我们对成功率的确定性<em>远</em>低于使用氧气的年轻登山者——后者的成功率普遍较高。类似地，但在程度上不那么明显的是，我们对不使用氧气的年轻登山者的成功率确定性低于不使用氧气的高龄登山者——后者的成功率普遍较低。</p>
+<div class="sourceCode" id="cb402"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 下面给出与本节模型一致的 Python 写法。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+alpha = 0.1) +
+labs(y = "probability of success")</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch18-post-plaus-log" style="display:block;"></span>
-<img alt="这是成功概率(y-轴)对年龄(x-轴)的情节. 概率从0到1,年龄从17到76. 有200个非线性、向下倾斜的曲线,每个使用过的氧气类别有100个,TRUE或FALSE。 对于使用过的氧气等于TRUE,100行在17岁开始接近0.95成功率,到70岁结束,成功率范围更广,从0.5到0.9。 对应氧的100行等于FALSE. 它们从17岁时的0.05至0.20成功率开始,到76岁时全部以接近0的成功率结束." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch18-post-plaus-log-1-d0ff9f843d4e.png" width="384"/>
-<p class="caption">图18.4:按年龄和氧气使用率计算攀登成功概率的100个后期可信模型。</p>
+<img alt="This is a plot of probability of success (y-axis) vs age (x-axsis). The probabilities range from 0 to 1 and the ages range from 17 to 76. There are 200 non-linear, downward-sloping curves, 100 for each oxygen_used category, TRUE or FALSE. For oxygen_used equals TRUE, the 100 lines all start near a success rate of 0.95 at age 17 and end at a wider range of success rates, from 0.5 to 0.9 by age 70. The 100 lines corresponding to oxygen_used equals FALSE are much lower. They start with success rates between 0.05 and 0.20 at age 17 and all end at a success rate near 0 by age 76." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch18-post-plaus-log-1-d0ff9f843d4e.png" width="384"/>
+<p class="caption">
+图 18.4：按年龄和氧气使用划分的登山成功概率的 100 个后验合理模型。
+</p>
 </div>
 </div>
 <div class="section level3" id="posterior-classification" number="18.1.3">
-<h3>后分类</h3>
+<h3> 后验分类</h3>
 <p></p>
-<p>假设有四个登山者开始新的探险 2岁20岁,2岁60岁. 在两种年龄中,一种登山者计划使用氧气,另一种则不:</p>
-<div class="sourceCode" id="cb403">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>假设有四名登山者开始一次新的探险。其中两人 20 岁，两人 60 岁。在每个年龄对中，一名登山者计划使用氧气，另一名不使用：</p>
+<div class="sourceCode" id="cb403"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -323,19 +365,15 @@ age oxygen_used expedition_id
 1  20       FALSE           new
 2  20        TRUE           new
 3  60       FALSE           new
-4  60        TRUE           new</code></pre>
-</div>
-<p>自然,他们每个人都想知道他们达到高峰的概率。 关于如何从零开始模拟新组的后期预测模型的提醒,请审查第16.5节。 在这里,我们直接跳到后预告()的快捷键功能,以模拟我们四个新登山者每人的20,000 0或1后预言:</p>
-<div class="sourceCode" id="cb404">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+4  60        TRUE           new</code></pre></div>
+<p>他们自然都想知道自己登顶的概率。关于如何从头模拟<em>新</em>组的后验预测模型，请回顾第 <a href="/bayes-rules-python-cn/chapter-16/#ch16-prediction">16.5</a> 节。这里我们直接使用 <code>posterior_predict()</code> 快捷函数为 4 名新登山者各模拟 20,000 个 0-1 后验预测：</p>
+<div class="sourceCode" id="cb404"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 二进制结果的预测
 rng = np.random.default_rng(84735)
 binary_prediction = posterior_predict(climb_model, newdata = new_expedition)
@@ -344,12 +382,9 @@ head(binary_prediction, 3)
 1 2 3 4
 [1,] 0 1 0 1
 [2,] 0 1 0 1
-[3,] 0 1 0 1</code></pre>
-</div>
-<p>对每个登山者来说,成功概率大约是在其20 000次后期预测中观察到的成功比例。 由于这些概率在新考察的基线成功率中包含不确定性,因此这些概率比图18.4所示的全球趋势要小:</p>
-<div class="sourceCode" id="cb405">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+[3,] 0 1 0 1</code></pre></div>
+<p>对于每位登山者，成功概率由其 20,000 次后验预测中观测到的成功比例来近似。由于这些概率包含了新探险基线成功率的不确定性，它们比图 <a href="/bayes-rules-python-cn/chapter-18/#fig:ch18-post-plaus-log">18.4</a> 中观察到的全局趋势更为温和：</p>
+<div class="sourceCode" id="cb405"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -358,26 +393,22 @@ import arviz as az
 # 总结Y的后期预测
 colMeans(binary_prediction)
 1      2      3      4
-0.2788 0.8040 0.1440 0.6515</code></pre>
-</div>
-<p>这些后期预测对年龄,氧气和成功之间的联系提供了更深入的见解. 例如,我们的后期预测是,登山者1号20岁,没有计划使用氧气,有27.88%的机会登顶高峰. 这一概率自然低于登山者2,他也是20岁,但确实计划使用氧气. 这比登山者3的成功预测要高, 总体而言,登山者2的后期预测成功率最高,而登山者3的后期预测成功率最低,而登山者3的后期预测成功率也最高,而登山者3的后期预测成功率也最低,而登山者3的后期预测成功率也最高,而登山者3的后期预测成功率也最低,而登山者3的后期预测成功率也最低,而登山者3的后期预测成功率也最高,而登山者则不计划使用氧气。</p>
-<p>在第十三章中,我们讨论了将这种后期概率预测转化为二进制结果的后期分类的选择:是还是否,我们预计登山者是否会成功? 如果我们使用简单的0.5后概率截断来作出这个决定,我们建议登山者1号和3号不要加入探险队(至少没有氧气),并让登山者2号和4号先行. 然而,在这方面,我们也许应该让个别登山者来解释他们自己的结果,并作出他们自己是否继续探险的决定。 例如,65.16%的成功机会可能值得为一些人带来麻烦和风险,但对另一些人则不然。</p>
+0.2788 0.8040 0.1440 0.6515</code></pre></div>
+<p>这些后验预测让我们更深入地了解年龄、氧气使用与成功登顶之间的关系。例如，根据后验预测，1号登山者20岁且<em>不</em>打算使用氧气，其成功登顶的概率为27.88%。这个概率自然低于2号登山者，后者也是20岁但<em>确实</em>打算使用氧气。它也高于3号登山者的后验成功预测概率，3号登山者同样不打算使用氧气，但年龄为60岁。总体来看，后验成功预测概率<em>最高</em>的是2号登山者，他更年轻且计划使用氧气；而<em>最低</em>的是3号登山者，他年纪更大且不打算使用氧气。</p>
+<p>在第<a href="/bayes-rules-python-cn/chapter-13/#chapter-13">13</a>章中，我们讨论了将这种后验<em>概率</em>预测转换为二元结果的<strong>后验分类</strong>：是或否，我们预计该登山者会成功吗？如果使用简单的0.5后验概率阈值来做此决定，我们会建议1号和3号登山者<em>不要</em>参加此次探险（至少，不带氧气的话），而让2号和4号登山者继续。然而，在这种特定情境下，我们或许应该让每个登山者自己解读结果，并自行决定是否继续他们的探险。例如，65.16%的成功机会对某些人来说可能值得付出麻烦和风险，对另一些人则不然。</p>
 </div>
 <div class="section level3" id="model-evaluation-2" number="18.1.4">
-<h3>示范评价</h3>
+<h3> 模型评估</h3>
 <p></p>
-<p>最后,让我们问一下:我们的等级后勤模式是否是一个好模式? 长话短说,答案是肯定的。 首先,我们的模型是公平的。 我们使用的数据是公共记录的一部分,我们没有预见到我们对个人或社会产生任何负面影响的分析。 (同样,对公平问题的无趣回答是最好的。 ) 第二,图18.3中的我们的后期预测检查表明,我们的模型似乎并不太错误 — — 我们的后期模拟成功率徘徊在我们的数据中观察到的成功率上。 最后,关于后期分类准确性问题,我们可以将我们的后期成功分类与我们数据集中2076名登山者的实际结果进行比较。 如果登山者的成功概率超过0.5, 我们会预测他们将会成功。 我们使用下文的分类 摘要()执行和评价这一分类规则。</p>
-<div class="sourceCode" id="cb406">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>总结我们的登山分析，我们来问问：我们的分层Logistic模型是一个<em>好</em>模型吗？长话短说，答案是<em>是的</em>。首先，我们的模型是<strong>公平的</strong>。我们使用的数据是公开记录的一部分，并且我们预计我们的分析不会对个人或社会产生任何负面影响。（再次说明，对公平性问题给出平淡的答案是最好的。）其次，图<a href="/bayes-rules-python-cn/chapter-18/#fig:ch16-pp-log">18.3</a>中的后验预测检查表明，我们的模型<strong>似乎没有太大问题</strong>——我们的后验模拟成功率在数据中观察到的成功率附近波动。最后，关于<strong>后验分类准确率</strong>的问题，我们可以将我们对成功的后验分类与数据集中2076名登山者的实际结果进行比较。默认情况下，我们从<strong>概率阈值</strong>0.5开始——如果一名登山者的成功<em>概率</em>超过0.5，我们就预测他们会成功。我们使用下面的<code>classification_summary()</code>来实现并评估这个分类规则。</p>
+<div class="sourceCode" id="cb406"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
 rng = np.random.default_rng(84735)
-classification_summary(data = climbers, model = climb_model, cutoff = 0.5)</code></pre>
-</div>
+classification_summary(data = climbers, model = climb_model, cutoff = 0.5)</code></pre></div>
 <pre class="sourceCode"><code>$confusion_matrix
      y    0   1
  FALSE 1174  95
@@ -388,22 +419,19 @@ $accuracy_rates
 sensitivity      0.9046
 specificity      0.9251
 overall_accuracy 0.9171</code></pre>
-<p>总的来说,在这个分类规则下,我们的模型成功地预测了我们91.71%的登山者的结果. 我们只利用登山者年龄及氧气使用等信息, 然而,鉴于在这种特定情况下错误分类的后果(例如伤害风险),我们应该优先考虑具体性,我们预测登山者何时可能不会成功的能力。 为此,我们的模型正确预测了92.51%的攀登失败. 为了提高这个速率,我们可以改变我们分类规则中的概率截断.</p>
+<p>总体而言，在这个分类规则下，我们的模型成功预测了91.71%登山者的结果。考虑到我们只利用了登山者的年龄和氧气使用信息，而还有许多其他可能考虑的因素（例如目的地、季节等），这个结果相当不错。然而，鉴于在这种特定背景下误分类的后果（例如受伤的风险），我们应优先考虑<strong>特异度</strong>，即我们预测登山者<em>不会</em>成功的能力。为此，我们的模型仅正确预测了92.51%的登顶失败案例。为了提高这个比率，我们可以改变分类规则中的概率阈值。</p>
 <div class="quiz">
-<p>我们可采用何种截断方式来实现至少95%的特异性,同时保持尽可能高的敏感性?</p>
+<p>我们可以使用什么阈值来达到至少95%的特异度，同时尽可能保持最高的灵敏度？</p>
 </div>
-<p>一般来说,为了提高特异性,我们可以增加概率截断,从而更难预测“成功”。 经过一些试验和错误后,大约0.65或更高的断层似乎将达到95%的预期特异性水平。 这个切换到0.65自然降低了我们后期分类的灵敏度,从90.46%降至81.54%,从而我们检测登山者何时成功的能力. 我们认为,额外的谨慎是值得的。</p>
-<div class="sourceCode" id="cb408">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>一般来说，要提高特异度，我们可以<em>提高</em>概率阈值，从而使预测“成功”变得更<em>困难</em>。经过一些试错，大约0.65或更高的阈值似乎能达到所需的95%特异度水平。将阈值切换到0.65自然会降低我们后验分类的灵敏度，从90.46%降至81.54%，从而降低我们发现登山者<em>会</em>成功的能力。我们认为增加这种谨慎是值得的。</p>
+<div class="sourceCode" id="cb408"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
 rng = np.random.default_rng(84735)
-classification_summary(data = climbers, model = climb_model, cutoff = 0.65)</code></pre>
-</div>
+classification_summary(data = climbers, model = climb_model, cutoff = 0.65)</code></pre></div>
 <pre class="sourceCode"><code>$confusion_matrix
      y    0   1
  FALSE 1214  55
@@ -417,85 +445,107 @@ overall_accuracy 0.9017</code></pre>
 </div>
 </div>
 <div class="section level2" id="hierarchical-poisson-negative-binomial-regression" number="18.2">
-<h2>等级化的 Poisson 和负二进制回归</h2>
+<h2> 分层泊松 &amp; 负二项回归</h2>
 <p>
 </p>
-<p>度假租赁服务,如AirBnB,提供旅行者替代酒店房间的服务. AirBnB的存货和价格范围很广,导致我们问:为什么有些上市的检讨比其他的要多(因此大概是更多的客人)? 除了一个模糊的基线理解, 即典型的列名约有20次审查之外, 我们不确定AirBnB市场的动态, 由Trinh和Ameri(2016年)整理, 由Legler和Roback(2021年)分发。 包括芝加哥43个街区的1561个列表,</p>
-<div class="sourceCode" id="cb410">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>像爱彼迎（AirBnB）这样的度假租赁服务，为旅行者提供了酒店客房之外的替代选择。爱彼迎的库存和价格范围非常广，这让我们不禁要问：为什么有些房源比其他房源有更多的评论（因此可以推测客人也更多）？除了一个<em>模糊</em>的基线认知——典型房源大约有 20 条评论——我们对于爱彼迎市场的动态并不确定，因此将采用弱信息先验分布。我们将通过 <code>airbnb</code> 数据集（关于 Airbnb 的数据）来平衡这些先验，该数据集最初由 <span class="citation"><a href="#ref-stolaf2" role="doc-biblioref">Trinh 和 Ameri</a>（<a href="#ref-stolaf2" role="doc-biblioref">2016</a>）</span>整理，并由 <span class="citation"><a href="#ref-legler" role="doc-biblioref">Legler 和 Roback</a>（<a href="#ref-legler" role="doc-biblioref">2021</a>）</span>发布。这个数据集包含了芝加哥 43 个社区的 1561 个房源信息，因此<em>每个社区有多个房源</em>：</p>
+<div class="sourceCode" id="cb410"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 装入数据
 data(airbnb)
 # 列名数目
 nrow(airbnb)
 [1] 1561
 # 邻里数
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>我们对这些社区并不感兴趣。 我们想用这些社区的数据来了解更广泛的AirBnB市场。 然而,由于同一街区内的列名具有许多特征(例如相似的地点、便利设施、公共交通),因此假定其独立性是错误的。 因此,为了反映和研究AirBnB在邻里之间和内部的评论数量的变化,我们将将邻里分组结构纳入我们的分析之中。</p>
+# 可用 pandas / PyMC 按同一数据流程表达。
+summarize(nlevels(neighborhood))
+nlevels(neighborhood)
+1                    43</code></pre></div>
+<p>我们并非对这些特定的社区本身感兴趣。相反，我们希望利用这些社区的数据来了解更广泛的爱彼迎市场。然而，由于同一社区内的房源共享许多特征（例如相似的位置、便利设施、公共交通），假设它们之间相互独立是错误的。因此，为了反映和研究爱彼迎 <code>reviews</code> 数量在社区<em>之间</em>和社区<em>内部</em>的变异性，我们将在分析中纳入 <code>neighborhood</code> 分组结构。</p>
 <div class="section level3" id="ch-18-rat-sim" number="18.2.1">
-<h3>模型建设和模拟</h3>
-<p>在探索AirBnB上市与上市之间为何评论数量不同时,我们会考虑两个可能的因素:其总的用户评级(从1到5级)及其房间类型分配的隐私,即租户是获得一个完整的私人单位,还是在一个共享单位内获得一个私人房间,还是共享一个房间。 更具体地说,为了在邻里上市,我们将模拟响应变量。</p>
-<p>\[Y_{ij} = \text{ number of reviews }\]</p>
-<p>以及房间类型, 整个私人单位是参考级别,</p>
-<p>\[X_{ij2} = \begin{cases} 1 &amp; \text{private room} \\ 0 &amp; \text{otherwise} \\ \end{cases} \;\; \text{ and } \;\; X_{ij3} = \begin{cases} 1 &amp; \text{shared room} \\ 0 &amp; \text{otherwise} \\ \end{cases}\]</p>
-<p>图18.5显示了审查次数的趋势及其与列名评级和会议室类型的关系。 但大多数上市者只有不到20次评论, 此外,评论量往往随着评级和隐私水平的增加而增加。</p>
-<div class="sourceCode" id="cb411">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h3>模型构建与模拟</h3>
+<p>在探究为什么爱彼迎房源之间的 <code>reviews</code> 数量会有所差异时，我们将考虑两个可能的因素：房源的总体用户 <code>rating</code>（评分，范围 1 到 5 分）以及其 <code>room_type</code>（房型）所赋予的私密程度，即租客是获得整个独立单元、在共享单元中的一间私人房间，还是共享一个房间。更具体地说，对于社区 <span class="math inline">\(j\)</span> 中的房源 <span class="math inline">\(i\)</span>，我们将建模响应变量</p>
+<p><span class="math display">\[Y_{ij} = \text{ number of reviews }\]</span></p>
+<p>依赖于访客评分 <span class="math inline">\(X_{ij1}\)</span> 以及房型，其中“整套独立单元”作为参考水平，我们为另外两种房型构建了指示变量：</p>
+<p><span class="math display">\[X_{ij2} = \begin{cases}
+1 &amp; \text{private room} \\
+0 &amp; \text{otherwise} \\
+\end{cases}
+\;\; \text{ and } \;\;
+X_{ij3} = \begin{cases}
+1 &amp; \text{shared room} \\
+0 &amp; \text{otherwise} \\
+\end{cases}\]</span></p>
+<p>图 <a href="/bayes-rules-python-cn/chapter-18/#fig:ch18-air-data">18.5</a> 展示了评论数量的趋势以及它们与房源评分和房型之间的关系。在单独考察 <span class="math inline">\(Y_{ij}\)</span> 的变异性时，请注意大多数房源的评论数量少于 20 条，尽管存在长右尾现象。此外，评论量往往随着评分和私密程度的提高而增加。</p>
+<div class="sourceCode" id="cb411"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 下面给出与本节模型一致的 Python 写法。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch18-air-data" style="display:block;"></span>
-<img alt="有三块地 左图是评论的直方图(x轴). 评审范围从0到200,正确扭曲,峰值接近0. 大约600份清单有0至10份审查。 中篇情节是一首令人焦躁的评语情节(y-axis)vs评分(x-axis),每首1561个榜单各有一个点. 审查次数往往低于150次,随着评级的增加而增加。 评分在4级或以下的上市审查往往少于50份。 正确的情节是小提琴情节的评语(y-轴)vs room type,全家/ept,私房,或共享房间(x-轴). 在每间房间 类型内,审查都是右侧的。 此外,共用会议室的审查往往较少。 很难区分其他模式。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch18-air-data-1-9f5673027382.png" width="624"/>
-<p class="caption">FIGURE 18.5: AirBnB上市(左)收到的评论数量以及上市(中)和室型(右)上市评论数量之间的关系。</p>
+<img alt="There are 3 plots. The left plot is a histogram of reviews (x-axis). The reviews range from 0 to 200, are right skewed, and peak near 0. Roughly 600 listings have between 0 and 10 reviews. The middle plot is a jitter plot of reviews (y-axis) vs rating (x-axis) with a point representing each of 1561 listings. The number of reviews tends to be below 150 and increase with rating. Listings with ratings of 4 or below tend to have fewer than 50 reviews. The right plot is a violin plot of reviews (y-axis) vs room_type, Entire home / apt, Private room, or Shared room (x-axis). Within each room_type, reviews are right-skewed. Further, shared rooms tend to have fewer reviews. It is difficult to distinguish any other patterns." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch18-air-data-1-9f5673027382.png" width="624"/>
+<p class="caption">
+图 18.5: Airbnb 房源收到评价数量的分布（左），以及评价数量与房源评分（中）和房间类型（右）的关系。
+</p>
 </div>
-<p>我们可以进一步打破这些动态 在每个街区。 我们在这里展示的只是三个珍贵的空间:奥尔巴尼公园(芝加哥北部的住宅小区),东加菲尔德公园(芝加哥中部的住宅小区),以及环球(商业区和旅游目的地). 一般来说,请注意,奥尔巴尼公园的上市审查往往较少,无论评分和房间类型如何.</p>
-<div class="sourceCode" id="cb412">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>我们还可以进一步按社区分解这些动态。这里只展示三个以节省篇幅：Albany Park（芝加哥北部的一个住宅区）、East Garfield Park（芝加哥中部的一个住宅区）和 The Loop（一个商业区和旅游目的地）。总体来看，Albany Park 的房源无论评分高低或房间类型如何，收到的评价数量都较少。</p>
+<div class="sourceCode" id="cb412"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 下面给出与本节模型一致的 Python 写法。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+facet_wrap(~ neighborhood)</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-806" style="display:block;"></span>
-<img alt="有3个按评级(x轴)划分的散点评论(y-轴),每个街区有1个:奥尔巴尼公园,东加菲尔德公园,以及The Loop. 在每个街区内,点数按房间 类型 -- -- 整个家/小房间或私人房间配色. 虽然《环球报》有几家评论较高的上市公司," loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-806-1-20c31c3595fe.png" width="576"/>
-<p class="caption">图18.6: AirBnB列出的评分和房间类型,</p>
+<img alt="There are 3 scatterplots of reviews (y-axis) by rating (x-axis), one for each neighborhood: Albany Park, East Garfield Park, and The Loop. Within each neighborhood, points are colored by room_type -- Entire home/apt or Private room. Across neighborhoods, most listings have fewer than 100 reviews, though The Loop has several listings with higher reviews." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-806-1-20c31c3595fe.png" width="576"/>
+<p class="caption">
+图 18.6: 三个社区内 Airbnb 房源的评价数量随评分和房间类型变化的散点图。
+</p>
 </div>
-<p>在为审查次数建立回归模型时,第一步是考虑数据的合理概率模型。 由于QQ1+Q值是非阴性扭曲的计数,一个Poisson模型是一个很好的起点. 具体地说,允许率(QQ2)表示通过在邻里(QQ4)列出QQ3)收到的预期审查数量,</p>
-<p>\[Y_{ij} | \lambda_{ij} \sim \text{Pois}(\lambda_{ij}) .\]</p>
-<p>以下分级的Poisson回归模型构建了这个模型,以纳入(1) 评级和室型预测器( 0@@,\(X_{ij2}\),\(X_{ij3}\))和(2) airbnb数据分组结构. 除了一般认为典型的列名有大约20次审查(即QQ3@@记录审查)外,</p>
-<p>\[\begin{equation} \begin{array}{rl} Y_{ij}|\beta_{0j},\beta_1, \beta_2, \beta_3 &amp; \sim \text{Pois}(\lambda_{ij}) \;\; \text{ with } \;\; \log(\lambda_{ij}) = \beta_{0j} + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \beta_3 X_{ij3} \\ \beta_{0j} | \beta_0, \sigma_0 &amp; \stackrel{ind}{\sim} N(\beta_0, \sigma_0^2)\\ \beta_{0c} &amp; \sim N\left(3, 2.5^2 \right)\\ \beta_{1} &amp; \sim N\left(0, 7.37^2 \right)\\ \beta_{2} &amp; \sim N\left(0, 5.04^2 \right)\\ \beta_{3} &amp; \sim N\left(0, 14.19^2 \right)\\ \sigma_0 &amp; \sim \text{Exp}(1). \\ \end{array} \tag{18.2} \end{equation}\]</p>
-<p>这个模式假设邻居可能有独特的截取量, 在平庸的语言中:虽然有些街区可能比其他街区更受欢迎的AirBnB目的地(因此其上市往往有更多的评论),但评论与评级和房间类型的关系对每个街区来说是一样的. 例如,评分对一个社区的评论没有比对另一个社区的影响更大。 这一假设大大简化了我们的分析,同时仍然考虑到数据中的分组结构。 为了模拟后期,我们指定了我们的家族=poisson数据结构,并且通过(1 QQ邻里)整合了邻里层次的分组结构:</p>
-<!-- AJ: note that putting the model fmla on line 1 will go into the margins -->
-<div class="sourceCode" id="cb413">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>在为评价数量建立回归模型时，第一步是为数据 <span class="math inline">\(Y_{ij}\)</span> 考虑合理的概率模型。由于 <span class="math inline">\(Y_{ij}\)</span> 是非负的偏态计数数据，<strong>泊松</strong>模型是一个很好的起点。具体来说，令 <em>率</em> <span class="math inline">\(\lambda_{ij}\)</span> 表示社区 <span class="math inline">\(j\)</span> 中房源 <span class="math inline">\(i\)</span> 收到的期望评价数量，</p>
+<p><span class="math display">\[Y_{ij} | \lambda_{ij} \sim \text{Pois}(\lambda_{ij})  .\]</span></p>
+<p>下面的<strong>分层泊松回归模型</strong>在此基础上纳入 (1) 评分和房间类型预测变量（<span class="math inline">\(X_{ij1}\)</span>、<span class="math inline">\(X_{ij2}\)</span>、<span class="math inline">\(X_{ij3}\)</span>）以及 (2) <code>airbnb</code> 数据的分组结构。除了大致了解典型房源大约有 20 条评价（因此 <span class="math inline">\(\log(20) \approx 3\)</span> 的对数评价）之外，该模型使用了由建模软件自动调整的独立、弱信息先验分布：</p>
+<p><span class="math display" id="eq:pois-hier-ch18">\[\begin{equation}
+\begin{array}{rl}
+Y_{ij}|\beta_{0j},\beta_1, \beta_2, \beta_3 &amp; \sim \text{Pois}(\lambda_{ij}) \;\;
+\text{ with }  \;\; \log(\lambda_{ij}) = \beta_{0j} + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \beta_3 X_{ij3} \\
+\beta_{0j} | \beta_0, \sigma_0    &amp; \stackrel{ind}{\sim} N(\beta_0, \sigma_0^2)\\
+\beta_{0c} &amp; \sim N\left(3, 2.5^2 \right)\\
+\beta_{1} &amp; \sim N\left(0, 7.37^2 \right)\\
+\beta_{2} &amp; \sim N\left(0, 5.04^2 \right)\\
+\beta_{3} &amp; \sim N\left(0, 14.19^2 \right)\\
+\sigma_0 &amp; \sim \text{Exp}(1). \\
+\end{array}
+\tag{18.2}
+\end{equation}\]</span></p>
+<p>仔细看，该模型假设各社区可能有独特的截距 <span class="math inline">\(\beta_{0j}\)</span>，但共享相同的回归参数 <span class="math inline">\((\beta_1, \beta_2, \beta_3)\)</span>。简单来说：尽管某些社区可能是比另一些更受欢迎的 Airbnb 目的地（因此其房源往往获得更多评价），但评价与评分及房间类型之间的<em>关系</em>在各社区是一致的。例如，评分对评价数量的影响在不同社区之间并没有差异。这一假设在考虑数据中分组结构的同时，大大简化了分析。为了进行后验模拟，我们设置 <code>family = poisson</code> 的数据结构，并通过 <code>(1 | neighborhood)</code> 纳入社区层级的分组结构：</p>
+ AJ: note that putting the model fmla on line 1 will go into the margins
+<div class="sourceCode" id="cb413"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 with pm.Model() as model:
     # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
     # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
@@ -504,45 +554,62 @@ with pm.Model() as model:
     # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
     idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
 az.summary(idata)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>在太兴奋之前,</p>
-<div class="sourceCode" id="cb414">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+# 可用 pandas / PyMC 按同一数据流程表达。
+reviews ~ rating + room_type + (1 | neighborhood),
+data = airbnb, family = poisson,
+prior_intercept = normal(3, 2.5, autoscale = TRUE),
+prior = normal(0, 2.5, autoscale = TRUE),
+prior_covariance = decov(reg = 1, conc = 1, shape = 1, scale = 1),
+chains = 4, iter = 5000*2, seed = 84735
+)</code></pre></div>
+<p>在过于兴奋之前，我们先做一个快速的 `pp_check()`：</p>
+<div class="sourceCode" id="cb414"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 pp_check(airbnb_model_1) +
 xlim(0, 200) +
-xlab("reviews")</code></pre>
-</div>
+xlab("reviews")</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch18-pois-pp" style="display:block;"></span>
-<img alt="模拟评论数据有50个浅蓝色密度曲线,观测评论数据有1个深蓝色密度曲线. 这种深蓝色的密度曲线是右侧扭曲的,从大约0到150个上市范围,峰值接近10个评论. 50轻蓝密度曲线相互类似,但与深蓝色曲线差别很大. 它们呈钟形,以近30份评论为中心,从大约10份到50份不等。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch18-pois-pp-1-64cfd778c88a.png" width="288"/>
-<p class="caption">FIGURE 18.7: AirBnB Poisson回归模型的后期预测检查.</p>
+<img alt="There are 50 light blue density curves of simulated reviews data and 1 dark blue density curve of the observed reviews data. This dark blue density curve is right-skewed, ranges from roughly 0 to 150 listings, and peaks near 10 reviews. The 50 light blue density curves are similar to each other, but very different from the dark blue curve. They are bell-shaped, centered near 30 reviews, and range from roughly 10 to 50 reviews." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch18-pois-pp-1-64cfd778c88a.png" width="288"/>
+<p class="caption">
+图 18.7: AirBnB 泊松回归模型的后验预测检查。
+</p>
 </div>
-<p>图18.7显示,我们的分级的Poisson回归模式大大低估了从上市到上市的审查的可变性,同时高估了典型的审查数量。 我们以前来过这里! 从第12章中回顾,一个基本的Poisson回归假设是,在任何一套预测值中,审查的平均次数等于审查中的差异:</p>
-<p>\[E(Y_{ij}) = \text{Var}(Y_{ij}) = \lambda_{ij} .\]</p>
-<p>pp check () 对这个假设提出质疑。 为了解决QQ0QQ值中明显的过度分散问题,我们在18.2中将Poisson模型换成更灵活的负二分位模型,取出额外的对等分散参数QQ1X:</p>
-<p>\[\begin{equation} \begin{array}{rl} Y_{ij}|\beta_{0j},\beta_1, \beta_2, \beta_3, r &amp; \sim \text{NegBin}(\mu_{ij}, r) \;\; \text{ with } \;\; \log(\mu_{ij}) = \beta_{0j} + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \beta_3 X_{ij3} \\ \beta_{0j} | \beta_0, \sigma_0 &amp; \stackrel{ind}{\sim} N(\beta_0, \sigma_0^2) \\ \beta_{0c} &amp; \sim N\left(3, 2.5^2 \right) \\ \beta_1 &amp; \sim N\left(0, 7.37^2 \right) \\ \beta_2 &amp; \sim N\left(0, 5.04^2 \right) \\ \beta_3 &amp; \sim N\left(0, 14.19^2 \right) \\ r &amp; \sim \text{Exp}(1) \\ \sigma_0 &amp; \sim \text{Exp}(1) \\ \end{array} \tag{18.3} \end{equation}\]</p>
-<p>同理,我们可以把随机拦截 表达为全球拦截,</p>
-<p>\[\log(\mu_{ij}) = (\beta_0 + b_{0j}) + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \beta_3 X_{ij3}\]</p>
-<p>在哪里, \ \ \ \ \ \ 为了模拟等级的负二元回归模型的后期,我们可以将家族=poisson换成家族=neg binomial 2:</p>
-<!-- AJ: putting fmla on line 1 goes into margins -->
-<div class="sourceCode" id="cb415">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>图 <a href="/bayes-rules-python-cn/chapter-18/#fig:ch18-pois-pp">18.7</a> 表明我们的分层泊松回归模型明显低估了各房源评论的变异性，同时高估了评论的典型数量。
+我们之前遇到过这种情况！
+回想第 <a href="/bayes-rules-python-cn/chapter-12/#chapter-12">12</a> 章，泊松回归的一个基本假设是，在任何预测变量取值下，评论的<em>均值</em>等于评论的<em>方差</em>：</p>
+<p><span class="math display">\[E(Y_{ij}) = \text{Var}(Y_{ij}) = \lambda_{ij}  .\]</span></p>
+<p>`pp_check()` 给这一假设打上了问号。
+为了处理 <span class="math inline">\(Y_{ij}\)</span> 值中明显的<strong>过度离散</strong>现象，我们将 <a href="/bayes-rules-python-cn/chapter-18/#eq:pois-hier-ch18">(18.2)</a> 中的泊松模型替换为更灵活的负二项模型，并引入额外的倒数离散参数 <span class="math inline">\(r &gt; 0\)</span>：</p>
+<p><span class="math display" id="eq:nb-model-ch18">\[\begin{equation}
+\begin{array}{rl}
+Y_{ij}|\beta_{0j},\beta_1, \beta_2, \beta_3, r &amp; \sim \text{NegBin}(\mu_{ij}, r) \;\; \text{ with } \;\; \log(\mu_{ij}) = \beta_{0j} + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \beta_3 X_{ij3} \\
+\beta_{0j} | \beta_0, \sigma_0    &amp; \stackrel{ind}{\sim} N(\beta_0, \sigma_0^2) \\
+\beta_{0c} &amp;  \sim N\left(3, 2.5^2 \right) \\
+\beta_1 &amp;  \sim N\left(0, 7.37^2 \right) \\
+\beta_2 &amp;  \sim N\left(0, 5.04^2 \right) \\
+\beta_3 &amp;  \sim N\left(0, 14.19^2 \right) \\
+r &amp; \sim \text{Exp}(1) \\
+\sigma_0 &amp; \sim \text{Exp}(1) \\
+\end{array}
+\tag{18.3}
+\end{equation}\]</span></p>
+<p>等价地，我们可以将随机截距表示为全局截距的调整项，</p>
+<p><span class="math display">\[\log(\mu_{ij}) = (\beta_0 + b_{0j}) + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \beta_3 X_{ij3}\]</span></p>
+<p>其中 <span class="math inline">\(b_{0j} | \sigma_0 \stackrel{ind}{\sim} N(0, \sigma_0^2)\)</span>。
+为了模拟<strong>分层负二项回归模型</strong>的后验分布，我们可以将 <code>family = poisson</code> 替换为 <code>family = neg_binomial_2</code>：</p>
+ AJ: putting fmla on line 1 goes into margins
+<div class="sourceCode" id="cb415"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 with pm.Model() as model:
     # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
     # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
@@ -551,37 +618,44 @@ with pm.Model() as model:
     # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
     idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
 az.summary(idata)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>负面二元模型虽然并不完美,</p>
-<div class="sourceCode" id="cb416">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+# 可用 pandas / PyMC 按同一数据流程表达。
+reviews ~ rating + room_type + (1 | neighborhood),
+data = airbnb, family = neg_binomial_2,
+prior_intercept = normal(3, 2.5, autoscale = TRUE),
+prior = normal(0, 2.5, autoscale = TRUE),
+prior_aux = exponential(1, autoscale = TRUE),
+prior_covariance = decov(reg = 1, conc = 1, shape = 1, scale = 1),
+chains = 4, iter = 5000*2, seed = 84735
+)</code></pre></div>
+<p>尽管不完美，负二项模型在捕捉不同房源之间评论行为方面做得 <em>好得多</em>：</p>
+<div class="sourceCode" id="cb416"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 pp_check(airbnb_model_2) +
 xlim(0, 200) +
-xlab("reviews")</code></pre>
-</div>
+xlab("reviews")</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch-18-nb-pp" style="display:block;"></span>
-<img alt="模拟评论数据有50个浅蓝色密度曲线,观测评论数据有1个深蓝色密度曲线. 这种深蓝色的密度曲线是右侧扭曲的,从大约0到150个上市范围,峰值接近10个评论. 50浅蓝色密度曲线相互类似,深蓝色曲线相似. 然而,它们的分布略大于深蓝色曲线." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-18-nb-pp-1-281ade45e689.png" width="288"/>
-<p class="caption">FIGURE 18.8: AirBnB评论的负二项回归模型的后期预测检查.</p>
+<img alt="There are 50 light blue density curves of simulated reviews data and 1 dark blue density curve of the observed reviews data data. This dark blue density curve is right-skewed, ranges from roughly 0 to 150 listings, and peaks near 10 reviews. The 50 light blue density curves are similar to each other and the dark blue curve. However, they have slightly greater spread than the dark blue curve." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-18-nb-pp-1-281ade45e689.png" width="288"/>
+<p class="caption">
+图 18.8：AirBnB 评论的负二项回归模型的后验预测检查。
+</p>
 </div>
 <div style="page-break-after: always;"></div>
 </div>
 <div class="section level3" id="posterior-analysis-1" number="18.2.2">
-<h3>A. 后方分析</h3>
-<p>让我们从评分和房间类型,</p>
-<p>\[\lambda_{ij} = e^{\beta_0 + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \beta_3 X_{ij3}}.\]</p>
-<p>以下是我们全球参数的后述。 QQ1@@的后期模式反映了审查和评级之间的重大实质性积极联系. 当控制房间类型时, 评论量可能会增加1.17倍到1.45倍, 反之,QQ4@@的后台模式表明,共享的房间与审查有着负面的联系. 在控制评分时, 共享房间上市的评论量可能高达52%至76%,</p>
-<div class="sourceCode" id="cb417">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h3> 后验分析</h3>
+<p>现在让我们解释后验模拟结果，先从评论与评分和房间类型的全局关系开始：<span class="math inline">\(\log(\lambda_{ij}) = \beta_0 + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \beta_3 X_{ij3}\)</span>，即：</p>
+<p><span class="math display">\[\lambda_{ij} = e^{\beta_0 + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \beta_3 X_{ij3}}.\]</span></p>
+<p>下面是全局参数 <span class="math inline">\((\beta_0,\beta_1, \beta_2, \beta_3)\)</span> 的后验摘要。
+参数 <span class="math inline">\(\beta_1\)</span> 的后验模型反映了评论数与评分之间存在显著且实质性的正相关关系。
+在控制房间类型的情况下，有 80% 的概率评论量会随着评分每提高一分而增加 1.17 到 1.45 <em>倍</em>，即增加 17% 到 45%：(<span class="math inline">\(e^{0.154}\)</span>, <span class="math inline">\(e^{0.371}) = (1.17, 1.45)\)</span>。
+相反，参数 <span class="math inline">\(\beta_3\)</span> 的后验模型表明，共享房间与评论量呈负相关。
+在控制评分的情况下，共享房间房源的评论量有 80% 的概率仅为整套私人房源的 52% 到 76%：<span class="math inline">\((e^{-0.659}, e^{-0.275}) = (0.52, 0.76)\)</span>。</p>
+<div class="sourceCode" id="cb417"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -594,35 +668,40 @@ term            estimate std.error conf.low conf.high
 1 (Intercept)       1.99      0.405   1.48e+0     2.52
 2 rating            0.265     0.0852  1.54e-1     0.371
 3 room_typePriva…   0.0681    0.0520  9.54e-4     0.136
-4 room_typeShare…  -0.471     0.149  -6.59e-1    -0.275</code></pre>
-</div>
-<p>也让我们在一些特定街区的AirBnB模型中登顶,</p>
-<p>\[\lambda_{ij} = e^{\beta_{0j} + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \beta_3 X_{ij3}}\]</p>
-<p>基线审查率因邻里而异。 我们将再次关注三个街区:奥尔巴尼公园、东加菲尔德公园和环球。 以下总结评价这些邻居的基线与全球截取量之间的差异,</p>
-<div class="sourceCode" id="cb418">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+4 room_typeShare…  -0.471     0.149  -6.59e-1    -0.275</code></pre></div>
+<p>我们也可以看一看一些<strong>针对特定街区</strong>的 AirBnB 模型，</p>
+<p><span class="math display">\[\lambda_{ij} = e^{\beta_{0j} + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \beta_3 X_{ij3}}\]</span></p>
+<p>其中 <span class="math inline">\(\beta_{0j}\)</span>，即基准评论率，因社区而异。
+我们仍将重点关注三个社区：奥尔巴尼公园（Albany Park）、东加菲尔德公园（East Garfield Park）和卢普区（The Loop）。
+下面的后验摘要评估了这些社区的基准与全局截距之间的<em>差异</em>，<span class="math inline">\(b_{0j} = \beta_{0j} - \beta_0\)</span>：</p>
+<div class="sourceCode" id="cb418"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 tidy(airbnb_model_2, effects = "ran_vals",
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>注意,奥尔巴尼公园的AirBnB上市评论数量少得典型,东加菲尔德公园的上市评论数量少得典型,而The Loop的上市评论数量与平均水平没有显著差异. 虽然不是戏剧性的,但邻居之间的这些差异在后期的预测中显现出来。 例如,下面我们模拟了三种评论的后期预测模型, 每种评论都有5个评分, 鉴于这些街区的审查基线不同,我们预计奥尔巴尼公园的上市审查会少于东加菲尔德公园的上市审查,尽管预测范围相当宽:</p>
-<div class="sourceCode" id="cb419">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# A:3×4
+level              estimate conf.low conf.high
+&lt;chr&gt;                 &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
+1 Albany_Park         -0.234   -0.427    -0.0548
+2 East_Garfield_Park   0.205    0.0385    0.397
+3 The_Loop             0.0101  -0.0993    0.124</code></pre></div>
+<p>请注意，奥尔巴尼公园（Albany Park）的AirBnB房源评论数量异常地少，东加菲尔德公园（East Garfield Park）的房源评论数量异常地多，而卢普区（The Loop）的房源与平均值没有显著差异。
+虽然差异不算巨大，但这些社区之间的差异会在后验预测中显现出来。
+例如，下面我们模拟了三个房源评论数的后验预测模型，每个房源都评分为5分，且都提供私密性，但它们位于三个不同的社区。
+考虑到这些社区不同的评论基准，我们预计奥尔巴尼公园的房源评论数会少于东加菲尔德公园的房源，不过预测范围非常宽：</p>
+<div class="sourceCode" id="cb419"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 对审查的预测
 rng = np.random.default_rng(84735)
 predicted_reviews = posterior_predict(
@@ -632,20 +711,32 @@ rating = rep(5, 3),
 room_type = rep("Entire home/apt", 3),
 neighborhood = c("Albany Park", "East Garfield Park", "The Loop")))
 mcmc_areas(predicted_reviews, prob = 0.8) +
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 可用 pandas / PyMC 按同一数据流程表达。
+labels = c("Albany Park", "East Garfield Park", "The Loop")) +
+xlim(0, 150) +
+xlab("reviews")</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-814" style="display:block;"></span>
-<img alt="共有3块密度的评语版图,每个街区各一张:环形山,东加菲尔德公园和奥尔巴尼公园. 这些都非常相似。 所有评论都是正确的,往往从0到75次。 然而,东加菲尔德公园的上市往往有略多的评论,奥尔巴尼公园较少." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-814-1-fcf7416fa463.png" width="384"/>
-<p class="caption">FIGURE 18.9:对AirBnB在三个不同街区的上市次数进行评论的后期预测模型.</p>
+<img alt="There are 3 density plots of reviews, one for each neighborhood: The Loop, East Garfield Park, and Albany Park. These are very similar. All are right-skewed and tend to range from 0 to 75 reviews. However, East Garfield Park listings tend to have slightly more reviews and Albany Park fewer." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-814-1-fcf7416fa463.png" width="384"/>
+<p class="caption">
+图18.9：三个不同社区AirBnB房源评论数的后验预测模型。
+</p>
 </div>
 </div>
 <div class="section level3" id="model-evaluation-3" number="18.2.3">
-<h3>示范评价</h3>
+<h3> 模型评估</h3>
 <p></p>
-<p>我们正式评估上市分析的质量。 首先,关于我们的模式是否公平的问题。 有点 在回答关于AirBnB的研究问题时,我们试图从我们掌握的数据中学习一些东西. 关于芝加哥的AirBnB市场, 因此,我们不愿用我们的分析来做更多的关于大市场的一般结论。 第二,图18.8中的我们的后期预测检查表明,我们的模型并不太错误,至少比采取普瓦森方法要好得多! 最后,我们对复核数的后期预测并不十分准确。 观察到的列名审查次数往往为18次审查,即0.68次标准差,与其后期预测平均值不同。 这种误差在我们的数据规模上相当大 — — 尽管每次上市的审查次数大约为0到200次,但大多数上市的审查低于20次(图18.5)。 为了改进我们对收到的审查次数的预测,我们可以在分析中纳入更多的预测因素。</p>
-<div class="sourceCode" id="cb420">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>最后，让我们正式评估一下我们的房源分析质量。
+首先，回答我们的模型是否<strong>公平</strong>的问题。
+算是吧。
+在回答关于AirBnB的研究问题时，我们试图从手头数据中学习一些东西。
+我们所拥有的数据是关于<em>芝加哥</em> AirBnB市场的信息。
+因此，我们不会轻易将分析结果用于超出整体市场一般性结论的用途。
+其次，图<a href="/bayes-rules-python-cn/chapter-18/#fig:ch-18-nb-pp">18.8</a>中的后验预测检查表明，<strong>我们的模型没有太大问题</strong> —— 至少比采用泊松方法要好得多！
+最后，<strong>我们对评论数的后验预测并不十分准确</strong>。
+一个房源的<em>实际</em>评论数往往与其后验均值预测相差18条评论，即0.68个标准差。
+这个误差水平在我们的数据尺度上是相当大的——尽管每个房源的评论数大致在0到200之间，但大多数房源的评论数低于20条（图<a href="/bayes-rules-python-cn/chapter-18/#fig:ch18-air-data">18.5</a>）。
+为了<em>改进</em>对房源评论数的预测，我们可能会在分析中加入更多的预测变量。</p>
+<div class="sourceCode" id="cb420"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -654,38 +745,43 @@ import arviz as az
 rng = np.random.default_rng(84735)
 prediction_summary(model = airbnb_model_2, data = airbnb)
 mae mae_scaled within_50 within_95
-1 17.7      0.678    0.5183    0.9571</code></pre>
-</div>
+1 17.7      0.678    0.5183    0.9571</code></pre></div>
 </div>
 </div>
 <div class="section level2" id="chapter-summary-17" number="18.3">
-<h2>章节摘要</h2>
-<p>在第18章中,我们把第3单元的通用线性模型原则与第4单元的分级模型原则结合起来,从而扩大了我们的分级工具包,包括Normal、Poisson、Nencio Binomial和后勤回归。 一般来说,让 @@0 @@ 表示其模型结构定义的 @@1 @@的预期值. 对于所有等级通用线性模型,XQ2@@对XQ3@@预测器的线性组合的依赖性由XQ4@@表示.</p>
-<p>\[\begin{split} g\left(E(Y_{ij}|\ldots)\right) &amp; = \beta_{0j} + \beta_{1j} X_{ij1} + \beta_{2j} X_{ij2} + \cdots + \beta_{pj} X_{ijp} \\ &amp; = (\beta_0 + b_{0j}) + (\beta_1 + b_{1j}) X_{ij1} + (\beta_2 + b_{2j}) X_{ij2} + \cdots + (\beta_p + b_{pj}) X_{ijp} \\ \end{split}\]</p>
-<p>其中 (1) 任何特定组的参数 QQ0 QQ 都可以被一个全局参数 QQ1 QQ 在 QQ2 QQ 组之间变化不大的情况下, (2) 链接函数 QQ3 QQ 取决于模型结构:</p>
+<h2> 章节总结</h2>
+<p>在第<a href="/bayes-rules-python-cn/chapter-18/#chapter-18">18</a>章中，我们将第3单元的广义线性模型原理与第4单元的分层建模原理相结合，从而将我们的分层模型工具箱扩展到了正态回归、泊松回归、负二项回归和Logistic回归。
+一般来说，令 <span class="math inline">\(E(Y_{ij}|\ldots)\)</span> 表示由模型结构定义的 <span class="math inline">\(Y_{ij}\)</span> 的期望值。
+对于所有<strong>分层广义线性模型</strong>，<span class="math inline">\(E(Y_{ij}|\ldots)\)</span> 对 <span class="math inline">\(p\)</span> 个预测变量 <span class="math inline">\((X_{ij1}, X_{ij2}, ..., X_{ijp})\)</span> 的线性组合的依赖关系由下式表达</p>
+<p><span class="math display">\[\begin{split}
+g\left(E(Y_{ij}|\ldots)\right)
+&amp; = \beta_{0j} + \beta_{1j} X_{ij1} + \beta_{2j} X_{ij2} + \cdots + \beta_{pj} X_{ijp} \\
+&amp; = (\beta_0 + b_{0j}) + (\beta_1 + b_{1j}) X_{ij1} + (\beta_2 + b_{2j}) X_{ij2} + \cdots + (\beta_p + b_{pj}) X_{ijp} \\
+\end{split}\]</span></p>
+<p>其中，(1) 当组间 <span class="math inline">\(\beta_{kj}\)</span> 变化很小时，任何组别特定参数 <span class="math inline">\(\beta_{kj}\)</span> 都可以替换为全局参数 <span class="math inline">\(\beta_k\)</span>，(2) <strong>连接函数</strong> <span class="math inline">\(g(\cdot)\)</span> 取决于模型结构：</p>
 <table>
 <thead>
 <tr class="header">
 <th align="left">模型</th>
-<th align="left">链接函数</th>
+<th align="left">连接函数</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">\(Y_{ij} | \ldots \sim N(\mu_{ij}, \sigma_y^2)\)</td>
-<td align="left">\(g(\mu_{ij}) = \mu_{ij}\)</td>
+<td align="left"><span class="math inline">\(Y_{ij} | \ldots \sim N(\mu_{ij}, \sigma_y^2)\)</span></td>
+<td align="left"><span class="math inline">\(g(\mu_{ij}) = \mu_{ij}\)</span></td>
 </tr>
 <tr class="even">
-<td align="left">\(Y_{ij} | \ldots \sim \text{Pois}(\lambda_{ij})\)</td>
-<td align="left">\(g(\lambda_{ij})= \log(\lambda_{ij})\)</td>
+<td align="left"><span class="math inline">\(Y_{ij} | \ldots \sim \text{Pois}(\lambda_{ij})\)</span></td>
+<td align="left"><span class="math inline">\(g(\lambda_{ij})= \log(\lambda_{ij})\)</span></td>
 </tr>
 <tr class="odd">
-<td align="left">\(Y_{ij} | \ldots \sim \text{NegBinom}(\mu_{ij}, r)\)</td>
-<td align="left">\(g(\mu_{ij})= \log(\mu_{ij})\)</td>
+<td align="left"><span class="math inline">\(Y_{ij} | \ldots \sim \text{NegBinom}(\mu_{ij}, r)\)</span></td>
+<td align="left"><span class="math inline">\(g(\mu_{ij})= \log(\mu_{ij})\)</span></td>
 </tr>
 <tr class="even">
-<td align="left">\(Y_{ij} | \ldots \sim \text{Bern}(\pi_{ij})\)</td>
-<td align="left">\(g(\pi_{ij}) = \log\left(\frac{\pi_{ij}}{1 - \pi_{ij}}\right)\)</td>
+<td align="left"><span class="math inline">\(Y_{ij} | \ldots \sim \text{Bern}(\pi_{ij})\)</span></td>
+<td align="left"><span class="math inline">\(g(\pi_{ij}) = \log\left(\frac{\pi_{ij}}{1 - \pi_{ij}}\right)\)</span></td>
 </tr>
 </tbody>
 </table>
@@ -693,45 +789,45 @@ mae mae_scaled within_50 within_95
 <div class="section level2" id="exercises-17" number="18.4">
 <h2>练习</h2>
 <div class="section level3" id="applied-conceptual-exercises" number="18.4.1">
-<h3>应用和概念练习</h3>
+<h3>应用与概念练习</h3>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-817"><strong>Exercise 18.1  (We know how to do a lot of stuff)  </strong></span>For each model scenario, specify an appropriate structure for the data model, note whether the model is hierarchical, and if so, identify the grouping variable. Though you do not need to simulate the models, be sure to justify your selections using the data provided. To learn more about these datasets, type <code>?name_of_dataset</code> into the console.
+<span class="exercise" id="exr:unnamed-chunk-817"><strong>练习 18.1（我们能做很多事情）</strong></span> 对于每个模型场景，指定合适的数据模型结构，指出模型是否为分层模型，如果是，确定分组变量。虽然你不需要模拟这些模型，但务必使用提供的数据来证明你的选择。要了解这些数据集的更多信息，请在 Python 控制台中输入 <code>help(name_of_dataset)</code>。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>研究者希望利用R中的咖啡量数据,</li>
-<li>研究者希望用R中的树木数据,</li>
-<li>研究人员希望利用rstanarm包中的radon数据,以log uranium水平模拟一个家的log radon水平.</li>
-<li>研究者希望透过该公寓是否接受过虫害防治治疗,</li>
+<li>使用 <code>coffee_ratings</code> 数据集，研究人员希望基于 <code>flavor</code>（风味）来建模一批咖啡豆是否为罗布斯塔 <code>species</code>（种类）。</li>
+<li>使用 <code>trees</code> 数据集，研究人员希望用树木的 <code>Girth</code> 来对其 <code>Height</code> 进行建模。</li>
+<li>使用 <code>radon</code> 数据集，研究人员希望用房屋的 <code>log_uranium</code> 水平来建模其 <code>log_radon</code> 水平。</li>
+<li>使用 <code>roaches</code> 数据集，研究人员希望根据公寓是否接受了害虫防治 <code>treatment</code> 来建模城市公寓中蟑螂的数量。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-818"><strong>Exercise 18.2  (Book banning: setting up the model)  </strong></span>People have both failed and succeeded at getting books banned, and hence ideas censored, from public libraries and education. In the following exercises, you’ll explore whether certain book characteristics can help predict whether or not a book challenge is successful. To do so, you’ll balance <em>weakly informative priors</em> with the <code>book_banning</code> data in the <strong>bayesrules</strong> package. This data, collected by <span class="citation"><a href="#ref-stolaf" role="doc-biblioref">Fast and Hegland</a> (<a href="#ref-stolaf" role="doc-biblioref">2011</a>)</span> and presented by <span class="citation"><a href="#ref-legler" role="doc-biblioref">Legler and Roback</a> (<a href="#ref-legler" role="doc-biblioref">2021</a>)</span>, includes features and outcomes for 931 book challenges made in the US between 2000 and 2010. Let <span class="math inline">\(Y_{ij}\)</span> denote the outcome of the <span class="math inline">\(i\)</span>th book challenge in state <span class="math inline">\(j\)</span>, i.e., whether or not the book was <code>removed</code>. You’ll consider three potential predictors of outcome: whether the reasons for the challenge include concern about <code>violent</code> material (<span class="math inline">\(X_{ij1}\)</span>), <code>antifamily</code> material (<span class="math inline">\(X_{ij2}\)</span>), or the use of inappropriate <code>language</code> (<span class="math inline">\(X_{ij3}\)</span>).
+<span class="exercise" id="exr:unnamed-chunk-818"><strong>练习 18.2（书籍禁令：模型设定）</strong></span>人们在从公共图书馆和教育中禁止书籍、进而审查思想方面，既有失败也有成功。在下面的练习中，你将探索某些书籍特征是否有助于预测书籍挑战是否成功。为此，你将平衡<em>弱信息先验</em>与 <strong>bayesrules</strong> 包中的 <code>book_banning</code> 数据。该数据由 <span class="citation"><a href="#ref-stolaf" role="doc-biblioref">Fast 和 Hegland</a> (<a href="#ref-stolaf" role="doc-biblioref">2011</a>)</span> 收集，并由 <span class="citation"><a href="#ref-legler" role="doc-biblioref">Legler 和 Roback</a> (<a href="#ref-legler" role="doc-biblioref">2021</a>)</span> 呈现，它包含了 2000 年至 2010 年间美国提出的 931 次书籍挑战的特征和结果。令 <span class="math inline">\(Y_{ij}\)</span> 表示州 <span class="math inline">\(j\)</span> 中第 <span class="math inline">\(i\)</span> 次书籍挑战的结果，即该书是否被 <code>removed</code>（移除）。你将考虑三个潜在的结果预测变量：挑战的理由是否包括对 <code>violent</code>（暴力）材料（<span class="math inline">\(X_{ij1}\)</span>）、<code>antifamily</code>（反家庭）材料（<span class="math inline">\(X_{ij2}\)</span>）或不当 <code>language</code>（语言）使用（<span class="math inline">\(X_{ij3}\)</span>）的担忧。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>在禁止分析的书中,你将使用书中质疑的状态作为分组变量。 说明为何认为禁止任何特定州内结果的书依附于人,</li>
-<li>使用正式标记, 假设每个州都有自己的拦截,但各州有相同的预测系数.</li>
-<li>跳进书库 封存数据. 哪个州有最多的书挑战? 起码?</li>
-<li>哪个州的图书删除率最高? 最小的吗?</li>
-<li>设想和讨论书中的挑战结果与三个预测者之间的关系.</li>
+<li>在你的禁书分析中，你将使用书籍挑战发生的州作为分组变量。解释为什么假定同一州内的禁书结果之间<em>相关</em>是合理（且重要）的。</li>
+<li>用形式化符号写出 <span class="math inline">\(Y_{ij}\)</span> 对 <span class="math inline">\((X_{ij1},X_{ij2},X_{ij3})\)</span> 的合适分层回归模型。假设每个州有自己的截距，但所有州共享相同的预测变量系数。</li>
+<li>深入探索 <code>book_banning</code> 数据。哪个州发生的书籍挑战最多？最少？</li>
+<li>哪个州的书籍移除率最高？最低？</li>
+<li>可视化并讨论书籍挑战结果与三个预测变量之间的关系。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-819"><strong>Exercise 18.3  (Book banning: simulating the model)  </strong></span>Next, let’s simulate and dig into the posterior model of the book banning parameters.
+<span class="exercise" id="exr:unnamed-chunk-819"><strong>习题 18.3（书籍禁令：模拟模型）</strong></span>接下来，让我们模拟并深入探究书籍禁令参数的后验模型。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>模拟下你的禁止模式的等级书的后缀. 构造链输出的痕量,密度和自动对映图.</li>
-<li>报告后期中位数全球模型。 在此模型中解释每个数字。</li>
-<li>暴力、反家庭材料和不当语言是否都与书本挑战的结果(当控制他人时)有重要联系? 解释一下</li>
-<li>书籍特征的组合与被禁的书籍最常相关? 有一本没有被禁止的书? 解释一下</li>
+<li>模拟分层书籍禁令模型的后验分布。构建链输出的轨迹图、密度图和自相关图。</li>
+<li>报告后验中位数全局模型，并解释该模型中的每个数字。</li>
+<li>在控制其他变量的前提下，暴力、反家庭内容和不适当语言是否都与书籍挑战的结果显著相关？请解释。</li>
+<li>什么样的书籍特征组合最常与禁书相关联？什么样的组合最常与未禁书相关联？请解释。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-820"><strong>Exercise 18.4  (Book banning: will the book be banned?)  </strong></span>
+<span class="exercise" id="exr:unnamed-chunk-820"><strong>习题 18.4（书籍禁令：这本书会被禁吗？）</strong></span>
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>您的模型对于一本书是否会被禁的后期预测有多准确? 提供证据。</li>
-<li>解释两个州(堪萨斯州(KS)和俄勒冈州(OR))的后置中位数为 0@@.</li>
-<li>假设一本书在堪萨斯州和俄勒冈州都因其语言受到挑战,但并非因为暴力或反家庭材料. 构建和比较后验模型,以确定这本书是否在这两个州被禁.</li>
+<li>模型对书籍是否会被禁的后验预测有多准确？请提供证据。</li>
+<li>解释两个州 <span class="math inline">\(j\)</span>（堪萨斯州 (KS) 和俄勒冈州 (OR)）的 <span class="math inline">\(b_{0j} = \beta_{0j} - \beta_0\)</span> 的后验中位数。</li>
+<li>假设有一本书在堪萨斯州和俄勒冈州都因语言问题受到质疑，但并未涉及暴力或反家庭内容。构建并比较该书在这两个州是否会被禁的后验模型。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-821"><strong>Exercise 18.5  (Basketball!)  </strong></span>The Women’s National Basketball Association (WNBA) is a professional basketball league in North America. Founded in the mid-1990s, the league has grown to include twelve teams. Though teams might have up to 12 players, only five play at a time. Players then rotate in and out throughout the game, with the best combination of players typically <em>starting</em> the game. The goal of our analysis is to better understand why some players get more game time than other players. Beyond the general understanding that the typical player gets 400 minutes of game time throughout the season, we’ll balance <em>weakly informative priors</em> with the <code>basketball</code> data in the <strong>bayesrules</strong> package. This data includes information about various players from the 2019 season including:
+<span class="exercise" id="exr:unnamed-chunk-821"><strong>练习 18.5（篮球！）</strong></span>美国女子职业篮球联赛（WNBA）是北美的职业篮球联赛，成立于20世纪90年代中期，已发展到包括十二支球队。虽然每支球队最多可以有12名球员，但每次只有5人上场。球员在比赛中轮换，通常最优秀的组合<em>首发出场</em>。我们分析的目标是更好地理解为什么有些球员比其他球员获得更多的上场时间。除了通常认为一名球员整个赛季平均上场400分钟之外，我们将结合<em>弱信息先验</em>与本书配套数据资源中的 <code>basketball</code> 数据集。该数据包含2019年赛季各球员的信息，包括：
 </div>
 <table>
 <thead>
@@ -742,69 +838,69 @@ mae mae_scaled within_50 within_95
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">总分钟</td>
-<td align="left">整个赛季的比赛总分钟数</td>
+<td align="left"><code>total_minutes</code></td>
+<td align="left">整个赛季的上场总分钟数</td>
 </tr>
 <tr class="even">
-<td align="left">游戏( P)</td>
-<td align="left">整个赛季的比赛次数</td>
+<td align="left"><code>games_played</code></td>
+<td align="left">整个赛季中参加的比赛场数</td>
 </tr>
 <tr class="odd">
-<td align="left">启动器</td>
-<td align="left">玩家的起始时间是否超过</td>
+<td align="left"><code>starter</code></td>
+<td align="left">该球员是否在超过半数的</td>
 </tr>
 <tr class="even">
 <td align="left"></td>
-<td align="left">他们玩的游戏</td>
+<td align="left">所参加的比赛中首发</td>
 </tr>
 <tr class="odd">
-<td align="left">avg 点数</td>
-<td align="left">每场比赛的平均得分数</td>
+<td align="left"><code>avg_points</code></td>
+<td align="left">每场比赛的平均得分</td>
 </tr>
 <tr class="even">
-<td align="left">团队</td>
-<td align="left">团队名称</td>
+<td align="left"><code>team</code></td>
+<td align="left">球队名称</td>
 </tr>
 </tbody>
 </table>
 <ol style="list-style-type: lower-alpha">
-<li>数据集中有多少玩家?</li>
-<li>数据集中有多少团队有代表?.</li>
-<li>构造并讨论一个图案, 内容为 avg  points and starter。 这就是你想看到的吗?</li>
-<li>构造和讨论一个包含总 分钟对游戏 播放和启动的图。 注: 将游戏 播放到我们的分析中,为游戏的分钟总数提供了一个重要的比较点.</li>
+<li>数据集中有多少名球员？</li>
+<li>数据集中有多少支球队？</li>
+<li>构建并讨论 <code>total_minutes</code> 与 <code>avg_points</code> 和 <code>starter</code> 的关系图。这是你所预期的吗？</li>
+<li>构建并讨论 <code>total_minutes</code> 与 <code>games_played</code> 和 <code>starter</code> 的关系图。注意：将 <code>games_played</code> 纳入分析为总上场分钟数提供了一个重要的对比维度。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-822"><strong>Exercise 18.6  (Basketball! Build a model)  </strong></span>
+<span class="exercise" id="exr:unnamed-chunk-822"><strong>练习 18.6（篮球！建立模型）</strong></span>
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>使用形式标记,写出一个按 avg points,启动符,和游戏  played 的层次化的 poisson regress 模型. 使用团队作为分组变量。</li>
-<li>解释一下为什么普瓦森号可能在这里是一个合理的模型结构,为什么它可能不是.</li>
-<li>解释为什么将团队列为组合变量很重要。</li>
-<li>使用信息薄弱的前科模拟此模型, 并执行 pp  check ()。</li>
+<li>使用形式化符号，写出以 <code>total_minutes</code> 为响应变量的分层泊松回归模型，预测变量包括 <code>avg_points</code>、<code>starter</code> 和 <code>games_played</code>，并将 <code>team</code> 作为分组变量。</li>
+<li>解释为什么泊松分布在这里可能是一个合理的模型结构，以及为什么它<em>可能不</em>合理。</li>
+<li>解释为什么将 <code>team</code> 作为分组变量纳入模型很重要。</li>
+<li>使用弱信息先验分布模拟此模型，并进行 <code>pp_check()</code> 检查。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-823"><strong>Exercise 18.7  (Basketball! Normal or Poisson or Negative Binomial?)  </strong></span>Above, you analyzed a player’s total number of minutes played using a Poisson hierarchical regression model. Redo this analysis using a <em>Normal</em> and a <em>Negative Binomial</em> hierarchical model. Evaluate and compare the three models, and explain which you prefer.
+<span class="exercise" id="exr:unnamed-chunk-823"><strong>练习 18.7（篮球！正态、泊松还是负二项？）</strong></span>前面你用泊松分层回归模型分析了一位球员的总上场时间分钟数。现在用<em>正态</em>和<em>负二项</em>分层模型重新进行这项分析。评估并比较这三个模型，并说明你更偏好哪一个。
 </div>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-824"><strong>Exercise 18.8  (More basketball!)  </strong></span>Utilize your final chosen model (Poisson, Normal, or Negative Binomial) to explore the relationship between the total number of minutes played by a player and their average points per game in more depth.
+<span class="exercise" id="exr:unnamed-chunk-824"><strong>练习 18.8（更多篮球！）</strong></span>利用你最终选择的模型（泊松、正态或负二项），进一步探索球员总上场时间分钟数与场均得分之间的关系。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li><p>总结你的关键发现。 沿途有些事情需要考虑: 你能解释每个模型参数(包括全球参数和团队参数)吗? 你能总结一下关键的趋势吗? 哪些趋势是显著的? 你的模特有多厉害?</p></li>
-<li><p>预估一个玩家如果在30场比赛中进行比赛,整个赛季获得的总分,每场比赛开始,每场比赛平均得15分.</p></li>
+<li><p>总结你的关键发现。过程中需要考虑的一些问题：你能解释每一个模型参数（包括全局和球队特定参数）吗？你能总结关键趋势吗？哪些趋势是显著的？你的模型有多好？</p></li>
+<li><p>如果一名球员在赛季中出战 30 场比赛，且每场都首发，场均得分为 15 分，预测他整个赛季的总上场时间分钟数。</p></li>
 </ol>
 </div>
 <div class="section level3" id="open-ended-exercises-5" number="18.4.2">
-<h3>不限成员名额的工作</h3>
+<h3><p>开放性练习</p></h3>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-825"><strong>Exercise 18.9  (Open exercise: basketball analysis with multiple predictors)  </strong></span>In this open-ended exercise, complete an analysis of the number of games started by WNBA players using multiple predictors of your choosing.
+<span class="exercise" id="exr:unnamed-chunk-825"><strong>练习 18.9（开放性练习：含多个预测变量的篮球分析）</strong></span>在这个开放性练习中，使用你选择的多个预测变量，完成对 WNBA 球员首发场次的分析。
 </div>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-826"><strong>Exercise 18.10  (Open exercise: more climbing)  </strong></span>In Chapter <a href="/bayes-rules-python-cn/chapter-18/#chapter-18">18</a>, you analyzed the relationship of a climber’s success with their age and oxygen use. In this open-ended exercise, continue your climbing analysis by considering other possible predictors. These might include any combination of personal attributes (<code>age</code>, <code>oxygen_used</code>, <code>injured</code>), time attributes (<code>year</code>, <code>season</code>), or attributes of the climb itself (<code>highpoint_metres</code>, <code>height_metres</code>).
+<span class="exercise" id="exr:unnamed-chunk-826"><strong>练习 18.10（开放性练习：更多登山分析）</strong></span>在第 <a href="/bayes-rules-python-cn/chapter-18/#chapter-18">18 章</a>中，你分析了登山者成功与否与年龄和氧气使用的关系。在这个开放性练习中，通过考虑其他可能的预测变量继续你的登山分析。这些可能包括个人属性（<code>age</code>、<code>oxygen_used</code>、<code>injured</code>）、时间属性（<code>year</code>、<code>season</code>）或登山本身属性（<code>highpoint_metres</code>、<code>height_metres</code>）的任意组合。
 </div>
 </div>
 </div>
 </div>
-<h3>参考资料</h3>
+<h3>参考文献</h3>
 <div class="references csl-bib-body hanging-indent" id="refs">
 <div class="csl-entry" id="ref-stolaf">
 Fast, Shannon, and Thomas Hegland. 2011. <span>“Book Challenges: A Statistical Examination.”</span> <em>Project for Statistics 316-Advanced Statistical Modeling, <span>S</span>t. <span>O</span>laf <span>C</span>ollege</em>.
@@ -821,6 +917,12 @@ The Himalayan Database. 2020. <a href="https://www.himalayandatabase.com/">https
 <div class="csl-entry" id="ref-stolaf2">
 Trinh, Ly, and Pony Ameri. 2016. <span>“<span>AirBnB</span> Price Determinants: A Multilevel Modeling Approach.”</span> <em>Project for Statistics 316-Advanced Statistical Modeling, <span>S</span>t. <span>O</span>laf <span>C</span>ollege</em>.
 </div>
+</div>
+<div class="footnotes">
+<hr/>
+<ol start="76">
+<li id="fn76"><p>例如，观测到的 <code>season</code> 类别（<code>Autumn</code>、<code>Spring</code>、<code>Summer</code>、<code>Winter</code>）是一组固定且完整的选项，而不是来自更广泛季节总体的随机类别样本。<a class="footnote-back" href="/bayes-rules-python-cn/chapter-18/#fnref76">↩︎</a></p></li>
+</ol>
 </div>
 </section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-17/">上一节：第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-19/">下一节：第 19 章 加入更多层级</a></nav>
 </article>

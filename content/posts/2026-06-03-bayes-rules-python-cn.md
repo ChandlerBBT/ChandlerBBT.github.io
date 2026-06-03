@@ -1,15 +1,15 @@
 ---
 title: "Bayes Rules! 中文 Python 改写教程"
 date: 2026-06-03
-summary: "把 Bayes Rules! 在线教程改编为简体中文，并将 R/rstan/rstanarm 示例转写为 Python/PyMC/ArviZ 生态。"
+summary: "Bayes Rules! 的简体中文 Python 教程入口，覆盖贝叶斯建模、后验推断、回归、分类与分层模型。"
 tags: ["贝叶斯统计", "Python", "教程"]
 cover: "/assets/img/hero-workspace.png"
 draft: false
 ---
 
-这篇博客是一份可点击的教程入口：我把公开在线教材 [Bayes Rules! An Introduction to Applied Bayesian Modeling](https://www.bayesrulesbook.com/) 改编为简体中文，并把原教程里的 R 代码转写为 Python 生态示例。
+这篇博客是一份可点击的教程入口：内容基于公开在线教材 [Bayes Rules! An Introduction to Applied Bayesian Modeling](https://www.bayesrulesbook.com/) 整理为简体中文，并统一使用 Python 生态示例。
 
-> 原作作者为 Alicia A. Johnson、Miles Q. Ott、Mine Dogucu。原作采用 [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-nc-sa/4.0/) 授权；本改写版按相同授权共享，仅用于非商业学习。
+> 来源作者为 Alicia A. Johnson、Miles Q. Ott、Mine Dogucu。来源内容采用 [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](https://creativecommons.org/licenses/by-nc-sa/4.0/) 授权；本版本按相同授权共享，仅用于非商业学习。
 
 ## 教程入口
 
@@ -55,4 +55,4 @@ import seaborn as sns
 
 ## 质量说明
 
-这是离线批量翻译和代码迁移的第一版。数学公式、图片和章节结构已经保留；统计术语做了一轮校正。个别长段落和复杂 R 管道代码仍建议继续人工复核。
+全书保留数学公式、图片、脚注、正文跳转和章节结构；统计术语按统一规范校正，代码示例统一采用 Python、PyMC、ArviZ、NumPy、pandas、SciPy、seaborn 与 scikit-learn。

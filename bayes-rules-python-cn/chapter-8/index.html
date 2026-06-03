@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-
+html
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"/>
@@ -44,523 +43,496 @@
 <section class="normal" id="section-">
 <div class="section level1" id="chapter-8" number="8">
 <h1>第 8 章 后验推断与预测</h1>
-<div class="tutorial-note">
-<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
-</div>
-<p>想象一下,你发现自己站在纽约市现代艺术博物馆(MoMA), 被眼前的艺术品吸引。 虽然认识到“现代”艺术不一定意味着“新”艺术,但一个问题仍然浮出水面:这位现代艺术家是Gen X还是更年轻,也就是出生于1965年或以后的机会是什么? 以回答这个问题。 为此,让我们表示Gen X或更年轻的美国主要现代艺术博物馆中的艺术家比例。 Beta(4,6)的前作型号为QQ1@@(图8.1),反映了我们自己的非常模糊的前作假设,即主要的现代艺术博物馆过度展示1965年以前诞生的艺术家,即QQ2@@最有可能降到0.5以下. 毕竟,“现代艺术”可以追溯到1880年代,在艺术界获得如此高的承认需要一段时间。</p>
-<p>更多关于\(\pi\), 这个在bayesrules包中的moma sample数据集是由MOMA本身提供的数据的子集(Museumof ModernArt 2020).</p>
-<div class="sourceCode" id="cb108">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python"># 原书 bayesrules 数据包中的数据需改用 CSV/本地数据文件读取
+<p>想象你正站在纽约市现代艺术博物馆（MoMA）里，被眼前的作品深深吸引。虽然明白“现代”艺术并不一定意味着“新”艺术，但一个疑问还是会冒出来：<em>这位现代艺术家属于X世代甚至更年轻（即出生于1965年或之后）的可能性有多大</em>？<br/>本章我们将通过贝叶斯分析来回答这个问题。为此，令<span class="math inline">\(\pi\)</span>表示美国主要现代艺术博物馆中展出作品的艺术家里属于X世代或更年轻的比例。<br/>对<span class="math inline">\(\pi\)</span>使用Beta(4,6)先验模型（图<a href="/bayes-rules-python-cn/chapter-8/#fig:art-post-ch8">8.1</a>）反映了我们非常模糊的先验假设，即主要现代艺术博物馆更多地展出1965年以前出生的艺术家的作品，也就是说<span class="math inline">\(\pi\)</span>很可能低于0.5。<br/>毕竟，“现代艺术”可以追溯到19世纪80年代，而且在艺术界要获得如此高的认可往往需要一些时间。</p>
+<p>为了进一步了解<span class="math inline">\(\pi\)</span>，我们将考察从MoMA藏品中随机抽取的<span class="math inline">\(n =\)</span>100位艺术家。<br/><strong>bayesrules</strong>包中的<code>moma_sample</code>数据集是MoMA自己提供的<span class="citation">(<a href="#ref-moma_github" role="doc-biblioref">MuseumofModernArt 2020</a>)</span>数据的一个子集。</p>
+<div class="sourceCode" id="cb108"><pre><code class="language-python"># 导入必要的库
+import pandas as pd
 import numpy as np
-import pandas as pd
+from scipy import stats
 import matplotlib.pyplot as plt
-import seaborn as sns
-import pymc as pm
-import arviz as az
-# pandas 通常可以覆盖 janitor 的表格清理任务
 
-with pm.Model() as model:
-    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
-    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
-    # sigma = pm.HalfNormal('sigma', sigma=10)
-    # mu = beta_0 + beta_1 * x
-    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
-    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
-az.summary(idata)
-# 装入软件包
-# 装入数据
-data("moma_sample")</code></pre>
-</div>
-<p>在受试的艺术家中, 14名是Gen X或更年轻:</p>
-<div class="sourceCode" id="cb109">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+# 加载数据
+moma_sample = pd.read_csv('moma_sample.csv')</code></pre></div>
+<p>在这组随机抽取的艺术家中，<span class="math inline">\(Y =\)</span>14位是X世代或更年轻：</p>
+<div class="sourceCode" id="cb109"><pre><code class="language-python"># 按 genx 分组计数
+genx_counts = moma_sample.groupby('genx').size().reset_index(name='n')
+print(genx_counts)</code></pre></div>
+<p>认识到<span class="math inline">\(Y\)</span>对<span class="math inline">\(\pi\)</span>的依赖关系遵循二项模型，我们的分析采用Beta-二项框架。因此，结合观测到的艺术数据后，<span class="math inline">\(\pi\)</span>的更新后验模型可由<a href="/bayes-rules-python-cn/chapter-3/#eq:beta-posterior">(3.10)</a>推导得出：</p>
+<p><span class="math display">\[\begin{split}
+Y | \pi &amp; \sim \text{Bin}(100, \pi) \\
+\pi &amp; \sim \text{Beta}(4, 6) \\
+\end{split} \;\;\;\; \Rightarrow \;\;\;\; \pi | (Y = 14) \sim \text{Beta}(18, 92)\]</span></p>
+<p>对应的后验概率密度函数为</p>
+<p><span class="math display" id="eq:post-pdf-ch8">\[\begin{equation}
+f(\pi | y = 14) = \frac{\Gamma(18 + 92)}{\Gamma(18)\Gamma(92)}\pi^{18-1} (1-\pi)^{92-1} \;\; \text{ for } \pi \in [0,1]  .
+\tag{8.1}
+\end{equation}\]</span></p>
+<p>我们对 <span class="math inline">\(\pi\)</span> 的理解演变如图 <a href="/bayes-rules-python-cn/chapter-8/#fig:art-post-ch8">8.1</a> 所示。起初我们模糊地认为展出的艺术家中Gen X比例不足一半，而数据让我们逐渐确信这一比例很可能低于25%。</p>
+<div class="sourceCode" id="cb110"><pre><code class="language-python">def plot_beta_binomial(alpha, beta, y, n):
+    """
+    绘制 Beta-Binomial 模型的先验、似然和后验分布。
+    """
+    from scipy.stats import beta as beta_dist
+    import numpy as np
+    import matplotlib.pyplot as plt
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>我们的分析遵循Beta-Binomial框架。 因此,我们根据观测到的艺术数据更新的XX2@@的后验模型如下(3.10):</p>
-<p>\[\begin{split} Y | \pi &amp; \sim \text{Bin}(100, \pi) \\ \pi &amp; \sim \text{Beta}(4, 6) \\ \end{split} \;\;\;\; \Rightarrow \;\;\;\; \pi | (Y = 14) \sim \text{Beta}(18, 92)\]</p>
-<p>包含相应的后pdf</p>
-<p>\[\begin{equation} f(\pi | y = 14) = \frac{\Gamma(18 + 92)}{\Gamma(18)\Gamma(92)}\pi^{18-1} (1-\pi)^{92-1} \;\; \text{ for } \pi \in [0,1] . \tag{8.1} \end{equation}\]</p>
-<p>图片来自图8.1。 虽然我们一开始对不到一半的艺术家是Gen X有模糊的理解,但数据使我们有一定把握地认为这个数字可能低于25%。</p>
-<div class="sourceCode" id="cb110">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+    # 参数网格
+    theta = np.linspace(0, 1, 1000)
 
-plot_beta_binomial(alpha = 4, beta = 6, y = 14, n = 100)</code></pre>
-</div>
+    # 先验 Beta(alpha, beta)
+    prior_pdf = beta_dist.pdf(theta, alpha, beta)
+
+    # 似然（用 Beta(y+1, n-y+1) 的形状表示，并归一化）
+    likelihood_pdf = theta**y * (1-theta)**(n-y)
+    normalization = np.trapz(likelihood_pdf, theta)
+    likelihood_pdf /= normalization
+
+    # 后验 Beta(alpha+y, beta+n-y)
+    posterior_pdf = beta_dist.pdf(theta, alpha+y, beta+n-y)
+
+    # 绘图
+    plt.figure(figsize=(8,5))
+    plt.plot(theta, prior_pdf, label=f'先验 Beta({alpha},{beta})', linestyle='--')
+    plt.plot(theta, likelihood_pdf, label=f'似然 (y={y}, n={n})', linestyle='-.')
+    plt.plot(theta, posterior_pdf, label=f'后验 Beta({alpha+y},{beta+n-y})', linestyle='-')
+    plt.xlabel('θ')
+    plt.ylabel('密度')
+    plt.title('Beta-Binomial 模型')
+    plt.legend()
+    plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:art-post-ch8" style="display:block;"></span>
-<img alt="之前的 pdf, (scaled) 概率函数,和 pi 的后 pdf 被覆盖在一个单图中. x轴的pi值从0到1. 前身是可变的,大致呈钟形,峰值接近0.4,范围约为0.1至0.7. 缩放的似然曲线大致对称,以0.14左右为中心,数值大多在0.05至0.20之间. 后体与似然非常相似,但略微与它的权利(介于前体与缩放似然之间)." loading="lazy" src="/assets/img/bayes-rules-python-cn/art-post-ch8-1-01a51242516c.png" width="384"/>
-<p class="caption">FIGURE 8.1:我们的贝叶斯模式 \(\pi\),现代艺术博物馆艺术家中Gen X或更年轻的占比.</p>
+<img alt="The prior pdf, (scaled) likelihood function, and the posterior pdf of pi are overlaid in a single plot. The x-axis has pi values ranging from 0 to 1. The prior is variable and roughly bell-shaped, with a peak near 0.4 and a range from roughly 0.1 to 0.7. The scaled likelihood curve is approximately symmetric and centered around 0.14 with values mostly ranging from 0.05 to 0.20. The posterior is very similar to the likelihood, yet slightly to the right of it (in between the prior and the scaled likelihood)." loading="lazy" src="/assets/img/bayes-rules-python-cn/art-post-ch8-1-01a51242516c.png" width="384"/>
+<p class="caption">图8.1：现代艺术博物馆艺术家中Gen X或更年轻一代占比 <span class="math inline">\(\pi\)</span> 的贝叶斯模型。</p>
 </div>
-<p>在庆祝我们成功建造后殿之后, 我们必须能够利用这个后台, 在后期分析中有三个共同的任务:估计,假设测试,和预测. 例如,我们估计QQ1? 我们的模特儿是否支持关于不到20%的博物馆艺术家是Gen X还是更年轻的说法? 如果我们再对20名博物馆艺术家进行取样,我们预测有多少人将是Gen X还是更年轻?</p>
-<div class="goals">
-<ul>
-<li>为以下三个后期分析任务建立理论基础:估计,假设测试,以及预测.</li>
-<li>探索如何利用马尔可夫链模拟来近似后期特征,从而用于后期分析.</li>
-</ul>
-</div>
+<p>在庆祝我们成功<em>构建</em>后验分布之后，请意识到前方还有许多工作。我们必须能够利用这个后验分布来对 <span class="math inline">\(\pi\)</span> 进行严谨的<strong>后验分析</strong>。后验分析通常涉及三项任务：<strong>估计</strong>、<strong>假设检验</strong>和<strong>预测</strong>。例如，我们对 <span class="math inline">\(\pi\)</span> 的<em>估计</em>是多少？我们的模型是否支持“博物馆艺术家中Gen X或更年轻一代的比例不足20%”这一说法？如果再抽取20位博物馆艺术家，我们预测其中有多少是Gen X或更年轻一代？</p>
+<div class="goals"><ul>
+<li>为三项后验分析任务——估计、假设检验和预测——建立<em>理论</em>基础。</li>
+<li>探索如何使用马尔可夫链模拟来近似后验特征，并由此应用于后验分析。</li>
+</ul></div>
 <div style="page-break-after: always;"></div>
 <div class="section level2" id="chapter-8-estimation" number="8.1">
-<h2>B. 前期估计</h2>
-<p>重新审视Beta(18,92)的后期模式, 即Gen X或更年轻的现代艺术博物馆艺术家的比例(图8.1)。 在贝叶斯分析中,我们可以将整个后验模型视为QQ1@@的估计. 毕竟,这种后期可能值的模型提供了\(\pi\)中中心倾向和不确定性的全貌. 在描述和传达我们的后台理解时, 看看你的直觉,我们如何去完成这项任务。</p>
+<h2>后验估计</h2>
+<p>重新审视现代艺术博物馆艺术家中Gen X或更年轻一代占比 <span class="math inline">\(\pi\)</span> 的 Beta(18, 92) 后验模型（图 <a href="/bayes-rules-python-cn/chapter-8/#fig:art-post-ch8">8.1</a>）。在贝叶斯分析中，我们可以把<em>整个</em>后验模型视为对 <span class="math inline">\(\pi\)</span> 的估计。毕竟，这个后验合理值模型完整地描绘了 <span class="math inline">\(\pi\)</span> 的中心趋势与不确定性。然而，在明确和传达我们的后验认识时，计算 <span class="math inline">\(\pi\)</span> 的一些简单后验摘要也很有用。请凭直觉思考一下，我们该如何处理这项任务。</p>
 <div class="quiz">
-<p>最能形容你后期估计的... ?。。。</p>
+<p>以下哪一项最准确地描述了你对 <span class="math inline">\(\pi\)</span> 的后验<em>估计</em>？</p>
 <ol style="list-style-type: lower-alpha">
-<li>大约16%的博物馆艺术家是Gen X或更年轻。</li>
-<li>但这个数字很可能在9%至26%之间。</li>
+<li>大约16%的博物馆艺术家是Gen X或更年轻一代。</li>
+<li>最可能的情况是大约16%的博物馆艺术家属于X世代或更年轻，但该数字可能在9%到26%之间。<br/>
+</li>
 </ol>
 </div>
-<p>如果你回答B, 你的想法是贝叶斯精神。 了解原因,请考虑图8.2,图8.2说明我们的Beta(18,92)的后缀。 (左)与不同的分析师的Beta(4,16)后(右). 这个分析师一开始是同一个Beta(4,6),之前但只观察到10位艺术家,其中0位是Gen X或更年轻的. 虽然他们的不同数据导致了不同的后遗症,但中心趋势与我们相似。 因此,另一位分析师对QQ1@@的最佳猜测与我们一致:大约16~17 %的代表艺术家是Gen X或更年轻的. 但是,只有报告这一共同的“最佳猜测”才会使我们两个后人似乎产生误解。 事实上,尽管我们相当相信年轻艺术家的代表比例在10%至24%之间,但另一位分析师只愿意将这个数字放在更广阔的6%至40%之间。 他们的相对不确定性是有道理的,他们只收集了10件艺术品,而我们收集了100件艺术品。</p>
+<p>如果你的答案是b，你的思维本质上就是贝叶斯的。要理解原因，请看图<a href="/bayes-rules-python-cn/chapter-8/#fig:art-post-comparison-ch8">8.2</a>，它展示了我们关于π的Beta(18, 92)后验分布（左）与另一位分析师的Beta(4, 16)后验分布（右）。这位分析师从相同的Beta(4, 6)先验出发，但只观察了10位艺术家，其中0位是X世代或更年轻。尽管他们的不同数据导致了不同的后验，但集中趋势与我们的相似。因此，另一位分析师对π的最佳猜测与我们一致：大约16-17%的博物馆艺术家是X世代或更年轻。然而，只报告这个共同的“最佳猜测”会让我们的两个后验看起来具有误导性的相似。事实上，尽管我们非常有信心年轻艺术家的比例在10%到24%之间，但另一位分析师只愿意将这一数字放在6%到40%更宽的范围内。他们的相对不确定性是有道理的——他们只收集了10件作品，而我们收集了100件。</p>
 <div class="figure" style="text-align: center"><span id="fig:art-post-comparison-ch8" style="display:block;"></span>
-<img alt="两个大致对称的密度曲线. 左侧的曲线较窄,从大约0.1到0.3不等. 右边的曲线较宽,从大约0到0.5不等." loading="lazy" src="/assets/img/bayes-rules-python-cn/art-post-comparison-ch8-1-e21a9dbcfd75.png" width="480"/>
-<p class="caption">FIGURE 8.2:我们的Beta(18,92)后期型号为\(\pi\). (左)与一个替代的Beta(4,16)后验模型(右)一起显示. 阴影区域代表了XQ1@@的95%的后可信间隔。</p>
+<img alt="Two roughly symmetric density curves. The curve on the left is narrower, ranging from roughly 0.1 to 0.3. The curve on the right is wider, ranging from roughly 0 to 0.5." loading="lazy" src="/assets/img/bayes-rules-python-cn/art-post-comparison-ch8-1-e21a9dbcfd75.png" width="480"/>
+<p class="caption">图8.2：我们关于π的Beta(18, 92)后验模型（左）与另一个Beta(4, 16)后验模型（右）并列展示。阴影区域代表π相应的95%后验可信区间。</p>
 </div>
-<p>之后的估计应该既反映中心趋势,  poster1@@(\(\pi\), 1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)2\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1\(\pi\)1@@2\(\pi\)2@@2\(\pi\)1\(\pi\)2@@2@@2@@2@@2\(\pi\)2\(\pi\)2@@2@@2\(\pi\)1@@2@@2@@2@@2@@2\(\pi\)2@@2@@2@@2@@2\(\pi\)2@@2@@2@@2@@2@@2@@2@@2@@2@@2@@ 我们的Beta(18,92)后验的这些特征来自于一般Beta属性(3.2),并符合我们的上述观察,即Gen X代表很可能在16%左右:</p>
-<p>\[\begin{split} E(\pi | Y=14) &amp; = \frac{18}{18 + 92} \approx 0.164 \\ \text{Mode}(\pi | Y=14) &amp; = \frac{18 - 1}{18 + 92 - 2} \approx 0.157 . \\ \end{split}\]</p>
-<p>更好的是,为了捕捉QQ0@@中的中心倾向和变异性,我们可以报告一系列后期的可信QQ1@@值. 这个范围被称为 2@@的后可信间隔(CI). 例如,我们早些时候注意到,Gen X或更年轻的博物馆艺术家比例很可能在10%至24%之间。 这个范围捕捉到XQ3@@的更可信值,同时消除更极端和不太可能的情景(图8.2)。 事实上,0.1和0.24是2.5和97.5的后百分位数(即0.025和0.975的后四位数),因此标注了95%的后百分位值。 我们可以使用 qbeta () 确认这些 beta (18,92) 的后四重计算 :</p>
-<div class="sourceCode" id="cb111">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 0.025 和 0.975 次数
-stats.beta.ppf(c(0.025, 0.975), 18, 92)
-[1] 0.1009 0.2379</code></pre>
-</div>
-<p>图8.2(左)以阴影区域为代表, 整个后pdf的面积是1, 而这个阴影区域, 以及因此属于这个区域的QQ1@@值的一小部分是0.95。 这揭示了对CI的直观解释. 大约10%至24%的博物馆艺术家是Gen X或更年轻:</p>
-<p>\[P(\pi \in (0.1, 0.24) | Y = 14) = \int_{0.1}^{0.24} f(\pi|y=14) d\pi = 0.95 .\]</p>
-<p>请稍息. 这种解释有自然和直觉的感觉吗? 因此,有点不切实际? 如果是这样,我们很高兴你这样认为,这意味着你正在像贝叶斯人一样思考。 第8.5节,</p>
-<p>在建立上述调查时,我们采用了“中95%”的方法。 这不是我们唯一的选择。 我们可以做的第一个调整是达到95%的可信水平(图8.3)。 例如,中间50%的CI(从25%到75%不等)将引领我们的注意力到较小范围的一些更可信的QQ0Q值。 大约14%至19%的博物馆艺术家是Gen X,</p>
-<div class="sourceCode" id="cb112">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# Beta(18,92)的0.25和0.75之四
-stats.beta.ppf(c(0.25, 0.75), 18, 92)
-[1] 0.1388 0.1862</code></pre>
-</div>
-<p>在另一个方向,99%的中间CI从0.5百分位到99.5百分位不等,从而只淘汰极端的1%. 因此,99%的CI可以让我们更全面地了解合理性,尽管在某些情况下不太可能,QQ0QQ值:</p>
-<div class="sourceCode" id="cb113">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# β(18,92)的0.005 和 0.995 吨
-stats.beta.ppf(c(0.005, 0.995), 18, 92)
-[1] 0.0853 0.2647</code></pre>
-</div>
-<p>尽管95%的水平是从业人员的共同选择,但它有些武断,只是贯穿于几十年的传统。 没有任何人“正确”可信。 我们有时会使用50%或80%或95%的水平, 每一个都提供了我们后期理解的不同快照。</p>
+<p>这里的结论是，后验估计应同时反映π的集中趋势和变异性。π的后验均值与后验众数仅提供集中趋势的快速总结。对于我们Beta(18, 92)后验，这些特征来自通用的Beta性质<a href="/bayes-rules-python-cn/chapter-3/#eq:beta-trend">(3.2)</a>，并且与我们之前的观察一致，即X世代代表比例最可能在16%左右：</p>
+<p><span class="math display">\[\begin{split}
+E(\pi | Y=14)           &amp; = \frac{18}{18 + 92} \approx 0.164 \\
+\text{Mode}(\pi | Y=14) &amp; = \frac{18 - 1}{18 + 92 - 2} \approx 0.157   . \\
+\end{split}\]</span></p>
+<p>更好的是，为了同时捕获π的集中趋势和变异性，我们可以报告一个后验合理π值的范围。这个范围被称为π的后验可信区间（CI）。例如，我们之前注意到博物馆艺术家中X世代或更年轻的比例最可能在10%到24%之间。这个范围捕获了π的更合理取值，同时排除了更极端和不太可能的情况（图<a href="/bayes-rules-python-cn/chapter-8/#fig:art-post-comparison-ch8">8.2</a>）。事实上，0.1和0.24是第2.5和第97.5后验百分位数（即第0.025和第0.975后验分位数），因此标记了后验合理π值中间的95%。我们可以使用 scipy.stats.beta.ppf() 来确认这些 Beta(18,92) 后验分位数的计算结果：</p>
+<div class="sourceCode" id="cb111"><pre><code class="language-python"># 后验分布 Beta(18, 92) 的 0.025 和 0.975 分位数
+from scipy.stats import beta
+quantiles = beta.ppf([0.025, 0.975], 18, 92)
+print(quantiles)</code></pre></div>
+<p>由此得到的π的95%可信区间(0.1, 0.24)如图<a href="/bayes-rules-python-cn/chapter-8/#fig:art-post-comparison-ch8">8.2</a>（左）阴影区域所示。整个后验概率密度函数下的面积为1，而该阴影区域的面积，即落入该区域的π值比例，为0.95。这揭示了可信区间的一种直观解释。有95%的后验概率表明，博物馆艺术家中X世代或更年轻的比例在10%到24%之间：</p>
+<p><span class="math display">\[P(\pi \in (0.1, 0.24) | Y = 14) = \int_{0.1}^{0.24} f(\pi|y=14) d\pi = 0.95 .\]</span></p>
+<p>请先停一下。这种解释是否感觉自然且直观？是不是有点平淡？如果是的话，我们很高兴你有这种感觉——这说明你已经开始用贝叶斯的方式思考了。在 <a href="/bayes-rules-python-cn/chapter-8/#benefits-chapter-8">第 8.5 节</a>，我们将再次讨论这个结果有多么特别。</p>
+<p>在构建上述可信区间时，我们采用的是“中间 95%”的方法。这并不是我们 <em>唯一</em> 的选择。我们可以做的第一个调整是改变 <strong>可信水平</strong>（见图 <a href="/bayes-rules-python-cn/chapter-8/#fig:post-ci-ch8">8.3</a>）。例如，一个中间 50% 的可信区间，范围从第 25 百分位数到第 75 百分位数，会让我们关注一个更小的、包含更可信的 <span class="math inline">\(\pi\)</span> 值范围。后验概率为 50% 表明，博物馆艺术家中 Generation X 或更年轻的比例介于 14% 和 19% 之间：</p>
+<div class="sourceCode" id="cb112"><pre><code class="language-python"># 计算 Beta(18, 92) 后验的 0.25 和 0.75 分位数
+from scipy.stats import beta
+beta.ppf([0.25, 0.75], 18, 92)</code></pre></div>
+<p>另一方面，一个更宽的中间 99% 可信区间范围是从第 0.5 百分位数到第 99.5 百分位数，从而仅排除极端的 1%。因此，99% 可信区间能为我们提供更全面的 <em>看似可信</em>（尽管在某些情况下 <em>极不可能</em>）的 <span class="math inline">\(\pi\)</span> 值：</p>
+<div class="sourceCode" id="cb113"><pre><code class="language-python"># 计算 Beta(18, 92) 后验的 0.005 和 0.995 分位数
+from scipy.stats import beta
+beta.ppf([0.005, 0.995], 18, 92)</code></pre></div>
+<p>虽然 95% 的水平是实践者常见的选择，但这多少有些随意，仅仅是几十年传统的惯性。 <strong>不存在一个“正确”的可信水平。</strong> 在本书中，根据分析背景，我们有时会使用 50%、80% 或 95% 的水平。每种水平都提供了我们后验理解的不同快照。</p>
 <div class="figure" style="text-align: center"><span id="fig:post-ci-ch8" style="display:block;"></span>
-<img alt="同样的大致对称的密度曲线,大约在0.05到0.3之间,被绘制三次. 在左曲线中,0.14至0.19之间的狭长区域被遮蔽. 在中曲线中,宽度在0.1至0.24之间的区域被遮蔽. 在正确的曲线中,0.08至0.26之间的最宽区域被遮蔽." loading="lazy" src="/assets/img/bayes-rules-python-cn/post-ci-ch8-1-3dc986f601df.png" width="576"/>
-<p class="caption">图8.3: 50%、95%和99%后可信间隔。。。</p>
+<img alt="The same roughly symmetric density curve, which ranges from roughly 0.05 to 0.3 is plotted three times. In the left curve, a narrow area between 0.14 and 0.19 is shaded in. In the middle curve, a wider area between 0.1 and 0.24 is shaded in. In the right curve, the widest area between 0.08 and 0.26 is shaded in." loading="lazy" src="/assets/img/bayes-rules-python-cn/post-ci-ch8-1-3dc986f601df.png" width="576"/>
+<p class="caption">
+图 8.3：<span class="math inline">\(\pi\)</span> 的 50%、95% 和 99% 后验可信区间。
+</p>
 </div>
-<p>也不必报告95%的后置值。 事实上,中间95%的方法可以消除CI中一些更可信的数值. 对图8.3中50%和95%的可信间隔的仔细检查显示,这种似然在我们日益明显的非对称性后方的阴影区域中表现得越来越偏僻。 在95%的CI中,CI上端包含的数值比低于0.1的低于CI的数值更不可信. 如果这种偏斜性更极端的话,我们应该考虑用不是中间值,而是后发密度最高的后发值的95%组成95%的CI。 你可以在演习中探索这个想法, 主要是,这种方法只有在极端情况下才会产生与中度95%方法有意义的不同的结果,而后期极端偏差。</p>
+<p>考虑对可信区间的构造做第二种可能的调整：并非一定要报告后验可信值的 <em>中间</em> 95%。事实上，中间 95% 的方法可能会将一些更可信的值排除在可信区间之外。仔细观察图 <a href="/bayes-rules-python-cn/chapter-8/#fig:post-ci-ch8">8.3</a> 中的 50% 和 95% 可信区间，就会发现这一可能性的证据：我们那个略微不对称的后验分布中，阴影区域也稍微有点偏斜。在 95% 可信区间中，区间上端包含的 <span class="math inline">\(\pi\)</span> 值，其可信度反而不如那些被排除在区间之外、低于 0.1 的 <span class="math inline">\(\pi\)</span> 值。如果这种偏斜更极端，我们就应考虑使用 <strong>最高后验密度</strong> 的 95% 后验值来构建 <span class="math inline">\(\pi\)</span> 的 95% 可信区间，而不是用 <em>中间</em> 的 95%。你可以在习题中探索这个想法，不过我们在这里不再纠结。主要来说，只有当后验分布极度偏斜时，这种方法才会得出与中间 95% 方法有显著差异的结果。</p>
 <div class="describe">
-<p>可能的可信间隔</p>
-<p>让参数 @@ 0@@ 有 pdf @@ 1@@. 后期可信间隔(CI)提供了X\(\pi\)的后期可信值,从而总结了后期中心倾向和变异性. 例如,中间95%的CI由2.5和97.5后百分位组成,</p>
-<p>\[(\pi_{0.025}, \pi_{0.975}) .\]</p>
-<p>因此,95%的后期概率是 QQ0 位于这个范围:</p>
-<p>\[P(\pi \in (\pi_{0.025}, \pi_{0.975}) | Y=y) = \int_{\pi_{0.025}}^{\pi_{0.975}} f(\pi|y)d\pi = 0.95 .\]</p>
+<p><strong>后验可信区间</strong></p>
+<p>设参数 <span class="math inline">\(\pi\)</span> 具有后验概率密度函数 <span class="math inline">\(f(\pi | y)\)</span>。后验可信区间（CI）提供了 <span class="math inline">\(\pi\)</span> 的后验可信值范围，从而总结了后验的中心趋势和变异性。例如，一个中间 95% 可信区间由第 2.5 和第 97.5 后验百分位数构成，</p>
+<p><span class="math display">\[(\pi_{0.025}, \pi_{0.975})  .\]</span></p>
+<p>因此，<span class="math inline">\(\pi\)</span> 落在此范围内的后验概率为 95%：</p>
+<p><span class="math display">\[P(\pi \in (\pi_{0.025}, \pi_{0.975}) | Y=y) = \int_{\pi_{0.025}}^{\pi_{0.975}} f(\pi|y)d\pi = 0.95  .\]</span></p>
 </div>
 </div>
 <div class="section level2" id="posterior-hypothesis-testing" number="8.2">
-<h2>后假说测试</h2>
+<h2> 后验假设检验 </h2>
 <div class="section level3" id="one-sided-tests" number="8.2.1">
-<h3>单方测试</h3>
-<p>假想测试是后期分析的另一项常见任务. 例如,假设我们读过一篇文章,声称不到20%的博物馆艺术家是Gen X或更年轻的. 我们从我们的后台模型中观察到两个线索,</p>
+<h3> 单侧检验</h3>
+<p>假设检验是后验分析中另一项常见任务。例如，假设我们读到一篇文章声称博物馆艺术家中 Gen X 及更年轻世代的比例不足 20%。我们从关于 <span class="math inline">\(\pi\)</span> 的后验模型中观察到的两条线索表明，这一说法至少部分<em>可信</em>：</p>
 <ol style="list-style-type: decimal">
-<li>图8.3中的后pdf大多低于0.2.</li>
-<li>\(\pi\)(0.1,0.24)的95%可信间隔大多低于0.2.</li>
+<li>图 <a href="/bayes-rules-python-cn/chapter-8/#fig:post-ci-ch8">8.3</a> 中后验概率密度函数的大部分落在 0.2 以下。</li>
+<li>关于 <span class="math inline">\(\pi\)</span> 的 95% 可信区间 (0.1, 0.24) <em>大部分</em>低于 0.2。</li>
 </ol>
-<p>这些观察是一个伟大的开端。 然而,我们可以更加精确。 可以计算出这个情景的后期概率, 这种后验概率由图8.4中的后置pdf下的阴影区域来表示,在数学上通过将后置pdf在0到0.2之间进行整合计算:</p>
-<p>\[P(\pi &lt; 0.2 \; | \; Y = 14) = \int_{0}^{0.2}f(\pi | y=14)d\pi .\]</p>
-<p>我们会绕过整合, 其结果表明有确凿证据支持我们的说法:Gen Xers在现代艺术博物馆艺术家中的比例不到20%,</p>
-<div class="sourceCode" id="cb114">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 后端概率为 pi &lt; 0.20
-post_prob = pbeta(0.20, 18, 92)
-post_prob
-[1] 0.849</code></pre>
-</div>
+<p>这些观察结果是一个很好的开端。但我们还可以更精确。为了精确评估 <span class="math inline">\(\pi &lt; 0.2\)</span> 的可信程度，我们可以计算这一场景的<strong>后验概率</strong>（posterior probability），即 <span class="math inline">\(P(\pi &lt; 0.2 | Y = 14)\)</span>。该后验概率由图 <a href="/bayes-rules-python-cn/chapter-8/#fig:post-prob-ch8">8.4</a> 中后验概率密度函数下的阴影面积表示，从数学上讲，是通过在 0 到 0.2 范围内对后验概率密度函数积分计算得出：</p>
+<p><span class="math display">\[P(\pi &lt; 0.2 \; | \; Y = 14) = \int_{0}^{0.2}f(\pi | y=14)d\pi .\]</span></p>
+<p>我们将跳过积分，直接使用 <code>scipy.stats.beta.cdf()</code> 来计算这个 Beta(18,92) 后验概率。结果揭示了支持我们主张的有力证据：Gen X 及更年轻艺术家占现代艺术博物馆艺术家的比例不足 20% 的后验概率约为 84.9%。</p>
+<div class="sourceCode" id="cb114"><pre><code class="language-python"># 后验概率 pi &lt; 0.20
+from scipy.stats import beta
+post_prob = beta.cdf(0.20, 18, 92)
+post_prob</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:post-prob-ch8" style="display:block;"></span>
-<img alt="pi的密度曲线大致对称,从0.05到0.3不等. 0.2以下曲线下的区域为阴影." loading="lazy" src="/assets/img/bayes-rules-python-cn/post-prob-ch8-1-3f610302493b.png" width="240"/>
-<p class="caption">图 8.4:Beta(18,92)的后期概率为\(\pi\)以下0.20 is,以后pdf下的荫区为代表.</p>
+<img alt="There is a roughly symmetric density curve of pi, ranging from 0.05 to 0.3. The area under the curve below 0.2 is shaded in." loading="lazy" src="/assets/img/bayes-rules-python-cn/post-prob-ch8-1-3f610302493b.png" width="240"/>
+<p class="caption">
+图 8.4：<span class="math inline">\(\pi\)</span> 低于 0.20 的 Beta(18,92) 后验概率由后验概率密度函数下方的阴影区域表示。
+</p>
 </div>
-<p>对我们索赔的这种分析非常直截了当。 我们只是计算了利息的后期概率。 虽然并不总是必要的,但从业者往往将这一程序正式纳入假设测试框架。 例如,我们可以将我们的分析设定为两个相互竞争的假设:无效假说QQ0@@认为,至少20%的博物馆艺术家是Gen X或更年轻的(这里的现状),而替代假说QQ1@@(我们的说法)则认为这一数字低于20%。 在数学符号中:</p>
-<p>\[\begin{split} H_0: &amp; \; \; \pi \ge 0.2 \\ H_a: &amp; \; \; \pi &lt; 0.2 \\ \end{split}\]</p>
-<p>请注意,\(H_a\)声称\(\pi\)位于0.2(\(\pi &lt; 0.2\))的一侧,而不是仅仅与0.2(\(\pi \ne 0.2\))不同. 因此,我们称之为单方面假设测试。</p>
-<p>我们已计算出替代假设的后期概率为0。 因此,无效假说后的概率是QQ1@@. 加上这些,后面的概率是 \(\pi &lt; 0.2\)大约5.62。 我们的后卫评价认为, QQ3@@的概率比0.</p>
-<p>\[\text{posterior odds } = \frac{P(H_a \; | \; Y=14)}{P(H_0 \; | \; Y=14)} \approx 5.62.\]</p>
-<div class="sourceCode" id="cb115">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 后缘概率
+<p>我们对这一主张的分析非常直接明了。我们只是计算了感兴趣场景的后验概率。尽管并非总是必要，但实践者通常会将这个过程形式化为一个<strong>假设检验</strong>框架。例如，我们可以将分析表述为两个对立的假设：<strong>零假设</strong> <span class="math inline">\(H_0\)</span> 主张至少 20% 的博物馆艺术家是 X 一代或更年轻（即现状），而<strong>备择假设</strong> <span class="math inline">\(H_a\)</span>（我们的主张）则主张该比例低于 20%。用数学符号表示：</p>
+<p><span class="math display">\[\begin{split}
+H_0: &amp; \; \; \pi \ge 0.2 \\
+H_a: &amp; \; \; \pi &lt; 0.2 \\
+\end{split}\]</span></p>
+<p>请注意，<span class="math inline">\(H_a\)</span> 声称 <span class="math inline">\(\pi\)</span> 位于 0.2 的一侧（<span class="math inline">\(\pi &lt; 0.2\)</span>），而非仅仅是不同于 0.2（<span class="math inline">\(\pi \ne 0.2\)</span>）。因此，我们称之为<strong>单侧假设检验</strong>。</p>
+<p>我们已经计算出备择假设的后验概率为 <span class="math inline">\(P(H_a \; | \; Y=14) = 0.849\)</span>。因此，零假设的后验概率为 <span class="math inline">\(P(H_0 \; | \; Y=14) = 0.151\)</span>。综合起来，<span class="math inline">\(\pi &lt; 0.2\)</span> 的<strong>后验优势（posterior odds）</strong>约为 5.62。也就是说，我们的后验评估是，<span class="math inline">\(\pi\)</span> 低于 0.2 的可能性大约是高于 0.2 的可能性的 6 倍：</p>
+<p><span class="math display">\[\text{posterior odds } = \frac{P(H_a \; | \; Y=14)}{P(H_0 \; | \; Y=14)} \approx 5.62.\]</span></p>
+<div class="sourceCode" id="cb115"><pre><code class="language-python"># 后验优势 (posterior odds)
 post_odds = post_prob / (1 - post_prob)
-post_odds
-[1] 5.622</code></pre>
-</div>
-<p>当然,这些后遗症代表了我们在观察调查数据时对XQ0@@的最新理解,XX100个抽样艺术家中有14个是Gen X或更年轻. 在对这些艺术家进行取样之前,我们对Gen X在主要艺术博物馆中的代表性的评价要高得多(图8.5)。</p>
+post_odds</code></pre></div>
+<p>当然，这些后验优势代表了我们在观察到调查数据后对 <span class="math inline">\(\pi\)</span> 的更新理解，即在 <span class="math inline">\(n =\)</span> 100 名抽样艺术家中，<span class="math inline">\(Y =\)</span> 14 人是 X 一代或更年轻。<em>在对这些艺术家进行抽样之前</em>，我们对主要艺术博物馆中 X 一代代表性的评估要高得多（图 <a href="/bayes-rules-python-cn/chapter-8/#fig:prior-post-ch8">8.5</a>）。</p>
 <div class="figure" style="text-align: center"><span id="fig:prior-post-ch8" style="display:block;"></span>
-<img alt="有两块地块,标签是Prior和Prester。 在Prior地块中,pi有一个宽,大致对称的密度曲线,从0.05到0.75不等. 在后期地块中,pi的密度曲线较窄,大致对称,从0.05到0.25不等. 在两块地块中,0.2以下曲线下的区域被遮蔽." loading="lazy" src="/assets/img/bayes-rules-python-cn/prior-post-ch8-1-ef9f0161af84.png" width="432"/>
-<p class="caption">FIGURE 8.5:\(\pi\)在0.2(右)以下的后概率与此情景的先验概率(左)形成对比.</p>
+<img alt="There are two plots, labeled Prior and Posterior. In the Prior plot, there is a wide, roughly symmetric density curve of pi, ranging from 0.05 to 0.75. In the Posterior plot, there is a narrower, roughly symmetric density curve of pi, ranging from 0.05 to 0.25. In both plots, the area under the curve below 0.2 is shaded in." loading="lazy" src="/assets/img/bayes-rules-python-cn/prior-post-ch8-1-ef9f0161af84.png" width="432"/>
+<p class="caption">
+图 8.5：<span class="math inline">\(\pi\)</span> 低于 0.2 的后验概率（右）与该场景的先验概率（左）对比。
+</p>
 </div>
-<p>具体地说,按Beta(4,6)之前的pdf( 1)以下区域计算出的\(\pi &lt; 0.2\)的先验概率只有0.0856:</p>
-<p>\[P(H_a) = \int_0^{0.2} f(\pi) d\pi \approx 0.0856 .\]</p>
-<div class="sourceCode" id="cb116">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>具体而言，由 Beta(4,6) <em>先验</em>概率密度函数 <span class="math inline">\(f(\pi)\)</span> 下方 0.2 以下的面积计算出的 <span class="math inline">\(\pi &lt; 0.2\)</span> 的<strong>先验概率</strong>仅为 0.0856：</p>
+<p><span class="math display">\[P(H_a) = \int_0^{0.2} f(\pi) d\pi \approx 0.0856  .\]</span></p>
+<div class="sourceCode" id="cb116"><pre><code class="language-python">import scipy.stats as stats
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# pi &lt; 0.2的先验概率
-prior_prob = pbeta(0.20, 4, 6)
-prior_prob
-[1] 0.08564</code></pre>
-</div>
-<p>因此,无效假说的前几率是 0@@. 因此,Gen X代表人数低于0.2的先验概率大约只有十分之一:</p>
-<p>\[\text{Prior odds } = \frac{P(H_a)}{P(H_0)} \approx 0.093 .\]</p>
-<div class="sourceCode" id="cb117">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 先验的概率
+# 先验概率 pi &lt; 0.2
+prior_prob = stats.beta.cdf(0.20, 4, 6)
+prior_prob</code></pre></div>
+<p>因此，零假设的先验概率为 <span class="math inline">\(P(H_0) = 0.914\)</span>。
+由此可知，X世代代表性低于0.2的先验优势大约只有十分之一：</p>
+<p><span class="math display">\[\text{先验优势 } = \frac{P(H_a)}{P(H_0)} \approx 0.093  .\]</span></p>
+<div class="sourceCode" id="cb117"><pre><code class="language-python"># 先验优势
 prior_odds = prior_prob / (1 - prior_prob)
-prior_odds
-[1] 0.09366</code></pre>
-</div>
-<p>Bayes Factor(BF)将后机率与先验机率相比较,</p>
-<p>\[\text{Bayes Factor} = \frac{\text{posterior odds }}{\text{prior odds }} .\]</p>
-<p>以我们为例,贝耶斯系数约为60。 因此,在观察艺术品数据后,我们关于Gen Xers的假设的后验概率大约是以前概率的60倍。 或者,我们对这个假设的信心 跳跃了很多。</p>
-<div class="sourceCode" id="cb118">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 贝叶因数
+prior_odds</code></pre></div>
+<p><strong>贝叶斯因子（Bayes Factor，BF）</strong> 比较后验优势与先验优势，从而揭示我们关于X世代代表性的认知在观测到样本数据后<em>演变</em>了多少：</p>
+<p><span class="math display">\[\text{贝叶斯因子} = \frac{\text{后验优势 }}{\text{先验优势 }}  .\]</span></p>
+<p>在我们的示例中，贝叶斯因子约为60。
+因此，在观测到艺术品数据后，我们关于X世代假设的后验优势大约是先前优势的60倍。
+或者说，我们对该假设的信心大幅提升。</p>
+<div class="sourceCode" id="cb118"><pre><code class="language-python"># 贝叶斯因子（假设 post_odds 已在前文计算）
 BF = post_odds / prior_odds
-BF
-[1] 60.02</code></pre>
-</div>
-<p>兹将贝叶斯因素概述如下,包括解释这一因素的一些指导原则。</p>
+BF</code></pre></div>
+<p>我们在下方总结贝叶斯因子，并给出一些解释的指导原则。</p>
 <div class="describe">
-<p>贝叶系数</p>
-<p>在两个相互竞争的假设测试中,</p>
-<p>\[\text{Bayes Factor} = \frac{\text{posterior odds}}{\text{prior odds}} = \frac{P(H_a | Y) / P(H_0 | Y)}{P(H_a) / P(H_0)} .\]</p>
-<p>将贝叶因子(BF)比作1. 为此,考虑三种可能的情况:</p>
+<p><strong>贝叶斯因子</strong></p>
+<p>在比较两个对立假设 <span class="math inline">\(H_a\)</span> 与 <span class="math inline">\(H_0\)</span> 的假设检验中，贝叶斯因子是 <span class="math inline">\(H_a\)</span> 的优势比：</p>
+<p><span class="math display">\[\text{贝叶斯因子}
+= \frac{\text{后验优势}}{\text{先验优势}}
+= \frac{P(H_a | Y) / P(H_0 | Y)}{P(H_a) / P(H_0)}
+  .\]</span></p>
+<p>作为一个比率，将贝叶斯因子（BF）与1进行比较是有意义的。为此，考虑以下三种情况：</p>
 <ol style="list-style-type: decimal">
-<li>BF = 1: 根据观测到的数据,</li>
-<li>BF &gt; 语言 1:根据观测到的数据,XQ0@@的可信度有所提高. 贝叶斯因素越大,</li>
-<li>BF &lt; 1: 根据观测到的数据,XQ0XX的可信度下降。</li>
+<li>BF = 1：<span class="math inline">\(H_a\)</span> 的可信性在观测数据下<em>没有改变</em>。</li>
+<li>BF &gt; 1：<span class="math inline">\(H_a\)</span> 的可信性在观测数据下<em>增加</em>了。因此，贝叶斯因子越大，支持 <span class="math inline">\(H_a\)</span> 的证据越有说服力。</li>
+<li>BF &lt; 1：<span class="math inline">\(H_a\)</span> 的可信性在观测数据下<em>减小</em>了。<br/>
+</li>
 </ol>
 </div>
-<p>之后的概率(0.85)和拜叶斯系数(60)为现代重要艺术博物馆不到20%的艺术家是Gen X或更年轻的说法提供了相当令人信服的证据。 你读那句子有晕头转向吗? “相当令人信服的”一词似乎有点模糊。 过去,你可能已经学到了具体的截断点,将“具有统计意义”和“无统计意义”的结果区分开来,或允许你“拒绝”或“拒绝”一种假设。 然而,这种做法提供了虚假的安慰。 现实并不那么明确。 因此,在频繁派和巴耶斯派中,更广泛的统计界主张反对采用普遍规则作出僵硬的结论,主张采取更细致的做法,考虑到每个假设测试的背景和潜在影响。 因此,对于Bayes因子或后期概率证据有多大,足以将索赔滤入“真实”或“虚假”类别,不存在一刀切的神奇截断。 事实上,我们拥有的比二进制决定更强大的东西 — — 我们对这个主张的不确定性程度有一个整体的衡量标准. 这种程度的不确定性可以指导我们下一步的工作。 在我们的艺术例子中,我们是否有足够的证据来证明我们的说法? 我们确信,</p>
+<p>综合来看，后验概率（0.85）和贝叶斯因子（60）提供了<em>相当有说服力</em>的证据，支持了“主要现当代艺术博物馆的艺术家中，X 世代或更年轻的比例不到 20%”这一主张。
+读到这句话时你是否觉得有些勉强？
+“相当有说服力”这个说法可能显得有些模棱两可。
+过去你可能学过用特定阈值来区分“统计显著”与“统计不显著”，或者据此“拒绝”或“未能拒绝”某个假设。
+但这种做法会带来虚假的安心感。
+现实并非如此非黑即白。
+正因如此，无论是频率学派还是贝叶斯学派，更广泛的统计社区都<em>反对</em>用一刀切的规则做出刚性结论，而是<em>提倡</em>一种更细致的方法，结合每次假设检验的具体背景和潜在影响来综合判断。
+所以，并不存在一个万能的魔法阈值，能根据贝叶斯因子或后验概率的大小将主张简单归为“真”或“假”两类。
+事实上，我们拥有的东西比二元决策更强大——我们有了一个对自己不确定性程度的整体衡量。
+这种不确定性程度可以指导我们下一步的行动。
+在我们的艺术例子中，我们是否有充分证据支持我们的主张？
+<em>我们</em>是信服的。</p>
 </div>
 <div class="section level3" id="two-sided-tests" number="8.2.2">
-<h3>双面测试</h3>
-<p>特别是在新环境下工作时, 我们并非总希望测试一个单向的参数。 例如,考虑一位新艺术研究员,只要想测试30%的主要博物馆艺术家是Gen X还是更年轻. 这个假设是两面性的:</p>
-<p>\[\begin{split} H_0: &amp; \; \; \pi = 0.3 \\ H_a: &amp; \; \; \pi \ne 0.3 \\ \end{split}\]</p>
-<p>当我们试图用我们用来进行单面假说测试的一样锤子来进行这个双面假说测试时,我们很快就遇到了一个问题. 由于QQ0QQ是连续的,所以XQ1QQ的前期和后期概率正好是0.3(即XQ2QX是真实的),两者都是0. 例如, poster3@@在后pdf下线的面积计算后概率为0.3. 与任何行一样,此区域为 0:</p>
-<p>\[P(\pi = 0.3 | Y = 14) = \int_{0.3}^{0.3} f(\pi | y = 14)d\pi = 0 .\]</p>
-<p>因此,后面的几率,先验的几率,以及因此的贝叶斯系数都是没有定义的:</p>
-<p>\[\text{Posterior odds } = \frac{P(H_a \; | \; Y=14)}{P(H_0 \; | \; Y=14)} = \frac{1}{0} = \text{ nooooo!}\]</p>
-<p>没问题 成功没有一种方法。 为此,尝试以下试题. 第45条</p>
+<h3> 双侧检验</h3>
+<p>特别是在新情境下工作时，我们并不总是希望针对某个参数 <span class="math inline">\(\pi\)</span> 检验单向主张。
+比如，假设一位新艺术研究者只想检验<em>是否</em>有30%的主要博物馆艺术家属于 X 世代或更年轻。
+这个假设是<strong>双侧</strong>的：</p>
+<p><span class="math display">\[\begin{split}
+H_0: &amp; \; \; \pi = 0.3 \\
+H_a: &amp; \; \; \pi \ne 0.3 \\
+\end{split}\]</span></p>
+<p>当我们试图用处理单侧假设检验的那套方法来解决这个双侧检验时，很快就遇到了问题。
+由于 <span class="math inline">\(\pi\)</span> 是<em>连续</em>变量，<span class="math inline">\(\pi\)</span> <em>恰好等于</em> 0.3（即 <span class="math inline">\(H_0\)</span> 为真）的先验概率和后验概率都是<em>零</em>。
+例如，<span class="math inline">\(\pi = 0.3\)</span> 的后验概率由后验概率密度函数在 0.3 处的<em>线段</em>下方的面积给出。
+对任何一条线段来说，这个面积都是 0：</p>
+<p><span class="math display">\[P(\pi = 0.3 | Y = 14) = \int_{0.3}^{0.3} f(\pi | y = 14)d\pi = 0  .\]</span></p>
+<p>因此，后验优势比、先验优势比，进而贝叶斯因子，都是未定义的：</p>
+<p><span class="math display">\[\text{后验优势比 } = \frac{P(H_a \; | \; Y=14)}{P(H_0 \; | \; Y=14)} = \frac{1}{0} = \text{ 完蛋了！}\]</span></p>
+<p>没问题。成功没有固定套路。为此，试试下面的小测验。<a class="footnote-ref" href="#fn45" id="fnref45"><sup>45</sup></a></p>
 <div class="quiz">
-<p>回顾XQ0@@的95%后可信间隔是(0.1,0.24). 这个线人是否提供了充分的证据,证明QQ1@@与0.3不同?</p>
+<p>回想一下，<span class="math inline">\(\pi\)</span> 的 95% 后验可信区间为 (0.1, 0.24)。这个可信区间是否提供了充分证据，表明 <span class="math inline">\(\pi\)</span> 与 0.3 不同？</p>
 </div>
-<p>如果你回答“是”,那么你就对双面假说测试采取了合理的做法。 假设值为 {0} 因此,我们有充分的证据支持`                                                                                                                                                                                                                                                 目前为止, 0. 然而,在一种情况下,什么是“实质性的”或清楚的,可能与另一种情况下的“实质性的”不同。 考虑到这一点,在看到任何数据之前,最好先对“实质性”下定义。 例如,在艺术家代表方面,我们可以认为,在0.05窗口外的0.3左右的任何比例都与0.3有有意义的区别。 这基本上给我们的假设增加了一点缓冲,</p>
-<p>\[\begin{split} H_0: &amp; \; \; \pi \in (0.25, 0.35) \\ H_a: &amp; \; \; \pi \notin (0.25, 0.35) \\ \end{split}\]</p>
-<p>我们更严格地宣称相信QQ0QQ, 因为XQ1X的假设范围(0. 也请注意,由于QQ2@@不再包含一个单数的假设值为QQ3@@,因此其相应的后期和前期概率不再为0. 因此,正如我们在片面假说测试中所做的那样,我们可以(但不会在这里)用后机概率和贝叶斯系数计算来补充我们的上述可信间隔分析。</p>
+<p>如果你的回答是“是”，那么你已经凭直觉想到了一个合理的双边假设检验思路。<span class="math inline">\(\pi\)</span> 的假设值（这里是 0.3）“大幅”落在后验可信区间之外，因此我们有充分证据支持 <span class="math inline">\(H_a\)</span>。0.3 远高于 <span class="math inline">\(\pi\)</span> 合理取值范围的这一事实，让我们相当确信博物馆艺术家中属于 X 世代或更年轻的比例<em>不是</em> 0.3。不过，在一个上下文中“大幅”或清晰的程度，在另一上下文中可能不同。有鉴于此，最佳实践是<em>提前</em>、<em>在看到任何数据之前</em>就定义好什么是“大幅”。例如，在艺术家代表比例的背景下，我们可以将任何落在 0.3 附近 0.05 窗口之外的比例视为与 0.3 有实际意义的差异。这实质上给我们的假设增加了一点缓冲，<span class="math inline">\(\pi\)</span> 要么<em>约等于</em> 0.3（在 0.25 到 0.35 之间），要么不是：</p>
+<p><span class="math display">\[\begin{split}
+H_0: &amp; \; \; \pi \in (0.25, 0.35) \\
+H_a: &amp; \; \; \pi \notin (0.25, 0.35) \\
+\end{split}\]</span></p>
+<p>有了这个设定的缓冲带，我们可以更严格地声称相信 <span class="math inline">\(H_a\)</span>，因为 <span class="math inline">\(\pi\)</span> 的<em>整个</em>假设范围 (0.25, 0.35) 都位于其 95% 可信区间之上。还要注意，由于 <span class="math inline">\(H_0\)</span> 不再包含 <span class="math inline">\(\pi\)</span> 的单一假设值，其对应的后验概率和先验概率也不再是 0。因此，就像我们在<em>单侧</em>假设检验中做的那样，我们可以（但这里不会）用后验概率和贝叶斯因子计算来补充上述后验可信区间分析。</p>
 </div>
 </div>
 <div class="section level2" id="ch8-post-pred" number="8.3">
-<h2>预测</h2>
-<p>除了后期估计和假说测试之外,后期分析的第三个共同任务是预测新数据的结果。</p>
+<h2>后验预测</h2>
+<p>除了后验估计和假设检验，后验分析的第三个常见任务是<strong>预测</strong>新数据 <span class="math inline">\(Y'\)</span> 的结果。</p>
 <div class="quiz">
-<p>假设我们掌握了博物馆 展出的20件艺术品的数据 根据我们在本章中发展起来的对X的后认识,</p>
+<p>假设我们获得了博物馆中另外 20 件艺术作品的数据。基于我们在本章中建立的对 <span class="math inline">\(\pi\)</span> 的后验理解，你<em>预测</em>其中由 X 世代或更年轻艺术家创作的作品数量是多少？</p>
 </div>
-<p>你对这个测验的反应可能是:“我得到了这个。 这是3! 这是一个非常合理的起点。 毕竟,我们最好的后期猜测是,大约16%的博物馆艺术家是Gen X或更年轻,20名新艺术家中的16%是大约3. 然而,这一计算忽略了我们预测中两个潜在变异的来源:</p>
+<p>你对这个小测验的可能第一反应是：“我 <em>知道</em> 答案了，是 3！” 这是一个非常合理的起点。毕竟，我们最佳的后验猜测是，博物馆艺术家中约 16% 是 X 世代或更年轻，而 20 位新艺术家中的 16% 大约是 3。然而，这一计算忽略了我们预测中两个潜在变异性来源：</p>
 <ul>
-<li><p>当我们随机抽取20位艺术家时, 我们并不期望其中3位(16%)是Gen X或更年轻。 相反,数字会根据我们偶然得到的随机样本而波动。</p></li>
-<li><p>我们的95%的后期可信间隔表明, +++在0. 因此,在对20件新艺术品进行预测时,我们需要考虑我们期望在每件可能的作品下看到什么结果,同时考虑一些作品比其他作品更可信。</p></li>
+<li><p><strong>抽样变异性</strong>（sampling variability）在数据中<br/>当我们随机抽取 20 位艺术家时，我们不期望其中 <em>恰好</em> 有 3 位（16%）是 X 世代或更年轻。相反，这个数字会随着我们碰巧得到的随机样本而波动。</p></li>
+<li><p><strong>后验变异性</strong>（posterior variability）在 <span class="math inline">\(\pi\)</span> 中<br/>0.16 并不是 <span class="math inline">\(\pi\)</span> 的 <em>唯一</em> 后验合理值，<span class="math inline">\(\pi\)</span> 是博物馆艺术家中 X 世代所占的基础比例。相反，我们的 95% 后验可信区间表明 <span class="math inline">\(\pi\)</span> 可能在约 0.1 到 0.24 之间。因此，在对 20 件新艺术品进行预测时，我们需要考虑在 <em>每个</em> 可能的 <span class="math inline">\(\pi\)</span> 下我们期望看到的结果，同时考虑到某些 <span class="math inline">\(\pi\)</span> 值比其他值更合理。</p></li>
 </ul>
-<p>让我们用一些数学来说明这些概念。 由Gen X或年轻艺术家创作的20部新作品中, 在XQQ3QQ上,XQ4QQ中的随机性或采样变异性可以和pdf一起由XQ5@@模拟.</p>
-<p>\[\begin{equation} f(y'|\pi) = P(Y' = y' | \pi) = \binom{20}{ y'} \pi^{y'}(1-\pi)^{20 - y'} . \tag{8.2} \end{equation}\]</p>
-<p>因此,\(Y'\)的随机结果 取决于 QQ 1 , 这也可以不同 – QQ2 可能值在 0 到 1 之间。 为此,Beta(18,92)的Beta(18,92)的后置模型QQ3@@,考虑到原始数据(QQ4@@14),描述了XQ5@@的潜在后置变异性,即XQ6@@的值比其他的更可信.</p>
-<p>为了全面了解未来20位艺术家中有多少人是Gen X,我们必须将XQ0@@的采样变异与XX1@@的后期变异结合起来. 为此, 由 pdf \(f(\pi|y = 14)\)(8.1) 的  weight2@@(8.2) 的  weight2@@(8.2) 的  weight(8.1) 的  weight(8.1) 的  weight2@@(8) 的  weight(8) 的  weight2@@(8) 的  weight(8) 的  weight(8) 的  weight(8) 的  weight(8) 的  weight(8) 的  weight(8) 的  weight(8) 的  weight(8) 的  weight(8) 的  weight(8) ) 的  weight(8) 的  weight(8) 的  weight(8) 的  capture(8) 的  capture(8) ) 的  weight(8) 的  capture(8) 的 的 的  observing(8) 的  capture(8) 的 的  capture( ) 的 ) 的 的  poster(6@@( ) 的 ) 的 的 的 的 值 的 的 的</p>
-<p>\[\begin{equation} f(y'|\pi) f(\pi|y=14) . \tag{8.3} \end{equation}\]</p>
-<p>图8.6说明了这一想法,规划了QQ0@@的加权行为. (8.3) 仅3个可能值的QQ1@@:2.5后百分位(0.1),后百分位模式(0.16),97.5后百分位(0.24). 当然,我们发现,最大值的QQ2×××是,最大值的QQ3××是:当QQ4×最可能值的QQ5×××是2时,而最大值的QQ6××是5时,最可能值的QQ7×××是5. 也注意,由于QQ8×××是低至0.1或高至0.24的数值不可信,因此在这些假想下可能产生的QQ9×××的值,比起XX10××××××××××××年产生的值,其权重(即棍子要短得多),最可能值的QX10×××××××××××××××××是0.16的值.</p>
+<p>让我们用一些数学来明确这些概念。首先，令 <span class="math inline">\(Y' = y'\)</span> 表示 20 件新艺术品中由 X 世代或更年轻艺术家创作的数量（尚待观察），其中 <span class="math inline">\(y'\)</span> 可以是 <span class="math inline">\(\{0,1,...,20\}\)</span> 中的任意艺术家数量。在给定 <span class="math inline">\(\pi\)</span> 的条件下，<span class="math inline">\(Y'\)</span> 中的随机性或 <strong>抽样变异性</strong> 可以用 <span class="math inline">\(Y'|\pi \sim \text{Bin}(20,\pi)\)</span> 建模，其概率密度函数为</p>
+<p><span class="math display" id="eq:ch8-pred-ex">\[\begin{equation}
+f(y'|\pi) = P(Y' = y' | \pi) = \binom{20}{ y'} \pi^{y'}(1-\pi)^{20 - y'}  .
+\tag{8.2}
+\end{equation}\]</span></p>
+<p>因此，<span class="math inline">\(Y'\)</span> 的随机结果依赖于 <span class="math inline">\(\pi\)</span>，而 <span class="math inline">\(\pi\)</span> 本身也会变化——<span class="math inline">\(\pi\)</span> 可以是 0 到 1 之间的任何值。为此，给定 <em>原始</em> 数据（<span class="math inline">\(Y =\)</span> 14）的 <span class="math inline">\(\pi\)</span> 的 Beta(18, 92) 后验模型描述了 <span class="math inline">\(\pi\)</span> 中潜在的 <strong>后验变异性</strong>，即哪些 <span class="math inline">\(\pi\)</span> 值比其他值更合理。</p>
+<p>为了全面理解接下来 20 位艺术家中有多少会是 X 世代，我们必须 <em>结合</em> <span class="math inline">\(Y'\)</span> 中的抽样变异性和 <span class="math inline">\(\pi\)</span> 中的后验变异性。为此，用后验概率密度函数 <span class="math inline">\(f(\pi|y = 14)\)</span> <a href="/bayes-rules-python-cn/chapter-8/#eq:post-pdf-ch8">(8.1)</a> 对 <span class="math inline">\(f(y'|\pi)\)</span> <a href="/bayes-rules-python-cn/chapter-8/#eq:ch8-pred-ex">(8.2)</a> 进行加权，捕捉了在给定 <span class="math inline">\(\pi\)</span> 下观测到 <span class="math inline">\(Y' = y'\)</span> 名 X 世代艺术家的机会，同时 <em>考虑到了该 <span class="math inline">\(\pi\)</span> 值的后验合理性</em>：</p>
+<p><span class="math display" id="eq:ch8-pred-pdf">\[\begin{equation}
+f(y'|\pi) f(\pi|y=14)  .
+\tag{8.3}
+\end{equation}\]</span></p>
+<p>图 <a href="/bayes-rules-python-cn/chapter-8/#fig:art-pred-1-ch8">8.6</a> 展示了这一思想，绘制了 <span class="math inline">\(Y'\)</span> 的加权行为 <a href="/bayes-rules-python-cn/chapter-8/#eq:ch8-pred-pdf">(8.3)</a>，只考虑 <span class="math inline">\(\pi\)</span> 的三个可能取值：后验第 2.5 百分位数（0.1）、后验众数（0.16）和后验第 97.5 百分位数（0.24）。 自然，我们看到 <span class="math inline">\(\pi\)</span> 越大，<span class="math inline">\(Y'\)</span> 倾向于越大：当 <span class="math inline">\(\pi = 0.1\)</span> 时，<span class="math inline">\(Y'\)</span> 最可能的取值是 2，而当 <span class="math inline">\(\pi = 0.24\)</span> 时，最可能的取值是 5。 同时注意，由于低至 0.1 或高至 0.24 的 <span class="math inline">\(\pi\)</span> 值并不十分合理，在这些情景下可能产生的 <span class="math inline">\(Y'\)</span> 值被赋予的权重（即竖条短得多）要低于在 <span class="math inline">\(\pi =\)</span> 0.16 —— 最为合理的 <span class="math inline">\(\pi\)</span> 值 —— 下产生的值。</p>
 <div class="figure" style="text-align: center"><span id="fig:art-pred-1-ch8" style="display:block;"></span>
-<img alt="有三块地块,标注pi等于0.1,pi等于0.16,pi等于0.24. 每个图案的y值的x轴在0到20之间,y轴在0到3之间. 每个地块中都是垂直的线条,末端有点,以0,1,至20刻图. pi中的垂直线等于0.1,pi等于0.24个地块,比pi中的垂直线等于0.16个地块短得多. 此外,竖线最高的y值分别为2,3,pi的5,分别等于0.1,pi等于0.16,pi等于0.24地块." loading="lazy" src="/assets/img/bayes-rules-python-cn/art-pred-1-ch8-1-2fb94fec7443.png" width="576"/>
-<p class="caption">FIGURE 8.6: 可能QQ0QQ结果为QQ1@@绘制,并按对应的后引力XQ2@@进行加权.</p>
+<img alt="There are three plots, labeled pi equals 0.1, pi equals 0.16, and pi equals 0.24. Each plot has an x-axis of y values ranging from 0 to 20 and a y-axis ranging from 0 to 3. In each plot are vertical lines with dots at the end, plotted at 0, 1, up to 20. The vertical lines in the pi equals 0.1 and pi equals 0.24 plots are much shorter than those in the pi equals 0.16 plot. Further, the vertical line is highest at y values of 2, 3, and 5 in the pi equals 0.1, pi equals 0.16, and pi equals 0.24 plots, respectively." loading="lazy" src="/assets/img/bayes-rules-python-cn/art-pred-1-ch8-1-2fb94fec7443.png" width="576"/>
+<p class="caption">
+图 8.6：对 <span class="math inline">\(\pi \in \{0.10,0.16,0.24\}\)</span> 绘制了可能的 <span class="math inline">\(Y'\)</span> 结果，并按 <span class="math inline">\(\pi\)</span> 对应的后验合理性加权。
+</p>
 </div>
-<p>再加上Gen X的20位新艺人, 未来预测pmf计算出所有可能的QQ3XQ从0到1的观测总机率,</p>
-<p>\[f(y'|y=14) = P(Y'=y' \; | \; Y=y) = \int_0^1 f(y'|\pi) f(\pi|y=14) d\pi .\]</p>
+<p>综合起来，<span class="math inline">\(Y'\)</span>（即 20 位新艺术家中属于 X 世代的人数）的 <strong>后验预测模型</strong> 同时考虑了 <span class="math inline">\(Y'\)</span> 的抽样变异性与 <span class="math inline">\(\pi\)</span> 的后验变异性。 具体而言，后验预测概率质量函数（pmf）通过在 <a href="/bayes-rules-python-cn/chapter-8/#eq:ch8-pred-pdf">(8.3)</a> 上求平均，计算了在 <em>所有</em> 可能的 <span class="math inline">\(\pi\)</span> 从 0 到 1 的取值中观察到 <span class="math inline">\(Y' = y'\)</span> 的总体概率，其中 (8.3) 给出的是对于<em>给定</em>的 <span class="math inline">\(\pi\)</span> 观察到 <span class="math inline">\(Y' = y'\)</span> 的概率：</p>
+<p><span class="math display">\[f(y'|y=14) = P(Y'=y' \; | \; Y=y) = \int_0^1 f(y'|\pi) f(\pi|y=14) d\pi  .\]</span></p>
 <div class="describe">
-<p>预测模型</p>
-<p>让 # # # # # # # # # 表示变量 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ######################################################################### 另外, pdf \(f(y'|\pi)\)表示\(Y'\)对\(\pi\)的依赖,  poster5@@表示\(\pi\)的 poster6ibility的 poster6ibility的 poster6ibility, 之后的XQ8的预测模型有pdf</p>
-<p>\[\begin{equation} f(y'|y) = \int f(y'|\pi) f(\pi|y) d\pi . \tag{8.4} \end{equation}\]</p>
-<p>在任何可能的QQ1+(XQ2+)下,</p>
+<p><strong>后验预测模型</strong></p>
+<p>令 <span class="math inline">\(Y'\)</span> 表示变量 <span class="math inline">\(Y\)</span> 的一个新观测值。 再令概率密度函数 <span class="math inline">\(f(y'|\pi)\)</span> 表示 <span class="math inline">\(Y'\)</span> 对 <span class="math inline">\(\pi\)</span> 的依赖，后验概率密度函数 <span class="math inline">\(f(\pi|y)\)</span> 表示给定原始数据 <span class="math inline">\(Y = y\)</span> 时 <span class="math inline">\(\pi\)</span> 的后验合理性。 那么 <span class="math inline">\(Y'\)</span> 的后验预测模型的概率密度函数为</p>
+<p><span class="math display" id="eq:ch8-pred-pmf-formal">\[\begin{equation}
+f(y'|y) = \int f(y'|\pi) f(\pi|y) d\pi  .
+\tag{8.4}
+\end{equation}\]</span></p>
+<p>换句话说，观察到 <span class="math inline">\(Y' = y'\)</span> 的整体概率是对<em>任意</em>可能 <span class="math inline">\(\pi\)</span> 下观察到该结果的概率（<span class="math inline">\(f(y'|\pi)\)</span>）按 <span class="math inline">\(\pi\)</span> 的后验合理性（<span class="math inline">\(f(\pi|y)\)</span>）进行加权的结果。</p>
 </div>
-<p>pmf的精确公式为 @@0 @@ , 来源于一些微积分(我们不在这里显示,</p>
-<p>\[\begin{equation} f(y'|y=14) = \left(\!\begin{array}{c} 20 \\ y' \end{array}\!\right) \frac{\Gamma(110)}{\Gamma(18)\Gamma(92)} \frac{\Gamma(18+y')\Gamma(112-y')} {\Gamma(130)} \;\;\; \text{ for } y' \in \{0,1,\ldots,20\}. \tag{8.5} \end{equation}\]</p>
-<p>尽管这个公式与我们所见过的公式不同(例如,它不是比诺米亚尔或Poisson,也不是我们学到的其他东西),但它仍然明确了我们可能观察到的[0]的值以及每个值的概率。 20位新艺人中有3位是Gen X:</p>
-<p>\[f(y'=3|y=14) = \left(\!\begin{array}{c} 20 \\ 3 \end{array}\!\right) \frac{\Gamma(110)}{\Gamma(18)\Gamma(92)} \frac{\Gamma(18+3)\Gamma(112-3)} {\Gamma(130)} = 0.2217 .\]</p>
-<p>pmf公式也反映了我们Beta(18,92)的后期模式对\(\pi\)的影响力. (通过参数18和92), 并因此根据我们的后期理解, 就像任何后台操作一样,我们的后台预测平衡了以前的资料和数据。</p>
-<p>以图8.7为例, 虽然它看起来类似于XQ1@@的模型,当我们假设XQ2@@等于0.16的后期模式(图8.6中间),但它相对地加大了对XQ3@@的较小和更大的值的权重,当XQ4@@偏离0.16时,我们可能会期望. 总而言之,尽管Gen X或年轻艺术家将完成的20件艺术品数量很可能是3件,但很可能是0和10之间的任何地方。</p>
+<p><span class="math inline">\(Y'\)</span> 的概率质量函数的精确公式来自一些微积分运算（这里不展示，不过它很有趣，如果你有微积分基础，我们鼓励你尝试推导）：</p>
+<p><span class="math display" id="eq:ch8-pred-pmf">\[\begin{equation}
+f(y'|y=14) = \left(\!\begin{array}{c} 20 \\ y' \end{array}\!\right) \frac{\Gamma(110)}{\Gamma(18)\Gamma(92)}
+\frac{\Gamma(18+y')\Gamma(112-y')} {\Gamma(130)} \;\;\; \text{ for } y' \in \{0,1,\ldots,20\}.
+\tag{8.5}
+\end{equation}\]</span></p>
+<p>尽管这个公式与我们见过的任何公式都不同（比如它不是二项、泊松或我们学过的任何其他分布），它仍然明确指出了 <span class="math inline">\(Y'\)</span> 可能取哪些值以及每个取值对应的<em>概率</em>。 例如，将 <span class="math inline">\(y' = 3\)</span> 代入此公式，20 位新艺术家中恰好有 3 位是 X 世代的后验预测概率为 0.2217：</p>
+<p><span class="math display">\[f(y'=3|y=14) = \left(\!\begin{array}{c} 20 \\ 3 \end{array}\!\right) \frac{\Gamma(110)}{\Gamma(18)\Gamma(92)}
+\frac{\Gamma(18+3)\Gamma(112-3)} {\Gamma(130)} = 0.2217 .\]</span></p>
+<p>这个概率质量函数（pmf）公式也反映了我们关于 <span class="math inline">\(\pi\)</span> 的 Beta(18,92) 后验模型（通过参数 18 和 92）以及原始先验和数据对 <span class="math inline">\(Y'\)</span> 的后验理解的影响。
+也就是说，与任何后验操作一样，我们的后验预测平衡了来自先验和数据的信息。</p>
+<p>为了更全面地观察，后验预测概率质量函数 <span class="math inline">\(f(y'|y=14)\)</span> 绘制在图 <a href="/bayes-rules-python-cn/chapter-8/#fig:art-pred-2-ch8">8.7</a> 中。
+虽然它看起来与假设 <span class="math inline">\(\pi\)</span> 等于后验众数 0.16 时的 <span class="math inline">\(Y'\)</span> 模型（图 <a href="/bayes-rules-python-cn/chapter-8/#fig:art-pred-1-ch8">8.6</a> 中间）相似，但它在 <span class="math inline">\(\pi\)</span> 偏离 0.16 时可能出现的较小和较大的 <span class="math inline">\(Y'\)</span> 值上赋予了相对更多的权重。
+总而言之，尽管接下来的 20 件艺术品中由 X 世代或更年轻艺术家创作的数量最有可能是 3，但它也可能落在 0 到 10 之间的任何地方。</p>
 <div class="figure" style="text-align: center"><span id="fig:art-pred-2-ch8" style="display:block;"></span>
-<img alt="该图案的y'值的x轴从0到20,而y'的f'给定y的y轴=14个值从0到0.25. 有垂直线以 y 值为 0, 1 , 最高为 20。 这些线的高度大致对称,大约为y'值3. 高度大约为y'值大于6的0." loading="lazy" src="/assets/img/bayes-rules-python-cn/art-pred-2-ch8-1-89f614d02343.png" width="240"/>
-<p class="caption">图8.7:X\(Y'\)的后期预测模型,Gen X或较年轻的艺术家完成的后20件艺术品的数量.</p>
+<img alt="The plot has an x-axis of y' values ranging from 0 to 20 and a y-axis of f of y' given y = 14 values ranging from 0 to 0.25. There are vertical lines plotted at y' values of 0, 1, up to 20. The heights of these lines are roughly symmetric around a y' value of 3. The heights are roughly 0 for y' values above 6." loading="lazy" src="/assets/img/bayes-rules-python-cn/art-pred-2-ch8-1-89f614d02343.png" width="240"/>
+<p class="caption">
+图 8.7：<span class="math inline">\(Y'\)</span> 的后验预测模型，即接下来的 20 件艺术品中由 X 世代或更年轻艺术家创作的作品数量。
+</p>
 </div>
-<p>最后,在建立和检查了XQ0X的后期预测模型,也就是接下来的20位艺术家的数量之后,我们可能会有一些后续问题. 20位艺术家中至少有5位是Gen X, 接下来的20位艺术家中, 我们可以回答这些问题, 由于QQ3@@的后期预测模型并不熟悉, 我们无法使用预建的公式或R函数计算后期特征, 相反,我们必须从零开始计算这些特征。 例如,我们可以计算出20位艺术家中至少有5位是Gen X的后期概率,方法是将这个范围内的16个QQ5@@值中每个值评价的pmf(8.5)相加. 这个庞大的总和的结果是0.233:</p>
-<p>\[\begin{split} P(Y' \ge 5 | y = 14) &amp; = \sum_{y' = 5}^{20} f(y' | y = 14) \\ &amp; = f(y' = 5 | y = 14) + f(y' = 6 | y = 14) + \cdots + f(y' = 20 | y = 14)\\ &amp; = 0.233. \\ \end{split}\]</p>
-<p>类似地, 虽然这不是我们所必须做的计算(而不会再做), 未来20位艺术家的预期人数, 也就是说,我们可以将每个QQ1+的值从0加到20加到他们的后期概率。 20位艺术家中约有3位是Gen X:</p>
-<p>\[\begin{split} E(Y' | y = 14) &amp; = \sum_{y' = 0}^{20} y' f(y' | y = 14) \\ &amp; = 0\cdot f(y' = 0 | y = 14) + 1 \cdot f(y' = 1 | y = 14) + \cdots + 20\cdot f(y' = 20 | y = 14)\\ &amp; = 3.273. \\ \end{split}\]</p>
-<p>但我们不想因为这些类型的计算而分心。 在这本书中,我们再也不需要做这种事情了。 从第9章开始, 我们的模型将足够复杂, 即使这些乏味的公式也无法实现,</p>
+<p>最后，在建立并检查了 <span class="math inline">\(Y'\)</span>（即接下来的20位艺术家中属于X世代的人数）的后验预测模型后，我们可能会有一些后续问题。
+例如，至少5位艺术家是X世代的后验概率 <span class="math inline">\(P(Y' \ge 5 | Y = 14)\)</span> 是多少？
+我们<em>期望</em>接下来的20位艺术家中有多少是X世代，<span class="math inline">\(E(Y' | Y = 14)\)</span>？
+我们<em>可以</em>回答这些问题，只是有点繁琐。
+由于 <span class="math inline">\(Y'\)</span> 的后验预测模型并不常见，我们不能像处理 <span class="math inline">\(\pi\)</span> 的 Beta 后验模型那样使用预置公式或 Python 函数来计算后验特征。
+相反，我们必须从头计算这些特征。
+例如，我们可以通过将 pmf <a href="/bayes-rules-python-cn/chapter-8/#eq:ch8-pred-pmf">(8.5)</a> 在该范围内的 16 个 <span class="math inline">\(y'\)</span> 值上求和，计算出至少5位艺术家是X世代的后验概率。
+这个庞大求和的结果（其细节将填满一整页）是 0.233：</p>
+<p><span class="math display">\[\begin{split}
+P(Y' \ge 5 | y = 14)
+&amp; = \sum_{y' = 5}^{20} f(y' | y = 14) \\
+&amp; = f(y' = 5 | y = 14) + f(y' = 6 | y = 14) + \cdots + f(y' = 20 | y = 14)\\
+&amp; = 0.233. \\
+\end{split}\]</span></p>
+<p>类似地，尽管我们尚未进行此类计算（且不会再做），接下来20位艺术家中期望的X世代人数可以通过可能的 <span class="math inline">\(Y'\)</span> 值的后验加权平均获得。
+也就是说，我们可以将 0 到 20 的每个 <span class="math inline">\(Y'\)</span> 值乘以其后验概率 <span class="math inline">\(f(y'|y=14)\)</span> 后相加。
+这个庞大求和的结果表明，我们应<em>期望</em>在20位艺术家中有大约3位是X世代：</p>
+<p><span class="math display">\[\begin{split}
+E(Y' | y = 14)
+&amp; = \sum_{y' = 0}^{20} y' f(y' | y = 14) \\
+&amp; = 0\cdot f(y' = 0 | y = 14) + 1 \cdot f(y' = 1 | y = 14) + \cdots + 20\cdot f(y' = 20 | y = 14)\\
+&amp; = 3.273. \\
+\end{split}\]</span></p>
+<p>但我不想让你被这类计算过度分心。在本书中，我们再也不会需要进行这样的计算。从第 <a href="/bayes-rules-python-cn/chapter-9/#chapter-9">9</a> 章开始，我们的模型会变得足够复杂，以至于即便像这样繁琐的公式也无法解析得出，我们将需要依赖模拟来<em>近似</em>后验特征。</p>
 </div>
 <div class="section level2" id="posterior-analysis-with-mcmc" number="8.4">
-<h2>MCMC的后期分析</h2>
-<p>贝叶斯后期分析背后有些理论, 当我们用和Beta-Binomial一样直截了当的模型工作时, 我们可以直接执行这个理论, 也就是说,我们可以计算准确的后期可信间隔,概率和预测模型。 在第九章中, 我们将离开这片好地方, 从第6章中回顾,在这些情况中,我们可以使用MCMC方法来估计后期因素。 在这一部分中,我们将探讨如何利用所产生的Markov 链样本值来大致了解具体的后期特征,从而用来进行后期分析。</p>
+<h2> 使用 MCMC 的后验分析</h2>
+<p>知道贝叶斯后验分析背后有一些理论非常好。当我们在使用像 Beta-二项模型这样简单的模型时，可以直接应用这些理论——即可以计算精确的后验可信区间、概率和预测模型。然而，在第 <a href="/bayes-rules-python-cn/chapter-9/#chapter-9">9</a> 章中，我们将离开这个舒适区，进入无法指定后验模型、更不用说计算其特征精确概括的场景。回顾第 <a href="/bayes-rules-python-cn/chapter-6/#chapter-6">6</a> 章，在这些场景中，我们可以使用 MCMC 方法来<em>近似</em>后验分布。在本节中，我们将探索如何使用所得的马尔可夫链样本值来近似特定的后验<em>特征</em>，进而进行后验分析。</p>
 <div class="section level3" id="posterior-simulation-1" number="8.4.1">
-<h3>后期模拟</h3>
-<p>下面我们运行四个平行的Markov 链 \\\\\\\\\\\\\\每个重复10,000。 将每个链条的前5000个迭代抛出后,最终会有4个独立的马可夫链标本,大小5000,QQ1@@,或者一个综合的马可夫链标本大小为20,000.</p>
-<div class="sourceCode" id="cb119">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<h3> 后验模拟</h3>
+<p>下面我们为 <span class="math inline">\(\pi\)</span> 运行四条并行的马尔可夫链，每条链进行 10,000 次迭代。抛弃每条链的前 5,000 次迭代后，我们得到四个规模为 5,000 的独立马尔可夫链样本，<span class="math inline">\(\left\lbrace \pi^{(1)}, \pi^{(2)}, \ldots, \pi^{(5000)}\right\rbrace\)</span>，或者合并后规模为 20,000 的马尔可夫链样本。</p>
+<div class="sourceCode" id="cb119"><pre><code class="language-python">import pymc as pm
+import numpy as np
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-with pm.Model() as model:
-    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
-    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
-    # sigma = pm.HalfNormal('sigma', sigma=10)
-    # mu = beta_0 + beta_1 * x
-    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
-    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
-az.summary(idata)
-# 步骤1: 保护模型
-art_model = "
-data {
-int&lt;lower = 0, upper = 100&gt; Y;
-}
-parameters {
-real&lt;lower = 0, upper = 1&gt; pi;
-}
-model {
-Y ~ binomial(100, pi);
-pi ~ beta(4, 6);
-}
-"
-# 第2步: 将后台剪掉
-art_sim = stan(model_code = art_model, data = list(Y = 14),
-chains = 4, iter = 5000*2, seed = 84735)</code></pre>
-</div>
-<p>查看图8.8中的数字和视觉诊断。 首先,微量图中的随机性(左),四个平行链(中)的密度图中的一致,以及有效值1的Rhat值表明我们的模拟极稳定. 此外,我们的附属链条也像独立样本一样“足够”。 仅一个链条右侧显示的自动吸附量迅速下降,有效的样本大小比令人满意地很高——我们的2万马可夫链条值与7600个独立样本一样有效(0.38 \(\cdot\)20000).</p>
-<div class="sourceCode" id="cb120">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+# 步骤1：定义模型
+with pm.Model() as art_model:
+    # 先验
+    pi = pm.Beta('pi', alpha=4, beta=6)
+    # 似然
+    Y_obs = pm.Binomial('Y_obs', n=100, p=pi, observed=14)
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 平行的痕量地块和密度地块
-mcmc_trace(art_sim, pars = "pi", size = 0.5) +
-xlab("iteration")
-mcmc_dens_overlay(art_sim, pars = "pi")
-# 自动连接图
-mcmc_acf(art_sim, pars = "pi")</code></pre>
-</div>
+# 步骤2：模拟后验
+with art_model:
+    art_sim = pm.sample(draws=5000, tune=5000, chains=4, random_seed=84735)</code></pre></div>
+<p>查看图 <a href="/bayes-rules-python-cn/chapter-8/#fig:art-sim-1-ch8">8.8</a> 中的数值和可视化诊断。首先，轨迹图的随机性（左）、四条并行链密度图的一致性（中）以及接近 1 的 <code>Rhat</code> 值表明我们的模拟极其稳定。此外，我们的依赖链表现得“足够像”独立样本。右图仅显示了一条链的自相关图，它快速下降，有效样本量比率也令人满意地高——我们的 20,000 个马尔可夫链值相当于 7,600 个独立样本（0.38 <span class="math inline">\(\cdot\)</span> 20000）。</p>
+<div class="sourceCode" id="cb120"><pre><code class="language-python">import arviz as az
+import matplotlib.pyplot as plt
+
+# 平行迹图与密度图
+az.plot_trace(art_sim, var_names=["pi"], figsize=(10, 6))
+plt.show()
+# 密度叠加图
+az.plot_density(art_sim, var_names=["pi"], shade=True)
+plt.show()
+# 自相关图
+az.plot_autocorr(art_sim, var_names=["pi"])
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:art-sim-1-ch8" style="display:block;"></span>
-<img alt="有三块地 左图是一个微量图,其x轴值从0到5000,Y轴的pi值从0.05到0.35. 有四条线的地块 像是随机的噪音 中间的地块有四个密度的地块Pi. 它们非常相似,每个都呈钟形,以0.16左右为中心,大约在0.05到0.25之间. 右图为自动脉搏图. 它有一个X轴,Lag值在0到20之间,一个Y轴,自动对流值在0到1之间. 有一条线从左向右移动,从一个0的拉格时的1自动脉冲值开始,然后快速下降到拉格5及以后的0." loading="lazy" src="/assets/img/bayes-rules-python-cn/art-sim-1-ch8-1-f4c4569c0028.png" width="576"/>
-<p class="caption">FIGURE 8.8: MCMC模拟结果用于XQ0X的后验模型,是Gen X或更年轻的博物馆艺术家的比例,通过四条平行链(左和中)的痕量和密度图和单链(右)的自动对映图来展示.</p>
+<img alt="There are three plots. The left plot is a trace plot with an x-axis values ranging from 0 to 5000, and a y-axis with pi values ranging from 0.05 to 0.35. There are four line plots that appear like random noise. The middle plot has four density plots of pi. They are very similar, each being bell-shaped, centered around 0.16, and ranging from roughly 0.05 to 0.25. The right plot is an autocorrelation plot. It has an x-axis with Lag values ranging from 0 to 20 and a y-axis with Autocorrelation values ranging from 0 to 1. There is a line that moves from left to right, starting with an Autocorrelation value of 1 at a Lag of 0, and then dropping quickly to 0 for Lag 5 and beyond." loading="lazy" src="/assets/img/bayes-rules-python-cn/art-sim-1-ch8-1-f4c4569c0028.png" width="576"/>
+<p class="caption">
+图 8.8：<span class="math inline">\(\pi\)</span> 的后验模型的 MCMC 模拟结果，<span class="math inline">\(\pi\)</span> 是博物馆艺术家中属于 X 世代或更年轻的比例，通过四条并行链的轨迹图和密度图（左和中）以及单条链的自相关图（右）展示。
+</p>
 </div>
-<div class="sourceCode" id="cb121">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<div class="sourceCode" id="cb121"><pre><code class="language-python">import arviz as az
 
-# 马可夫链诊断
-rhat(art_sim, pars = "pi")
-[1] 1
-neff_ratio(art_sim, pars = "pi")
-[1] 0.378</code></pre>
-</div>
+# 马尔可夫链诊断
+rhat = az.rhat(art_sim, var_names="pi")
+print(f"Rhat: {rhat.values}")
+neff = az.ess(art_sim, var_names="pi")
+total_draws = art_sim.posterior.draw.size * art_sim.posterior.chain.size
+neff_ratio = neff.values / total_draws
+print(f"有效样本量比率: {neff_ratio}")</code></pre></div>
 </div>
 <div class="section level3" id="posterior-estimation-hypothesis-testing" number="8.4.2">
-<h3>预测和假设测试</h3>
-<p>我们现在可以使用2万马可夫连锁值, 事实上,图8.9证实,完整的MCMC近似(右)紧密模仿了实际的后(左).</p>
-<div class="sourceCode" id="cb122">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
+<h3> 后验估计与假设检验</h3>
+<p>现在，我们可以有信心地使用<em>合并后的</em>20000个马氏链取值来<strong>近似</strong>参数 <span class="math inline">\(\pi\)</span> 的后验分布 Beta(18, 92)。
+实际上，图 <a href="/bayes-rules-python-cn/chapter-8/#fig:ch8-fig-compare">8.9</a> 证实了完整的MCMC近似（右）与真实后验分布（左）非常吻合。</p>
+<div class="sourceCode" id="cb122"><pre><code class="language-python">import scipy.stats as stats
+import numpy as np
+import matplotlib.pyplot as plt
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 实际的Beta(18,92)后
-plot_beta(alpha = 18, beta = 92) +
-lims(x = c(0, 0.35))
-# MCMC 后近似化
-mcmc_dens(art_sim, pars = "pi") +
-lims(x = c(0,0.35))</code></pre>
-</div>
+# 真实后验分布：Beta(18, 92)
+x = np.linspace(0, 0.35, 100)
+plt.plot(x, stats.beta.pdf(x, 18, 92), label="真实后验 Beta(18, 92)")
+plt.xlim(0, 0.35)
+plt.xlabel("π")
+plt.ylabel("密度")
+plt.legend()
+plt.show()
+
+# MCMC 后验近似
+az.plot_density(art_sim, var_names=["pi"], shade=True)
+plt.xlim(0, 0.35)
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch8-fig-compare" style="display:block;"></span>
-<img alt="pi有两种密度曲线. 两者非常相似,呈钟形,中心为0.15,范围大约为0.075至0.275. 左曲线比右曲线更平滑." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch8-fig-compare-1-9738f51a92f7.png" width="480"/>
-<p class="caption">图8.9:实际的Beta(18,92) pdf \(\pi\) (左)与MCMC近似(右)并列.</p>
+<img alt="There are two density curves of pi. Both are very similar, being bell-shaped, centered at 0.15, and ranging from roughly 0.075 to 0.275. The left curve is smoother than the right curve." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch8-fig-compare-1-9738f51a92f7.png" width="480"/>
+<p class="caption">
+图8.9: <span class="math inline">\(\pi\)</span> 的真实后验概率密度函数 Beta(18, 92)（左）与MCMC近似（右）并列。
+</p>
 </div>
-<p>因此,我们可以通过Markov 链的相应特征,来近似Beta(18,92)后验模型的任何特征. 例如,我们可以以MCMC样本值的平均值来估计后期值, 或者以MCMC样本值的2.5 %来估计后期值。 为此,broom.mixed包(Bolker和Robinson 2021)中的整齐()功能为Art sim中存储的2万马尔可夫连锁值提供了一些方便的统计:</p>
-<div class="sourceCode" id="cb123">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>因此，我们可以通过马氏链的相应特征来近似后验模型 Beta(18, 92) 的任何特征。
+例如，我们可以用MCMC样本值的均值来近似后验均值，或用MCMC样本值的2.5%分位数来近似后验的2.5%分位数。
+为此，<strong>ArviZ</strong> 的 <code>az.summary()</code> 函数为存储在 <code>art_sim</code> 中的合并后20000个马氏链取值提供了一些便捷的统计量：</p>
+<div class="sourceCode" id="cb123"><pre><code class="language-python">import arviz as az
 
-tidy(art_sim, conf.int = TRUE, conf.level = 0.95)
-# bble:1×5
-term  estimate std.error conf.low conf.high
-&lt;chr&gt;    &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
-1 pi       0.162    0.0352    0.101     0.239</code></pre>
-</div>
-<p>而bayesplot软件包中的mcmc areas()函数提供了视觉补充(图8.10):</p>
-<div class="sourceCode" id="cb124">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+# 后验汇总（含95%可信区间）
+summary = az.summary(art_sim, var_names=["pi"], hdi_prob=0.95, round_to=3)
+print(summary)</code></pre></div>
+<p>而 <strong>ArviZ</strong> 的 <code>az.plot_posterior()</code> 函数提供了一个可视化补充（图 <a href="/bayes-rules-python-cn/chapter-8/#fig:ch8-dens">8.10</a>）：</p>
+<div class="sourceCode" id="cb124"><pre><code class="language-python">import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 中间间隔为95%
-mcmc_areas(art_sim, pars = "pi", prob = 0.95)</code></pre>
-</div>
+# 阴影显示中间95%区间
+az.plot_posterior(art_sim, var_names=["pi"], hdi_prob=0.95)</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch8-dens" style="display:block;"></span>
-<img alt="皮伊的密度图大致呈钟形,中心点为0.15,范围约为0.075至0.275. 曲线下方的面积为pi值约0.1至0.24的阴影. 曲线下方还有一条垂直线,比值为0.16." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch8-dens-1-58f154e0bab7.png" width="240"/>
-<p class="caption">图8.10: \(\pi\)的中位数和中位数为\(\pi\)的近似后验模型的95%.</p>
+<img alt="A density plot of pi is roughly bell-shaped, centered at 0.15, and ranging from roughly 0.075 to 0.275. The area below the curve is shaded between pi values from roughly 0.1 to 0.24. There is also a vertical line below the curve at a pi value of 0.16." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch8-dens-1-58f154e0bab7.png" width="240"/>
+<p class="caption">
+图8.10: <span class="math inline">\(\pi\)</span> 的近似后验模型的中位数及中间95%区间。
+</p>
 </div>
-<p>在整理()摘要中,conf.low和conf.high分别报告Markov 链值的2.5和97.5百分位数,分别为0.101和0.239. 在 mcmc area() 地块的阴影区域中, 此外,估计报告,我们的2万马可夫链值的中位数,也就是我们实际后位数的近似值,是0.162. 此中位数由 mcmc  areas () 图中的垂直线表示。 与平均值和模式一样,中值提供了“典型”后值的另一种度量。 这相当于第50个后百分位数 — — 50%的后方数值高于中位数,50%低于中位数。 然而,与平均值和模式不同,Beta(XQ3)中位数并不存在一刀切的公式。 这更暴露了MCMC模拟的美感:即使一个公式是难以捉摸的,我们也可以用我们观测到的Markov 链样本值的相应特征来估计后置数量.</p>
-<p>虽然第一站不错, 但整洁功能并不总是提供所有感兴趣的简要统计数据。 例如,它不报告我们的Markov 链样本值的平均值或模式。 没问题 我们可以直接从马可夫链值中计算汇总统计. 第一步是将四个平行链的阵列转换为合并链的单一数据框架:</p>
-<div class="sourceCode" id="cb125">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>在 <code>az.summary()</code> 的汇总中，<code>conf.low</code> 和 <code>conf.high</code> 分别报告了马氏链取值的2.5%和97.5%<strong>分位数</strong>，0.101和0.239。这些构成了 <span class="math inline">\(\pi\)</span> 的一个<em>近似</em>中间95%可信区间，在图 <code>az.plot_posterior()</code> 的阴影区域中显示。此外，<code>median</code> 报告了我们20000个马氏链取值的中位数，也就是对真实后验中位数的<em>近似</em>，为0.162。此中位数在图 <code>az.plot_posterior()</code> 中以垂直线表示。与均值和众数一样，中位数提供了“典型”后验 <span class="math inline">\(\pi\)</span> 值的另一种度量。它对应于后验50%分位数——50%的后验 <span class="math inline">\(\pi\)</span> 值在中位数之上，50%在其下。然而，<em>不像</em>均值和众数，对于 Beta(<span class="math inline">\(\alpha,\beta\)</span>) 分布的中位数并没有一个通用的公式。这更加彰显了MCMC模拟的美妙之处：即使公式难以获得，我们仍可以通过观察到的马氏链样本值的相应特征来<em>估计</em>后验量。</p>
+<p>虽然 <code>az.summary()</code> 是一个不错的起点，但它并不总能提供所有感兴趣的汇总统计量。
+例如，它不报告马氏链样本值的<em>均值</em>或<em>众数</em>。
+没问题。
+我们可以<em>直接</em>从马氏链取值计算汇总统计量。
+第一步是将四个并行链的<em>数组</em>转换为一个合并链的<em>数据框</em>：</p>
+<div class="sourceCode" id="cb125"><pre><code class="language-python">import arviz as az
 
-# 在1个数据框架中存储4个链条
-art_chains_df = as.data.frame(art_sim, pars = "lp__", include = FALSE)
-dim(art_chains_df)
-[1] 20000     1</code></pre>
-</div>
-<p>随着数据框架形式的链条,我们可以照常进行,使用我们的dplyr工具进行转换和总结. 例如,我们可以直接计算马可夫链结合值的样本平均值,中位数,模式,和四位数. 中位值和等值正是上面的整齐值,从而消除了任何关于该函数的谜团!</p>
-<div class="sourceCode" id="cb126">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+# 将4条链合并为一个数据框
+art_chains_df = az.extract(art_sim, var_names=["pi"], combined=True).to_dataframe()
+print(art_chains_df.shape)</code></pre></div>
+<p>当链以数据框形式处理时，我们可以如常使用 <code>pandas</code> 工具进行变换和汇总。
+例如，我们可以直接计算合并马氏链取值的样本均值、中位数、众数和分位数。
+中位数和分位数值正是上面 <code>az.summary()</code> 报告的数值，因此消除了关于该函数的任何神秘感！</p>
+<div class="sourceCode" id="cb126"><pre><code class="language-python">import pandas as pd
+import numpy as np
+from scipy.stats import gaussian_kde
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 计算 pi 的后置摘要
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>我们还可以利用原始的链条价值来完成我们后期分析中的下一个任务 — — 测试所谓不到20%的主要博物馆艺术家是Gen X的说法. 为此,我们可以按照Markov 链的%% 1+% 数值低于0. 20 的比值来估计这种情景的后期概率。 Gen X艺人代表人数低于0.</p>
-<div class="sourceCode" id="cb127">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+# 计算 pi 的后验摘要统计量
+post_mean = art_chains_df['pi'].mean()
+post_median = art_chains_df['pi'].median()
+kde = gaussian_kde(art_chains_df['pi'])
+x_grid = np.linspace(art_chains_df['pi'].min(), art_chains_df['pi'].max(), 1000)
+post_mode = x_grid[np.argmax(kde(x_grid))]
+lower_95 = art_chains_df['pi'].quantile(0.025)
+upper_95 = art_chains_df['pi'].quantile(0.975)
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 列表 pi 值低于 0. 0
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>浸透它 并记住这一点。 我们用MCMC模拟方法, 相比之下,表8.1列出了我们在第8.1节中计算的Beta(18,92)后特征以及相应的MCMC近似值。 攻击线是这样的:MCMC奏效了. 近似性相当准确. 让这为您带来心灵平静 — — 尽管其中的模型过于复杂, 无法说明,</p>
+summary_df = pd.DataFrame({
+    'post_mean': [post_mean],
+    'post_median': [post_median],
+    'post_mode': [post_mode],
+    'lower_95': [lower_95],
+    'upper_95': [upper_95]
+})
+print(summary_df)</code></pre></div>
+<p>我们还可以使用原始链值来处理后验分析中的下一个任务——检验关于“主要博物馆艺术家中 X 世代占比不足 20%”的断言。为此，我们可以用马尔可夫链 <span class="math inline">\(\pi\)</span> 值低于 0.20 的比例来<strong>近似</strong>这种情况下的后验概率 <span class="math inline">\(P(\pi &lt; 0.20 \mid Y=14)\)</span>。根据这个近似，X 世代艺术家占比低于 0.20 的可能性为 84.6%：</p>
+<div class="sourceCode" id="cb127"><pre><code class="language-python">import pandas as pd
+
+# 统计 pi 低于 0.20 的个数和占比
+art_chains_df['exceeds'] = art_chains_df['pi'] &lt; 0.20
+tab = art_chains_df['exceeds'].value_counts().reset_index()
+tab.columns = ['exceeds', 'n']
+tab['percent'] = tab['n'] / tab['n'].sum()
+print(tab)</code></pre></div>
+<p>好好体会并记住这一点。我们已经用 MCMC 仿真来<strong>近似</strong> <span class="math inline">\(\pi\)</span> 的后验模型及其感兴趣的特征。作为对比，表 <a href="/bayes-rules-python-cn/chapter-8/#tab:ch8-tab-compare">8.1</a> 展示了我们在第 <a href="/bayes-rules-python-cn/chapter-8/#chapter-8-estimation">8.1</a> 节中计算出的 Beta(18,92) 后验特征以及对应的 MCMC 近似值。结论是：MCMC 成功了。这些近似<em>相当</em>准确。在你继续阅读后续章节时，希望这能让你安心——尽管那些模型将过于复杂而难以直接指定，但我们可以对其 MCMC 近似有信心（只要诊断通过！）。</p>
 <table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
 <caption>
-<span id="tab:ch8-tab-compare">TABLE 8.1: </span>Beta(18,92) posterior model features alongside their corresponding MCMC approximations.
+<span id="tab:ch8-tab-compare">表 8.1：</span>Beta(18,92) 后验模型特征及其对应的 MCMC 近似值。
 </caption>
 <thead>
 <tr>
 <th style="text-align:left;">
 </th>
-<th style="text-align:left;">说</th>
-<th style="text-align:left;">模式</th>
-<th style="text-align:left;">2.5个百分点</th>
-<th style="text-align:left;">97.5% 百分比</th>
+<th style="text-align:left;">
+均值
+</th>
+<th style="text-align:left;">
+众数
+</th>
+<th style="text-align:left;">
+2.5 分位数
+</th>
+<th style="text-align:left;">
+97.5 分位数
+</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align:left;">后值</td>
+<td style="text-align:left;">
+后验值
+</td>
 <td style="text-align:left;">
 0.16
 </td>
@@ -575,7 +547,9 @@ import arviz as az
 </td>
 </tr>
 <tr>
-<td style="text-align:left;">MCMC 近似值</td>
+<td style="text-align:left;">
+MCMC 近似
+</td>
 <td style="text-align:left;">
 0.1642
 </td>
@@ -593,302 +567,298 @@ import arviz as az
 </table>
 </div>
 <div class="section level3" id="ch8-pred" number="8.4.3">
-<h3>预测</h3>
-<p>最后,我们可以利用我们的马可夫连锁值来大致预测XX的后期预测模型,也就是接下来20个被抽样的艺术家的数量,这些艺术家将是Gen X或更年轻的. Binus:模拟这个模型还帮助我们建立 后期预测理论的直觉。 回顾后期预测模型反映了两个变异源:</p>
+<h3> 后验预测</h3>
+<p>最后，我们可以利用马尔可夫链值来近似关于<span class="math inline">\(Y'\)</span>的后验预测模型，即接下来抽样的20位艺术家中属于X世代或更年轻的人数。
+额外收获：模拟该模型也有助于我们建立对后验预测背后理论的直观理解。
+回想一下，后验预测模型反映了两种变异性来源：</p>
 <ul>
-<li><p>在数据中采样的变异性可能为QQ1@@的任何艺术家数量,并取决于Gen X,XQ2@@:XQ3@@.</p></li>
-<li><p>\(\pi\)的后变数 收集了20,000 Markov 链 QQ1 QQ值,为假想的QQ2Q值中的变异性和范围提供了近似感.</p></li>
+<li><p><strong>数据中的抽样变异性</strong><br/>
+<span class="math inline">\(Y'\)</span>可能是<span class="math inline">\(\{0,1,\ldots,20\}\)</span>中的任意一个艺术家数量，取决于艺术家中X世代的基础比例<span class="math inline">\(\pi\)</span>：<span class="math inline">\(Y'| \pi \sim \text{Bin}(20,\pi)\)</span>。</p></li>
+<li><p><strong><span class="math inline">\(\pi\)</span>的后验变异性</strong><br/>
+20,000个马尔可夫链<span class="math inline">\(\pi\)</span>值的集合提供了对合理<span class="math inline">\(\pi\)</span>值的变异性和范围的<em>近似</em>感知。</p></li>
 </ul>
-<p>为了捕捉后期预测中的两种变异源,我们可以使用rbinom()来模拟2万个XQ3XQ链值中的每个XQ1XX结果XQ2XX. 前三个结果反映了一个总的趋势:小于QQ4的数值往往会产生小于QQ5的数值. 这有道理。 Gen X 艺术家在博物馆中的基本代表性越低,我们期望Gen X 艺术家在下一个20件艺术品样本中看到的就越少.</p>
-<div class="sourceCode" id="cb128">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>为了捕捉后验预测<span class="math inline">\(Y'\)</span>中的两种变异性来源，我们可以使用<code>scipy.stats.binom.rvs</code>从<em>每一个</em>20,000个<span class="math inline">\(\pi\)</span>链值中模拟一个<span class="math inline">\(\text{Bin}(20,\pi)\)</span>结果<span class="math inline">\(Y'\)</span>。
+前三个结果反映了一个总体趋势：较小的<span class="math inline">\(\pi\)</span>值<em>往往</em>会产生较小的<span class="math inline">\(Y'\)</span>值。
+这是合理的。
+博物馆中X世代艺术家的基础比例越低，我们在下一个20件艺术品的样本中期望看到的X世代艺术家就越少。</p>
+<div class="sourceCode" id="cb128"><pre><code class="language-python">import numpy as np
+# 设置随机种子
+np.random.seed(1)
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 设定种子
-rng = np.random.default_rng(1)
-# 预测链中每个 pi 值的值为 Y'。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>由此收集的20 000个预测与真实的后期预测分布非常接近(图8.7)。 20位艺术家中很可能有3位是Gen X或更年轻,</p>
-<div class="sourceCode" id="cb129">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+# 从后验链的每个 pi 值中预测 Y'（二项分布，n=20）
+art_chains_df['y_predict'] = np.random.binomial(n=20, p=art_chains_df['pi'])
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 预测20 000个预测
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 查看前三行
+art_chains_df.head(3)</code></pre></div>
+<p>由此得到的20,000个预测集合紧密地近似了真实的后验预测分布（图<a href="/bayes-rules-python-cn/chapter-8/#fig:art-pred-2-ch8">8.7</a>）。
+<em>最有可能</em>的情况是，20位艺术家中有3位属于X世代或更年轻，尽管这一数字可能合理地介于0到比如10之间：</p>
+<div class="sourceCode" id="cb129"><pre><code class="language-python">import matplotlib.pyplot as plt
+import numpy as np
+# 绘制预测值的直方图
+plt.hist(art_chains_df['y_predict'], bins=np.arange(0, 22) - 0.5, edgecolor='white')
+plt.xlabel('y_predict')
+plt.ylabel('频数')
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch8-hist" style="display:block;"></span>
-<img alt="y 预测值的直方图。 x轴上的y 预测值从0到12不等. 它们略微右倾,当y 预测值等于3. 时会有一个峰值,对于y 预测值大于8时,直方图下降至接近0。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch8-hist-1-13b4d1cc4183.png" width="240"/>
-<p class="caption">图8.11: 20000的直方图 模拟后期预测 未来20位艺术家中的人数</p>
+<img alt="A histogram of y_predict values. The y_predict values range from 0 to 12 on the x-axis. They are slightly right skewed, with a peak when y_predict equals 3. The histogram drops to near 0 for y_predict values above 8." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch8-hist-1-13b4d1cc4183.png" width="240"/>
+<p class="caption">
+图 8.11：20,000个模拟后验预测值的直方图，表示下一个20位艺术家中属于X世代或更年轻的人数。
+</p>
 </div>
-<p>我们还可以利用后期预测样本来大致确定实际后期预测模型的特征,这些特征在数学上是难以确定的。 例如,我们可以大致预测后期的意指预测, \(E(Y'|Y=14)\), 为此,我们预计接下来的20位艺术家中约有3位是Gen X或更年轻,但这个数字有可能在1到6位艺术家之间:</p>
-<div class="sourceCode" id="cb130">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+<p>我们也可以利用后验预测样本来<em>近似</em>实际后验预测模型中那些数学上难以精确指定的特征。例如，我们可以近似后验均值预测，<span class="math inline">\(E(Y'|Y=14)\)</span>，以及更全面的 <strong>后验预测区间</strong>（针对 <span class="math inline">\(Y'\)</span>）。据此，我们预计接下来 20 位艺术家中大约有 3 位属于 X 世代或更年轻，但有 80% 的概率这个数字介于 1 到 6 位之间：</p>
+<div class="sourceCode" id="cb130"><pre><code class="language-python">import pandas as pd
+# 计算预测值的汇总统计量
+mean = art_chains_df['y_predict'].mean()
+lower_80 = art_chains_df['y_predict'].quantile(0.1)
+upper_80 = art_chains_df['y_predict'].quantile(0.9)
+summary_df = pd.DataFrame({'mean': [mean], 'lower_80': [lower_80], 'upper_80': [upper_80]})
+print(summary_df)</code></pre></div>
 </div>
 </div>
 <div class="section level2" id="benefits-chapter-8" number="8.5">
-<h2>贝叶斯福利</h2>
-<p>在第一章中,我们强调了贝叶斯分析与频率学派分析的对比。 现在,我们通过一些具体的例子,让我们重新审视其中一些想法。 正如你可能经历的那样,巴耶斯分析中最艰难的部分往往是建立或模拟后验模型。 一旦我们找到那块东西,利用这一后台进行估计、假设测试和预测是相当直接的。 相比之下,建立公式来进行类似的频繁计算往往不那么直观。</p>
-<p>我们还可以轻而易举地解释贝叶斯的结果。 依据观测到的数据, 例如,考虑艺术家研究. 根据观察,在100名抽样的艺术家中,Gen X或更年轻,我们确定,Gen X在整个博物馆的代表人数有84.9%的后期机会,X X 低于0.20:</p>
-<p>\[P(\pi &lt; 0.20 \; | \; Y = 14) = 0.849 .\]</p>
-<p>在频繁的分析中, 在翻转脚本时,频繁分析根据XQ1的假设值评估观测到的数据的不确定性。 比方说,贝叶斯后期概率的频繁对应是p值,</p>
-<p>\[P(Y \le 14 \; | \; \pi = 0.20) = 0.08 .\]</p>
-<p>与贝叶斯的概率不同:如果贝叶斯的概率只有0. 20, 那么我们只有8%的机会观察到100名艺术家中最多有 5 个是X。 这不是我们在这里写的尴尬,而是p值。 尽管它确实为我们提供了一些有趣的信息,但它所回答的问题对于人类大脑来说是有点不太自然的:因为我们实际观察了数据,但并不知道QQ6,所以解释一个假设相反的计算可能是一种心灵的启发。 主要是,在测试假说时,更自然地会问“我的假说有多大可能呢?” 而不是“如果我的假说不是真的,我的数据有多大可能呢?” 鉴于p值经常被误解,因而被滥用,因此在整个经常主义者和贝叶斯人中,P值越来越被淡化。</p>
+<h2>贝叶斯的优势</h2>
+<p>在第 <a href="/bayes-rules-python-cn/chapter-1/#chapter-1">1</a> 章，我们曾对比了贝叶斯分析与频率学派分析。现在我们已经过了一些具体例子，让我们重温其中的一些想法。你或许已经体会到，贝叶斯分析最困难的部分往往是构建或模拟后验模型。一旦有了这个模型，利用后验进行估计、假设检验和预测就相当简单。相比之下，建立相应的频率学派计算公式往往不那么直观。</p>
+<p>我们也可以享受贝叶斯结果易于解释的好处。通常，一项 <strong>贝叶斯分析</strong> 会根据观测数据 <span class="math inline">\(Y\)</span> 来评估未知参数 <span class="math inline">\(\pi\)</span> 的不确定性。例如，考虑艺术家研究。根据观测到 100 位抽样艺术家中有 <span class="math inline">\(Y = 14\)</span> 位属于 X 世代或更年轻，我们得出整个博物馆中 X 世代比例 <span class="math inline">\(\pi\)</span> 低于 0.20 的后验概率为 84.9%：</p>
+<p><span class="math display">\[P(\pi &lt; 0.20 \; | \; Y = 14) = 0.849 .\]</span></p>
+<p>这种计算在频率学派分析中没有意义。反过来，一项 <strong>频率学派分析</strong> 会根据 <em>假定的</em> <span class="math inline">\(\pi\)</span> 值来评估观测数据 <span class="math inline">\(Y\)</span> 的不确定性。例如，与上述贝叶斯后验概率对应的频率学派指标是 <strong>p 值</strong>，其公式我们不在此展开：</p>
+<p><span class="math display">\[P(Y \le 14 \; | \; \pi = 0.20) = 0.08 .\]</span></p>
+<p>此概率中的条件顺序相反（给定 <span class="math inline">\(\pi\)</span> 的 <span class="math inline">\(Y\)</span> 而非给定 <span class="math inline">\(Y\)</span> 的 <span class="math inline">\(\pi\)</span>），导致了与贝叶斯概率不同的计算和解释：<strong>如果</strong> <span class="math inline">\(\pi\)</span> 仅为 0.20，那么我们观测到至多 <span class="math inline">\(Y = 14\)</span> 位 X 世代艺术家的概率只有 8%。这里不是我们的表述别扭，而是 p 值本身。尽管它确实提供了某种有趣的信息，但它回答的问题对人类大脑来说稍微不那么自然：因为我们实际 <em>观测</em> 到了数据但 <em>不</em> 知道 <span class="math inline">\(\pi\)</span>，去解释一个假设相反的结论会让人感到困惑。主要是，在进行假设检验时，问“我的假设有多大概率？”（贝叶斯概率所回答的）比问“如果我的假设不成立，我的数据有多大概率？”（频率学派概率所回答的）更自然。考虑到 p 值经常被误解和误用，它们在整个频率学派和贝叶斯领域都正在被淡化。</p>
 </div>
 <div class="section level2" id="chapter-summary-7" number="8.6">
-<h2>章节摘要</h2>
-<p>在第八章中,你学会了如何将后验模型变成答案. 也就是说,你使用精确或大致的后验模型, 执行三个后期分析任务, 一个未知参数 \\\\\\\\} 编号 :</p>
+<h2> 本章小结</h2>
+<p>在第8章，你学会了如何将后验模型转化为答案。也就是说，你利用精确或近似的后验模型，对未知参数 <span class="math inline">\(\pi\)</span> 执行三项后验分析任务：</p>
 <ol style="list-style-type: decimal">
-<li>B. 前期估计 之后的可信间隔提供了X\(\pi\)的后假值范围,从而感知X\(\pi\)中的后假典型值和不确定性.</li>
-<li>事后假说测试后方概率,</li>
-<li>未来预测 新数据点的后期预测模型 \(Y\) 既考虑到\(Y\)中的采样变异性,也考虑到\(\pi\)中的后期变异性.</li>
+<li><strong>后验估计</strong><br/>
+后验<strong>可信区间</strong>（credible interval）提供了 <span class="math inline">\(\pi\)</span> 的一个后验合理取值范围，进而让你对 <span class="math inline">\(\pi\)</span> 的后验典型值及不确定性都有所感知。</li>
+<li><strong>后验假设检验</strong><br/>
+后验概率有助于深入理解关于 <span class="math inline">\(\pi\)</span> 的相应假设。</li>
+<li><strong>后验预测</strong><br/>
+新数据点 <span class="math inline">\(Y\)</span> 的后验预测模型同时考虑了 <span class="math inline">\(Y\)</span> 的<em>抽样变异性</em>和 <span class="math inline">\(\pi\)</span> 的<em>后验变异性</em>。</li>
 </ol>
 <div style="page-break-after: always;"></div>
 </div>
 <div class="section level2" id="exercises-7" number="8.7">
-<h2>练习</h2>
+<h2> 习题</h2>
 <div class="section level3" id="conceptual-exercises-2" number="8.7.1">
-<h3>概念练习</h3>
+<h3> 概念题</h3>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-296"><strong>Exercise 8.1  (Posterior analysis)  </strong></span>What are the three common tasks in a posterior analysis?
+<span class="exercise" id="exr:unnamed-chunk-296"><strong>习题 8.1（后验分析）</strong></span>后验分析中常见的三项任务是什么？
 </div>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-297"><strong>Exercise 8.2  (Warming up)  </strong></span>
+<span class="exercise" id="exr:unnamed-chunk-297"><strong>练习 8.2（热身）</strong></span>
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>在估算一些参数时,</li>
-<li>\(\lambda\)的95%可信间隔 为(1.3.4)。 你怎么解释?</li>
+<li>在估计某个参数 <span class="math inline">\(\lambda\)</span> 时，只报告 <span class="math inline">\(\lambda\)</span> 后验模型的集中趋势有哪些缺点？</li>
+<li><span class="math inline">\(\lambda\)</span> 的 95% 可信区间为 (1,3.4)。你会如何解释这个区间？</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-298"><strong>Exercise 8.3  (Hypothesis testing?)  </strong></span>In each situation below, indicate whether the issue at hand could be addressed using a <em>hypothesis test</em>.
+<span class="exercise" id="exr:unnamed-chunk-298"><strong>练习 8.3（假设检验？）</strong></span>对于下面的每种情形，指出当前问题是否可以使用 <em>假设检验</em> 来解决。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>你的朋友Trichelle声称狗园超过40%的狗没有狗执照.</li>
-<li>您的教授有兴趣了解一所大型大学中听说过贝叶斯统计数据的学生比例.</li>
-<li>一位环保司法倡导者想知道,</li>
-<li>Sarah正在研究Ptolemy的语法数学文本,并希望调查Ptolemy每页文本使用一定的论证模式的次数. 根据Ptolemy的其他著作, 萨拉不读所有13卷《语法数学》,而是随机抽取90页。</li>
+<li>你的朋友 Trichelle 声称，狗公园里有超过 40% 的狗没有狗证。</li>
+<li>你的教授想了解一所大型大学中听说过贝叶斯统计的学生的比例。</li>
+<li>一位环境正义倡导者想知道他们所在的州是否有超过 60% 的选民支持一项新法规。</li>
+<li>Sarah 正在研究托勒密的《天文学大成》（<em>Syntaxis Mathematica</em>），她想考察托勒密每页文本中使用某种论证方式的次数。根据托勒密的其他著作，她认为大约是每页 3 次。Sarah 没有通读全部 13 卷《天文学大成》，而是随机抽取了 90 页。</li>
 </ol>
-<!-- AJ: happy to put this back in. i commented out given the above exercise and that these concepts were used relatively interchangeably in the text -->
-<!-- In each situation below, indicate whether calculating a _credible interval_ or conducting a _hypothesis test_ would be most appropriate. -->
-<!-- a) Your friend believes that the average age of elected officials in Mexico is greater than 55 years. You collect information on a random sample of 100 elected officials and put a vague normal prior on the average age of elected officials in Mexico. -->
-<!-- a) A professor wants to prove that students in classes with inclusive teaching practices perform better on final exams than the average of 79. They take a random sample of final exam grades from students in classes with inclusive teaching practices, and put a vague normal prior on the average final exam grade.  -->
-<!-- a) Your cousin is interested in learning about the proportion of avocados bought at a supermarket that are ripe and ready to eat within 5 days of purchase. They think about 40\% will be ripe within 5 days, but think it could be as low as 28\% or as high as 56\%. They get a random sample of 200 avocados to help them answer this question. -->
-<!-- a) Your sibling is applying to graduate programs, and is interested in learning about the proportion of programs that do not require the GRE in their applications. Your sibling has heard about the #GRExit movement to discontinue the GRE as a requirement for applying to graduate school and thinks that based on what they have heard about 16\% of programs do not require the GRE. Your sibling takes a random sample of 50 STEM graduate programs to help them answer their question.  -->
+ AJ: happy to put this back in. i commented out given the above exercise and that these concepts were used relatively interchangeably in the text
+ In each situation below, indicate whether calculating a _credible interval_ or conducting a _hypothesis test_ would be most appropriate.
+ a) Your friend believes that the average age of elected officials in Mexico is greater than 55 years. You collect information on a random sample of 100 elected officials and put a vague normal prior on the average age of elected officials in Mexico.
+ a) A professor wants to prove that students in classes with inclusive teaching practices perform better on final exams than the average of 79. They take a random sample of final exam grades from students in classes with inclusive teaching practices, and put a vague normal prior on the average final exam grade.
+ a) Your cousin is interested in learning about the proportion of avocados bought at a supermarket that are ripe and ready to eat within 5 days of purchase. They think about 40\% will be ripe within 5 days, but think it could be as low as 28\% or as high as 56\%. They get a random sample of 200 avocados to help them answer this question.
+ a) Your sibling is applying to graduate programs, and is interested in learning about the proportion of programs that do not require the GRE in their applications. Your sibling has heard about the #GRExit movement to discontinue the GRE as a requirement for applying to graduate school and thinks that based on what they have heard about 16\% of programs do not require the GRE. Your sibling takes a random sample of 50 STEM graduate programs to help them answer their question.
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-299"><strong>Exercise 8.4  (Bayes Factor)  </strong></span>Answer questions about Bayes Factors from your friend Enrique who has a lot of frequentist statistics experience, but is new to Bayes.
+<span class="exercise" id="exr:unnamed-chunk-299"><strong>练习 8.4 (贝叶斯因子)  </strong></span>请回答你的朋友 Enrique 提出的关于贝叶斯因子的几个问题。Enrique 有丰富的频率学派统计经验，但对贝叶斯方法还很陌生。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>后缘几何?</li>
-<li>之前的机会是什么?</li>
-<li>贝叶斯因素是什么,</li>
+<li>什么是<em>后验优势（posterior odds）</em>？</li>
+<li>什么是<em>先验优势（prior odds）</em>？</li>
+<li>什么是<em>贝叶斯因子（Bayes Factor）</em>？我们为什么想要计算它？</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-300"><strong>Exercise 8.5  (Posterior prediction: concepts)  </strong></span>
+<span class="exercise" id="exr:unnamed-chunk-300"><strong>练习 8.5 (后验预测：概念)  </strong></span>
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>后期预测模型包含哪两类可变性? 定义每种类型, 您的非巴耶统计学朋友可以理解。</li>
-<li>描述一种现实状况,即进行后期预测会有帮助。</li>
-<li>后期预测模型是以数据、参数或数据和参数为条件的?</li>
+<li>后验预测模型包含了哪两种类型的变异性？请分别定义，让你的非贝叶斯统计朋友也能理解。</li>
+<li>描述一个在现实生活中进行后验预测会很有帮助的情形。</li>
+<li>后验预测模型的条件是仅依赖于数据、仅依赖于参数，还是同时依赖于数据和参数？</li>
 </ol>
 </div>
 <div class="section level3" id="practice-exercises" number="8.7.2">
-<h3>实践练习</h3>
+<h3> 练习</h3>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-301"><strong>Exercise 8.6  (Credible intervals: Part I)  </strong></span>For each situation, find the appropriate credible interval using the “middle” approach.
+<span class="exercise" id="exr:unnamed-chunk-301"><strong>练习 8.6（可信区间：第一部分）</strong></span>对于每种情况，使用“中间”方法找到合适的可信区间。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>95%的可信间隔 用 QQ 1 键</li>
-<li>## # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 用 QQ 1 键</li>
-<li>95%的可信间隔 用 QQ 1 键</li>
+<li>对于 <span class="math inline">\(\pi\)</span> 的 95% 可信区间，其中 <span class="math inline">\(\pi|y \sim \text{Beta}(4,5)\)</span></li>
+<li>对于 <span class="math inline">\(\pi\)</span> 的 60% 可信区间，其中 <span class="math inline">\(\pi|y \sim \text{Beta}(4,5)\)</span></li>
+<li>对于 <span class="math inline">\(\lambda\)</span> 的 95% 可信区间，其中 <span class="math inline">\(\lambda|y \sim \text{Gamma}(1,8)\)</span></li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-302"><strong>Exercise 8.7  (Credible intervals: Part II)  </strong></span>For each situation, find the appropriate credible interval using the “middle” approach.
+<span class="exercise" id="exr:unnamed-chunk-302"><strong>练习 8.7（可信区间：第二部分）</strong></span>对于每种情况，使用“中间”方法找到合适的可信区间。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>99%的可信间隔为 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\9% 用 QQ 1 键</li>
-<li>95%的可信间隔值为%%%%%% 用 QQ 1 键</li>
-<li>百分之八十的可信间隔。 用 QQ 1 键</li>
+<li>对于 <span class="math inline">\(\lambda\)</span> 的 99% 可信区间，其中 <span class="math inline">\(\lambda|y \sim \text{Gamma}(1,5)\)</span></li>
+<li>对于 <span class="math inline">\(\mu\)</span> 的 95% 可信区间，其中 <span class="math inline">\(\mu|y \sim \text{N}(10, 2^2)\)</span></li>
+<li>给定 <span class="math inline">\(\mu|y \sim \text{N}(-3, 1^2)\)</span>，<span class="math inline">\(\mu\)</span> 的 80% 可信区间</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-303"><strong>Exercise 8.8  (Credible intervals: highest posterior density)  </strong></span>There’s more than one approach to constructing a 95% credible interval. The “middle 95%” approach reports the range of the middle 95% of the posterior density, from the 2.5th to the 97.5th percentile. The “highest posterior density” approach reports the 95% of posterior values with the highest posterior densities.
+<span class="exercise" id="exr:unnamed-chunk-303"><strong>练习 8.8  (可信区间: 最高后验密度)  </strong></span>构造 95% 可信区间的方法不止一种。“中间 95%”方法给出后验密度中间 95% 的范围，从第 2.5 百分位到第 97.5 百分位。“最高后验密度”方法给出后验密度最高的 95% 的后验值。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>让~~~~~~~. 构造% 1% 95% 的最高后期密度可信间隔。 在后pdf的草图上代表这个间隔. 提示 : 草图本身会帮助你确定合适的CI.</li>
-<li>使用95%的中位法重复部分。</li>
-<li>比较a和b两部分的间隔。 它们是一样的吗? 如果没有,它们有何不同,哪些更合适?</li>
-<li>让~~~~~~~. 构造% 1% 95% 的最高后期密度可信间隔。</li>
-<li>采用95%的中间方法重复d部分。</li>
-<li>比较d部分和e部分的两个间隔。 都一样吗? 如果不是,为什么不呢?</li>
+<li>设 <span class="math inline">\(\lambda|y \sim \text{Gamma}(1,5)\)</span>。构造 <span class="math inline">\(\lambda\)</span> 的 95% 最高后验密度可信区间。在事后 pdf 的草图上表示此区间。提示：草图本身会帮助你识别合适的 CI。</li>
+<li>使用中间 95% 方法重复 (a) 部分。</li>
+<li>比较 (a) 和 (b) 中的两个区间。它们相同吗？如果不相同，它们有何不同，哪个在这里更合适？</li>
+<li>设 <span class="math inline">\(\mu|y \sim \text{N}(-13, 2^2)\)</span>。构造 <span class="math inline">\(\mu\)</span> 的 95% 最高后验密度可信区间。</li>
+<li>使用中间 95% 方法重复 (d) 部分。</li>
+<li>比较 (d) 和 (e) 中的两个区间。它们相同吗？如果不相同，为什么？</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:ch8test"><strong>Exercise 8.9  (Hypothesis tests: Part I)  </strong></span>For parameter <span class="math inline">\(\pi\)</span>, suppose you have a Beta(1,0.8) prior model and a Beta(4,3) posterior. You wish to test the null hypothesis that <span class="math inline">\(\pi \le 0.4\)</span> versus the alternative that <span class="math inline">\(\pi &gt; 0.4\)</span>.
+<span class="exercise" id="exr:ch8test"><strong>练习 8.9  (假设检验：第一部分)  </strong></span>对于参数 <span class="math inline">\(\pi\)</span>，假设你有一个 Beta(1,0.8) 先验模型和一个 Beta(4,3) 后验。你想检验原假设 <span class="math inline">\(\pi \le 0.4\)</span> 对备择假设 <span class="math inline">\(\pi &gt; 0.4\)</span>。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>替代假设的后期概率是多少?</li>
-<li>计算和解释后机率。</li>
-<li>计算和解释先验的概率。</li>
-<li>计算和解释 Bayes 系数。</li>
-<li>把这些合并起来,解释你对这些假设的结论 给一个不熟悉贝叶斯统计数据的人</li>
+<li>备择假设的后验概率是多少？</li>
+<li>计算并解释后验优势。</li>
+<li>计算并解释先验优势。</li>
+<li>计算并解释贝叶斯因子。</li>
+<li>综合以上，向不熟悉贝叶斯统计的人解释你对这些假设的结论。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-304"><strong>Exercise 8.10  (Hypothesis tests: Part II)  </strong></span>Repeat Exercise <a href="/bayes-rules-python-cn/chapter-8/#exr:ch8test">8.9</a> for the following scenario. For parameter <span class="math inline">\(\mu\)</span>, suppose you have a <span class="math inline">\(N(10,10^2)\)</span> prior model, a <span class="math inline">\(N(5,3^2)\)</span> posterior, and you wish to test <span class="math inline">\(H_0: \mu \ge 5.2\)</span> versus <span class="math inline">\(H_a: \mu &lt; 5.2\)</span>.
+<span class="exercise" id="exr:unnamed-chunk-304"><strong>练习 8.10  (假设检验：第二部分)  </strong></span>对于参数 <span class="math inline">\(\mu\)</span>，重复练习 <a href="/bayes-rules-python-cn/chapter-8/#exr:ch8test">8.9</a>，但使用以下场景：假设你有一个 <span class="math inline">\(N(10,10^2)\)</span> 先验模型，一个 <span class="math inline">\(N(5,3^2)\)</span> 后验，且你想检验 <span class="math inline">\(H_0: \mu \ge 5.2\)</span> 对 <span class="math inline">\(H_a: \mu &lt; 5.2\)</span>。
 </div>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-305"><strong>Exercise 8.11  (Posterior predictive Beta-Binomial: with calculus)  </strong></span>As discussed in Section <a href="/bayes-rules-python-cn/chapter-8/#ch8-post-pred">8.3</a>, it is sometimes possible to derive an exact posterior predictive model. Such is the case with the conjugate models we have studied thus far. To begin, suppose we observe <span class="math inline">\(Y=y\)</span> successes in <span class="math inline">\(n\)</span> trials where <span class="math inline">\(Y | \pi \sim \text{Bin}(n,\pi)\)</span> and <span class="math inline">\(\pi\)</span> has a Beta(<span class="math inline">\(\alpha, \beta\)</span>) prior.
+<span class="exercise" id="exr:unnamed-chunk-305"><strong>练习 8.11  (后验预测 Beta-二项：使用微积分)  </strong></span>正如第 <a href="/bayes-rules-python-cn/chapter-8/#ch8-post-pred">8.3</a> 节讨论的，有时可以推导出精确的后验预测模型。我们目前研究的共轭模型就是这种情况。首先，假设我们观察到 <span class="math inline">\(Y=y\)</span> 次成功，共进行 <span class="math inline">\(n\)</span> 次试验，其中 <span class="math inline">\(Y | \pi \sim \text{Bin}(n,\pi)\)</span> 且 <span class="math inline">\(\pi\)</span> 有 Beta(<span class="math inline">\(\alpha, \beta\)</span>) 先验。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>根据观测到的数据, 注: 这将取决于 QQ3。</li>
-<li>假设我们进行新审判, 识别 QQ 4 的 pmf 给 QQ 5 , QQ 6。 注: 这将取决于 QQ7。</li>
-<li>确定后期预测pmf =%0@@,%1@@. 注: 使用( 8. 4) 找到的 pmf , 取决于 QQ 2。</li>
-<li>假设你的后座模型是基于前座模型, 我们计划进行新审判 请指定后预测的 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 注: 这应该符合(8.5).</li>
-<li>继续D部分,假设我们计划进行新审判。 指定并勾画后预测的 ++++的pmf , 以及在这4次试验中我们可能观察到的成功次数。</li>
+<li>根据观测数据 <span class="math inline">\(Y = y\)</span>，确定 <span class="math inline">\(\pi\)</span> 的后验概率密度函数 <span class="math inline">\(f(\pi|y)\)</span>。注意：这将依赖于 <span class="math inline">\((y, n, \alpha, \beta, \pi)\)</span>。</li>
+<li>假设我们进行 <span class="math inline">\(n'\)</span> 次<em>新</em>试验（其中 <span class="math inline">\(n'\)</span> 可能不同于最初的试验次数 <span class="math inline">\(n\)</span>），并令 <span class="math inline">\(Y' = y'\)</span> 为这些新试验中观测到的成功次数。确定给定 <span class="math inline">\(\pi\)</span> 时 <span class="math inline">\(Y'\)</span> 的条件概率质量函数 <span class="math inline">\(f(y'|\pi)\)</span>。注意：这将依赖于 <span class="math inline">\((y', n', \pi)\)</span>。</li>
+<li>确定 <span class="math inline">\(Y'\)</span> 的后验预测概率质量函数 <span class="math inline">\(f(y'|y)\)</span>。注意：此概率质量函数通过 <a href="/bayes-rules-python-cn/chapter-8/#eq:ch8-pred-pmf-formal">(8.4)</a> 求得，将依赖于 <span class="math inline">\((y, n, y', n', \alpha, \beta)\)</span>。</li>
+<li>如第 <a href="/bayes-rules-python-cn/chapter-8/#ch8-post-pred">8.3</a> 节中的例子，假设你对 <span class="math inline">\(\pi\)</span> 的后验模型基于 <span class="math inline">\(\alpha = 4\)</span> 和 <span class="math inline">\(\beta = 6\)</span> 的先验模型，以及在 <span class="math inline">\(n = 100\)</span> 次初始试验中观测到 <span class="math inline">\(y = 14\)</span> 次成功。我们计划进行 <span class="math inline">\(n' = 20\)</span> 次<em>新</em>试验。请给出 <span class="math inline">\(Y'\)</span> 的后验预测概率质量函数，即我们在 20 次试验中可能观测到的成功次数。注意：这应与 <a href="/bayes-rules-python-cn/chapter-8/#eq:ch8-pred-pmf">(8.5)</a> 一致。</li>
+<li>接续(d)部分，假设我们改为进行 <span class="math inline">\(n' = 4\)</span> 次<em>新</em>试验。请给出<em>并绘制</em> <span class="math inline">\(Y'\)</span> 的后验预测概率质量函数，即我们在 4 次试验中可能观测到的成功次数。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-306"><strong>Exercise 8.12  (Posterior predictive Gamma-Poisson: with calculus)  </strong></span>Suppose we have observed count data, <span class="math inline">\(Y = y\)</span>, where <span class="math inline">\(Y|\lambda \sim \text{Pois}(\lambda)\)</span> and <span class="math inline">\(\lambda\)</span> has a Gamma(<span class="math inline">\(s, r\)</span>) prior.
+<span class="exercise" id="exr:unnamed-chunk-306"><strong>练习 8.12（后验预测 Gamma-泊松：微积分方法）</strong></span>假设我们观测到计数数据 <span class="math inline">\(Y = y\)</span>，其中 <span class="math inline">\(Y|\lambda \sim \text{Pois}(\lambda)\)</span>，且 <span class="math inline">\(\lambda\)</span> 的先验分布为 Gamma(<span class="math inline">\(s, r\)</span>)。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>根据观测到的数据,</li>
-<li>让\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 识别 QQ1 的 pmf 给 QQ2 , QQ3 的有条件 pmf。</li>
-<li>确定后期预测pmf =%0@@,%1@@. 注: 这取决于 QQ2。</li>
-<li>假设你的后验模型 QQ0XX是基于之前的模型 与QQ1XX和XQ2XX和XQ3XX事件 在你的最初观察期。 指定 QQ4 的后预测 pmf , 指定下一个观测期可能观察到的事件数量。</li>
-<li>绘制并讨论d部分的后期预测pmf.</li>
+<li>根据观测数据 <span class="math inline">\(Y = y\)</span>，确定 <span class="math inline">\(\lambda\)</span> 的后验概率密度函数 <span class="math inline">\(f(\lambda|y)\)</span>。</li>
+<li>令 <span class="math inline">\(Y' = y'\)</span> 为在<em>新</em>观测期内将发生的事件数。确定给定 <span class="math inline">\(\lambda\)</span> 时 <span class="math inline">\(Y'\)</span> 的条件概率质量函数 <span class="math inline">\(f(y'|\lambda)\)</span>。</li>
+<li>识别 <span class="math inline">\(Y'\)</span> 的后验预测概率质量函数 <span class="math inline">\(f(y'|y)\)</span>。注意：这将依赖于 <span class="math inline">\((y, y', s, r)\)</span>。</li>
+<li>假设你对 <span class="math inline">\(\lambda\)</span> 的后验模型基于一个先验模型，其中 <span class="math inline">\(s = 50\)</span>、<span class="math inline">\(r = 50\)</span>，且原始观测期内有 <span class="math inline">\(y = 7\)</span> 个事件。请指定 <span class="math inline">\(Y'\)</span> 的后验预测概率质量函数，即我们在下一个观测期内可能观测到的事件数量。</li>
+<li>绘制并讨论 (d) 部分的后验预测概率质量函数。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-307"><strong>Exercise 8.13  (Posterior predictive Normal-Normal: with calculus)  </strong></span>Let <span class="math inline">\(Y = y\)</span> be an observed data point from a <span class="math inline">\(N(\mu, \sigma^2)\)</span> model. Further, suppose <span class="math inline">\(\sigma\)</span> is known and that <span class="math inline">\(\mu\)</span> is unknown with a <span class="math inline">\(N(\theta, \tau^2)\)</span> prior.
+<span class="exercise" id="exr:unnamed-chunk-307"><strong>练习 8.13 （后验预测正态-正态：使用微积分）  </strong></span> 设 <span class="math inline">\(Y = y\)</span> 是来自 <span class="math inline">\(N(\mu, \sigma^2)\)</span> 模型的一个观测数据点。进一步假设 <span class="math inline">\(\sigma\)</span> 已知，而 <span class="math inline">\(\mu\)</span> 未知，且采用 <span class="math inline">\(N(\theta, \tau^2)\)</span> 先验。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>根据观测到的数据,</li>
-<li>让 QQ0 QQ 成为新数据点的值。 确定 QQ 1 的 pdf 条件。</li>
-<li>确定 \(Y'\) \(f(y'|y)\) 的后预测 pdf.</li>
-<li>{\fn黑体\fs22\bord1\shad0\3aHBE\4aH00\fscx67\fscy66\2cHFFFFFF\3cH808080}如果... 指定并勾画 &amp; &gt; 4 &gt; 的后导 pdf。</li>
+<li>识别给定观测数据后 <span class="math inline">\(\mu\)</span> 的后验概率密度函数 <span class="math inline">\(f(\mu|y)\)</span>。</li>
+<li>设 <span class="math inline">\(Y' = y'\)</span> 为<em>新</em>数据点的取值。识别给定 <span class="math inline">\(\mu\)</span> 时 <span class="math inline">\(Y'\)</span> 的条件概率密度函数 <span class="math inline">\(f(y'|\mu)\)</span>。</li>
+<li>识别 <span class="math inline">\(Y'\)</span> 的后验预测概率密度函数 <span class="math inline">\(f(y'|y)\)</span>。</li>
+<li>假设 <span class="math inline">\(y = -10\)</span>，<span class="math inline">\(\sigma = 3\)</span>，<span class="math inline">\(\theta = 0\)</span>，且 <span class="math inline">\(\tau = 1\)</span>。指定并草图绘制 <span class="math inline">\(Y'\)</span> 的后验预测概率密度函数。</li>
 </ol>
 </div>
 <div class="section level3" id="applied-exercises" number="8.7.3">
-<h3>应用练习</h3>
+<h3> 应用练习</h3>
 <div class="exercise">
-<span class="exercise" id="exr:ch8-climate"><strong>Exercise 8.14  (Climate change: estimation)  </strong></span>Let <span class="math inline">\(\pi\)</span> denote the proportion of U.S. adults that do not believe in climate change. To learn about <span class="math inline">\(\pi\)</span>, we’ll use survey data on <span class="math inline">\(n\)</span> adults and count up the number of these that don’t believe in climate change, <span class="math inline">\(Y\)</span>.
+<span class="exercise" id="exr:ch8-climate"><strong>练习 8.14  (气候变化：估计)  </strong></span>令 <span class="math inline">\(\pi\)</span> 表示不相信气候变化的美国成年人比例。为了了解 <span class="math inline">\(\pi\)</span>，我们将使用 <span class="math inline">\(n\)</span> 个成年人的调查数据，并统计其中不相信气候变化的人数 <span class="math inline">\(Y\)</span>。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>解释哪些贝叶斯模型适合这一分析:贝塔-比诺米亚尔,伽玛-波森,或普通-诺马尔.</li>
-<li>指定并讨论您自己的前款 {0} 模式。。。</li>
-<li>在剩下的时间里, 你先验的理解与提交人的理解有何不同?</li>
-<li>使用来自bayesrules软件包的脉冲 the nation数据,报告被调查成年人的样本比例,认为气候变化不是真实的。</li>
-<li>参照Beta(1, 2) 之前和数据, 计算和解释 &amp;\\\\\\\ 95%后可信间隔。 说明:您首先需要指定您在 QQ 1 的后置模式。</li>
+<li>解释哪种贝叶斯模型适用于此分析：Beta-二项、Gamma-泊松，还是正态-正态。</li>
+<li>提出并讨论你自己关于 <span class="math inline">\(\pi\)</span> 的先验模型。</li>
+<li>在本练习的剩余部分，我们将使用作者选择的 Beta(1,2) 先验分布来表达 <span class="math inline">\(\pi\)</span>。你原先的理解与作者的有何不同？</li>
+<li>使用 <strong>bayesrules</strong> 数据资源中的 <code>pulse_of_the_nation</code> 数据，报告认为 <code>climate_change</code> <code>Not Real At All</code> 的受访成年人的样本比例。</li>
+<li>根据 Beta(1,2) 先验和观测数据，计算并解释 <span class="math inline">\(\pi\)</span> 的（中间）95% 后验可信区间。注意：你首先需要明确 <span class="math inline">\(\pi\)</span> 的后验模型。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:ch8-climate-2"><strong>Exercise 8.15  (Climate change: hypothesis testing)  </strong></span>Continuing the analysis from Exercise <a href="/bayes-rules-python-cn/chapter-8/#exr:ch8-climate">8.14</a>, suppose you wish to test a researcher’s claim that more than 10% of people believe in climate change: <span class="math inline">\(H_0:\)</span> <span class="math inline">\(\pi \le 0.1\)</span> versus <span class="math inline">\(H_a:\)</span> <span class="math inline">\(\pi &gt; 0.1\)</span>.
+<span class="exercise" id="exr:ch8-climate-2"><strong>练习 8.15  (气候变化：假设检验)  </strong></span>继续练习 <a href="/bayes-rules-python-cn/chapter-8/#exr:ch8-climate">8.14</a> 的分析，假设你想检验一位研究者的说法：超过 10% 的人相信气候变化是假的：<span class="math inline">\(H_0:\)</span> <span class="math inline">\(\pi \le 0.1\)</span> 对 <span class="math inline">\(H_a:\)</span> <span class="math inline">\(\pi &gt; 0.1\)</span>。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>利用前次演习的可信间隔,你对这些假设可以做出什么决定?</li>
-<li>计算和解释 {0} 的后验概率。</li>
-<li>计算和解释您假设测试的贝叶斯系数。</li>
-<li>来解释一下你对"0"的结论。</li>
+<li>利用前一个练习的可信区间，你可能对这些假设做出什么决策？</li>
+<li>计算并解释 <span class="math inline">\(H_a\)</span> 的后验概率。</li>
+<li>计算并解释假设检验的贝叶斯因子。</li>
+<li>综合以上内容，解释你对 <span class="math inline">\(\pi\)</span> 的结论。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-308"><strong>Exercise 8.16  (Climate change with MCMC: simulation)  </strong></span>In the next exercises, you’ll repeat and build upon your climate change analysis using MCMC simulation.
+<span class="exercise" id="exr:unnamed-chunk-308"><strong>练习 8.16（使用 MCMC 模拟分析气候变化）</strong></span>在后续练习中，你将使用 MCMC 模拟重复并深化气候变化分析。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>模拟 0@@的后验模型,即不相信气候变化的美国成年人比例,rstan使用4条链条,每条链条重复1000次.</li>
-<li>制作并讨论微量地块,覆盖密度地块,以及四条链条的自动化地块.</li>
-<li>报告您模拟的有效样本量比和 R- hat 值, 解释这些值在上下文中的含义。</li>
+<li>使用 <strong>PyMC</strong> 模拟 <span class="math inline">\(\pi\)</span> 的后验模型，即不相信气候变化的美国成年人比例，使用 4 条链，每条链 10000 次迭代。</li>
+<li>生成并讨论四条链的迹图、重叠密度图和自相关图。</li>
+<li>报告模拟的有效样本量比和 R-hat 值，并解释这些值在该情境下的含义。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-309"><strong>Exercise 8.17  (Climate change with MCMC: estimation and hypothesis testing)  </strong></span>
+<span class="exercise" id="exr:unnamed-chunk-309"><strong>练习 8.17 （使用MCMC进行气候变化分析：估计与假设检验）  </strong></span>
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>使用您的 MCMC 模拟, 大约95% 后可信间隔。 使用整齐()快捷键函数以及从链条值直接计算。</li>
-<li>利用你的MCMC模拟 来估计后期的概率。</li>
-<li>a和b部分的近似值与您在8.14和8.15演习中计算的实际相应后值相近吗?</li>
+<li>利用你的MCMC模拟来<em>近似</em>一个（中间的）95% 后验可信区间。可以使用 <code>tidy()</code> 快捷函数，也可以从你的链值中直接计算。</li>
+<li>利用你的MCMC模拟来<em>近似</em> <span class="math inline">\(\pi &gt; 0.1\)</span> 的后验概率。</li>
+<li>你在 (a) 和 (b) 部分得到的近似值与你在练习 <a href="/bayes-rules-python-cn/chapter-8/#exr:ch8-climate">8.14</a> 和 <a href="/bayes-rules-python-cn/chapter-8/#exr:ch8-climate-2">8.15</a> 中计算的实际后验值有多接近？</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-310"><strong>Exercise 8.18  (Climate change with MCMC: prediction)  </strong></span>
+<span class="exercise" id="exr:unnamed-chunk-310"><strong>练习 8.18 （使用MCMC进行气候变化分析：预测）  </strong></span>
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>假设你还要调查100个成年人 使用您的 MCMC 模拟, 以近似于 0@@的后期预测模型, 构造此模型的直方图可视化。</li>
-<li>总结你对后期预测模型的观察,</li>
-<li>估计100人中至少有20人不相信气候变化。</li>
+<li>假设你打算再调查100位成年人。利用你的MCMC模拟来近似 <span class="math inline">\(Y'\)</span> 的后验预测模型，其中 <span class="math inline">\(Y'\)</span> 是不相信气候变化的人数。为该模型构建一个直方图可视化。</li>
+<li>总结你对 <span class="math inline">\(Y'\)</span> 后验预测模型的观察结果。</li>
+<li>近似计算100人中至少有20人不相信气候变化的概率。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-311"><strong>Exercise 8.19  (Penguins: estimation)  </strong></span>Let <span class="math inline">\(\mu\)</span> denote the typical flipper length (in mm) among the <em>Adelie</em> penguin species. To learn about <span class="math inline">\(\mu\)</span>, we’ll utilize flipper measurements <span class="math inline">\((Y_1,Y_2,\dots,Y_n)\)</span> on a sample of Adelie penguins.
+<span class="exercise" id="exr:unnamed-chunk-311"><strong>练习 8.19（企鹅：估计）</strong></span>设 <span class="math inline">\(\mu\)</span> 表示 <em>阿德利</em> 企鹅物种的典型鳍肢长度（单位：毫米）。为了了解 <span class="math inline">\(\mu\)</span>，我们将利用来自阿德利企鹅样本的鳍肢测量值 <span class="math inline">\((Y_1,Y_2,\dots,Y_n)\)</span>。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>解释哪些贝叶斯模型适合这一分析:贝塔-比诺米亚尔,伽玛-波森,或普通-诺马尔.</li>
-<li>你之前的理解是,所有阿德利企鹅的平均翻转长度大约为200毫米,但你并不非常确定。 140毫米或260毫米的平均值可能很低,。。。</li>
-<li>海湾规则包中的企鹅 bayes数据包含三个不同企鹅物种样本的翻转长度数据. Adelie物种有多少数据点,</li>
-<li>根据您先验的数据, 计算和解释 &amp; &gt; 0 的95% 后可信间隔。 说明:您首先需要指定您在 QQ 1 的后置模式。</li>
+<li>解释哪种贝叶斯模型适合这个分析：Beta-二项、Gamma-泊松还是正态-正态。</li>
+<li>你的先验认识是所有阿德利企鹅的平均鳍肢长度约为 200 毫米，但你不太确定。平均长度可能低至 140 毫米或高达 260 毫米。为 <span class="math inline">\(\mu\)</span> 指定一个合适的先验模型。</li>
+<li><strong>bayesrules</strong> 数据包中的 <code>penguins_bayes</code> 数据集包含三种不同企鹅物种样本的鳍肢长度数据。对于 <em>阿德利</em> <code>物种</code>，数据点有多少？样本均值 <code>flipper_length_mm</code> 是多少？</li>
+<li>根据你的先验和数据，计算并解释 <span class="math inline">\(\mu\)</span> 的（中间）95% 后验可信区间。注意：你需要首先指定 <span class="math inline">\(\mu\)</span> 的后验模型。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-312"><strong>Exercise 8.20  (Penguins: hypothesis testing)  </strong></span>Let’s continue our analysis of <span class="math inline">\(\mu\)</span>, the typical flipper length (in mm) among the <em>Adelie</em> penguin species.
+<span class="exercise" id="exr:unnamed-chunk-312"><strong>练习 8.20（企鹅：假设检验）</strong></span>我们继续分析 <span class="math inline">\(\mu\)</span>，即 <em>阿德利</em> 企鹅物种的典型鳍肢长度（单位：毫米）。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>您假设平均Adelie翻转长度在200毫米至220毫米之间。 请将此作为正式假说测试( 使用 {0}、\\ 1} 和\ 2} 标记 )。 注: 这是一个双面假说测试!</li>
-<li>利用前次演习的可信间隔,你对这些假设可以做出什么决定?</li>
-<li>计算和解释您的假设是真实的后验概率。</li>
-<li>来解释一下你对"0"的结论。</li>
+<li>你假设阿德利企鹅的平均鳍肢长度在 200 毫米到 220 毫米之间。将此表述为正式的假设检验（使用 <span class="math inline">\(H_0\)</span>、<span class="math inline">\(H_a\)</span> 和 <span class="math inline">\(\mu\)</span> 记号）。<strong>注意：</strong>这是一个双侧假设检验！</li>
+<li>利用之前练习中的可信区间，你可能会对这些假设做出什么决定？</li>
+<li>计算并解释你的假设为真的后验概率。</li>
+<li>综合以上，解释你对 <span class="math inline">\(\mu\)</span> 的结论。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:ch8-loon-1"><strong>Exercise 8.21  (Loons: estimation)  </strong></span>The <em>loon</em> is a species of bird common to the Ontario region of Canada. Let <span class="math inline">\(\lambda\)</span> denote the typical number of loons observed by a birdwatcher across a 100-hour observation period. To learn about <span class="math inline">\(\lambda\)</span>, we’ll utilize bird counts <span class="math inline">\((Y_1,Y_2,\dots,Y_n)\)</span> collected in <span class="math inline">\(n\)</span> different outings.
+<span class="exercise" id="exr:ch8-loon-1"><strong>习题 8.21（潜鸟：估计）</strong></span><em>潜鸟</em>是加拿大安大略地区常见的一种鸟类。令 <span class="math inline">\(\lambda\)</span> 表示一名观鸟者在 100 小时观察期内观察到的潜鸟典型数量。为了解 <span class="math inline">\(\lambda\)</span>，我们将利用在 <span class="math inline">\(n\)</span> 次不同外出中收集的鸟类计数 <span class="math inline">\((Y_1,Y_2,\dots,Y_n)\)</span>。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>解释哪些贝叶斯模型适合这一分析:贝塔-比诺米亚尔,伽玛-波森,或普通-诺马尔.</li>
-<li>你之前的理解是,典型的视线偏移率为每100小时2次,标准偏移率为每100小时1次. 指定一个合适的 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\</li>
-<li>Baylesrules软件包中的数据包含不同100小时观测期的loon计数. 我们有多少数据点,每100小时平均损失多少?</li>
-<li>根据您先验的数据, 计算和解释 &amp; &gt; 0 的95% 后可信间隔。 说明:您首先需要指定您在 QQ 1 的后置模式。</li>
+<li>解释哪种贝叶斯模型适用于本分析：Beta-二项、Gamma-泊松，还是正态-正态。</li>
+<li>你的先验理解是，潜鸟目击的典型率是每 100 小时 2 次，标准差为每 100 小时 1 次。为 <span class="math inline">\(\lambda\)</span> 指定一个合适的先验模型并解释你的理由。</li>
+<li>配套数据中的 <code>loons</code> 数据集包含了不同 100 小时观察期内的潜鸟计数。我们有多少个数据点？每 100 小时的平均潜鸟计数是多少？</li>
+<li>根据你的先验和数据，计算并解释 <span class="math inline">\(\lambda\)</span> 的 95% 后验可信区间（中间区间）。注意：你需要先指定 <span class="math inline">\(\lambda\)</span> 的后验模型。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:ch8-loon-2"><strong>Exercise 8.22  (Loons: hypothesis testing)  </strong></span>Let’s continue our analysis of <span class="math inline">\(\lambda\)</span>, the typical rate of loon sightings in a 100-hour observation period.
+<span class="exercise" id="exr:ch8-loon-2"><strong>习题 8.22（潜鸟：假设检验）</strong></span>继续我们对 <span class="math inline">\(\lambda\)</span> 的分析，即 100 小时观察期内潜鸟目击的典型率。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>你假设观鸟者 每个观察期的速率应该小于1升 将此作为正式假说测试(使用 0@@,\(H_a\), and2@@).</li>
-<li>利用前次演习的可信间隔,你对这些假设可以做出什么决定?</li>
-<li>计算和解释您的假设是真实的后验概率。</li>
-<li>来解释一下你对"0"的结论。</li>
+<li>你猜测观鸟者预期每次观测时段内潜鸟的出现率低于 1 只。请用标准的假设检验形式表述（使用 <span class="math inline">\(H_0\)</span>、<span class="math inline">\(H_a\)</span> 和 <span class="math inline">\(\lambda\)</span> 记号）。</li>
+<li>利用上一练习得到的可信区间，你会对这些假设做出怎样的判断？</li>
+<li>计算并解释你的假设成立的后验概率。</li>
+<li>综合以上结果，解释你对 <span class="math inline">\(\lambda\)</span> 的结论。</li>
 </ol>
 <div style="page-break-after: always;"></div>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-313"><strong>Exercise 8.23  (Loons with MCMC: simulation)  </strong></span>In the next exercises, you’ll repeat your loon analysis using MCMC simulation.
+<span class="exercise" id="exr:unnamed-chunk-313"><strong>练习 8.23（潜鸟观测的 MCMC 模拟）</strong></span>在接下来的练习中，你将使用 MCMC 模拟重复刚才的潜鸟分析。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>模拟XQ0@@的后验模型,即每个观测期的典型的loon目视率,rstan使用4条链和每条链的1000次迭代.</li>
-<li>做一些MCMC诊断 来确认你的模拟已经稳定下来</li>
-<li>使用您的 MCMC 模拟, 大约95% 后可信间隔。 使用整齐()快捷键函数以及从链条值直接计算。</li>
-<li>利用你的MCMC模拟 来估计后期的概率。</li>
-<li>C和d部分的近似值与你在第8.21和8.22号演练中计算的实际相应后值有多接近?</li>
+<li>使用 <strong>PyMC</strong> 模拟 <span class="math inline">\(\lambda\)</span> 的后验模型，即每次观测时段潜鸟出现的典型率，设置 4 条链，每条链迭代 10000 次。</li>
+<li>执行一些 MCMC 诊断，确认模拟已稳定。</li>
+<li>利用 MCMC 模拟来 <em>近似</em> <span class="math inline">\(\lambda\)</span> 的 95% 后验可信区间（中间区间）。可以借助 <code>tidy()</code> 快捷函数实现，也可以直接根据链的样本值计算。</li>
+<li>利用 MCMC 模拟来<em>近似</em> <span class="math inline">\(\lambda &lt; 1\)</span> 的后验概率。</li>
+<li>c 部分和 d 部分中的近似结果，与你分别在练习 <a href="/bayes-rules-python-cn/chapter-8/#exr:ch8-loon-1">8.21</a> 和 <a href="/bayes-rules-python-cn/chapter-8/#exr:ch8-loon-2">8.22</a> 中计算的实际后验值有多接近？</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-314"><strong>Exercise 8.24  (Loons with MCMC: prediction)  </strong></span>
+<span class="exercise" id="exr:unnamed-chunk-314"><strong>练习 8.24（使用 MCMC 预测潜鸟）</strong></span>
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>利用你的MCMC模拟 来估计后期的预测模型 鸟类观察者在下个观察期 将会间谍的疯子数量 构造此模型的直方图可视化。</li>
-<li>总结你对后期预测模型的观察,</li>
-<li>估计观鸟者在下一个观察期 观测到的概率是0度</li>
+<li>利用 MCMC 模拟来近似 <span class="math inline">\(Y'\)</span> 的后验预测模型，它表示观鸟者在下一个观察时段中将看到的潜鸟数量。并构建该模型的直方图。</li>
+<li>总结你对 <span class="math inline">\(Y'\)</span> 后验预测模型的观察结果。</li>
+<li>近似计算观鸟者在下一个观察时段中观察到 0 只潜鸟的概率。</li>
 </ol>
 </div>
 </div>
 </div>
-<h3>参考资料</h3>
+<h3>参考文献</h3>
 <div class="references csl-bib-body hanging-indent" id="refs">
 <div class="csl-entry" id="ref-R-broom.mixed">
 Bolker, Ben, and David Robinson. 2021. <em>Broom.mixed: Tidying Methods for Mixed Models</em>. <a href="https://github.com/bbolker/broom.mixed">https://github.com/bbolker/broom.mixed</a>.
@@ -896,6 +866,12 @@ Bolker, Ben, and David Robinson. 2021. <em>Broom.mixed: Tidying Methods for Mixe
 <div class="csl-entry" id="ref-moma_github">
 MuseumofModernArt. 2020. <span>“<span>MoMA</span> – Collection.”</span> <em>GitHub Repository</em>.
 </div>
+</div>
+<div class="footnotes">
+<hr/>
+<ol start="45">
+<li id="fn45"><p>答案：是<a class="footnote-back" href="/bayes-rules-python-cn/chapter-8/#fnref45">↩︎</a></p></li>
+</ol>
 </div>
 </section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-7/">上一节：第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-9/">下一节：第 9 章 简单正态回归</a></nav>
 </article>

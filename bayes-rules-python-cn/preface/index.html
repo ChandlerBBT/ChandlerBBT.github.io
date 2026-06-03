@@ -1,13 +1,13 @@
-<!doctype html>
+html
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="序言 | Bayes Rules! 中文 Python 改写教程">
-  <title>序言 | Chandler&#x27;s AI Productivity Notes</title>
-  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/assets/css/styles.css">
-  <script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="序言 | Bayes Rules! 中文 Python 改写教程" name="description"/>
+<title>序言 | Chandler's AI Productivity Notes</title>
+<link href="/assets/img/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="/assets/css/styles.css" rel="stylesheet"/>
+<script>
     window.MathJax = {
       tex: {
         inlineMath: [["$", "$"], ["\\(", "\\)"]],
@@ -17,152 +17,126 @@
       svg: { fontCache: "global" }
     };
   </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
-  <a class="skip-link" href="#content">跳到正文</a>
-  <header class="site-header">
-    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
-      <span class="brand-mark">C</span>
-      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
-    </a>
-    <nav class="site-nav" aria-label="主导航">
-      <a href="/">首页</a>
-      <a href="/posts/" aria-current="page">最新文章</a>
-      <a href="/tags/">主题</a>
-      <a href="/about/">关于</a>
-    </nav>
-  </header>
-  <main id="content" class="tutorial-page">
-    <div class="tutorial-layout">
-
+<a class="skip-link" href="#content">跳到正文</a>
+<header class="site-header">
+<a aria-label="Chandler's AI Productivity Notes 首页" class="brand" href="/">
+<span class="brand-mark">C</span>
+<span class="brand-name">Chandler's AI Productivity Notes</span>
+</a>
+<nav aria-label="主导航" class="site-nav">
+<a href="/">首页</a>
+<a aria-current="page" href="/posts/">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+</nav>
+</header>
+<main class="tutorial-page" id="content">
+<div class="tutorial-layout">
 <aside class="tutorial-sidebar">
-  <h2>教程目录</h2>
-  <nav><a href="/bayes-rules-python-cn/">首页</a><a href="/bayes-rules-python-cn/foreword/">前言</a><a href="/bayes-rules-python-cn/preface/" aria-current="page">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a href="/bayes-rules-python-cn/references/">参考文献</a></nav>
+<h2>教程目录</h2>
+<nav><a href="/bayes-rules-python-cn/">首页</a><a href="/bayes-rules-python-cn/foreword/">前言</a><a aria-current="page" href="/bayes-rules-python-cn/preface/">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a href="/bayes-rules-python-cn/references/">参考文献</a></nav>
 </aside>
-
-      <article class="tutorial-content">
-        <section class="normal" id="section-">
+<article class="tutorial-content">
+<section class="normal" id="section-">
 <div class="section level1 unnumbered" id="preface">
 <h1>序言</h1>
-<div class="tutorial-note">
-<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
-</div>
-
-<p>巴耶斯统计? 曾经是专业产业和研究圈外的模糊名词,巴耶斯方法正在享受复兴. 这本书的题目说明了所有大惊小怪的事: 贝叶斯规则! 贝叶斯方法为标准统计课程中根深蒂固的频率学派方法提供了强大的替代方法. 虽然经常主义者和巴耶斯人的方法有一个共同的目标——从数据中学习——但巴耶斯人实现该目标的方法正变得受欢迎,原因很多:(1) 巴耶斯人的方法使我们能够根据以前的信息解释新数据,正式将两者编成一套更新的信息;(2) 相对于经常主义者分析中使用的置信间隔和p值,巴耶斯人的结果更容易解释;(3) 在经常主义者的“相似”方法崩溃的情况下,巴耶斯人的方法可以闪耀;(4) 应用巴耶斯人技术所需的计算工具越来越容易获得。 不幸的是,巴耶斯统计的普及程度超过了支持统计所需的课程资源。 为此,贝叶斯规则(Bayes Rules!)的首要目标是让现代贝叶斯人的思维,建模,和计算为更广泛的受众所使用.</p>
+<p><em>贝叶斯</em>统计？！<br/>曾经在专业行业和研究圈外鲜为人知的贝叶斯方法正迎来复兴。本书的书名道出了这阵热潮的原因：<em>贝叶斯法则！</em><br/>贝叶斯方法为根植于标准统计课程中的频率学派（frequentist）方法提供了强大的替代方案。尽管频率学派和贝叶斯方法共享一个共同目标——从数据中学习——但贝叶斯方法实现这一目标的方式正因多种原因而日益普及：<br/>(1) 贝叶斯方法允许我们根据先验信息来解读新数据，将两者正式融合为一组更新后的信息；<br/>(2) 相对于频率学派分析中使用的置信区间和 p 值，贝叶斯结果更易于解释；<br/>(3) 在频率学派“似然”方法失效的场合，贝叶斯方法可以大放异彩；<br/>(4) 应用贝叶斯技术所需的计算工具正变得越来越容易获取。<br/>遗憾的是，贝叶斯统计的流行速度超过了支持它的课程资源建设。为此，《贝叶斯法则！》的首要目标是让更广泛的读者能够接触现代贝叶斯<em>思维</em>、<em>建模</em>和<em>计算</em>。</p>
 <div class="section level2 unnumbered" id="audience">
-<h2>观众</h2>
-<p>Bayes Rules! 将Bayes的力量带给高级本科生和比较训练的从业者. 因此,这本书既不是在研究生一级写的,也无意成为统计领域的第一个介绍。 这本书至少假定读者熟悉典型的本科一级入门统计课程的内容. 读者最好也会有一些本科水平概率,微积分,R统计软件的经验. 单单 请不要离开, 我们提供了所有R代码和足够的概率审查,这样,没有这种背景的读者只要热衷于在苍蝇上拾取这些工具,就仍然能够跟随. 此外,尽管某些微积分概念在贝叶斯分析(因此本书)中很重要,但微积分衍生法却不是. 后者仅限于早期章节中的简单模型设置,容易跳过.</p>
+<h2>读者对象</h2>
+<p><em>贝叶斯法则！</em>将贝叶斯的力量带给高年级本科生和同等水平的从业者。因此，本书既不是研究生级别的教材，也不是统计学的入门导论。本书至少假设读者熟悉典型本科入门统计课程所涵盖的内容。理想情况下，读者还应具备本科水平的概率论、微积分和 <code>Python</code> 编程语言经验。<em>不过，别走！</em>如果你没有完全符合这些条件，也请不要离开。我们会提供所有 <code>Python</code> 代码和足够的概率论复习，只要读者渴望在快速上手的过程中掌握这些工具，就能跟上内容。此外，尽管某些微积分<em>概念</em>在贝叶斯分析中很重要（因此本书有所涉及），但微积分<em>推导</em>并非重点。后者仅限于前面几章的简单模型设定，并且可以轻松跳过。</p>
 </div>
 <div class="section level2 unnumbered" id="navigating-this-book">
-<h2>浏览此书</h2>
-<p>贝叶斯规则!授权读者将贝叶斯方法编织成统计学和数据科学的日常现代实践. 总体精神得到运用:该书利用现代计算资源和可复制的管道;讨论强调概念理解;材料以数据驱动的查询为动力;交付将传统的“内容”与“活动”相结合。 尽管有应用的焦点,读者也会建立必要的理论基础,以便更深入地了解贝叶斯方法,并在新的环境下灵活概括. 以下是一些航海冒险的技巧和技巧.</p>
-<p>学道自在. 进行贝叶斯统计需要实践. 还有软件 贝叶斯规则! 使用 R 与 Stan 语言的强大的 Rstan 接口。 所有R代码都包含在书中,为读者提供复制和概括这些超出书中的计算技术的工具.</p>
-<!-- We also provide R scripts for each chapter which you can import directly into your R work space! -->
-<!-- We elaborate on the details below. -->
-<p>拥抱增长的心态。 当你读这本书,把贝叶斯方法付诸实践, 你会犯错误。 许多错误。 犯错误和从中吸取教训只是学习的一部分。 我们希望你们坚持不懈地进行学习的斗争,以便你们能够向贝叶斯社区贡献你们独特的见解、观点和经验。</p>
-<p>按上下文解释贝叶. 巴耶斯统计并不是在真空中存在的。 这是一个我们可以用来从数据中了解我们周围世界的工具。 我们鼓励读者思考我们贝叶斯分析的潜在影响(例如,这些分析是否具有偏见?</p>
-<p>练习,练习,练习。 每章最后都有一套练习。 一些可以让你了解你所学到的力学, 以咬伤大小的部分。 其他人鼓励您在现实环境中使用R来整合和应用各种概念。</p>
+<h2>本书导航</h2>
+<p><em>贝叶斯法则！</em>让读者有能力将贝叶斯方法融入统计和数据科学的日常现代实践中。整体基调是应用导向的：本书利用现代计算资源和可复现的分析流程；讨论强调概念性理解；内容由数据驱动的问题所驱动；传授方式则将传统的“讲授”与“活动”融合在一起。尽管着眼于应用，读者仍将打下必要的理论基础，以便更深入地理解贝叶斯方法论，并具备将其推广到新场景的灵活性。以下是一些导航这趟旅程的建议和技巧。</p>
+<p><strong>在做中学。</strong><br/><em>做</em>贝叶斯统计需要实践。也需要软件。<br/><em>贝叶斯法则！</em>使用 Python 并借助强大的 <strong>PyMC</strong> 概率编程库。书中包含了所有 Python 代码，为读者提供了复现这些计算技术并将其推广到本书之外的工具。</p>
+ We also provide R scripts for each chapter which you can import directly into your R work space!
+ We elaborate on the details below.
+<p><strong>拥抱成长型思维。</strong><br/>在阅读本书并将贝叶斯方法付诸实践的过程中，你会犯错。很多错误。犯错并从中吸取教训本就是学习的一部分。我们希望你坚持渡过学习的困难期，从而为贝叶斯社区贡献你独特的见解、视角和经验。</p>
+<p><strong>在情境中解读贝叶斯。</strong><br/>贝叶斯统计并非存在于真空中。它是我们可以用来从数据中了解周围世界的一种工具。全书之中，我们鼓励读者反思贝叶斯分析的潜在影响（例如，它们是否有偏？是否公平？）。</p>
+<p><strong>练习，练习，再练习。</strong><br/>每章末尾都配有一组练习题。有些让你以小分量回顾所学内容的操作细节。另一些则鼓励你使用 Python 在逼真的场景中综合应用各种概念。</p>
 </div>
 <div class="section level2 unnumbered" id="setup">
-<h2>准备</h2>
-<p>一旦你准备好潜入贝叶斯规则! 首先,下载以下软件的最新版本:</p>
+<h2>环境配置</h2>
+<p>当你准备好深入《贝叶斯法则！》时，请按以下步骤进行准备。<br/>首先，下载最新版本的以下软件：</p>
 <ul>
-<li>R(https://www.r-project.org/).</li>
-<li>斯图迪奥( 0@@).</li>
+<li>Python (<a class="uri" href="https://www.python.org/">https://www.python.org/</a>)</li>
+<li>Jupyter Notebook (<a class="uri" href="https://jupyter.org/install">https://jupyter.org/install</a>)</li>
 </ul>
-<p>下一步,在RStudio中安装以下软件包:</p>
+<p>接下来，在 Python 环境中安装以下库：</p>
 <ul>
-<li><p>安装 Rstan 软件包时, 要仔细遵循 \\\\\\\\\\\\\\\\\ 方向。</p></li>
-<li><p>在您的控制台中输入以下内容, 以安装一组数据摇摆和贝叶斯包。</p>
-<div class="sourceCode" id="cb1">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-with pm.Model() as model:
-    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
-    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
-    # sigma = pm.HalfNormal('sigma', sigma=10)
-    # mu = beta_0 + beta_1 * x
-    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
-    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
-az.summary(idata)
-install.packages(c("bayesrules", "tidyverse", "janitor", "rstanarm",
-"bayesplot", "tidybayes", "broom.mixed", "modelr",
-"e1071", "forcats"),
-dependencies = TRUE)</code></pre>
-</div></li>
-<li><p>Bayesrules软件包包含一些数据集和功能, 书。 这个软件包中的一些数据集是从更大的来源提取的,它们使用非随机方法获得与我们的教学目标相匹配的子集. 这些可能带有偏见的数据集不应用于严格的研究目的。 如果这是你的目标,请参见相关数据帮助文件以识别原始,完整的数据源.</p></li>
+<li><p>按照 <a class="uri" href="https://www.pymc.io/">https://www.pymc.io/</a> 上的说明仔细安装 <strong>PyMC</strong> 库。</p></li>
+<li><p>通过在控制台中输入以下命令来安装一组数据处理和贝叶斯库。</p>
+<div class="sourceCode" id="cb1"><pre><code class="language-python">pip install numpy pandas scipy matplotlib seaborn pymc arviz scikit-learn statsmodels</code></pre></div></li>
+<li><p><strong>bayesrules</strong> 库包含一些我们为《贝叶斯法则！》专门构建的数据集和函数。该库中的若干数据集提取自更大的数据源，使用了非随机方法来获得符合我们教学目标的子集。这些可能存在偏倚的数据集<em>不应</em>用于严格的研究目的。如果你的目标是进行研究，请查阅相关数据帮助文档，查明其原始的完整数据源。</p></li>
 </ul>
-<p>最后,检查出来~~0~~. 该网站载有更多有关该书的背景资料以及随着时间的推移将继续增长的支助资源。</p>
+<p>最后，查看 <a href="https://bayes-rules.github.io/">https://bayes-rules.github.io/</a>。<br/>该网站包含关于本书的更多背景信息以及将持续增长的配套资源。</p>
 </div>
 <div class="section level2 unnumbered" id="accessibility-and-inclusion">
-<h2>无障碍和包容</h2>
-<p>我们致力于提供包容和无障碍的贝叶斯资源。 我们继续学习,并分享我们目前的努力。 在线版书中的所有数字都辅以替代文本,应该能够使用屏幕阅读器供读者访问.</p>
+<h2>可访问性与包容性</h2>
+<p>我们致力于提供一个包容且可访问的贝叶斯资源。我们仍在不断学习，并在 <a href="https://www.datapedagogy.com/posts/2020-07-24a-bayes-open-access">https://www.datapedagogy.com/posts/2020-07-24a-bayes-open-access</a> 分享了我们当前的成果。在线版书籍中的所有图表都配有替代文本，使用屏幕阅读器的读者应能访问。</p>
 </div>
 <div class="section level2 unnumbered" id="contact-us">
 <h2>联系我们</h2>
-<p>在你阅读和与Bayes规则互动时! 请通过我们网站上公布的表格, 我们特别想知道:你是否有什么想法来增加这本书的可读性, 当我们修订案文时,我们偶尔会检查这一表格,以帮助指导这一进程。</p>
+<p>在阅读和与《贝叶斯法则！》互动的过程中，欢迎随时通过我们网站上发布的表格给我们留言：<a href="https://bayes-rules.github.io/posts/contact/">https://bayes-rules.github.io/posts/contact/</a>。<br/>我们特别渴望了解：你是否有任何提高本书可访问性和包容性的想法；你是否注意到任何错误或笔误；以及你对未来版本有任何期待的内容。我们在修订本书时，会偶尔查看此表格以辅助修订过程。</p>
 </div>
 <div class="section level2 unnumbered" id="acknowledgments">
-<h2>承认</h2>
-<p>首先,我们要感谢奥格斯堡大学、卡尔顿学院、德尼森大学、麦卡莱斯特学院、史密斯学院和加州大学伊尔文分校的学生。 他们的反馈、洞察力和榜样 激励了一个高档的酒吧, 用于我们想要向世界推出的书。 除了我们的学生,我们收到了统计和数据科学界许多同事的宝贵反馈。 特别感谢:詹姆斯·阿尔伯特,维吉尔里奥·戈麦斯·鲁比奥,艾米·赫林,大卫·希区柯克,尼克·霍顿,岳江,和保罗·罗贝克. 还有支持我们的编辑大卫·格鲁布斯 他当然使这本书出版的首次冒险 比我们预期的更冷酷和愉快</p>
-<p>除了以上内容外,Alicia特别要感谢:</p>
+<h2>致谢</h2>
+<p>首先，我们要感谢在奥格斯堡大学、卡尔顿学院、丹尼森大学、马卡莱斯特学院、史密斯学院以及加州大学尔湾分校与我们共事的学生们。他们的反馈、见解与榜样激励我们为本书设立了很高的标准。除了学生，我们还收到了统计学与数据科学界众多同行的宝贵反馈。特别感谢：James Albert、Virgilio Gómez Rubio、Amy Herring、David Hitchcock、Nick Horton、Yue Jiang 和 Paul Roback。还要感谢我们支持有加的编辑 David Grubbs。他让我们这第一次出书的经历比预期中更轻松愉快。</p>
+<p>除了以上诸位，Alicia 还想特别感谢：</p>
 <ul>
-<li>John Kim、Martha Skold、Johnsons和Minneapolis的朋友支持他们,</li>
-<li>加林·琼斯(Galin Jones),因为他在统计计算方面邀请了大家的热情.</li>
-<li>马卡莱斯特学院的STAT 454学生因其鼓舞人心的好奇心和STAT 454助教支持同伴学习贝叶斯(Zuofu Huang, Sebastian Col, Connie Zhang).</li>
-<li>麦卡勒斯特学院数学、统计和计算机科学系的同事们 — — 你们是一位人道、有趣和反省的工作人员。</li>
+<li>John Kim、Martha Skold、Johnson 一家以及明尼阿波利斯的朋友们，感谢他们的支持，即使在让人畏惧的“写作脑”日子里也是如此。</li>
+<li>Galin Jones，感谢他对统计计算那股富有感染力的热情。</li>
+<li>马卡莱斯特学院 STAT 454 课程的学生们，感谢他们鼓舞人心的好奇心，以及 STAT 454 的助教们，感谢他们支持同伴学习贝叶斯（Zuofu Huang、Sebastian Coll、Connie Zhang）。</li>
+<li>马卡莱斯特学院数学、统计与计算机科学系的同事们——你们是一群既有人情味又有趣、善于反思的伙伴。</li>
 </ul>
-<p>迈尔斯特别要感谢:</p>
+<p>Miles 还想特别感谢：</p>
 <ul>
-<li>Francesca Giardine, Sarah Glidden, 以及Elaona Lemoto 测试半成型的练习, 轻轻地指出错误, 并给出出色的建议。 很荣幸能与你合作 在你的早期统计生涯。</li>
-<li>2019年春季的史密斯学院SDS 320名学生和2020年秋季的SDS 390名学生(尤其是奥黛丽·布雷廷,迪安·卡拉韦拉,玛琳·杰克逊和汉娜·斯内尔,他们为第8章提供了有益的反馈).</li>
-<li>他来自史密斯学院SDS的同事.</li>
-<li>WSDS会议是许多友谊与合作的起点,包括这本书.</li>
-<li>他的家人,比亚·卡皮斯特兰(Bea Capistrant),伊森·苏尼威克(Ethan Suniewick),马尔卡·伯德(Malkah Bird),亨利·施奈德曼(Henry Schneiderman),克里斯托弗·特拉多夫斯基(Christopher Tradowsky),罗斯·埃尔夫琳(Ross Elfline),乔恩·克纳普(Jon Knapp)和亚历克斯·卡伦达尔(Alex Callendar).</li>
+<li>Francesca Giardine、Sarah Glidden 和 Elaona Lemoto，感谢她们试做半成形的习题，温和地指出错误，并提出绝佳的建议。能在你们统计学生涯的早期阶段与你们合作，是我的荣幸。</li>
+<li>史密斯学院 2019 年春季 SDS 320 课程的学生和 2020 年秋季 SDS 390 课程的学生（尤其是 Audrey Bretin、Dianne Caravela、Marlene Jackson 和 Hannah Snell，她们为第 8 章提供了有益的反馈）。</li>
+<li>他在史密斯学院 SDS 的同事们。</li>
+<li>WSDS 会议，它是许多友谊与合作的起点，包括本书。</li>
+<li>他的家人，Bea Capistrant、Ethan Suniewick、Malkah Bird、Henry Schneiderman、Christopher Tradowsky、Ross Elfline、Jon Knapp 和 Alex Callendar。</li>
 </ul>
-<p>我特别要感谢以下各位:</p>
+<p>Mine 还想特别感谢：</p>
 <ul>
-<li>Morteza Khakshoor, 家人和朋友, 距离遥远, 他们的爱, 支持, 和理解。</li>
-<li>已故的宾纳兹·梅林从小支持自己的职业生涯.</li>
-<li>在UC Irvine的STATS 115的学生总是教授巴耶斯统计学的最佳部分.</li>
-<li>她的同僚在UC Irvine的统计局工作.</li>
-<li>统计界和R界中支持和善待他人的人,特别是新人。</li>
+<li>Morteza Khakshoor、家人以及远方的朋友们，感谢他们的爱、支持与理解。</li>
+<li>已故的 Binnaz Melin，感谢她从小就一直支持她的事业。</li>
+<li>加州大学尔湾分校 STATS 115 课程的学生们，你们始终是教授贝叶斯统计中最美好的部分。</li>
+<li>她在加州大学尔湾分校统计系的同事们。</li>
+<li>所有在统计学与 Python 社区中支持他人、善待他人（尤其是新人）的人们。</li>
 </ul>
-<p>最后,我们大家都要感谢对方认识到幽默、同情和感谢有效合作的重要性。 下定决心在真正认识对方之前 解决这个案子 是个非常伟大的赌博 这很有趣!</p>
+<p>最后，我们想感谢彼此，因为我们认识到幽默、同理心和感恩对于有效合作的重要性。在彼此还不太了解的时候决定一起做这个项目，是一场相当不错的豪赌。过程很有趣！</p>
 </div>
 <div class="section level2 unnumbered" id="license">
-<h2>许可证</h2>
-<p>依据创用CC授权,</p>
-<!-- Building a Bayesian community -->
-<!-- supplementary material that supports a growing Bayesian community of teachers, students, and practitioners. -->
-<!-- - website.  The website itself will serve as the book’s headquarters, hosting information about the print and bookdown versions of the book as well as links to other supplementary material (e.g., interactive apps, data, and news).  -->
-<!-- - shiny apps -->
-<!-- - github -->
-<!-- - solutions manual -->
-<!-- - bookdown -->
-<!-- - R scripts for each chapter -->
+<h2>许可</h2>
+<p><a href="http://creativecommons.org/licenses/by-nc-sa/4.0/" rel="license"><img alt="知识共享许可协议" loading="lazy" src="/assets/img/bayes-rules-python-cn/88x31-d5be619929e1.png" style="border-width:0"/></a><br/>本作品采用<a href="http://creativecommons.org/licenses/by-nc-sa/4.0/" rel="license">知识共享 署名-非商业性使用-相同方式共享 4.0 国际许可协议</a>进行许可。</p>
+ Building a Bayesian community
+ supplementary material that supports a growing Bayesian community of teachers, students, and practitioners.
+ - website.  The website itself will serve as the book’s headquarters, hosting information about the print and bookdown versions of the book as well as links to other supplementary material (e.g., interactive apps, data, and news).
+ - shiny apps
+ - github
+ - solutions manual
+ - bookdown
+ - R scripts for each chapter
 </div>
 </div>
 </section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/foreword/">上一节：前言</a><a href="/bayes-rules-python-cn/about-the-authors/">下一节：作者简介</a></nav>
-      </article>
-    </div>
-  </main>
-  <footer class="site-footer">
-    <div>
-      <strong>AI 提效研究笔记</strong>
-      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
-    </div>
-    <div class="footer-links">
-      <a href="/feed.xml">RSS</a>
-      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
-    </div>
-  </footer>
-  <script src="/assets/js/site.js"></script>
+</article>
+</div>
+</main>
+<footer class="site-footer">
+<div>
+<strong>AI 提效研究笔记</strong>
+<p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+</div>
+<div class="footer-links">
+<a href="/feed.xml">RSS</a>
+<a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+</div>
+</footer>
+<script src="/assets/js/site.js"></script>
 </body>
 </html>

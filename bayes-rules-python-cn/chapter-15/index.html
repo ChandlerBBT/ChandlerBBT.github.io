@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-
+html
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"/>
@@ -44,362 +43,357 @@
 <section class="normal" id="section-">
 <div class="section level1" id="chapter-15" number="15">
 <h1>第 15 章 分层模型的魅力</h1>
-<div class="tutorial-note">
-<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
-</div>
-<div class="describe">
-<p>欢迎来到第四小队!</p>
-<p>4号机组都是关于等级的 在“我的工作场所如此分级”一句中,这个词可能有负面含义。 与此相反,“我的巴耶斯模式如此分级”往往意味着一件好事。 分级模型通过容纳分级数据或分组数据,极大地扩大了我们建模工具箱的灵活性。 例如,我们的数据可能包括:</p>
+<div class="describe"><p><strong>欢迎来到第四单元！</strong></p>
+<p>第四单元的主题是分层。日常中“我的工作场所等级森严”这样的表达可能带有贬义，但“我的贝叶斯模型是分层模型”往往是一件好事！分层模型通过容纳分层（或称为<em>分组</em>）数据，极大地扩展了建模工具箱的灵活性。例如，我们的数据可能包括：</p>
 <ul>
-<li>a. 抽样的学校群和每个学校内多个学生的数据;或</li>
-<li>a. 从每个实验室的多个个别实验中抽取的一组实验室和数据;或</li>
-<li>一个抽样的人群,我们针对他们 逐个地观察信息 一段时间。</li>
+<li>抽样的多所学校，以及每所学校内多名学生的数据 <span class="math inline">\(y\)</span>；或者</li>
+<li>抽样的多个实验室，以及每个实验室内多个实验的数据 <span class="math inline">\(y\)</span>；或者</li>
+<li>抽样的一组人群，我们对其随时间重复观测信息 <span class="math inline">\(y\)</span>。</li>
 </ul>
-<p>忽略这种类型的基础分组结构,就违反了我们第3单元模型背后的独立数据的假设,进而可能产生误导性的结论。 在第四单元,我们将探索赋予我们权力的技术,将这种等级结构纳入我们的模式:</p>
+<p><em>忽略</em>这种底层分组结构会违反第三单元模型背后的<em>独立</em>数据假设，进而可能产生误导性结论。在第四单元，我们将探索如何在模型中融入这种分层结构：</p>
 <ul>
-<li>第15章: 国家 为何你应该兴奋 等级模特</li>
-<li>第16章:无预测器的(正常)等级模型</li>
-<li>第17章:带有预测器的(自然)等级模型</li>
-<li>第18章:非正常等级模型</li>
-<li>第19章:增加一层</li>
+<li>第15章：为什么你应该对分层建模感到兴奋</li>
+<li>第16章：不含预测变量的（正态）分层模型</li>
+<li>第17章：含预测变量的（正态）分层模型</li>
+<li>第18章：非正态分层模型</li>
+<li>第19章：增加更多层级</li>
 </ul>
-<p>在这样做之前,我们要指出的是,我们用“等级”作为团体结构模型的统称。 在整个文献中,这些被称为多层次、混合效应或随机效应模型。 这些术语可能会造成混淆,特别是因为有些人互换地使用这些术语,而另一些人则使用这些术语在群体结构模型中作细微的区分。 这就像“流行”对“Soda”对“cola ”。 我们在此避免混乱,</p>
+<p>在开始之前，我们想说明，这里用“分层”作为概括分组结构模型的统称。在文献中，这类模型被称为<strong>多水平</strong>模型、<strong>混合效应</strong>模型或<strong>随机效应</strong>模型。这些术语可能令人困惑，特别是有些人将它们互换使用，而另一些人用它们对分组结构模型进行细微区分，有点像“汽水”“苏打水”和“可乐”的叫法之分。我们在此避免这种困惑，但指出这一点，以便你在其他场合能建立起联系。</p></div>
+<p>在转向分层模型之前，理解我们为何要这样做至关重要。在第 <a href="/bayes-rules-python-cn/chapter-15/#chapter-15">15 章</a>，我们的唯一目的就是回答这个问题。我们不会构建、解释或模拟任何分层模型，而只是为这些技术的重要性搭建一个论证，以填补现有贝叶斯方法的一些缺口。为此，我们将探索 <code>cherry_blossom_sample</code> 数据集（来自本书配套数据资源，此处简称为 <code>running</code>）：</p>
+<div class="sourceCode" id="cb301"><pre><code class="language-python"># 导入必要的库
+import pandas as pd
+
+# 加载数据集（假设数据文件已存在于工作目录）
+cherry_blossom_sample = pd.read_csv("cherry_blossom_sample.csv")
+
+# 选择需要的列：跑步者ID、年龄、净时间
+running = cherry_blossom_sample[["runner", "age", "net"]]
+
+# 查看数据行数
+print(len(running))</code></pre></div>
+<p>该数据集是 <code>Cherry</code> 数据的一个子集（参见 Baumer, Horton, and Kaplan 2021），包含华盛顿特区年度 10 英里樱花赛跑中 36 名参与者的 <code>net</code> 用时（单位：分钟）。每位跑者年龄在 50 至 60 多岁之间，并且多次参加该赛事。下图展示了不同跑者之间的速度差异，以及每位跑者逐年成绩的波动程度。</p>
+<div class="sourceCode" id="cb302"><pre><code class="language-python"># 导入绘图库
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# 绘制箱线图：不同跑步者的净时间分布
+sns.boxplot(data=running, x="runner", y="net")
+plt.show()</code></pre></div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-629" style="display:block;"></span>
+<img alt="There is a boxplot of net running time (y-axis) for each runner, labeled 1 through 36. The net times range from 60 to 130 minutes. There is great variety in the boxplots. For example, some runners have boxplots that are narrow and fall under 70 minutes, whereas others have boxplots that are wider and fall above 80 minutes." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-629-1-479cd466be00.png" width="576"/>
+<p class="caption">图 15.1：多次参加樱花赛跑的 36 名跑者净用时（分钟）箱线图。</p>
 </div>
-<p>在转向等级模式之前, 在第15章中,我们的唯一目的是解决这一问题。 我们不会建立、解释或模拟任何等级模型。 我们只要说明这些技术在填补现有贝叶斯方法的一些空白中的重要性。 为此,我们将探索Bayesrules软件包中的樱桃 blossom sample数据,缩写为在这里运行:</p>
-<div class="sourceCode" id="cb301">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python"># 原书 bayesrules 数据包中的数据需改用 CSV/本地数据文件读取
+<p>例如，17 号跑者往往用时较长，且逐年波动很大。相比之下，29 号跑者是这群人中最快的，且成绩非常稳定。仔细看数据，1 号跑者在 53 岁时以 84 分钟完赛，次年他们以 74.3 分钟完赛：</p>
+<div class="sourceCode" id="cb303"><pre><code class="language-python"># 查看前两行数据
+print(running.head(2))</code></pre></div>
+<p>我们的目标是更好地理解该年龄段跑者跑步用时与年龄之间的关系。我们将看到，现有的贝叶斯建模工具箱存在一些局限。</p>
+<div class="goals"><ul>
+<li>探索现有贝叶斯建模工具箱在两种极端情况下的局限：<strong>完全合并</strong>和<strong>不合并</strong>。</li>
+<li>考察<strong>分层贝叶斯模型</strong>所提供的<strong>部分合并</strong>的优势。</li>
+<li>聚焦核心思想，细节留待后续章节。</li>
+</ul></div>
+<div class="section level2" id="ch15-complete" number="15.1">
+<h2> 完全池化</h2>
+<p>我们将采用<strong>完全池化</strong>方法开始分析跑步用时与年龄之间的关系：将 36 名跑者的全部 252 个观测值合并为一个<em>信息池</em>。
+在此过程中，请注意这种关系似乎较弱——每个年龄段的跑步用时存在相当大的变异，并且随着年龄增长没有明显的趋势：</p>
+<div class="sourceCode" id="cb304"><pre><code class="language-python"># 绘制散点图：年龄与净时间的关系
+sns.scatterplot(data=running, x="age", y="net")
+plt.show()</code></pre></div>
+<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-631" style="display:block;"></span>
+<img alt="A scatterplot of net times (y-axis) vs age (x-axis). Each of the 252 points represent a single race outcome for a single runner. There is a lot of variability in the points and no discernible relationship between net times and age." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-631-1-edb98f183557.png" width="240"/>
+<p class="caption">
+图 15.2：每次比赛结果的净跑步用时与年龄的散点图。
+</p>
+</div>
+<p>为了更好地理解这种关系，我们可以构建一个熟悉的正态回归模型，将跑步用时表示为年龄的函数。
+令 <span class="math inline">\(Y_i\)</span> 和 <span class="math inline">\(X_i\)</span> 分别表示数据集中第 <span class="math inline">\(i\)</span> 个观测值的跑步用时和年龄，该模型的数据结构为：</p>
+<p><span class="math display" id="eq:complete-pool-ch15">\[\begin{equation}
+Y_i | \beta_0, \beta_1, \sigma \stackrel{ind}{\sim} N\left(\mu_i, \sigma^2\right) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1X_i  .
+\tag{15.1}
+\end{equation}\]</span></p>
+<p>我们可以像往常一样模拟这个<strong>完全池化</strong>模型，这里使用弱信息先验：</p>
+<div class="sourceCode" id="cb305"><pre><code class="language-python">import pymc as pm
+import arviz as az
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+
+# 假设 running 数据集已加载为 pandas DataFrame
+# running = pd.read_csv('running.csv')
+
+with pm.Model() as complete_pooled_model:
+    # 先验设置
+    intercept = pm.Normal('intercept', mu=0, sigma=2.5)
+    slope = pm.Normal('slope', mu=0, sigma=2.5)
+    sigma = pm.Exponential('sigma', lam=1)
+    # 线性预测
+    mu = intercept + slope * running['age'].values
+    # 观测模型
+    net_obs = pm.Normal('net_obs', mu=mu, sigma=sigma, observed=running['net'].values)
+    # 采样
+    trace = pm.sample(draws=5000, tune=5000, chains=4, random_seed=84735)</code></pre></div>
+<p>模拟结果与我们先前的观察一致，即跑步用时与年龄之间存在较弱的关系。
+后验中位数模型表明，年龄每增加一岁，跑步用时往往仅增加 0.27 分钟。
+并且，<span class="math inline">\(\beta_1\)</span> 的 80% 后验可信区间跨过了 0（-0.3, 0.84），表明这种关系<em>并不</em>显著：</p>
+<div class="sourceCode" id="cb306"><pre><code class="language-python"># 后验汇总统计
+import arviz as az
+
+# 假设 trace 已从 complete_pooled_model 获得
+summary_df = az.summary(trace, var_names=['intercept', 'slope'], hdi_prob=0.8, round_to=3)
+print(summary_df[['mean', 'sd', 'hdi_5%', 'hdi_95%']])</code></pre></div>
+<p>好吧。我们本不想第一个说出来，但这似乎有点奇怪。
+我们自身的经验并不支持我们会一直保持同样速度的观点。
+事实上，请看图 <a href="/bayes-rules-python-cn/chapter-15/#fig:ch15-gray-lines">15.3</a>。
+如果我们分别检查 36 名跑者每个人的跑步用时与年龄的关系（灰色线条），<em>几乎所有人</em>都随着时间的推移变慢了，<em>并且</em>变慢的速度比后验中位数模型（蓝色线条）所显示的要快。</p>
+<div class="sourceCode" id="cb307"><pre><code class="language-python">import matplotlib.pyplot as plt
 import seaborn as sns
-import pymc as pm
-import arviz as az
+import numpy as np
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-with pm.Model() as model:
-    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
-    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
-    # sigma = pm.HalfNormal('sigma', sigma=10)
-    # mu = beta_0 + beta_1 * x
-    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
-    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
-az.summary(idata)
-# 装入软件包
-# 装入数据
-data(cherry_blossom_sample)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>这个数据是Mdsr包(Baumer,Horton,和Kaplan 2021)中樱桃数据的一个子集,包含在华盛顿特区举行的年度10英里樱桃花花样比赛中36名参与者的净运行时间(以分钟计). 每名选手都是50或60岁,并在多年内进入了比赛. 下面的情节说明一些跑者的速度比其他跑者快的程度,以及每个跑者每年的时间变化。</p>
-<div class="sourceCode" id="cb302">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-629" style="display:block;"></span>
-<img alt="每个跑者有一个净运行时间(Y轴)的框图,标签为1至36。 净时从60分钟到130分钟不等. 盒子里有很多种类 例如,有些跑者有狭长70分钟以下的箱盖,而另一些跑者有宽80分钟以上的箱盖。" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-629-1-479cd466be00.png" width="576"/>
-<p class="caption">FIGURE 15.1:36名在多年内进入樱桃花竞技场的跑者净跑时间(以分钟计)的箱形.</p>
-</div>
-<p>例如,跑者17往往时间较慢,每年变化很大。 相比之下,29号跑车是这批跑车中最快的,并且有着非常一致的时间. 更仔细地看数据,跑者1在他们53岁时的84分钟内完成了比赛. 次年,他们在74.3分钟内完成了比赛:</p>
-<div class="sourceCode" id="cb303">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-head(running, 2)
-# A: 2 x 3
-runner   age   net
-&lt;fct&gt;  &lt;int&gt; &lt;dbl&gt;
-1 1         53  84.0
-2 1         54  74.3</code></pre>
-</div>
-<p>我们的目标是更好地理解这个年龄段的跑者跑步时间和年龄之间的关系. 我们的贝叶斯建模工具箱有些局限性,</p>
-<div class="goals">
-<ul>
-<li>探索当前贝叶斯模式工具箱在两个极端下的局限性,</li>
-<li>审视分级的贝叶斯模式提供的部分集合的好处。</li>
-<li>注重大思想,将细节留待以后各章.</li>
-</ul>
-</div>
-<div class="section level2" id="ch15-complete" number="15.1">
-<h2>完成集合</h2>
-<p>使用完整的集合技术, 开始分析运行时间与年龄之间的关系: 将36名跑者的全部252个观察结果合并为一个信息库。 双方的关系似乎很弱,</p>
-<div class="sourceCode" id="cb304">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-631" style="display:block;"></span>
-<img alt="净时间(y-轴)对年龄(x-轴)的散点。 252分中的每分代表一个跑者获得一个赛事结果. 各个点有很大的可变性,而且净时间和年龄之间没有明显的关系。" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-631-1-edb98f183557.png" width="240"/>
-<p class="caption">图15.2:每场比赛结果的净运行时间与年龄的分布图。</p>
-</div>
-<p>为了更好地理解这种关系,我们可以构建一个熟悉的按年龄排列运行时间的正常回归模型. 使用XQ0@@和XQ1@@表示我们数据集中XQ2@@的观测运行时间和年龄,该模型的数据结构是:</p>
-<p>\[\begin{equation} Y_i | \beta_0, \beta_1, \sigma \stackrel{ind}{\sim} N\left(\mu_i, \sigma^2\right) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1X_i . \tag{15.1} \end{equation}\]</p>
-<p>我们可以像往常一样模拟这个完全的集合模型, 这里使用微弱的信息前科:</p>
-<div class="sourceCode" id="cb305">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-with pm.Model() as model:
-    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
-    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
-    # sigma = pm.HalfNormal('sigma', sigma=10)
-    # mu = beta_0 + beta_1 * x
-    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
-    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
-az.summary(idata)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>模拟结果符合我们先验对运行时间和年龄之间微弱关系的观察. 后期中位数模型显示,运行时间在年龄上每年往往只增加0.27分钟. 超过0.</p>
-<div class="sourceCode" id="cb306">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 以后的简要统计
-tidy(complete_pooled_model, conf.int = TRUE, conf.level = 0.80)
-# bble:2×5
-term        estimate std.error conf.low conf.high
-&lt;chr&gt;          &lt;dbl&gt;     &lt;dbl&gt;    &lt;dbl&gt;     &lt;dbl&gt;
-1 (Intercept)   75.2      24.6     43.7     106.
-2 age            0.268     0.446   -0.302     0.842</code></pre>
-</div>
-<p>好,我们走吧 我们不想第一个说出来, 我们的经验并不支持我们将继续以同样的速度运行的想法。 事实上,请查看图15.3。 如果我们审查我们36名选手(灰色线)的每个选手的运行时间和年龄之间的关系,几乎所有选手都随着时间的推移变慢,速度比后期中位模型(蓝色线)建议的速度要快.</p>
-<div class="sourceCode" id="cb307">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 后期中位数模型图
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 绘制每位跑者的单独线性趋势
+for runner_id in running['runner'].unique():
+    subset = running[running['runner'] == runner_id]
+    sns.regplot(x='age', y='net', data=subset, scatter=False, ci=None,
+                color='gray', line_kws={'linewidth': 0.5})
+# 添加汇总模型的后验中位数直线
+age_range = np.array([running['age'].min(), running['age'].max()])
+net_pred = 75.2 + 0.268 * age_range
+plt.plot(age_range, net_pred, color='blue')
+plt.xlabel('年龄')
+plt.ylabel('净成绩')
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch15-gray-lines" style="display:block;"></span>
-<img alt="净时(y-轴)对年龄(x-轴)的图案. 有36条灰色线,每条跑者1条. 几乎所有的这些线路都有正斜坡,虽然截流非常不同. 例如,一些跑者有跨年龄停留在70分钟以下的线路,而另一些则有停留在110分钟以上的线路。 灰色线的垂直中心附近有一条几乎平坦但呈正斜坡的蓝线." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch15-gray-lines-1-e796f0f45c59.png" width="240"/>
-<p class="caption">FIGURE 15.3:36个学科(gray)的运行时间相对于年龄的观察趋势,以及后期中位数模型(蓝色).</p>
+<img alt="A plot of net times (y-axis) vs age (x-axis). There are 36 gray lines, 1 for each runner. Almost all of these lines have positive slopes, though very different intercepts. For example, some runners have lines that stay below 70 minutes across age, whereas others have lines that stay above 110 minutes. There is a nearly flat, but positively sloped blue line that falls near the vertical center of the gray lines." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch15-gray-lines-1-e796f0f45c59.png" width="240"/>
+<p class="caption">
+图 15.3：36 名受试者的跑步时间与年龄的观测趋势（灰色）以及后验中位数模型（蓝色）。
+</p>
 </div>
-<p>在图15.4中,我们放大了三个跑者的细节。 虽然完整的集合模式(蓝线)在某些情况下是好的(例如跑者22),但远非通用。 一般速度,以及随时间而变化的速度,从跑者到跑者都有很大的不同. 例如,跑步者20的跑速往往比平均水平慢,随着年龄的增长,速度正在加快。 跑者1的运行速度一直高于平均水平.</p>
-<div class="sourceCode" id="cb308">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>在图 <a href="/bayes-rules-python-cn/chapter-15/#fig:ch15-3-sub">15.4</a> 中，我们聚焦于三名跑步者的细节。尽管完全池化模型（蓝色线）在某些情况下表现尚可（例如跑步者 22），但它远非普遍适用。不同跑步者的总体速度以及速度随年龄的变化<em>差异</em>相当大。例如，跑步者 20 往往跑得比平均慢<em>而且</em>随着年龄增长，速度下降得更快。跑步者 1 则一直跑得比平均快。</p>
+<div class="sourceCode" id="cb308"><pre><code class="language-python"># 选择示例跑者
+examples = running[running['runner'].isin(['1', '20', '22'])]
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 选择示例子集
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 创建分面散点图
+g = sns.FacetGrid(examples, col='runner', col_wrap=3)
+g.map(sns.scatterplot, 'age', 'net')
+# 添加相同的汇总模型直线
+age_range = np.array([examples['age'].min(), examples['age'].max()])
+line_y = 75.2242 + 0.2678 * age_range
+for ax in g.axes.flat:
+    ax.plot(age_range, line_y, color='blue')
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch15-3-sub" style="display:block;"></span>
-<img alt="净运行时间(y-轴)对年龄(x-轴)有3个散点,标签为1,20,22. 每个都拥有5个数据点和一个几乎平坦的,但正倾斜的垂直中心蓝线. 对于地块1,5个数据点落到蓝线以下,并有略微下降的趋势. 就图20而言,5个数据点位于蓝线以上,呈急剧上升趋势。 就图22而言,5个数据点大致沿蓝线下降。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch15-3-sub-1-8fed9410ebb1.png" width="576"/>
-<p class="caption">图15.4:3个学科的运行时间与年龄之比,以及后期中位数模型(蓝色).</p>
+<img alt="There are 3 scatterplots of net running time (y-axis) vs age (x-axis), labeled 1, 20, and 22. Each has 5 data points and a nearly flat, but positively sloped blue line in the vertical center. For plot 1, the 5 data points fall below the blue line and have a slight downward trend. For plot 20, the 5 data points fall above the blue line and have a steep upward trend. For plot 22, the 5 data points fall roughly along the blue line." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch15-3-sub-1-8fed9410ebb1.png" width="576"/>
+<p class="caption">
+图 15.4：3 名受试者的跑步时间与年龄的散点图，以及后验中位数模型（蓝色）。
+</p>
 </div>
-<p>关于这些观察,我们完整的集合模型确实错过了标记。 如图15.5所示,完整的集合模型将所有运行时间观测结果( 0@@)汇总成一个群体或一个“集合”。 在这样做时,它提出了两个假设:</p>
+<p>就这些观察而言，我们的完全池化模型确实不准确。如图 <a href="/bayes-rules-python-cn/chapter-15/#fig:complete-pool-diagram-1">15.5</a> 所示，完全池化模型将所有跑步时间的观测值（<span class="math inline">\(y_1, y_2, \ldots, y_n\)</span>）归入一个总体或一个“池”中。这样做，它作出了两个假设：</p>
 <ol style="list-style-type: decimal">
-<li>每项观察都独立于其他观察(我们第3单元模式背后的一揽子假设);</li>
-<li>有关个人跑者的信息 与我们的运行时间模型 与年龄无关</li>
+<li>每个观测值都与其他观测值相互<em>独立</em>（这是第三单元模型背后的普遍假设）；以及 </li>
+<li>关于个体跑步者的信息与我们的跑步时间与年龄模型无关。</li>
 </ol>
-<p>我们现在注意到这些假设是不适当的:</p>
+<p>我们现在观察到这些假设是不合适的：</p>
 <ol style="list-style-type: decimal">
-<li>虽然关于一个跑者的意见可能独立于关于另一个跑者的意见,但跑者的意见是相互关联的。 跑者在前一场比赛跑得多么快,</li>
-<li>关于运行时间和年龄之间的关系,人们在本质上是不同的.</li>
+<li>虽然一个跑步者的观测值可能独立于另一个，但同一个跑步者<em>内部</em>的观测值是<em>相关的</em>。也就是说，跑步者在前一场比赛中的速度能告诉我们他们在下一场比赛中可能会跑多快。 </li>
+<li>就跑步时间与年龄的关系而言，人天生就各不相同。</li>
 </ol>
-<p>这些违反规定的行为产生了重大影响:我们完全的集合模式未能证实人们往往随着年龄的增长而放慢。 虽然我们探索了樱桃花花卉赛的具体背景,</p>
+<p>这些假设违背带来了显著后果：我们的完全池化模型未能捕捉到人们往往随年龄增长而变慢这一事实。
+虽然我们是在樱花赛跑的特定背景下探讨了完全池化的缺点，但这些缺点具有普遍性。</p>
 <div class="figure" style="text-align: center"><span id="fig:complete-pool-diagram-1" style="display:block;"></span>
-<img alt='流图. 顶部是标有"人口"字样的盒子. 在这个框中,有7个不同的箭头导致下级的气泡,标记为y1,y2,最高为yn,每个代表一个独特的数据点.' loading="lazy" src="/assets/img/bayes-rules-python-cn/complete_pool_diagram-7ff62e06f99c.png" width="90%"/>
-<p class="caption">图15.5:完整集合模式的总框架。</p>
+<img alt="A flow chart. At the top is a box labeled Population. Out of this box are 7 different arrows leading to bubbles at a lower level, labeled y1, y2, up to yn, each representing a unique data point." loading="lazy" src="/assets/img/bayes-rules-python-cn/complete_pool_diagram-7ff62e06f99c.png" width="90%"/>
+<p class="caption">
+图15.5：完全池化模型的一般框架。
+</p>
 </div>
 <div class="describe">
-<p>完整的集合办法的缺点</p>
-<p>采取完整的集合方法分析分组结构化数据有两个主要缺点:</p>
+<p><strong>完全池化方法的缺点</strong></p>
+<p>使用完全池化方法分析具有组结构的数据有两个主要缺点：</p>
 <ol style="list-style-type: decimal">
-<li>我们违反了独立的假设;反过来,</li>
-<li>我们可能会对关系本身和这种关系的意义产生误导性的结论。</li>
+<li>我们违反了独立性假设；进而，</li>
+<li>我们可能会对关系本身及其显著性得出误导性结论。</li>
 </ol>
 </div>
 </div>
 <div class="section level2" id="no-pooling" number="15.2">
-<h2>没有集合</h2>
-<p>我们的集合模式失败了, 而不是把所有人混为一谈, 这个框架由图15.6中的图表示,</p>
+<h2> 不池化</h2>
+<p>完全池化模型失败了，我们转向另一个极端。
+不池化（no pooling）方法不把所有人混在一起、忽视任何关于跑者的信息，而是<strong>分别</strong>考虑我们的 <span class="math inline">\(m = 36\)</span> 位跑者。
+这个框架由图 <a href="/bayes-rules-python-cn/chapter-15/#fig:no-pool-diagram-1">15.6</a> 表示，其中 <span class="math inline">\(y_{ij}\)</span> 表示跑者 <span class="math inline">\(j\)</span> 的第 <span class="math inline">\(i\)</span> 次观测。</p>
 <div class="figure" style="text-align: center"><span id="fig:no-pool-diagram-1" style="display:block;"></span>
-<img alt="三个独立的,没有连接的流程图. 于各顶上为一盒. 这些是标注为1号跑者,跑者2号和跑者m. 每个框中有三个不同的箭头,导致气泡,代表每个跑者上三个独特的数据点." loading="lazy" src="/assets/img/bayes-rules-python-cn/no_pool_diagram-2d9f45c9f7c7.png" width="95%"/>
-<p class="caption">图15.6:无集合模式的总框架。</p>
+<img alt="Three separate, unconnected flow charts. At the top of each is a box. These are labeled runner 1, runner 2, and runner m. Out of each box are 3 different arrows leading to bubbles representing 3 unique data points on each runner." loading="lazy" src="/assets/img/bayes-rules-python-cn/no_pool_diagram-2d9f45c9f7c7.png" width="95%"/>
+<p class="caption">
+图15.6：不池化模型的一般框架。
+</p>
 </div>
-<p>这个框架还意味着,没有集合办法为每个跑者建立一个单独的模式。 具体地说,让 0@@表示在他们的\(i\)的比赛中观察到的赛跑时间和赛跑年龄. 然后运行时间的正常线性回归模型的数据结构对跑者XQ3XX的年龄是:</p>
-<p>\[\begin{equation} Y_{ij} | \beta_{0j}, \beta_{1j}, \sigma \sim N\left(\mu_{ij}, \sigma^2\right) \;\; \text{ with } \;\; \mu_{ij} = \beta_{0j} + \beta_{1j} X_{ij}. \tag{15.2} \end{equation}\]</p>
-<p>这个模式允许每个跑者XQ0XQ拥有独特的截取XQ1X和年龄系数XQ2XX. 以及随着时间推移速度的变化对每个人来说并不一样(因此, 如果使用模糊的前科, 由此产生的个别后期中位数模型将类似于以下模式:</p>
-<div class="sourceCode" id="cb309">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>这个框架也意味着不池化方法为每位跑者构建一个<em>单独</em>的模型。
+具体来说，设 <span class="math inline">\((Y_{ij}, X_{ij})\)</span> 表示跑者 <span class="math inline">\(j\)</span> 在其第 <span class="math inline">\(i\)</span> 次比赛中的观测跑步时间和年龄。
+那么跑者 <span class="math inline">\(j\)</span> 的跑步时间与年龄的正态线性回归模型的数据结构为：</p>
+<p><span class="math display" id="eq:no-pool-ch15">\[\begin{equation}
+Y_{ij} | \beta_{0j}, \beta_{1j}, \sigma \sim N\left(\mu_{ij}, \sigma^2\right) \;\; \text{ 其中 } \;\; \mu_{ij} = \beta_{0j} + \beta_{1j} X_{ij}.
+\tag{15.2}
+\end{equation}\]</span></p>
+<p>该模型允许每位跑步者 <span class="math inline">\(j\)</span> 拥有独特的截距 <span class="math inline">\(\beta_{0j}\)</span> 和年龄系数 <span class="math inline">\(\beta_{1j}\)</span>。或者，在跑步的语境下，无池化模型反映了有些人天生跑得比其他人快（因此 <span class="math inline">\(\beta_{0j}\)</span> 不同）以及速度随时间的变化因人而异（因此 <span class="math inline">\(\beta_{1j}\)</span> 不同）。虽然我们不会实际实现这 36 个无池化模型，但如果采用模糊先验，得到的个体后验中位数模型将与下图类似：</p>
+<div class="sourceCode" id="cb309"><pre><code class="language-python">import seaborn as sns
+import matplotlib.pyplot as plt
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+g = sns.FacetGrid(examples, col="runner")
+g.map(sns.regplot, "age", "net", ci=None, truncate=False, scatter=True)
+g.set(xlim=(52, 62))
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch15-subj-specific" style="display:block;"></span>
-<img alt="净运行时间(y-轴)对年龄(x-轴)有3个散点,标签为1,20,22. 每个都有5个数据点和沿着这些数据点落下的一条蓝线. 就地块1而言,5个数据点在70至90分钟之间下降,在年龄上略有下降趋势。 就20号地块而言,5个数据点在90至125分钟之间跌落,呈急剧上升的趋势。 就地块22而言,5个数据点在80至95分钟之间下降,并有略微上升的趋势." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch15-subj-specific-1-6bea0ce8c6b5.png" width="528"/>
-<p class="caption">图15.7:3个学科的运行时间与年龄的分布,以及具体学科的趋势(蓝色)。</p>
+<img alt="There are 3 scatterplots of net running time (y-axis) vs age (x-axis), labeled 1, 20, and 22. Each has 5 data points and a blue line that falls along these data points. For plot 1, the 5 data points fall between 70 and 90 minutes and have a slight downward trend across age. For plot 20, the 5 data points fall between 90 and 125 minutes and have a steep upward trend. For plot 22, the 5 data points fall between 80 and 95 minutes and have a slight upward trend." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch15-subj-specific-1-6bea0ce8c6b5.png" width="528"/>
+<p class="caption">
+图 15.7：3 名被试的跑步时间与年龄散点图，以及被试特异性趋势（蓝色）。
+</p>
 </div>
-<p>乍一看这看起来不错 赛跑特异性型号迎来赛跑特异性趋势. 然而,没有集合办法有两个重大缺点。 首先,假设你计划 在樱桃花赛跑 在接下来的每个几年。 基于我们三个案例没有集合结果,你预计你的运行时间是多少? 你被砍伤了吗? 如果没有,你应该。 任何集合方式都无法帮助你回答这个问题。 由于它们适合我们样本中的36个人, 考虑一下第二处皱纹,做一个快速的测试. 67国道</p>
+<p>这初看似乎不错。跑步者特异性模型捕捉到了跑步者特异性的趋势。然而，无池化方法有两个显著的缺点。首先，假设你计划在未来几年内每年参加樱花长跑比赛。根据我们三个示例案例的无池化结果，你预计你的跑步时间会是多少？你被难住了吗？如果没有，你应该犯难。无池化方法无法帮助你回答这个问题。因为这些模型是针对我们样本中的 36 个个体定制的，得到的 36 个模型无法可靠地外推到这些个体之外。再考虑第二个小问题，做个小测验。<a class="footnote-ref" href="#fn67" id="fnref67"><sup>67</sup></a></p>
 <div class="quiz">
-<p>重新审查图15.7中的第1跑道。 如果他们在62岁时第六次比赛, 在他们最新的数据点之后5年, 你会期望他们的净运行时间是什么?</p>
+<p>重新查看图 <a href="/bayes-rules-python-cn/chapter-15/#fig:ch15-subj-specific">15.7</a> 中的跑步者 1。如果他们在 62 岁时第六次参赛，距离他们最近的数据点已有 5 年，你预计他们的 <code>net</code> 跑步时间会是多少？</p>
 <ol style="list-style-type: lower-alpha">
-<li>75分钟以下</li>
-<li>75至85分钟</li>
-<li>85分钟以上</li>
+<li>低于 75 分钟</li>
+<li>75 到 85 分钟之间</li>
+<li>高于 85 分钟</li>
 </ol>
 </div>
-<p>如果你用没有集合模型来回答这个问题,你的答案将是a. 跑者1的型号表明,他们随着年龄的增长越来越快,到他们62岁时应该有不到75分钟的运行时间. 然而,这个集合结论并不存在于真空中,只考虑有关跑者的数据。 从其他35名跑者中,我们观察到大多数人往往会随着时间推移变慢。 尤其因为我们只有跑者1的5个种族样本大小(因此, 一个更合理的预测可能是备选案文b:虽然它们可能不会保持如此陡峭的下行轨迹,但跑者1很可能仍然是跑者,比赛时间在75至85分钟之间。 若我们不单独使用集合模式, 虽然我们探索了樱桃花花卉赛的具体背景,</p>
+<p>如果你使用非合并模型来回答这个问题，你的答案会是 a。跑步者 1 的模型表明，他们随着年龄增长越来越快，到 62 岁时跑步时间应该低于 75 分钟。然而，这一非合并结论存在于真空中，只考虑了跑步者 1 的数据。从其他 35 名跑步者中，我们观察到大多数人会随着年龄增长变慢。完全忽略这一信息是不合理的，尤其是我们只有区区五场比赛的跑步者 1 样本量（因此没有理由忽视额外数据！）。一个更合理的预测可能是选项 b：尽管跑步者 1 可能不会保持如此陡峭的下降趋势，但他们很可能仍是一名快速跑步者，比赛时间在 75 到 85 分钟之间。同样，这才是合理的结论，而不是我们仅使用非合并模型得出的结论。虽然我们在樱花赛跑的具体背景下探讨了非合并方法的缺点，但这些缺点具有普遍性。</p>
 <div class="describe">
-<p>无集合办法的缺点</p>
-<p>没有采取集合方法分析分组结构数据有两个主要缺点:</p>
+<p><strong>非合并方法的缺点</strong></p>
+<p>采用非合并方法分析分组结构数据有两个主要缺点：</p>
 <ol style="list-style-type: decimal">
-<li>我们无法可靠地概括或将特定团体的集合模式适用于我们样本中群体以外的群体。</li>
-<li>任何集合模式都认为一个团体不包含另一个团体的相关信息,因此忽略了可能有价值的信息。 如果我们每组有少量的观测结果,情况尤其如此。</li>
+<li>我们无法可靠地将特定于组的非合并模型推广或应用于样本之外的组。</li>
+<li>非合并模型假设一个组不包含关于另一个组的相关信息，因此忽略了可能有价值的信息。当每组观测数量较少时，这一点尤其重要。</li>
 </ol>
 </div>
 </div>
 <div class="section level2" id="hierarchical-data" number="15.3">
-<h2>等级数据</h2>
-<p>"樱桃花"数据给我们带来了新的挑战:等级数据. 这一等级的一般结构见图15.8。 这个等级的顶层 是所有跑者的数量, 不只是我们样本中的那些。 下一层是36名跑者 从这群人群中取样 在直到本章的每一份分析中,事情都停止了。 然而,在运行中的数据中,阶梯的最后一层保存着每个跑者的多重观测数据,通常被称为重复测量或纵向数据。</p>
-<p>分级或分组的数据结构在实践中很常见。 并非总能像运行中的数据那样, 在分析新的教学技术时,我们的群体可能是学校,我们观察每个学校的多名学生:</p>
+<h2>分层数据</h2>
+<p>樱花赛跑数据给我们带来了一个新的挑战：<strong>分层数据。</strong>这种层次结构的一般结构如图 <a href="/bayes-rules-python-cn/chapter-15/#fig:partial-pool-diagram-1">15.8</a> 所示。该层次结构的顶层是<em>所有</em>跑步者的总体，而不仅仅是我们样本中的跑步者。下一层是我们的 36 名跑步者，是从这个总体中抽取的。在本章之前的每个分析中，到这里就停止了。然而在 <code>running</code> 数据中，层次结构的最后一层包含每名跑步者的多个观测值，通常称为<strong>重复测量</strong>或<strong>纵向数据</strong>。</p>
+<p>分层（或<em>分组</em>）数据结构在实践中很常见。这些并不总是像 <code>running</code> 数据那样源于对<em>个人</em>的多次观测。在分析新的教学技术时，我们的组可能是学校，而我们的观测是每所学校内的多名学生：</p>
 <pre class="sourceCode"><code>  school_id tech score
 1         1    A    90
 2         1    A    94
 3         1    B    82
 4         2    A    85
 5         2    B    89</code></pre>
-<p>在对天然驱蚊剂的分析中 我们的小组可能是实验室样本 以及每个实验室的多项实验</p>
+<p>在分析天然驱蚊剂时，我们的组可能是一组实验室样本，而我们的观测是每个实验室内的多个实验：</p>
 <pre class="sourceCode"><code>  lab_id repellant score
 1      1         A    90
 2      1         A    94
 3      1         B    82
 4      2         A    85
 5      2         B    89</code></pre>
-<p>有充分的理由以这种分级方式收集数据。 在时间、金钱、物流和其他资源方面, 例如,虽然两种数据收集方法都产生100个数据点,但与100个不同学校的每所学校1名学生相比,在5个不同学校约谈20名学生所需的资源要少。 等级数据也提供了对两个重要特征的见解:</p>
+<p>以这种分层方式收集数据有充分的理由。首先，在时间、金钱、后勤和其他资源方面，它通常更具可持续性。例如，尽管两种数据收集方法都会产生 100 个数据点，但分别在 5 所不同学校各采访 20 名学生所需的资源比在 100 所不同学校各采访 1 名学生要少。分层数据还能深入了解两个重要特征：</p>
 <ol style="list-style-type: decimal">
-<li><p>内部 - 组别变异 每一组内多种观测的变异程度本身可能很有趣。 例如,我们可以审查个人每年的运行时间是否一致。</p></li>
-<li><p>之间 - 组变异分级数据也允许我们逐组检查变异性. 例如,我们可以审查个人运行模式的不同程度。</p></li>
+<li><p><strong>组内变异性</strong><br/> 每组<em>内部</em>多个观测值之间的变异程度本身就很有趣。例如，我们可以考察<em>个人</em>跑步成绩逐年的一致性如何。</p></li>
+<li><p><strong>组间变异性</strong><br/>
+分层数据还使我们能够考察组与组之间的变异性。例如，我们可以考察跑步模式因人而异的程度。</p></li>
 </ol>
 </div>
 <div class="section level2" id="partial-pooling-with-hierarchical-models" number="15.4">
-<h2>与等级模式部分合并</h2>
-<p>我们现有的贝叶斯模型工具箱提供了两种分析等级数据的方法。 我们可以完全忽略组合结构,将所有组合组合在一起,并假设一个模式通过完全集合是适当的普遍模式(图15.5)。 或者我们可以分别分析每个团体, 在这种“无个性空间”和“人人为自己”的态度之间,等级模式通过部分集中提供了令人欢迎的中间立场(图15.8)。 一般而言,等级模型包含以下概念:虽然每个群体都是独特的,从同一人口抽样,但所有群体都是相互关联的,因此可能包含关于彼此的宝贵信息。 我们在这里探索这个想法, 并且实际上将开始建立层次模型 在第16章。</p>
+<h2> 分层模型中的部分合并（partial pooling）</h2>
+<p>我们现有的贝叶斯建模工具箱提供了两种分析分层数据的方法。
+我们可以完全忽略分组结构，将所有组混在一起，通过<strong>完全合并（complete pooling）</strong>假设一个模型普遍适用（图 <a href="/bayes-rules-python-cn/chapter-15/#fig:complete-pool-diagram-1">15.5</a>）。
+或者我们可以<em>分别</em>分析每个组，通过<strong>不合并（no pooling）</strong>假设一个组的模型不能告诉我们关于另一个组的任何信息（图 <a href="/bayes-rules-python-cn/chapter-15/#fig:no-pool-diagram-1">15.6</a>）。
+在“没有个性空间”和“人人为己”这两种态度之间，<strong>分层模型</strong>通过<strong>部分合并（partial pooling）</strong>提供了一个受欢迎的中庸之道（图 <a href="/bayes-rules-python-cn/chapter-15/#fig:partial-pool-diagram-1">15.8</a>）。
+一般来说，分层模型秉承以下思想：尽管每个组都是<em>独特的</em>，但由于它们来自同一个总体，所有组都是相互关联的，因此可能包含关于彼此的有价值信息。我们在此深入探讨这一<em>思想</em>，并将在第 <a href="/bayes-rules-python-cn/chapter-16/#chapter-16">16</a> 章实际<em>构建</em>分层模型。</p>
 <div class="figure" style="text-align: center"><span id="fig:partial-pool-diagram-1" style="display:block;"></span>
-<img alt='流图. 顶部是标有"人口"字样的盒子. 此框中有三个不同的箭头,导致标注为第1组,第2组和M组的盒子. 其中每个框中有三个不同的箭头,导致气泡代表每个组上的三个独特的数据点.' loading="lazy" src="/assets/img/bayes-rules-python-cn/partial_pool_diagram-9038ce277434.png" width="90%"/>
-<p class="caption">图15.8:等级模型的一般框架。</p>
+<img alt="A flow chart. At the top is a box labeled Population. Out of this box are 3 different arrows leading to boxes labeled group 1, group 2, and group m. Out of each of these boxes are 3 different arrows leading to bubbles representing 3 unique data points on each group." loading="lazy" src="/assets/img/bayes-rules-python-cn/partial_pool_diagram-9038ce277434.png" width="90%"/>
+<p class="caption">
+图 15.8：分层模型的通用框架。
+</p>
 </div>
-<p>图15.9比较了我们三个样本跑者与你(我们尚未观察到的一个新跑者)的分级、无集合和完整的跑时间集合模式。 想想我们三个样本跑者 虽然我们使用同样的数据,但我们的三种技术为这些跑者创造了不同的后中位数模型。 与完整的集合模式(黑色)不同,分级模式(dashed)允许每个个体的跑者享受独特的后期趋势. 这些趋势发现,跑者1是我国跑者中最快的。 然而,与无集合模型(蓝色)不同,跑者特有的等级模型不会忽略其他跑者的数据. 例如,检查跑者1的成绩。 仅根据该跑者的数据,没有集合模型假定其下行轨迹会继续下去。 相比之下,面对只有五个关于跑者1的数据点,然而我们其他35名跑者有力地证明,人们倾向于放慢速度,等级趋势的坡度已经拉高。 一般来说,由于认识到一名选手的数据可能包含关于另一名选手的宝贵信息,等级模型的趋势从没有集合的单个模型转向完全集合的通用模型。</p>
+<p>图 <a href="/bayes-rules-python-cn/chapter-15/#fig:runners-ch-15">15.9</a> 比较了针对三位示例跑者<em>以及</em>你（一位我们尚未观察到的新跑者）的跑步时间随年龄变化的分层模型、不合并模型和完全合并模型。
+考虑我们的三位示例跑者。
+尽管利用了相同的数据，我们的三种技术为这些跑者产生了不同的后验中位数模型。
+与<em>完全</em>合并模型（黑色）不同，分层模型（虚线）允许每位个体跑者拥有独特的后验趋势。
+这些趋势检测到了跑者 1 是我们的示例跑者中最快的事实。
+但与<em>不</em>合并模型（蓝色）不同，针对特定跑者的分层模型不会忽略其他跑者的数据。
+例如，考察跑者 1 的结果。
+仅基于该跑者的数据，不合并模型假设他们的下降趋势将继续。
+相反，在只有跑者 1 的五个数据点，却有来自<em>其他</em> 35 位跑者的有力证据表明人们通常会变慢的情况下，分层趋势的斜率被向上拉动了。
+一般来说，识别到一位跑者的数据可能包含关于另一位的有价值信息，分层模型趋势会<em>偏离</em>不合并的个体模型，并<em>趋向</em>完全合并的通用模型。</p>
 <div class="figure" style="text-align: center"><span id="fig:runners-ch-15" style="display:block;"></span>
-<img alt="净运行时间(y-轴)对年龄(x-轴)有4个散点,标签为1,20,22,还有你. 在每块地块中都有一条几乎平坦的黑线,落在垂直中心. 标记为1,20和22的地块各有5个数据点,如前几块地块所述. 每个都有一个沿着这些数据点落下的蓝线和一个破折线。 破折线有相似的,中度的坡度,大于黑线的坡度. 然而,它们的拦截因数据点而异. 贴上你标签的第四幅图没有任何数据点或蓝线. 其破损线的坡度与其它地块的破损线相似,并跨越黑线." loading="lazy" src="/assets/img/bayes-rules-python-cn/runners-ch-15-1-c1c0aeaa7195.png" width="384"/>
-<p class="caption">FIGURE 15.9:无集合(蓝色),完整集合(黑色)和分级(dashed)模式的后置中位数模式,运行时间对三个例如跑者和你的年龄。</p>
+<img alt="There are 4 scatterplots of net running time (y-axis) vs age (x-axis), labeled 1, 20, 22, and you. In each plot is a nearly flat black line that falls at the vertical center. The plots labeled 1, 20, and 22 each have 5 data points, as described in previous plots. Each also has a blue line which falls along these data points, and a dashed line. The dashed lines have similar, moderate slopes which are greater than the slope of the black line. However, their intercepts differ according to the data points. The fourth plot labeled you does not have any data points or a blue line. Its dashed line has a similar slope as the other plots' dashed lines and crosses the black line." loading="lazy" src="/assets/img/bayes-rules-python-cn/runners-ch-15-1-c1c0aeaa7195.png" width="384"/>
+<p class="caption">
+图 15.9：不合并模型（蓝色）、完全合并模型（黑色）和分层模型（虚线）针对三位示例跑者以及你的跑步时间随年龄变化的后验中位数模型。
+</p>
 </div>
-<p>最后,考虑一下你的建模结果,一个新的跑者。 请注意您的面板没有蓝线。 既然你没有在最初的运行样本中, 我们不能用没有集合模型来预测你的运行趋势。 对比之下,由于他们不会忽略我们选手所选的更广泛的人口,因此完全集合和分级的模式都可以用来预测你们的趋势。 但结果却不一样! 由于完全集合模型无法发现50多岁的跑者会随着时间推移变慢, 虽然这是一个不错的想法,但分级模型可能会提供更现实的预测。 根据36名选手的数据, 此外,你慢下来的预期速度与我们36名选手的平均速度相当。</p>
+<p>最后，考虑为你这位新跑者的建模结果。
+注意你的面板中没有蓝线。
+由于你不在原始的 <code>running</code> 样本中，我们不能使用不合并模型来预测你的跑步趋势。
+相反，由于它们没有忽略我们的跑者所来自的更广泛总体，完全合并模型和分层模型都可以用于预测你的趋势。
+但结果不同！
+由于完全合并模型未能检测到 50 多岁的跑者往往随时间变慢的事实，你的后验中位数模型（黑色）的斜率接近零。
+虽然这是一个美好的想法，但分层模型可能提供了一个更现实的预测。
+基于所有 36 位跑者的数据，你可能会变慢一点。
+此外，你预期变慢的速度与我们 36 位跑者的平均速度相当。</p>
 </div>
 <div class="section level2" id="chapter-summary-14" number="15.5">
-<h2>章节摘要</h2>
-<p>在第15章中,我们鼓励将另一种技术纳入我们的贝叶斯工具箱的重要性:等级模型。 我们侧重于大思想而不是细节,探讨了研究小组结构数据的三个方法:</p>
+<h2> 章节总结</h2>
+<p>在第 <a href="/bayes-rules-python-cn/chapter-15/#chapter-15">15</a> 章中，我们强调了将另一技术——分层模型——纳入贝叶斯工具箱的重要性。
+我们着眼于大局而非细节，探讨了研究分组数据的三种方法：</p>
 <ul>
-<li><p>完整的集合模型将所有数据点拼凑在一起,假定它们是独立的,一个通用模型适用于所有群体。 这可能会对利益关系和这种关系的意义产生误导性的结论。 简而言之,完整的集合模式的氛围“没有个性空间”。</p></li>
-<li><p>任何集合模式都无法为每个团体建立单独的模式, 这种方法没有充分利用数据,不能泛指我们样本以外的群体。 简而言之,没有集合模式的氛围是“各自为己”。</p></li>
-<li><p>部分集合或分级模式提供了一个中间点。 他们承认,虽然每个群体都有自己的模式,但一个群体可以提供关于另一个群体的宝贵信息。 也就是说,“让我们在庆祝我们的个性时互相学习。 ”</p></li>
+<li><p><strong>完全池化模型</strong>将所有数据点合并在一起，假设它们是独立的，并且一个通用模型适用于所有组。这可能会对所关注的关系及其重要性产生误导性结论。简而言之，完全池化模型的态度是“没有个体差异的空间”。</p></li>
+<li><p><strong>非池化模型</strong>为每个组建立单独的模型，假设一个组的模型不能告诉我们任何关于另一个组的信息。这种方法未能充分利用数据，并且无法推广到样本外的组。简而言之，非池化模型的态度是“各组自顾自”。</p></li>
+<li><p><strong>部分池化模型（即分层模型）</strong>提供了一种折衷方案。它们承认，尽管每个组都可能有自己的模型，但一个组可以提供关于另一组的有价值信息。也就是说，“让我们互相学习，同时保持个体独特性”。</p></li>
 </ul>
 </div>
 <div class="section level2" id="exercises-14" number="15.6">
-<h2>练习</h2>
+<h2> 练习</h2>
 <div class="section level3" id="conceptual-exercises-9" number="15.6.1">
-<h3>概念练习</h3>
+<h3> 概念练习</h3>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-639"><strong>Exercise 15.1  (Three pooling types: explain to your friend)  </strong></span>In one to two sentences each, explain the following concepts to your friend Hakeem, who has taken an intro statistics course but otherwise is new to pooled data.
+<span class="exercise" id="exr:unnamed-chunk-639"><strong>练习15.1（三种池化类型：向朋友解释）</strong></span>用一到两句话，向你的朋友 Hakeem 解释以下概念。Hakeem 上过统计学入门课，但对池化数据是新手。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>完成集合</li>
-<li>没有集合</li>
-<li>部分集合</li>
+<li>完全池化</li>
+<li>不汇总</li>
+<li>部分汇总</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-640"><strong>Exercise 15.2  (Three pooling types: redux)  </strong></span>Hakeem now understands the three pooling approaches thanks to your excellent explanations in the previous exercise. Now he has some follow-up questions! Answer these in your own words and using your own examples.
+<span class="exercise" id="exr:unnamed-chunk-640"><strong>练习 15.2（三种汇总方式：回顾）</strong></span> Hakeem 现在通过你上一道题的出色解释，已经理解了三种汇总方式。他还有一些后续问题！请用你自己的话和例子回答。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>能不能举个例子,当我们想采用部分集中的办法时?</li>
-<li>为什么我们不总是使用完全的集合方式? 这似乎更容易!</li>
-<li>没有集合办法有缺点吗? 假设似乎较少。</li>
-<li>你能提醒我 组内变异和组间变异有什么区别吗? 这与部分集合有什么关系?</li>
+<li>你能举个例子说明什么时候我们可能想要使用部分汇总方法吗？</li>
+<li>为什么我们不总是只用完全汇总方法？它看起来更简单！</li>
+<li>不汇总方法有什么缺点吗？它似乎假设更少。</li>
+<li>你能提醒我一下<em>组内</em>变异和<em>组间</em>变异的区别是什么吗？以及这与部分汇总有什么关系？</li>
 </ol>
 </div>
 <div class="section level3" id="applied-exercises-7" number="15.6.2">
 <h3>应用练习</h3>
-<p>关注剥夺睡眠对反应时间的影响,Belenky等人. (2003年)在一项研究中加入了18个科目。 学员们在学习的 " 0日 " 时有正常的夜间睡眠,然后在接下来的9天里,每晚只能睡3小时。 每天,研究人员在一系列测试中记录受试者的反应时间(毫秒)。 其结果在lme4包中的睡眠研究数据集中提供.</p>
+<p>为研究睡眠剥夺对反应时间的影响，<span class="citation"><a href="#ref-sleep" role="doc-biblioref">Belenky et al.</a> (<a href="#ref-sleep" role="doc-biblioref">2003</a>)</span> 招募了 18 名受试者。受试者在研究第 0 天正常睡眠，随后 9 天每晚只睡 3 小时。研究人员每天记录受试者在系列测试中的反应时间（单位：毫秒）。结果保存在 <code>sleepstudy</code> 数据集中。</p>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-641"><strong>Exercise 15.3  (Hierarchical data)  </strong></span>The <code>sleepstudy</code> data is hierarchical. Draw a diagram in the spirit of Figure <a href="/bayes-rules-python-cn/chapter-15/#fig:partial-pool-diagram-1">15.8</a> that captures the hierarchical framework. Think: What are the “groups?”
+<span class="exercise" id="exr:unnamed-chunk-641"><strong>练习 15.3（分层数据）</strong></span> <code>sleepstudy</code> 数据是分层的。仿照图 <a href="/bayes-rules-python-cn/chapter-15/#fig:partial-pool-diagram-1">15.8</a> 画一张图来体现分层框架。想一想：“组”是什么？
 </div>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-642"><strong>Exercise 15.4  (Complete pooling: Part I)  </strong></span>Suppose that we (incorrectly) took a complete pooling approach to modeling <code>Reaction</code> time (<span class="math inline">\(Y\)</span>) by <code>Days</code> of sleep deprivation (<span class="math inline">\(X\)</span>).
-</div>
-<ol style="list-style-type: lower-alpha">
-<li>探索数据点的完整集合行为,构建并讨论由Days反应的情节. 在这样做时,忽略主体,并包括观察到的关系趋势.</li>
-<li>以图15.8的精神绘制一个图,捕捉完整的集合框架.</li>
-<li>使用仔细的注解,</li>
-</ol>
-<div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-643"><strong>Exercise 15.5  (Complete pooling: Part II)  </strong></span>In the context of the sleep study, what two incorrect assumptions does the complete pooled model make and why are these inappropriate in the sleep study analysis?
-</div>
-<div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-644"><strong>Exercise 15.6  (No pooling: Part I)  </strong></span>Suppose instead that we (incorrectly) took a no pooling approach in our sleep study analysis.
+<span class="exercise" id="exr:unnamed-chunk-642"><strong>练习 15.4（完全池化：第一部分）</strong></span> 假设我们（错误地）采用完全池化方法对 <code>Reaction</code> 时间（<span class="math inline">\(Y\)</span>）随睡眠剥夺 <code>Days</code>（<span class="math inline">\(X\)</span>）的变化进行建模。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>探索数据点的不集合行为,构建和讨论每个主体按日分别的散点反应,包括主题特定趋势线.</li>
-<li>以图15.6的精神绘制一个图,以捕捉无集合框架.</li>
-<li>使用仔细的注解,</li>
+<li>为探究数据点的完全池化行为，构建并讨论一张 <code>Reaction</code> 随 <code>Days</code> 变化的图。在此过程中，忽略受试者，并纳入关系中的观测趋势。</li>
+<li>仿照图 <a href="/bayes-rules-python-cn/chapter-15/#fig:partial-pool-diagram-1">15.8</a> 画一张图来体现完全池化框架。</li>
+<li>使用严谨的符号，写出 <span class="math inline">\(Y\)</span> 对 <span class="math inline">\(X\)</span> 的完全池化模型结构。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-645"><strong>Exercise 15.7  (No pooling: Part II)  </strong></span>In the context of the sleep study, what are the two main drawbacks to analyzing the relationship between reaction time and sleep deprivation using a no pooling approach?
+<span class="exercise" id="exr:unnamed-chunk-643"><strong>练习 15.5（完全池化：第二部分）</strong></span> 在睡眠研究的背景下，完全池化模型犯了哪两个错误假设？为什么这些假设在睡眠研究分析中不合适？
 </div>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-646"><strong>Exercise 15.8  (Complete vs no vs partial pooling)  </strong></span>Suppose we only had data on the two subjects below. For both, provide a loose sketch of three separate trend lines corresponding to a complete pooled, no pooled, and partial pooled model of <code>Reaction</code> time by <code>Days</code>.
+<span class="exercise" id="exr:unnamed-chunk-644"><strong>练习 15.6（无池化：第一部分）</strong></span> 假设我们在睡眠研究分析中（错误地）采用了无池化方法。
+</div>
+<ol style="list-style-type: lower-alpha">
+<li>为探索数据点的非合并行为，为每个受试者构建并讨论以 <code>Days</code> 为横轴、<code>Reaction</code> 为纵轴的单独散点图，包括各受试者特定的趋势线。</li>
+<li>绘制一幅类似图 <a href="/bayes-rules-python-cn/chapter-15/#fig:no-pool-diagram-1">15.6</a> 的示意图，用以描绘非合并框架。</li>
+<li>使用严谨的符号，写出 <span class="math inline">\(Y\)</span> 关于 <span class="math inline">\(X\)</span> 的非合并模型结构。</li>
+</ol>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-645"><strong>练习 15.7 (非合并：第二部分)  </strong></span>在睡眠研究的背景下，采用非合并方法分析反应时间与睡眠剥夺之间关系的两个主要缺点是什么？
+</div>
+<div class="exercise">
+<span class="exercise" id="exr:unnamed-chunk-646"><strong>练习 15.8 (完全合并 vs 非合并 vs 部分合并)  </strong></span>假设我们只有下面两个受试者的数据。针对两者，分别粗略画出三条趋势线，对应于 <code>Reaction</code> 时间关于 <code>Days</code> 的完全合并、非合并与部分合并模型。
 </div>
 <p><img loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-647-1-05fa2a09185d.png" style="display: block; margin: auto;" width="384"/></p>
 </div>
 </div>
 </div>
-<h3>参考资料</h3>
+<h3>参考文献</h3>
 <div class="references csl-bib-body hanging-indent" id="refs">
 <div class="csl-entry" id="ref-R-mdsr">
 Baumer, Benjamin S., Nicholas Horton, and Daniel Kaplan. 2021. <em>Mdsr: Complement to Modern Data Science with r</em>. <a href="https://github.com/mdsr-book/mdsr">https://github.com/mdsr-book/mdsr</a>.
@@ -407,6 +401,12 @@ Baumer, Benjamin S., Nicholas Horton, and Daniel Kaplan. 2021. <em>Mdsr: Complem
 <div class="csl-entry" id="ref-sleep">
 Belenky, Gregory, Nancy J. Wesensten, David R. Thorne, Maria L. Thomas, Helen C. Sing, Daniel P. Redmond, Michael B. Russo, and Thomas J. Balkin. 2003. <span>“Patterns of Performance Degradation and Restoration During Sleep Restriction and Subsequent Recovery: A Sleep Dose-Response Study.”</span> <em>Journal of Sleep Research</em> 12: 1–12.
 </div>
+</div>
+<div class="footnotes">
+<hr/>
+<ol start="67">
+<li id="fn67"><p>答案：这里没有唯一的正确答案，但我们认为 b 最合理。<a class="footnote-back" href="/bayes-rules-python-cn/chapter-15/#fnref67">↩︎</a></p></li>
+</ol>
 </div>
 </section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-14/">上一节：第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-16/">下一节：第 16 章 无预测变量的正态分层模型</a></nav>
 </article>

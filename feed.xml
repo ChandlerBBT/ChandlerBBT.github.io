@@ -10,7 +10,7 @@
       <link>https://chandlerbbt.github.io/posts/bayes-rules-python-cn/</link>
       <guid>https://chandlerbbt.github.io/posts/bayes-rules-python-cn/</guid>
       <pubDate>Wed, 03 Jun 2026 00:00:00 +0800</pubDate>
-      <description>把 Bayes Rules! 在线教程改编为简体中文，并将 R/rstan/rstanarm 示例转写为 Python/PyMC/ArviZ 生态。</description>
+      <description>Bayes Rules! 的简体中文 Python 教程入口，覆盖贝叶斯建模、后验推断、回归、分类与分层模型。</description>
     </item>
     <item>
       <title>30 人部门 AI 助理部署手册：飞书入口、Hermes 实例、Mac Studio 承载</title>

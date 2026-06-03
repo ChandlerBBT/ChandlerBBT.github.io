@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-
+html
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"/>
@@ -44,815 +43,864 @@
 <section class="normal" id="section-">
 <div class="section level1" id="chapter-19" number="19">
 <h1>第 19 章 加入更多层级</h1>
-<div class="tutorial-note">
-<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
-</div>
-<p>我们为贝叶斯人的思考和建模奠定了基础。 但是,在更广泛的计划里,我们刚刚刮到了表面。 这最后一章标志着这本书的结束,而不是巴耶斯模型工具包的结束. 但一本书无法涵盖所有内容。 (也许续集? ) 拜尔斯规则2! 贝叶斯或巴耶斯规则2! 欢乐的贝叶又来了! 希望贝叶斯规则! 已经激发了你的好奇心,你觉得自己有能力推进你的贝叶斯探索。 最后,我们进一步淡化我们的等级模式,以解决两个问题。</p>
+<p>本书从头到尾一直在为贝叶斯思维和建模打下基础。但从更大的蓝图来看，我们才刚触及皮毛。这最后一章是本书的终点，但不是贝叶斯建模工具箱的终点。我们还有很多想分享的东西，但一本书不可能面面俱到。（也许会有续作？！《Bayes Rules 2! The Bayesianing》或《Bayes Rules 2! Happy Bayes Are Here Again!》）希望《Bayes Rules!》已经激起了你的好奇心，并让你觉得自己有能力进一步探索贝叶斯。我们在此将分层模型再推进一步，来回答两个问题。</p>
 <div class="goals">
 <ul>
-<li>我们利用个人的预测器, 我们还如何利用集团一级的预测器来更好地了解集团本身的趋势?</li>
-<li>当我们有一个以上的组合变量时会发生什么?</li>
+<li>我们已经使用<strong>个体层面预测变量（individual-level predictors）</strong>来更好地理解群体内个体的趋势。我们如何也能使用<strong>群体层面预测变量（group-level predictors）</strong>来更好地理解群体本身的趋势呢？</li>
+<li>当我们有<em>不止一个分组变量</em>时，会发生什么？</li>
 </ul>
 </div>
-<p>我们将通过两个案例研究来探讨这些问题。 为了着重本章中的新概念,我们还将利用资料不足的前科。 我们推荐Legler和Roback(2021年)或Gelman和Hill(2006年)。 尽管这些资源利用了频繁的框架,但如果你读了这么远,你拥有通过贝叶斯视角考虑他们工作的技能。</p>
-<div class="sourceCode" id="cb421">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python"># 原书 bayesrules 数据包中的数据需改用 CSV/本地数据文件读取
+<p>我们将通过两个案例研究来探讨这些问题。为突出本章的新概念，我们全文都会采用弱信息先验（weakly informative priors）。如果想得到更全面的讲解，我们推荐 <span class="citation"><a href="#ref-legler" role="doc-biblioref">Legler and Roback</a> (<a href="#ref-legler" role="doc-biblioref">2021</a>)</span> 或 <span class="citation"><a href="#ref-hill" role="doc-biblioref">Gelman and Hill</a> (<a href="#ref-hill" role="doc-biblioref">2006</a>)</span>。尽管这些资源采用的是频率学派框架，但如果你已经读到了这里，你就已经有能力从贝叶斯视角来看待他们的工作。</p>
+<div class="sourceCode" id="cb421"><pre><code class="language-python"># 导入必要的库
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import arviz as az
 import pymc as pm
-# pandas 通常可以覆盖 janitor 的表格清理任务
+import arviz as az
+import scipy.stats as stats
 
-with pm.Model() as model:
-    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
-    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
-    # sigma = pm.HalfNormal('sigma', sigma=10)
-    # mu = beta_0 + beta_1 * x
-    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
-    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
-az.summary(idata)
-# 装入软件包</code></pre>
-</div>
+# 加载 airbnb 数据集（此处假设数据已准备好，例如从 CSV 读取）
+# airbnb = pd.read_csv('airbnb.csv')</code></pre></div>
 <div class="section level2" id="group-level-predictors" number="19.1">
-<h2>组级预测器</h2>
-<p>在第18章中,我们探讨了从AirBnB上市到上市的审查次数如何不同。 我们还可能问:是什么使得一些AirBnB上市比其他人更昂贵? 我们先验对典型的列名费用每晚约100美元的认识很弱。 除了这个基线之外, 我们将用Bayesrules软件包中的Airbnb数据集来补充先验对AirBnB市场的微弱了解。 Airbnb包含43个芝加哥街区1561个上市信息,</p>
-<div class="sourceCode" id="cb422">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<h2> 群体层面预测变量 </h2>
+<p>在第 <a href="/bayes-rules-python-cn/chapter-18/#chapter-18">18</a> 章中，我们探究了评价数量在每个 AirBnB 房源之间如何不同。我们可能还会问：是什么让某些 AirBnB 房源比其他房源更贵？我们对此的先验了解很弱，大致知道一个标准房源每晚约 100 美元。在这个基线之上，我们会借助 <strong>bayesrules</strong> 数据资源中的 <code>airbnb</code> 数据集，用弱信息先验来补充对 AirBnB 市场的理解。回顾一下，<code>airbnb</code> 含有 43 个芝加哥社区中 1561 个房源的信息，因此 <em>每个社区都有多条房源</em>：</p>
+<div class="sourceCode" id="cb422"><pre><code class="language-python"># Airbnb 房源数量
+n_listings = len(airbnb)
+print(f'房源数量: {n_listings}')
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-data(airbnb)
-# 列名数目
-nrow(airbnb)
-[1] 1561
-# 社区数量和其他摘要
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>观测到的上市价格从每晚0. 因此,为了便于我们最终模拟某些列名比其他列名更贵的事物,我们将对称地计算价格。 现在相信我们,</p>
-<div class="sourceCode" id="cb423">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+# 计算社区数量、最低价格、最高价格
+summary = airbnb.agg(
+    n_neighborhood=('neighborhood', 'nunique'),
+    min_price=('price', 'min'),
+    max_price=('price', 'max')
+)
+print(summary)</code></pre></div>
+<p>观测到的房源价格从每晚 10 美元到 1000 美元不等，分布严重偏斜。因此，为了便于后续 <em>建模</em> 解释为什么某些房源更贵，我们将改用对称的 <em>对数</em> 价格。（请先相信我们，后面会给出进一步说明！）</p>
+<div class="sourceCode" id="cb423"><pre><code class="language-python"># 价格分布直方图
+plt.figure()
+sns.histplot(data=airbnb, x='price', bins=np.arange(0, 501, 20), edgecolor='white')
+plt.xlabel('price')
+plt.ylabel('频数')
+plt.title('Airbnb 价格分布')
+plt.show()
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 对数价格分布直方图
+plt.figure()
+sns.histplot(data=airbnb, x=np.log(airbnb['price']), binwidth=0.5, edgecolor='white')
+plt.xlabel('log(price)')
+plt.ylabel('频数')
+plt.title('对数价格分布')
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-831" style="display:block;"></span>
-<img alt="有两块地 左地块是价格的直方图(x轴),价格从0到500美元不等. 价格跌至200美元以下。 右图是log(价格)(x轴)的直方图,其中log(价格)从2到7不等. 它呈钟形,峰值接近4.5." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-831-1-df9c58d22b19.png" width="384"/>
-<p class="caption">FIGURE 19.1: AirBnB的直方图以美元(左)和对数(美元)(右)列出价格.</p>
+<img alt="There are two plots. The left plot is a histogram of price (x-axis) where prices range from 0 to 500 dollars. It is right-skewed with a peak near 75 dollars and most prices falling below 200 dollars. The right plot is a histogram of log(price) (x-axis) where log(price) ranges from 2 to 7. It is bell-shaped with a peak near 4.5." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-831-1-df9c58d22b19.png" width="384"/>
+<p class="caption">
+图 19.1：AirBnB 房源价格（美元，左）及价格对数（右）的直方图。
+</p>
 </div>
 <div class="section level3" id="a-model-using-only-individual-level-predictors" number="19.1.1">
-<h3>一个只使用个人预测器的模型</h3>
-<p>AirBnB上市价格与其拥有的卧室数量、总的用户评级(从1到5级)及其房间类型分配的隐私, 即租户是获得整个私人单位, 还是在共享单位内获得私人房间, 还是共享一个房间:</p>
-<div class="sourceCode" id="cb424">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<h3>仅使用个体层面预测变量的模型</h3>
+<p>如你所料，AirBnB房源的价格与<code>bedrooms</code>的数量、整体用户<code>rating</code>评分（1至5分）以及由<code>room_type</code>所决定的私密性（即租客是获得整个独立单元、在共享单元中获得一个独立房间，还是共享一个房间）正相关：</p>
+<div class="sourceCode" id="cb424"><pre><code class="language-python"># 对数价格与卧室数量的散点图（抖动）
+plt.figure()
+sns.stripplot(data=airbnb, x='bedrooms', y=np.log(airbnb['price']), jitter=True)
+plt.xlabel('bedrooms')
+plt.ylabel('log(price)')
+plt.title('对数价格 vs 卧室数')
+plt.show()
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 对数价格与评分的散点图（抖动）
+plt.figure()
+sns.stripplot(data=airbnb, x='rating', y=np.log(airbnb['price']), jitter=True)
+plt.xlabel('rating')
+plt.ylabel('log(price)')
+plt.title('对数价格 vs 评分')
+plt.show()
+
+# 对数价格按房间类型的箱线图
+plt.figure()
+sns.boxplot(data=airbnb, x='room_type', y=np.log(airbnb['price']))
+plt.xlabel('room_type')
+plt.ylabel('log(price)')
+plt.title('对数价格按房间类型')
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-833" style="display:block;"></span>
-<img alt="有三块地 左边的地块是拼凑的木(价)(y轴)对卧房(x轴)的图案,其中点数分别代表1561个列表. 卧室数量从0到8不等,对数(价格)从2.5到7. 日志(价格)和卧室之间有中度、积极的联系。 中间地块是焦急的地块,表示log(价格)(y-轴)对分(x-轴). 日志(价格)往往随着评级而增加,尽管关系似乎有些薄弱. 右图是log(价格)(y-轴) vss room type, Entire home / apt, Private room, 或 share room(x-轴)的框图. 3个盒片有很多重叠之处,虽然Entire home / apt的盒片是最高的,中心位置靠近一个5. 共享房间的盒式票房是最低的,在3.5的日志(价格)附近居中." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-833-1-7d53ac3d4f61.png" width="672"/>
-<p class="caption">FIGURE 19.2: AirBnB列表的日志(价格)的版图,按卧室数量(左),用户评级(中)和房间类型(右)排列.</p>
+<img alt="There are 3 plots. The left plot is a jitter plot of log(price) (y-axis) vs bedrooms (x-axis), with a point representing each of 1561 listings. The number of bedrooms ranges from 0 to 8 and the log(price) ranges from 2.5 to 7. There is a moderate, positive association between log(price) and bedrooms. The middle plot is a jitter plot of log(price) (y-axis) vs rating (x-axis). The log(price) tends to increase with rating, though the relationship appears somewhat weak. The right plot is a boxplot of log(price) (y-axis) vs room_type, Entire home / apt, Private room, or Shared room (x-axis). The 3 boxplots have a lot of overlap, though the boxplot for Entire home / apt is the highest, centered near a log(price) of 5. The boxplot for shared room is the lowest, centered near a log(price) of 3.5." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-833-1-7d53ac3d4f61.png" width="672"/>
+<p class="caption">
+图 19.2：AirBnB房源的对数价格（log(price)）按卧室数量（左）、用户评分（中）和房型（右）绘制的图形。
+</p>
 </div>
-<p>此外,尽管我们对空中bnb数据中特定的芝加哥街区不感兴趣(而不是我们想用这些数据来了解更广泛的市场),但我们也不应该忽视它们。 事实上,每个街区的上市价格的盒子都暗示着街区内部的相关性。 与一般房地产一样,AirBnB的上市价格在一些街区往往较低(如13和41),而在另一些街区则较高(如21和36):</p>
-<div class="sourceCode" id="cb425">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>此外，尽管我们并不关注<code>airbnb</code>数据中芝加哥的特定街区（而是想通过这些数据了解更广泛的市场），我们也不应该完全忽略它们。事实上，各街区房源价格的箱线图暗示了街区内的相关性。与一般房地产市场一样，AirBnB房源在某些街区（如13和41）往往更便宜，而在另一些街区（如21和36）则更贵：</p>
+<div class="sourceCode" id="cb425"><pre><code class="language-python">import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 创建 log_price 列
+airbnb['log_price'] = np.log(airbnb['price'])
+
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='neighborhood', y='log_price', data=airbnb,
+            order=sorted(airbnb['neighborhood'].unique()))
+plt.xlabel('neighborhood')
+plt.ylabel('log(price)')
+# 将 x 轴标签替换为数字 1 到 44
+plt.xticks(ticks=np.arange(44), labels=np.arange(1, 45))
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-834" style="display:block;"></span>
-<img alt="每个街区都有一个框图(价格)(Y轴),标注为1至43。 对数(价格)从2到7不等。 盒子里有很多种类 例如,一些街区有狭长的盒子,属于3的对数(价格),另一些街区有更大的盒子,覆盖整个对数(价格)的范围。" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-834-1-55d3f0ecf7fc.png" width="672"/>
-<p class="caption">图19.3:AirBnB上市日志(价格)的盒状图,按邻居分列.</p>
+<img alt="There is a boxplot of log(price) (y-axis) for each neighborhood, labeled 1 through 43. The log(price) ranges from 2 to 7. There is great variety in the boxplots. For example, some neighborhood have narrow boxplots that fall under a log(price) of 3. Others have boxplots that are wider, spanning the entire range of log(price)." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-834-1-55d3f0ecf7fc.png" width="672"/>
+<p class="caption">
+图 19.3：AirBnB房源的对数价格（log(price)）按街区划分的箱线图。
+</p>
 </div>
-<p>为此,我们可以通过列出的卧室数量、评级和房间类型来构建AirBnB价格的分级模型,同时考虑街区的分组结构。 在附近列出####################################################################### ######################################################################################################################################################################################</p>
-<p>\[X_{ij3} = \begin{cases} 1 &amp; \text{private room} \\ 0 &amp; \text{otherwise} \\ \end{cases} \;\; \text{ and } \;\; X_{ij4} = \begin{cases} 1 &amp; \text{shared room} \\ 0 &amp; \text{otherwise}. \\ \end{cases}\]</p>
-<p>鉴于记录价格的对称性、持续性,我们将实施以下正常的分级回归模式。 依据:</p>
-<p>\[\begin{equation} \begin{array}{rll} \log(Y_{ij}) | \beta_{0j}, \beta_1, \ldots, \beta_4, \sigma_y &amp; \sim N(\mu_{ij}, \sigma_y^2) &amp; \text{(within neighborhood $j$)} \\ \text{where } \mu_{ij} &amp; = \beta_{0j} + \beta_1 X_{ij1} + \cdots + \beta_4 X_{ij4} &amp; \\ \beta_{0j} | \beta_0, \sigma_0 &amp; \stackrel{ind}{\sim} N(\beta_0, \sigma_0^2) &amp; \text{(between neighborhoods)}\\ \beta_{0c} &amp; \sim N(4.6, 1.6^2) &amp; \text{(global priors)} \\ \beta_1 &amp; \sim N(0, 2.01^2) &amp; \\ \beta_2 &amp; \sim N(0, 4.66^2) &amp; \\ \beta_3 &amp; \sim N(0, 3.19^2) &amp; \\ \beta_4 &amp; \sim N(0, 8.98^2) &amp; \\ \sigma_y &amp; \sim \text{Exp}(1.6) &amp; \\ \sigma_0 &amp; \sim \text{Exp}(1) &amp; \\ \end{array} \tag{19.1} \end{equation}\]</p>
-<p>通知(19.1)允许随机的邻里特定拦截,但假设是共享的预测系数。 也就是说,我们假设基线上市价格可能因邻里而异,但上市特征与每个邻里的价格有相同的关联. 此外,除了我们模糊地理解典型列名的夜价为100美元(因此是一个约4.6的对数(价格))之外,我们资料不足的前科由stan glmer()调制。 相应的后缀在下面用前缀()进行模拟,确认(19.1)中的前缀。</p>
-<div class="sourceCode" id="cb426">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
+<p>为此，我们可以构建一个<strong>分层模型（hierarchical model）</strong>，通过卧室数量、评分和房型来对AirBnB价格建模，同时纳入街区分组结构。对于街区 <span class="math inline">\(j\)</span> 中的房源 <span class="math inline">\(i\)</span>，令 <span class="math inline">\(Y_{ij}\)</span> 表示价格，<span class="math inline">\(X_{ij1}\)</span> 表示卧室数量，<span class="math inline">\(X_{ij2}\)</span> 表示评分，</p>
+<p><span class="math display">\[X_{ij3} = \begin{cases}
+1 &amp; \text{private room} \\
+0 &amp; \text{otherwise} \\
+\end{cases}
+\;\; \text{ and } \;\;
+X_{ij4} = \begin{cases}
+1 &amp; \text{shared room} \\
+0 &amp; \text{otherwise}. \\
+\end{cases}\]</span></p>
+<p>考虑到对数价格具有对称、连续的特征，我们将采用如下关于 <span class="math inline">\(log(Y)\)</span> 的<strong>正态分层回归模型（Normal hierarchical regression model）</strong>，以 <span class="math inline">\((X_1, X_2, X_3, X_4)\)</span> 为预测变量：</p>
+<p><span class="math display" id="eq:airbnb-1-ch19">\[\begin{equation}
+\begin{array}{rll}
+\log(Y_{ij}) | \beta_{0j}, \beta_1, \ldots, \beta_4, \sigma_y &amp; \sim N(\mu_{ij}, \sigma_y^2) &amp; \text{(社区 $j$ 内部)} \\
+\text{其中 } \mu_{ij} &amp; = \beta_{0j} + \beta_1 X_{ij1} + \cdots + \beta_4 X_{ij4} &amp; \\
+\beta_{0j} | \beta_0, \sigma_0  &amp; \stackrel{ind}{\sim} N(\beta_0, \sigma_0^2) &amp; \text{(社区之间)}\\
+\beta_{0c} &amp; \sim N(4.6, 1.6^2) &amp; \text{(全局先验分布)} \\
+\beta_1 &amp; \sim N(0, 2.01^2) &amp; \\
+\beta_2 &amp; \sim N(0, 4.66^2) &amp; \\
+\beta_3 &amp; \sim N(0, 3.19^2) &amp; \\
+\beta_4 &amp; \sim N(0, 8.98^2) &amp; \\
+\sigma_y &amp; \sim \text{Exp}(1.6)    &amp; \\
+\sigma_0 &amp; \sim \text{Exp}(1)    &amp; \\
+\end{array}
+\tag{19.1}
+\end{equation}\]</span></p>
+<p>注意，<a href="/bayes-rules-python-cn/chapter-19/#eq:airbnb-1-ch19">(19.1)</a> 允许社区特定的随机截距，但假设共享预测变量系数。也就是说，我们假设基准房源价格可能因社区而异，但房源特征与价格之间的关联在各社区中相同。此外，除了我们模糊地认为典型房源的每晚价格约为 100 美元（因此 log(价格) 约 4.6）之外，弱信息先验由 <code>bambi.Model</code> 进行调整。下面模拟了对应的后验分布，并通过 <code>model.summary()</code> 确认了 <a href="/bayes-rules-python-cn/chapter-19/#eq:airbnb-1-ch19">(19.1)</a> 中的先验设定。</p>
+<div class="sourceCode" id="cb426"><pre><code class="language-python">import bambi as bmb
+import numpy as np
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-with pm.Model() as model:
-    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
-    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
-    # sigma = pm.HalfNormal('sigma', sigma=10)
-    # mu = beta_0 + beta_1 * x
-    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
-    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
-az.summary(idata)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>图19.4(左)中的pp check()使我们确信,我们的是一个合理的模型 — — 100个后期模拟的登录上市价格数据集具有类似于原始登录上市价格的特征。 这不是因为我们聪明, 我们的第一种方法是模拟价格,而不是记录价格。 然而,一个pp check()证实,这个原始模型并没有抓住价格的扭曲性(图19.4正确)。</p>
-<div class="sourceCode" id="cb427">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+# 创建 log_price 列
+airbnb['log_price'] = np.log(airbnb['price'])
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-pp_check(airbnb_model_1) +
-labs(title = "airbnb_model_1 of log(price)") +
-xlab("log(price)")</code></pre>
-</div>
+# 设置先验：截距、普通预测变量系数、残差标准差
+priors = {
+    'Intercept': bmb.Prior('Normal', mu=4.6, sigma=2.5),
+    'common': bmb.Prior('Normal', mu=0, sigma=2.5),
+    'sigma': bmb.Prior('Exponential', lam=1)
+}
+
+# 构建分层模型：随机截距按 neighborhood
+airbnb_model_1 = bmb.Model(
+    'log_price ~ bedrooms + rating + room_type + (1 | neighborhood)',
+    data=airbnb,
+    family='gaussian',
+    priors=priors
+)
+
+# 拟合模型
+fitted_model = airbnb_model_1.fit(
+    draws=5000,
+    tune=5000,
+    chains=4,
+    random_seed=84735,
+    idata_kwargs={'log_likelihood': True}
+)
+
+# 查看先验摘要
+print(airbnb_model_1.priors)</code></pre></div>
+<p>图 <a href="/bayes-rules-python-cn/chapter-19/#fig:ch19-ppc-airbnb">19.4</a>（左）中的 <code>az.plot_ppc()</code> 检查让我们确信这是一个合理的模型——基于后验模拟的 100 个对数房源价格数据集具有与原始对数房源价格相似的特征。这并不是因为我们有多聪明，而是因为我们先尝试了其他方法。我们最初的方法是对 <em>价格</em> 进行建模，而不是 <em>对数</em> 价格。然而，<code>az.plot_ppc()</code> 确认这个原始模型无法捕捉价格的偏态特征（图 <a href="/bayes-rules-python-cn/chapter-19/#fig:ch19-ppc-airbnb">19.4</a> 右）。</p>
+<div class="sourceCode" id="cb427"><pre><code class="language-python">import arviz as az
+import matplotlib.pyplot as plt
+
+# 后验预测检查
+ppc_data = airbnb_model_1.predict(fitted_model, kind='pps')
+az.plot_ppc(ppc_data, data_pairs={'observed': airbnb['log_price']})
+plt.suptitle('airbnb_model_1 of log(price)')
+plt.xlabel('log(price)')
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch19-ppc-airbnb" style="display:block;"></span>
-<img alt="有两块地 左图,标注为airbnb model 1的log(价格),有模拟的log(价格)数据的50浅蓝色密度曲线和观测到的log(价格)数据的1深蓝色密度曲线. 这些曲线都相似 -- -- 钟形,以4.5的对木(价格)为中心,从大约3到6不等。 右图,标注价格的原始模型(未登录),有模拟价格数据的50浅蓝色密度曲线和观测价格数据的1深蓝色密度曲线. 深蓝色密度曲线为右斜斜曲线,大约在0到250美元之间,峰值接近75美元. 50轻蓝密度曲线相互类似,但与深蓝色曲线差别很大. 它们都是钟形的,中心在100美元左右,大约在100到300美元之间。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch19-ppc-airbnb-1-355c3c0daf37.png" width="480"/>
-<p class="caption">图19.4:对记录的AirBnB上市价格(左)和未经记录的原始上市价格(右)的正态模型进行预测性检查。</p>
+<img alt="There are 2 plots. The left plot, labeled airbnb_model_1 of log(price), has 50 light blue density curves of simulated log(price) data and 1 dark blue density curve of the observed log(price) data. These curves are all similar -- bell-shaped, centered near a log(price) of 4.5, and ranging from roughly 3 to 6. The right plot, labeled original model of price (unlogged), has 50 light blue density curves of simulated price data and 1 dark blue density curve of the observed price data. The dark blue density curve is right-skewed, ranges from roughly 0 to 250 dollars, and peaks near 75 dollars. The 50 light blue density curves are similar to each other, but very different from the dark blue curve. They are all bell-shaped, centered near a 100 dollars, and ranging from roughly -100 to 300 dollars." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch19-ppc-airbnb-1-355c3c0daf37.png" width="480"/>
+<p class="caption">图 19.4：对数变换后的 Airbnb 房源价格（左）和原始未变换的价格（右）的正态模型的后验预测检查。</p>
 </div>
 </div>
 <div class="section level3" id="incorporating-group-level-predictors" number="19.1.2">
-<h3>包含组级预测器</h3>
-<p>如果这是第17章的话, 我们不会在空气中尽量增加资讯。 除了个人上市的特征外.</p>
-<div class="sourceCode" id="cb428">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<h3>纳入分组层面的预测变量</h3>
+<p>如果这是第 17 章，我们可能会在这个模型上停止分析——它已经很不错了！但我们还没有最大化 <code>airbnb</code> 数据中的信息。除了 <em>单个房源</em> 的特征之外……</p>
+<div class="sourceCode" id="cb428"><pre><code class="language-python">print(airbnb[['price', 'neighborhood', 'bedrooms', 'rating', 'room_type']].head(3))</code></pre></div>
+<p>我们还拥有更广泛的 <em>社区</em> 本身的特征，例如步行便利程度和公共交通便利程度的评分（0 到 100 分）。这些特征由社区内的每个房源共享。例如，<code>Albany Park</code> 中的所有房源的 <code>walk_score</code> 都是 87，<code>transit_score</code> 都是 62：</p>
+<div class="sourceCode" id="cb429"><pre><code class="language-python"># 查看数据框的前三行，选择感兴趣的列
+print(airbnb[['price', 'neighborhood', 'walk_score', 'transit_score']].head(3))</code></pre></div>
+<p>综上所述，<code>airbnb</code> 包含了 <strong>个体层面的预测变量</strong>（如评分）和 <strong>组层面的预测变量</strong>（如步行便利程度）。我们当前的模型 <a href="/bayes-rules-python-cn/chapter-19/#eq:airbnb-1-ch19">(19.1)</a> 忽略了后者。考虑社区特定的截距 <span class="math inline">\(\beta_{0j}\)</span>。原模型 <a href="/bayes-rules-python-cn/chapter-19/#eq:airbnb-1-ch19">(19.1)</a> 对所有 <span class="math inline">\(\beta_{0j}\)</span> 使用了 <em>相同的先验</em>，假设各社区的对数基准价格服从均值为某个平均对数价格 <span class="math inline">\(\beta_0\)</span>、标准差为 <span class="math inline">\(\sigma_0\)</span> 的正态分布：</p>
+<p><span class="math display" id="eq:airbnb-prior-ch19">\[\begin{equation}
+\beta_{0j} | \beta_0, \sigma_0  \stackrel{ind}{\sim} N(\beta_0, \sigma_0^2)  .
+\tag{19.2}
+\end{equation}\]</span></p>
+<p>通过这种方式将它们合并在一起，<a href="/bayes-rules-python-cn/chapter-19/#eq:airbnb-prior-ch19">(19.2)</a> 假设我们对每个社区的基准价格拥有<em>相同</em>的先验信息。在我们确实没有任何信息来区分组别（此处指社区）的情况下，这样做是没有问题的。但我们的 <code>airbnb</code> 分析并不属于这种情况。图 <a href="/bayes-rules-python-cn/chapter-19/#fig:ch19-nbhd-walk">19.5</a> 按步行便利性绘制了每个社区的平均对数 Airbnb 房源价格。结果表明，步行便利性更高的社区往往拥有更高的 Airbnb 价格。（交通便利性也是如此，但我们只关注步行便利性。）</p>
+<div class="sourceCode" id="cb430"><pre><code class="language-python">import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>我们拥有更广泛的社区本身的特征,例如可步行性评分和进入公共交通(0到100级)。 这些特征被邻居的每个上市者共享. 例如,奥尔巴尼公园的所有上市项目都拥有87个步行点和62个中转点:</p>
-<div class="sourceCode" id="cb429">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+# 按社区和步行分数分组，计算平均对数价格和房源数量
+nbhd_features = (airbnb
+    .groupby(['neighborhood', 'walk_score'])
+    .agg(mean_log_price=('price', lambda x: np.mean(np.log(x))),
+         n_listings=('price', 'count'))
+    .reset_index())
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>将这个组合起来,airbnb包括个人层面的预测器(如评级)和组层面的预测器(如可行性). 我们目前的模式(19.1)忽略了后者。 考虑邻里特定的截击。 最初的模型(19.1)对每个XQ1@@使用相同的前缀,</p>
-<p>\[\begin{equation} \beta_{0j} | \beta_0, \sigma_0 \stackrel{ind}{\sim} N(\beta_0, \sigma_0^2) . \tag{19.2} \end{equation}\]</p>
-<p>通过这种方式将它们拼凑在一起,(19.2)假设我们以前对每个街区的基线价格有同样的资料。 我们确实没有任何资料可以区分不同群体, 我们的空心分析并不属于这个类别。 图19.5按可步行性列出了每个街区平均记录的AirBnB价格。 结果显示,行走性较强的街区往往有较高的AirBnB价格. (过境也一样,</p>
-<div class="sourceCode" id="cb430">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 按邻里计算平均对数( 价格)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 绘制平均对数价格与步行分数的散点图，并叠加线性回归平滑线
+sns.regplot(data=nbhd_features, x='walk_score', y='mean_log_price', ci=False)
+plt.xlabel('步行分数')
+plt.ylabel('平均对数价格')
+plt.title('平均对数价格与步行分数')
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch19-nbhd-walk" style="display:block;"></span>
-<img alt="由 walk score (x-axis) 组成的平均log p价(y-axis)的散列图. 点数代表43个街区中的每一个. 这些点显示出中值-log 价格和行走-积分之间的中度正比关系. 这种关系由蓝色模型线概括." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch19-nbhd-walk-1-7b660c0cb752.png" width="240"/>
-<p class="caption">图19.5: AirBnB按每个街区的可走性分数列出的平均价格。</p>
+<img alt="A scatterplot of mean_log_price (y-axis) by walk_score (x-axis). The points represent each of 43 neighborhoods. These points exhibit a moderate positive association between mean_log_price and walk_score. This relationship is summarized by a blue model line." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch19-nbhd-walk-1-7b660c0cb752.png" width="240"/>
+<p class="caption">
+图 19.5: 按每个社区的步行便利性得分绘制的平均对数 Airbnb 房源价格的散点图。
+</p>
 </div>
-<p>街坊的平均记录价格似乎与可步行性有线性联系。 将这个观察纳入我们的模型(19.2), 首先,让我们表示邻里可步行性。 注意一些关于这个标记的事情:</p>
+<p>更重要的是，每个社区的平均对数价格似乎与步行便利性呈<em>线性</em>相关。将这一观察纳入我们的 <span class="math inline">\(\beta_{0j}\)</span> 模型 <a href="/bayes-rules-python-cn/chapter-19/#eq:airbnb-prior-ch19">(19.2)</a> 中，与将个体层面的预测变量 <span class="math inline">\(X\)</span> 纳入分层模型的第一层并没有太大区别。首先，令 <span class="math inline">\(U_j\)</span> 表示社区 <span class="math inline">\(j\)</span> 的步行便利性。注意关于该符号的几点：</p>
 <ul>
-<li>虽然QQ0@@最终是价格的预测者,</li>
-<li>由于所有在邻里上市的QQ0@@QQ1@@共享相同的可行性值,QQ2@@只需要一个QQ3@@下标.</li>
+<li>虽然 <span class="math inline">\(U_j\)</span> 最终是价格的预测变量，但我们使用“<span class="math inline">\(U\)</span>”而不是“<span class="math inline">\(X\)</span>”以将其区分为社区层面的预测变量，而非房源层面的预测变量。</li>
+<li>由于社区 <span class="math inline">\(j\)</span> 中的所有房源 <span class="math inline">\(i\)</span> 共享相同的步行便利性值，<span class="math inline">\(U_j\)</span> 只需要一个 <span class="math inline">\(j\)</span> 下标。</li>
 </ul>
-<p>换成邻里特有的线性趋势。</p>
-<p>\[\begin{equation} \mu_{0j} = \gamma_0 + \gamma_1 U_{j} . \tag{19.3} \end{equation}\]</p>
-<p>这个开关引入了两个新的模型参数来描述基线上市价格和邻里可步行性的线性趋势:</p>
+<p>接下来，我们可以将 <span class="math inline">\(\beta_{0j}\)</span> 中的全局趋势 <span class="math inline">\(\beta_0\)</span> 替换为受步行便利性 <span class="math inline">\(U_j\)</span> 影响的社区特定线性趋势 <span class="math inline">\(\mu_{0j}\)</span>：</p>
+<p><span class="math display" id="eq:newtrend-ch19">\[\begin{equation}
+\mu_{0j} = \gamma_0 + \gamma_1 U_{j}  .
+\tag{19.3}
+\end{equation}\]</span></p>
+<p>这个转换引入了两个新的模型参数，它们描述了基准房源价格与社区步行便利性之间的线性趋势：</p>
 <ul>
-<li><p>截取%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</p></li>
-<li><p>坡度乘以可步行性分数的每个额外点,</p></li>
+<li><p>截距 <span class="math inline">\(\gamma_0\)</span> 严格来说衡量的是步行便利性为0的社区我们期望的平均对数价格（尽管不存在这样的社区）；并且</p></li>
+<li><p>斜率 <span class="math inline">\(\gamma_1\)</span> 衡量的是步行便利性分数每增加一分，社区典型对数价格的预期变化。</p></li>
 </ul>
-<p>因此,我们的最后AirBnB模型在(19.1)的基础上得到了扩展,将集团级回归模型(19.3)与新的集团级回归参数的先验模型结合起来。 鉴于模型参数很多,我们在此不写独立和资料薄弱的前科。 可在下文中使用前总结()获取。</p>
-<p>\[\begin{equation} \begin{array}{rll} \log(Y_{ij}) | \beta_{0j}, \beta_1, \ldots, \beta_4, \sigma_y &amp; \sim N(\mu_j, \sigma_y^2) &amp; \text{with } \mu_j = \beta_{0j} + \beta_1 X_{ij1} + \cdots + \beta_4 X_{ij4} \\ \beta_{0j} | \gamma_0, \gamma_1, \sigma_0 &amp; \stackrel{ind}{\sim} N(\mu_{0j}, \sigma_0^2) &amp; \text{with } \mu_{0j} = \gamma_0 + \gamma_1 U_j \\ \beta_1,\ldots,\beta_4,\gamma_0,\gamma_1,\sigma_0, \sigma_y &amp; \sim \text{ some priors} &amp;\\ \end{array} \tag{19.4} \end{equation}\]</p>
-<p>此处的新标记可能会使这个模型显得比现在更加复杂或不同. 首先,考虑这个模型对AirBnB上市的预期价格意味着什么. 对于包含在空气bnb数据中的邻里,列表的预期对价由XQ1@@定义.</p>
-<p>\[\beta_{0j} + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \beta_3 X_{ij3} + \beta_4 X_{ij4}\]</p>
-<p>视其可走性不同, AirBnB上市的预期对价是用可行性依赖的平均值XQ2XX来定义:</p>
-<p>\[(\gamma_0 + \gamma_1 U_j) + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \beta_3 X_{ij3} + \beta_4 X_{ij4} .\]</p>
-<p>这里的括号强调(19.4)的结构:基线价格, 移除它们会强调另一点:可走性QQ2@@真的和其他每个预测器一样,</p>
-<p>最后,考虑组内和组间的变异参数,\(\sigma_y\)和\(\sigma_0\). 以及新模式(19.4):考虑到市内卧室、评分和房间类型, 然而,通过改变我们典型的登录价格在邻里之间如何变化的模式,QQ4@@的意义发生了变化:</p>
+<p>因此，我们最终的 AirBnB 模型在 <a href="/bayes-rules-python-cn/chapter-19/#eq:airbnb-1-ch19">(19.1)</a> 的基础上扩展，加入了组级别回归模型 <a href="/bayes-rules-python-cn/chapter-19/#eq:newtrend-ch19">(19.3)</a> 以及新组级别回归参数的先验模型。鉴于模型参数众多，这里我们不写出独立且弱信息的先验。这些可以通过下方的<code>az.summary()</code>函数获得。</p>
+<p><span class="math display" id="eq:airbnb-2-ch19">\[\begin{equation}
+\begin{array}{rll}
+\log(Y_{ij}) | \beta_{0j}, \beta_1, \ldots, \beta_4, \sigma_y &amp; \sim N(\mu_j, \sigma_y^2)  &amp; \text{with } \mu_j = \beta_{0j} + \beta_1 X_{ij1} + \cdots + \beta_4 X_{ij4} \\
+\beta_{0j} | \gamma_0, \gamma_1, \sigma_0  &amp; \stackrel{ind}{\sim} N(\mu_{0j}, \sigma_0^2) &amp; \text{with } \mu_{0j} = \gamma_0 + \gamma_1 U_j \\
+\beta_1,\ldots,\beta_4,\gamma_0,\gamma_1,\sigma_0, \sigma_y  &amp; \sim \text{ some priors}   &amp;\\
+\end{array}
+\tag{19.4}
+\end{equation}\]</span></p>
+<p>这里的新记号可能让这个模型看起来比实际更复杂或不同。首先，考虑这个模型对 Airbnb 房源期望价格的含义。对于我们的 <code>airbnb</code> 数据中<em>包含</em>的社区 <span class="math inline">\(j\)</span>，房源 <span class="math inline">\(i\)</span> 的期望对数价格由以下定义</p>
+<p><span class="math display">\[\beta_{0j} + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \beta_3 X_{ij3} + \beta_4 X_{ij4}\]</span></p>
+<p>其中截距 <span class="math inline">\(\beta_{0j}\)</span> 在不同社区之间 <em>根据其步行便利性</em> 变化。在<em>超出</em>所包含的社区时，Airbnb 房源的期望对数价格是通过将 <span class="math inline">\(\beta_{0j}\)</span> 替换为其依赖于步行便利性的均值 <span class="math inline">\(\gamma_0 + \gamma_1 U_j\)</span> 来定义的：</p>
+<p><span class="math display">\[(\gamma_0 + \gamma_1 U_j) + \beta_1 X_{ij1} + \beta_2 X_{ij2} + \beta_3 X_{ij3} + \beta_4 X_{ij4}  .\]</span></p>
+<p>这里的括号凸显了 <a href="/bayes-rules-python-cn/chapter-19/#eq:airbnb-2-ch19">(19.4)</a> 的结构：基准价格 <span class="math inline">\(\gamma_0 + \gamma_1 U_j\)</span> 会根据街区的步行友好度预测变量 <span class="math inline">\(U_j\)</span> 在不同街区之间变化。
+去掉括号则强调另一点：步行友好度 <span class="math inline">\(U_j\)</span> 其实就和其他预测变量一样，只是同一街区的所有房源共享同一个 <span class="math inline">\(U_j\)</span> 值。</p>
+<p>最后，考虑<strong>组内</strong>和<strong>组间</strong>变异参数 <span class="math inline">\(\sigma_y\)</span> 和 <span class="math inline">\(\sigma_0\)</span>。
+由于两个模型的第一层都利用了价格在街区<em>内部</em>的相同回归结构，<span class="math inline">\(\sigma_y\)</span> 在我们的原模型 <a href="/bayes-rules-python-cn/chapter-19/#eq:airbnb-1-ch19">(19.1)</a> 和新模型 <a href="/bayes-rules-python-cn/chapter-19/#eq:airbnb-2-ch19">(19.4)</a> 中含义相同：<span class="math inline">\(\sigma_y\)</span> 度量了在任何街区内，给定房源的 <code>bedrooms</code>、<code>rating</code> 和 <code>room_type</code> 时，房源价格中未被解释的变异。
+然而，通过改变我们对典型对数价格在街区<em>之间</em>变异的建模方式，<span class="math inline">\(\sigma_0\)</span> 的含义发生了变化：</p>
 <ul>
-<li>在(19.1)中, \(\sigma_0\) 反映了基线价格的不可解释的变化,</li>
-<li>在19.4)中,</li>
+<li>在 <a href="/bayes-rules-python-cn/chapter-19/#eq:airbnb-1-ch19">(19.1)</a> 中，<span class="math inline">\(\sigma_0\)</span> 反映了街区之间基准价格 <span class="math inline">\(\beta_{0j}\)</span> 中未被解释的变异；</li>
+<li>在 <a href="/bayes-rules-python-cn/chapter-19/#eq:airbnb-2-ch19">(19.4)</a> 中，<span class="math inline">\(\sigma_0\)</span> 反映了在考虑街区的步行友好度<em>之后</em>，街区之间基准价格 <span class="math inline">\(\beta_{0j}\)</span> 中仍未被解释的变异。</li>
 </ul>
 <div style="page-break-after: always;"></div>
 <div class="describe">
-<p>包含组级预测器</p>
-<p>请考虑分组数据,其中XQ0XX在XQ1XX组中有响应变量XQ2XX和单层预测器XQ3XX. 此外,让 QQ4 表示一个组级的预测器, 其值由 QQ5 组中的每个人共享。 包含个人和团体两级预测器的XQ6XX的分级模型的基本结构由(19.5)给出:</p>
-<p>\[\begin{equation} \begin{split} \text{ model of } Y_{ij} \text{ within group $j$:} &amp; \; \beta_{0j} + \beta_1 X_{ij} \\ \text{ model of } \beta_{0j} \text{ between groups:} &amp; \; \gamma_0 + \gamma_1 U_j \\ \beta_1, \gamma_0, \gamma_1, ... &amp; \sim \text{ some priors}. \\ \end{split} \tag{19.5} \end{equation}\]</p>
-<p>第一层(19.5)反映了个人的QQ0QQ和QQ1QQ值之间的关系,截取的QQ2QQ因组XQ3X而异. 下一层反映了我们先验对组合参数的认知, 将这两层拉在一起,XQ6++与QQ7++的预期关系是:</p>
-<p>\[(\gamma_0 + \gamma_1 U_j) + \beta_1 X_{ij}\]</p>
-<p>校对:Soup</p>
+<p><strong>纳入组级预测变量</strong></p>
+<p>考虑分组数据，其中组 <span class="math inline">\(j\)</span> 中的个体 <span class="math inline">\(i\)</span> 具有响应变量 <span class="math inline">\(Y_{ij}\)</span> 和<strong>个体级预测变量</strong> <span class="math inline">\(X_{ij}\)</span>。
+进一步，令 <span class="math inline">\(U_j\)</span> 表示一个<strong>组级预测变量</strong>，其值被组 <span class="math inline">\(j\)</span> 中的所有个体共享。
+同时包含个体级和组级预测变量的 <span class="math inline">\(Y_{ij}\)</span> 分层模型的基本结构由 <a href="/bayes-rules-python-cn/chapter-19/#eq:general-ch19">(19.5)</a> 给出：</p>
+<p><span class="math display" id="eq:general-ch19">\[\begin{equation}
+\begin{split}
+\text{ model of } Y_{ij} \text{ within group $j$:} &amp;  \; \beta_{0j} + \beta_1 X_{ij} \\
+\text{ model of } \beta_{0j} \text{ between groups:} &amp;  \; \gamma_0 + \gamma_1 U_j \\
+\beta_1, \gamma_0, \gamma_1, ...  &amp; \sim \text{ some priors}. \\
+\end{split}
+\tag{19.5}
+\end{equation}\]</span></p>
+<p><a href="/bayes-rules-python-cn/chapter-19/#eq:general-ch19">(19.5)</a> 的第一层反映了组 <span class="math inline">\(j\)</span> 内<em>个体</em> <span class="math inline">\(Y_{ij}\)</span> 与 <span class="math inline">\(X_{ij}\)</span> 之间的关系，其截距 <span class="math inline">\(\beta_{0j}\)</span> 随组 <span class="math inline">\(j\)</span> 变化。
+下一层反映了我们对<em>组</em>参数 <span class="math inline">\(\beta_{0j}\)</span> 的先验理解如何能被<em>组级</em>预测变量 <span class="math inline">\(U_j\)</span> 所影响。
+将这两层结合起来，<span class="math inline">\(Y_{ij}\)</span> 与 <span class="math inline">\(X_{ij}\)</span> 之间的预期关系为</p>
+<p><span class="math display">\[(\gamma_0 + \gamma_1 U_j) + \beta_1 X_{ij}\]</span></p>
+<p>其中截距 <span class="math inline">\((\gamma_0 + \gamma_1 U_j)\)</span> 取决于组 <span class="math inline">\(j\)</span> 的 <span class="math inline">\(U_j\)</span> 值。</p>
 </div>
 </div>
 <div class="section level3" id="posterior-simulation-global-analysis" number="19.1.3">
-<h3>后期模拟和全球分析</h3>
-<p>要模拟我们等级模型的后缀( 19.4), 我们只需要将组级的 walk score 预测器直接注入 stan glmer() 公式。 由于同一街区的所有上市都共享同一步数 score ,因此自动确认为组级预测器.</p>
-<div class="sourceCode" id="cb431">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
+<h3> 后验模拟与全局分析</h3>
+<p>要模拟我们的分层模型 <a href="/bayes-rules-python-cn/chapter-19/#eq:airbnb-2-ch19">(19.4)</a> 的后验，我们只需将组级预测变量 <code>walk_score</code> 直接放入 PyMC 模型的相应公式中。
+由于同一街区的所有房源共享相同的 <code>walk_score</code>，它会被自动识别为组级预测变量。</p>
+<div class="sourceCode" id="cb431"><pre><code class="language-python">import bambi as bmb
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-with pm.Model() as model:
-    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
-    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
-    # sigma = pm.HalfNormal('sigma', sigma=10)
-    # mu = beta_0 + beta_1 * x
-    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
-    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
-az.summary(idata)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>与Airbnb model 2和Airbnb model 1相关的全球中位数模型, 我们合并回归参数摘要,以便于比较,但鼓励您也查看单独的模型 1 正数和模型 2 正数摘要:</p>
-<div class="sourceCode" id="cb432">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+# 拟合层次线性模型：log(price) 对 walk_score、卧室数、评分、房型，加入社区随机截距
+airbnb_model_2 = bmb.Model(
+    'log(price) ~ walk_score + bedrooms + rating + room_type + (1 | neighborhood)',
+    data=airbnb,
+    family='gaussian'
+)
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 获取两个模型的关系摘要
-model_1_mean = tidy(airbnb_model_1, effects = "fixed")
-model_2_mean = tidy(airbnb_model_2, effects = "fixed")
-# 合并两个模型的摘要
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>根据这些整理()摘要,两个模型的后置中位数模型为:</p>
-<p>\[\begin{array}{lr} \text{model 1:} &amp; 3.21 + 0.265 X_{ij1} + 0.22 X_{ij2} - 0.538 X_{ij3} - 1.06 X_{ij4} \\ \text{model 2:} &amp; (1.92 + 0.0166 U_j) + 0.265 X_{ij1} + 0.221 X_{ij2} - 0.537 X_{ij3} - 1.06 X_{ij4}. \\ \end{array}\]</p>
-<p>除拦截术语外,后期中位数模型几乎无法区分. 这有道理。 在airbnb model 2中包括组级可走性预测器,实质上取代了Airbnb model 1中最初的全球截图QQ0@@,没有调整个人级QQ2@@预测器. 我们还可以像往常一样解释airbnb model 2的后置中位系数, 包括上市和邻里, 例如,在控制其他模型预测器时,共享房间的典型记录价格大约比整个私人住宅低1.06。 更有意义的是,共用房间的典型价格大约是整个私人住宅的三分之一( 3@@),\(\approx\)0.35. 此外,对于邻里可步行性评级中每增加10分,我们预计该邻里上市的典型价格将增加约18个百分点( 5@@)。</p>
-<p>以类似的精神,我们获取并比较标准偏差参数的后总结, {}(sd Observation.residual)和}{1}(sd (Intercept). newborhood ) :</p>
-<div class="sourceCode" id="cb433">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+# 设置先验（可省略，使用默认弱信息先验；这里仅示意与原文接近）
+airbnb_model_2.set_priors(
+    Intercept=bmb.Prior("Normal", mu=4.6, sigma=2.5),
+    walk_score=bmb.Prior("Normal", mu=0, sigma=2.5),
+    bedrooms=bmb.Prior("Normal", mu=0, sigma=2.5),
+    rating=bmb.Prior("Normal", mu=0, sigma=2.5),
+    room_type=bmb.Prior("Normal", mu=0, sigma=2.5),
+    sigma=bmb.Prior("Exponential", lam=1)
+)
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 获取两个模型的差异摘要
-model_1_var = tidy(airbnb_model_1, effects = "ran_pars")
-model_2_var = tidy(airbnb_model_2, effects = "ran_pars")
-# 合并两个模型的摘要
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>组内变异参数\(\sigma_y\)的后中位数对于我们两个模型来说几乎是不可分的:0.365对0.366. 也就是为什么有些上市价格比其他上市价格更贵。 说得通! 包括Airbnb model 2中的信息, 也无助于我们区分同一街区的列表。</p>
-<p>相比之下,组间变异参数\(\sigma_0\)的后中位数在airbnb model 2中明显小于airbnb model 1:0.202 vs0.279. 说明我们对于邻里基线价格的不确定性。 因此,QQ3@@从airbnb model 1到airbnb model 2的下降表明,通过包含邻里级可移动性预测器,我们提高了对邻里级QQ4@@参数的确定性. 或者用言语来说,可步行性帮助解释为什么一些街区往往比其他街区更昂贵的列表. 这也很合理!</p>
+# 采样
+airbnb_model_2_fitted = airbnb_model_2.fit(
+    chains=4,
+    draws=5000,
+    tune=5000,
+    random_seed=84735,
+    idata_kwargs={"log_likelihood": True}
+)
+
+# 显示先验和后验摘要
+print(airbnb_model_2)
+print(az.summary(airbnb_model_2_fitted))</code></pre></div>
+<p>让我们深入探究并比较 <code>airbnb_model_2</code> 与 <code>airbnb_model_1</code> 的全局中位数模型，其中 <code>airbnb_model_1</code> 是我们最初的模型，它<em>没有</em>包含社区级别的步行便利性预测变量 <a href="/bayes-rules-python-cn/chapter-19/#eq:airbnb-1-ch19">(19.1)</a>。
+我们将回归参数的摘要合并在一起以便比较，但也鼓励你查看单独的 <code>model_1_mean</code> 和 <code>model_2_mean</code> 摘要：</p>
+<div class="sourceCode" id="cb432"><pre><code class="language-python">import arviz as az
+import pandas as pd
+
+# 假设模型1（airbnb_model_1_fitted）已经拟合好
+# 提取模型1和模型2的固定效应后验均值
+model_1_summary = az.summary(airbnb_model_1_fitted,
+                             var_names=['Intercept', 'bedrooms', 'rating',
+                                        'room_type[Private room]', 'room_type[Shared room]'])[['mean']]
+model_2_summary = az.summary(airbnb_model_2_fitted,
+                             var_names=['Intercept', 'bedrooms', 'rating',
+                                        'room_type[Private room]', 'room_type[Shared room]', 'walk_score'])[['mean']]
+
+# 重命名列以便合并
+model_1_summary = model_1_summary.rename(columns={'mean': 'estimate_model_1'})
+model_2_summary = model_2_summary.rename(columns={'mean': 'estimate_model_2'})
+
+# 合并两个模型的结果（以模型2为基准，保留所有项）
+combined_summaries = pd.merge(model_2_summary, model_1_summary,
+                              left_index=True, right_index=True, how='left')
+
+# 显示合并结果
+print(combined_summaries)</code></pre></div>
+<p>基于这些 <code>tidy()</code> 摘要，两个模型关于 log(price) 的后验中位数模型分别为：</p>
+<p><span class="math display">\[\begin{array}{lr}
+\text{model 1:} &amp; 3.21 + 0.265 X_{ij1} + 0.22 X_{ij2} - 0.538 X_{ij3} - 1.06 X_{ij4} \\
+\text{model 2:} &amp; (1.92 + 0.0166 U_j) + 0.265 X_{ij1} + 0.221 X_{ij2} - 0.537 X_{ij3} - 1.06 X_{ij4}. \\
+\end{array}\]</span></p>
+<p>除截距项外，两个模型的后验中位数模型几乎无法区分。
+这是合理的。
+在 <code>airbnb_model_2</code> 中加入社区级别的步行便利性预测变量，本质上是将 <code>airbnb_model_1</code> 中原有的全局截距 <span class="math inline">\(\beta_0\)</span> 替换为 <span class="math inline">\(\gamma_0 + \gamma_1 U_j\)</span>，而<em>没有</em>更改个体层面的 <span class="math inline">\(X\)</span> 预测变量。
+我们也可以像往常一样<em>解释</em> <code>airbnb_model_2</code> 的后验中位数系数，无论是房源层面还是社区层面，同时注意价格响应变量已取对数。
+例如，在控制其他模型预测变量的情况下，合住房间的典型<em>对数</em>价格比整套私人住房低大约 1.06。
+更有意义的是，合住房间的典型<em>价格</em>大约是整套私人住房的<em>三分之一</em>（<span class="math inline">\(e^{-1.06}\)</span> <span class="math inline">\(\approx\)</span> 0.35）。
+此外，社区的步行便利性评分每增加<em>10</em>分，我们预计该社区房源典型价格将增加约 18%（<span class="math inline">\(e^{10*0.0166} \approx 1.18\)</span>）。</p>
+<p>类似地，我们来获取并比较标准差参数的后验摘要，即 <span class="math inline">\(\sigma_y\)</span> (<code>sd_Observation.Residual</code>) 和 <span class="math inline">\(\sigma_0\)</span> (<code>sd_(Intercept).neighborhood</code>)：</p>
+<div class="sourceCode" id="cb433"><pre><code class="language-python"># 获取两个模型的方差摘要（随机效应参数）
+# 假设 model_1_var 和 model_2_var 是类似 tidy 输出的 DataFrame，
+# 包含 term 和 estimate 列
+
+# 合并，使用右连接并添加后缀
+combined = pd.merge(
+    model_1_var, model_2_var,
+    on="term", how="right",
+    suffixes=("_model_1", "_model_2")
+)
+
+# 删除所有以 "group" 开头的列
+keep_cols = [col for col in combined.columns if not col.startswith("group")]
+result = combined[keep_cols]
+print(result)</code></pre></div>
+<p>两个模型的<strong>组内变异</strong>参数 <span class="math inline">\(\sigma_y\)</span> 的后验中位数几乎无法区分：0.365 对比 0.366。
+这表明纳入社区级别的步行便利性预测变量并没有增进我们对同一社区<em>内部</em>单个房源价格变异的理解，即，为什么同一社区内有些房源比其他房源更贵。
+这很合理！
+由于同一社区内的所有房源共享相同的步行便利性值 <span class="math inline">\(U_j\)</span>，在 <code>airbnb_model_2</code> 中加入这一信息并不能帮助我们在同一社区内的不同房源之间做出区分。</p>
+<p>相比之下，<code>airbnb_model_2</code> 中<strong>组间变异</strong>参数 <span class="math inline">\(\sigma_0\)</span> 的后验中位数<em>明显</em>小于 <code>airbnb_model_1</code>：0.202 对比 0.279。
+回想一下，<span class="math inline">\(\sigma_0\)</span> 反映了我们对社区基准价格 <span class="math inline">\(\beta_{0j}\)</span> 的不确定性。
+因此，从 <code>airbnb_model_1</code> 到 <code>airbnb_model_2</code>，<span class="math inline">\(\sigma_0\)</span> 的下降表明，通过纳入社区级别的步行便利性预测变量，我们增加了对社区层面 <span class="math inline">\(\beta_{0j}\)</span> 参数的把握。
+换句话说，步行便利性有助于解释为什么有些社区往往拥有比其他社区更贵的房源。
+这也很合理！</p>
 <div class="describe">
-<p>关于组级预测器的观察</p>
-<p>包括一个组级预测器,往往会提高我们对组间趋势的确定性(各组之间如何不同),而不会提高我们对组内趋势的确定性(同一组内的个人观测结果如何不同).</p>
+<p><strong>关于组层面预测变量的一个观察</strong></p>
+<p>引入一个组层面的预测变量往往会增强我们对<strong>组间</strong>趋势（各组之间有何不同）的把握，而不会改善我们对<strong>组内</strong>趋势（同一组内各个观测值之间有何不同）的把握。</p>
 </div>
 </div>
 <div class="section level3" id="posterior-group-level-analysis" number="19.1.4">
-<h3>B. 集团一级分析</h3>
-<p>在最后考虑可走性预测器对我们的AirBnB价格模型的影响时, 考虑43个街区中的2个:Edgewater和Pulman. 典型的AirBnB在这两个街区的上市价格几乎相当. 比起Pulman(89对49),</p>
-<div class="sourceCode" id="cb434">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<h3> 后验群组层面分析</h3>
+<p>在我们最后考虑步行性预测变量对 AirBnB 价格模型的影响时，让我们深入探讨邻域层面的趋势。
+考虑 43 个邻域中的两个：Edgewater 和 Pullman。
+这两个邻域的典型 AirBnB 房源价格几乎相同。
+<em>然而</em>，Edgewater 的步行性远高于 Pullman（89 对 49），我们在 AirBnB 市场中已经看到这是一个吸引人的特征：</p>
+<div class="sourceCode" id="cb434"><pre><code class="language-python"># 过滤 nbhd_features 中 neighborhood 为 Edgewater 或 Pullman 的行
+selected = nbhd_features[nbhd_features["neighborhood"].isin(["Edgewater", "Pullman"])]
+print(selected)</code></pre></div>
+<p>我们的两个不同模型，<a href="/bayes-rules-python-cn/chapter-19/#eq:airbnb-1-ch19">(19.1)</a> 和 <a href="/bayes-rules-python-cn/chapter-19/#eq:airbnb-2-ch19">(19.4)</a>，为这两个邻域建立了不同的基线价格 <span class="math inline">\(\beta_{0j}\)</span>。
+让 <span class="math inline">\(b_{0j}\)</span> 表示邻域 <span class="math inline">\(j\)</span> 的调整：</p>
+<p><span class="math display" id="eq:model-intercepts-ch19">\[\begin{equation}
+\begin{array}{lrr}
+\text{模型 1:} &amp; \beta_{0j} = &amp; \beta_0 + b_{0j} \\
+\text{模型 2:} &amp; \beta_{0j} = &amp; \gamma_0 + \gamma_1 U_j + b_{0j}. \\
+\end{array}
+\tag{19.6}
+\end{equation}\]</span></p>
+<p>为了计算两个邻域在两个模型中的后验中位数截距 <span class="math inline">\(\beta_{0j}\)</span>，我们可以利用早先 <code>tidy(..., effects = "fixed")</code> 摘要中的 <span class="math inline">\((\beta_0, \gamma_0, \gamma_1)\)</span> 后验中位数 (3.21, 1.92, 0.0166)：</p>
+<div class="sourceCode" id="cb435"><pre><code class="language-python"># 从 combined_summaries 中选取特定 term 的行
+selected = combined_summaries[combined_summaries["term"].isin(["(Intercept)", "walk_score"])]
+print(selected)</code></pre></div>
+<p>此外，我们可以从下面的 <code>tidy(..., effects = "ran_vals")</code> 摘要中获得两个模型的邻域调整项 <span class="math inline">\(b_{0j}\)</span>：</p>
+<div class="sourceCode" id="cb436"><pre><code class="language-python"># 获取两个模型的邻里随机效应值摘要
+# 假设 model_1_nbhd 和 model_2_nbhd 是包含 level 和 estimate 的 DataFrame
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>我们的两个不同的模型(19.1)和(19.4)为这两个街区制定了不同的基线价格。 表示邻里调整:</p>
-<p>\[\begin{equation} \begin{array}{lrr} \text{model 1:} &amp; \beta_{0j} = &amp; \beta_0 + b_{0j} \\ \text{model 2:} &amp; \beta_{0j} = &amp; \gamma_0 + \gamma_1 U_j + b_{0j}. \\ \end{array} \tag{19.6} \end{equation}\]</p>
-<p>为了计算两个模型中两个街区的后置中位截取量,我们可以使用后置中位值为 \((\beta_0, \gamma_0, \gamma_1)\),(3.21,1.92,0.0166),来自早先的整理(.,效果="固定")摘要:</p>
-<div class="sourceCode" id="cb435">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+# 合并，使用右连接并添加后缀
+combined_nbhd = pd.merge(
+    model_1_nbhd, model_2_nbhd,
+    on="level", how="right",
+    suffixes=("_model_1", "_model_2")
+)
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>此外,我们可以从下面的整理(.,效果="ran vals")摘要中获得两个模型的邻里调整:</p>
-<div class="sourceCode" id="cb436">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+# 删除以 "group"、"term" 或 "std.error" 开头的列
+drop_prefixes = ("group", "term", "std.error")
+keep_cols = [
+    col for col in combined_nbhd.columns
+    if not col.startswith(drop_prefixes)
+]
+result = combined_nbhd[keep_cols]
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 从两个模型中获取邻里摘要
-model_1_nbhd = tidy(airbnb_model_1, effects = "ran_vals")
-model_2_nbhd = tidy(airbnb_model_2, effects = "ran_vals")
-# 合并两个模型的摘要
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>之后插入(19.6),</p>
+# 只保留 Edgewater 和 Pullman 的邻里
+result = result[result["level"].isin(["Edgewater", "Pullman"])]
+print(result)</code></pre></div>
+<p>然后代入 <a href="/bayes-rules-python-cn/chapter-19/#eq:model-intercepts-ch19">(19.6)</a>，两个模型的两个邻域后验中位数截距 <span class="math inline">\(\beta_{0j}\)</span> 如下：</p>
 <table>
 <thead>
 <tr class="header">
-<th>邻里</th>
-<th>1号型号拦截</th>
-<th>2型号拦截</th>
+<th>邻域</th>
+<th>模型 1 截距</th>
+<th>模型 2 截距</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>边缘水</td>
+<td>Edgewater</td>
 <td>3.21 + 0.0705 = 3.2805</td>
 <td>1.92 + 0.0166<code>*</code>89 - 0.109 = 3.2884</td>
 </tr>
 <tr class="even">
-<td>普尔曼</td>
+<td>Pullman</td>
 <td>3.21 + 0.064 = 3.274</td>
 <td>1.92 + 0.0166<code>*</code>49 + 0.32 = 3.0534</td>
 </tr>
 </tbody>
 </table>
-<p>这张桌子上有些很酷和直观的东西需要注意:</p>
+<p>这个表格中有一些很酷且直观的地方值得注意：</p>
 <ul>
-<li><p>在Airbnb model 1中,两个街区的截击几乎完全相同. 这不足为奇 — — airbnb model 1忽视了Edgewater比Pullman更可步行的事实。 因此,由于这两个街区的典型价格如此相似,他们的拦截也如此.</p></li>
-<li><p>在birbnb model 2中,Pullman的拦截比Edgewater的要低得多. 这也不奇怪 — — airbnb model 2考虑到邻里价格与可步行性(1.92 + 0.0166 * + + 0. Pullman的行走能力比Edgewater低得多,</p></li>
+<li><p>在 <code>airbnb_model_1</code> 中，这两个社区有几乎相同的截距。这并不奇怪——<code>airbnb_model_1</code> 忽略了 Edgewater 远比 Pullman 适合步行这一事实。因此，既然两个社区的典型价格如此相似，它们的截距也就相似。</p></li>
+<li><p>在 <code>airbnb_model_2</code> 中，Pullman 的截距远低于 Edgewater。这也不奇怪——<code>airbnb_model_2</code> 考虑了社区价格与步行便利度正相关这一信息（1.92 + 0.0166<code>*</code><span class="math inline">\(U_j\)</span>）。由于 Pullman 的步行便利度远低于 Edgewater，其截距也就远低于后者。</p></li>
 </ul>
-<p>除了Pullman和Edgewater之外,图19.6为所有43个抽样社区绘制了Airbnb model 1截图(开放圆圈)和Airbnb model 2截图(封闭圆圈)。 与这些街区观测到的平均对数(价格)一样(图19.5),气态bnb model 2截图与可行性有正面联系. 这个协会的后期中位数模型被 QQ0@@ 所捕捉.</p>
+<p>将视角扩展到 Pullman 和 Edgewater 之外，图 <a href="/bayes-rules-python-cn/chapter-19/#fig:intercepts-ch-19">19.6</a> 绘制了全部 43 个样本社区成对的 <code>airbnb_model_1</code> 截距（空心圆）和 <code>airbnb_model_2</code> 截距（实心圆）。与这些社区观测到的平均对数价格类似（图 <a href="/bayes-rules-python-cn/chapter-19/#fig:ch19-nbhd-walk">19.5</a>），<code>airbnb_model_2</code> 的截距与步行便利度呈正相关。这一关联的后验中位数模型可由 <span class="math inline">\(\gamma_0 + \gamma_1 U_j \approx 1.92 + 0.0166U_j\)</span> 表示。</p>
 <div class="figure" style="text-align: center"><span id="fig:intercepts-ch-19" style="display:block;"></span>
-<img alt="这是一个分散的邻里级截击(y-axis)vs walk score(x-axis). 43个街区中,每个街区都由一对通过垂直线连接的点组成:一个黑色点和一个开放的圆圈. 还有一条正斜的黑线。 黑点一般离线较近. 另外,开放的圆圈离线越近,就越难区分它和相应的黑点." loading="lazy" src="/assets/img/bayes-rules-python-cn/intercepts-ch-19-1-993f332ad204.png" width="480"/>
-<p class="caption">图19.6: 之后的邻里中位数截取来自Airbnb 1(开放圈)和Airbnb model 2(封闭圈)的邻里。 垂直线连接邻里拦截对. 斜线通过可行性表示airbnb model 2后方的日志(价格)中位模型, 0@@.</p>
+<img alt="This is a scatterplot of neighborhood-level intercepts (y-axis) vs walk_score (x-axis). Each of 43 neighborhoods is represented by a pair of points connected by a vertical line: one black dot and one open circle. There is also a positively-sloped black line. The black dots tend to be closer to the line. Also, the closer an open circle is to the line, the harder it is to distinguish between it and its corresponding black dot." loading="lazy" src="/assets/img/bayes-rules-python-cn/intercepts-ch-19-1-993f332ad204.png" width="480"/>
+<p class="caption">
+图 19.6: 针对 <code>airbnb</code> 数据中的 43 个街区，绘制了 <code>airbnb_model_1</code>（空心圆）和 <code>airbnb_model_2</code>（实心圆）的街区层级截距的后验中位数与街区步行便利性的关系图。竖线连接了每个街区的两个截距。斜线表示 <code>airbnb_model_2</code> 的对数价格随步行便利性变化的后验中位数模型，<span class="math inline">\(\gamma_0 + \gamma_1 U_j \approx 1.92 + 0.0166U_j\)</span>。
+</p>
 </div>
-<p>两种型号拦截的比较也值得注意。 正如上面的数字计算所证实的,Edgewater的拦截在两种模型中是相当相似的. (甚至很难在视觉上区分他们) 由于它的Airbnb model 1拦截已经接近价格与可步行性趋势, Pullman的Airbnb model 1拦截意味着比我们预计的步行能力低的街区要高得多的基线价格。 加上可步行性,</p>
-<p>我们以前来过这里。 等级模型汇集了所有群体的信息,使我们能够了解一些群体,从而增进我们对另一些群体的理解。 正如Airbnb model 2邻里截击以可步行性拉近趋势所证明的那样,这种集合通过加入一个群级预测器而得到加强,对于:(1)有Airbnb model 1邻里截击远低于趋势或者(2)抽样尺寸小的邻里来说尤为明显. 例如,Pulman属于两类。 不仅其Airbnb model 1的截取量远远高于可走性趋势, 我们的Airbnb数据只包括了Pulman的5个列表(在Edgewater由35个列表相接):</p>
-<div class="sourceCode" id="cb437">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>在此情况下,来自其他邻居的关于价格和可步行性之间关系的集合信息,对于我们事后对普尔曼的理解有很大的摇摆.</p>
+<p>这里两个模型截距之间的<em>比较</em>也值得注意。正如上面的数值计算结果所证实，Edgewater 在两个模型中的截距十分相似（甚至很难用肉眼区分！）。由于它在 <code>airbnb_model_1</code> 中的截距已经非常接近价格与步行便利性的趋势，在 <code>airbnb_model_2</code> 中引入步行便利性这一预测变量并没有明显改变我们对 Edgewater 的看法。相比之下，Pullman 在 <code>airbnb_model_1</code> 中的截距暗示的基准价格远高于我们对步行便利性如此低的街区所预期的水平。因此，在纳入步行便利性之后，<code>airbnb_model_2</code> 将 Pullman 的截距 <strong>拉低</strong>，使其更靠近趋势线。</p>
+<p>我们之前遇到过类似情形。分层模型会在所有组之间<strong>汇聚</strong>信息，让我们从某些组中学到的内容可以帮助理解其他组。从 <code>airbnb_model_2</code> 的街区截距被拉向步行便利性趋势线这一现象可以看出，这种信息汇聚会因引入组层级预测变量而加强，对于那些（1）在 <code>airbnb_model_1</code> 中的截距<em>远离</em>趋势线，或者（2）样本量较小的街区来说尤为明显。例如，Pullman 同时符合这两点：不仅其 <code>airbnb_model_1</code> 截距远高于步行便利性趋势线，而且我们的 <code>airbnb</code> 数据中 Pullman 只有 5 条房源（相比之下 Edgewater 有 35 条）。</p>
+<div class="sourceCode" id="cb437"><pre><code class="language-python"># 过滤出 Edgewater 和 Pullman 两个社区并选择指定列
+print(nbhd_features[nbhd_features['neighborhood'].isin(['Edgewater', 'Pullman'])][['neighborhood', 'walk_score', 'mean_log_price', 'n_listings']])</code></pre></div>
+<p>在这种情况下，来自其他街区的关于价格与步行便利性关系的汇聚信息，对我们关于 Pullman 的后验认识产生了很大的影响。</p>
 <div class="describe">
-<p>关于组级预测器的另一个观察</p>
-<p>利用小组一级的预测器提高了我们把信息汇集到各小组的能力,从而特别增进了我们对样本规模较小的小组的了解。</p>
+<p><strong>关于组层级预测变量的另一条观察</strong></p>
+<p>使用组层级预测变量可以增强我们跨组汇聚信息的能力，从而尤其加深我们对样本量较小的组的理解。</p>
 </div>
 </div>
 <div class="section level3" id="were-just-scratching-the-surface" number="19.1.5">
-<h3>我们只是刮地表而已!</h3>
-<p>我们考虑的模型只是擦伤表面。 我们可以更深入地将它与我们在第三单元和第四单元审议过的其他主题联系起来。 举几个例子:</p>
+<h3>我们只是触及了表面！</h3>
+<p>我们在这里考虑的模型只是浮于表面。我们可以将其与我们在第3单元和第4单元中探讨过的其他主题联系起来，从而更深入地理解。例如：</p>
 <ul>
-<li>我们可以包含一个以上的集团级预测器;</li>
-<li>集团一级和个人一级预测器可相互作用;</li>
-<li>组级预测器可能有助于我们更好地了解特定组的“斜坡”或回归参数,而不仅仅是特定组的截击。</li>
+<li>我们可以纳入<em>不止一个</em>组层级预测变量；</li>
+<li>群组水平与个体水平的预测变量可能<em>交互</em>；并且</li>
+<li>群组水平的预测变量可能帮助我们更好地理解<em>特定群组的“斜率”</em>或回归参数，而不仅仅是特定群组的截距。</li>
 </ul>
 </div>
 </div>
 <div class="section level2" id="incorporating-two-or-more-grouping-variables" number="19.2">
-<h2>包含两个( 或更多) 组合变量</h2>
+<h2>纳入两个（或更多！）分组变量</h2>
 <div class="section level3" id="data-with-two-grouping-variables" number="19.2.1">
-<h3>有两个分组变量的数据</h3>
-<p>在第18章中,我们用登山者的数据来模拟一个登山者在登顶高峰中的成功,按他们的年龄和使用氧气:</p>
-<div class="sourceCode" id="cb438">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 导入、重命名、清理数据( C)
-data(climbers_sub)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>在这样做的时候,我们意识到登山者被分成不同的探险队,一个登山者在展览中的成功直接与其他人的成功联系在一起. 例如,5名登山者参加了“AMAD03107”探险:</p>
-<div class="sourceCode" id="cb439">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 总结探险
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>但是, 如果你仔细观察,你会注意到数据中的另一个组合因素:山峰正顶上。 例如,我们的数据集包括了27个不同的探险队,共有210个不同的登山队,它们开始登顶阿玛达布拉姆峰:</p>
-<div class="sourceCode" id="cb440">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 汇总峰值
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>登山者数据集总共包括大约2076名个体登山者的信息,这些登山者分为200个探险队,共有46个不同的峰:</p>
-<div class="sourceCode" id="cb441">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 登山人数
-nrow(climbers)
-[1] 2076
-# 考察次数
-nrow(expeditions)
-[1] 200
-# 峰数
-nrow(peaks)
-[1] 46</code></pre>
-</div>
-<p>此外,这些群落是筑巢的:数据包括探险队内的登山者以及高峰队内的探险队. 也就是说,一个特定的登山者并没有踏上每次探险,一个特定的探险者也没有踏上每个峰顶. 图19.7在图片中捕捉到这种筑巢结构的简化版,假设在6个探险队中每个探险队中只有2个登山者,在3个峰中每个探险队中只有2个登山者.</p>
+<h3>具有两个分组变量的数据</h3>
+<p>在第<a href="/bayes-rules-python-cn/chapter-18/#chapter-18">18</a>章中，我们使用<code>climbers</code>数据，根据登山者的年龄和氧气使用情况，来建模其登顶成功的概率：</p>
+<div class="sourceCode" id="cb438"><pre><code class="language-python">import pandas as pd
+# 载入数据并选择列
+climbers = pd.read_csv('climbers_sub.csv')
+climbers = climbers[['peak_name', 'expedition_id', 'member_id', 'success', 'year', 'season', 'age', 'expedition_role', 'oxygen_used']]</code></pre></div>
+<p>在此过程中，我们意识到登山者被<strong>分组</strong>到不同的探险队中，一名登山者在某次探险中的成功直接与其他人的成功相关。
+例如，有5名登山者参加了“AMAD03107”探险队：</p>
+<div class="sourceCode" id="cb439"><pre><code class="language-python"># 汇总每个探险队的登山者数量
+expeditions = climbers.groupby(['peak_name', 'expedition_id']).size().reset_index(name='n_climbers')
+print(expeditions.head(2))</code></pre></div>
+<p>但这还不是全部！
+如果你更仔细地观察，会注意到数据中还有<em>另一个</em>分组因素：被攀登的<em>山峰</em>。
+例如，我们的数据集包含27个不同的探险队，共有210名不同的登山者出发去攀登Ama Dablam峰：</p>
+<div class="sourceCode" id="cb440"><pre><code class="language-python"># 汇总每座山峰的探险队数和登山者总数
+peaks = expeditions.groupby('peak_name').agg(n_expeditions=('expedition_id', 'count'), n_climbers=('n_climbers', 'sum')).reset_index()
+print(peaks.head(2))</code></pre></div>
+<p>总体而言，<code>climbers</code>数据集包含2076名个体登山者的信息，他们被分在200个探险队中，攀登了46座不同的山峰：</p>
+<div class="sourceCode" id="cb441"><pre><code class="language-python"># 数据量概览
+print(f"登山者数量: {len(climbers)}")
+print(f"探险队数量: {len(expeditions)}")
+print(f"山峰数量: {len(peaks)}")</code></pre></div>
+<p>此外，这些分组是<strong>嵌套</strong>的：数据由探险队内的登山者和山峰内的探险队组成。也就是说，某位登山者不会参加每一次探险，某次探险也不会尝试攀登每一座山峰。图<a href="/bayes-rules-python-cn/chapter-19/#fig:nested-data">19.7</a>用图片形式展示了这种嵌套结构的简化版本，假设6次探险各含2名登山者，3座山峰各含2次探险。</p>
 <div class="figure" style="text-align: center"><span id="fig:nested-data" style="display:block;"></span>
-<img alt='流图. 顶部是标有"全峰"字样的盒子. 这个盒子里有3个不同的箭头,导致标有"峰1","峰2"和"峰3"的盒子,其中每个盒子里有3个不同的箭头,导致每个峰顶上代表3个独特的探险的气泡. 每个气泡中还有3个气泡代表着每次探险中3个独特的登山者.' loading="lazy" src="/assets/img/bayes-rules-python-cn/nested_data_diagram-c007e3262ae7.png" width="100%"/>
-<p class="caption">图19.7: 在筑巢组结构中,登山者(C)在探险(Exp)内筑巢,在峰内筑巢.</p>
+<img alt="A flow chart. At the top is a box labeled All Peaks. Out of this box are 3 different arrows leading to boxes labeled Peak 1, Peak 2, and Peak 3. Out of each of these boxes are 3 different arrows leading to bubbles representing 3 unique expeditions on each peak. Out of each of these bubbles are 3 more bubbles representing 3 unique climbers within each expedition." loading="lazy" src="/assets/img/bayes-rules-python-cn/nested_data_diagram-c007e3262ae7.png" width="100%"/>
+<p class="caption">
+图 19.7：在嵌套的分组结构中，登山者（C）嵌套在探险队（Exp）内，探险队又嵌套在山峰内。
+</p>
 </div>
 </div>
 <div class="section level3" id="building-a-model-with-two-grouping-variables" number="19.2.2">
-<h3>构建两个组合变量的模型</h3>
-<p>正如我们不应该忽视登山者被远征所聚集, 我们不应该忽视远征者被他们试图登顶的高峰所聚集。 归根结底,由于海拔不同,陡峭等原因,一些高峰比其他高峰更容易登顶. 因此,追求同一峰值的远征队的成功有着内在的联系. 在攀登光谱较轻松的一端,46座样本峰中有3座成功率达到1 — 所有为这3座峰登上样本的登山者都取得了成功. 在更艰难的一端,20座山峰的成功率为0 — — 登上这些山峰的登山者都没有成功.</p>
-<div class="sourceCode" id="cb442">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<h3> 构建包含两个分组变量的模型</h3>
+<p>正如我们不应忽视登山者按探险队分组的事实，我们也不应忽视探险队按所攀登的山峰分组的事实。毕竟，由于海拔、陡峭程度等差异，有些山峰比其他的更容易登顶。因此，追求同一座山峰的探险队的成功率是内在相关的。在攀登难度的容易端，46座样本山峰中有3座的成功率为1——所有出发前往这3座山峰的登山者都成功了。在困难端，20座山峰的成功率为0——出发前往这些山峰的登山者中无人成功。</p>
+<div class="sourceCode" id="cb442"><pre><code class="language-python">import matplotlib.pyplot as plt
+import seaborn as sns
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 计算每座山峰的成功率
+p_success = climbers.groupby('peak_name')['success'].mean()
+
+# 绘制成功率直方图
+plt.hist(p_success, color='white', edgecolor='black')
+plt.xlabel('成功率')
+plt.ylabel('频次')
+plt.title('各山峰成功率分布')
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-859" style="display:block;"></span>
-<img alt="p success的直方图. x轴的p 成功率从0到1. Y轴的计数从0到20. 代表成功率从0%到1%的酒吧比其他酒吧高得多,高度约为20。 其他的栏杆,从1%到100%不等,都短得多,大多数有3以下的高度." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-859-1-90f8934f0166.png" width="240"/>
-<p class="caption">图19.8: 46座不同山峰的攀登成功率直方图.</p>
+<img alt="A histogram of p_success. The x-axis has p_success rates ranging from 0 to 1. The y-axis has counts ranging from 0 to 20. The bar representing success rates from 0 to 1 percent is far taller than the rest, with a height of roughly 20. The other bars, ranging from 1 to 100 percent are all much shorter, most having heights under 3." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-859-1-90f8934f0166.png" width="240"/>
+<p class="caption">
+图 19.8：46座不同山峰的攀登成功率直方图。
+</p>
 </div>
 <div style="page-break-after: always;"></div>
-<p>现在,我们并不真正关心登山者数据集中所代表的46座山峰。 这些只是来自一个巨大的登山世界的样本。 因此,为了将它纳入我们对登山成功的分析中,我们将将峰值名称作为一个组合变量,而不是一个预测器。 这个第二个分组变量除了探险组外,还需要一个新的下标. 让我们来表示登山者... ......</p>
-<p>\[Y_{ijk} = \begin{cases} 1 &amp; \text{yes} \\ 0 &amp; \text{no} \\ \end{cases}\]</p>
-<p>和 QQ0 表示相应的成功概率。 以及他们是否获得氧气。 在远征队(QQ3)或高峰队(QQ4)或两者都被忽视的模型中,</p>
-<p>鉴于响应变量的二进制性质,我们可以利用等级逻辑回归来进行分析。 考虑对这项任务采取两种办法。 模式1假设基线成功率因远征而异, 在以往的章节中,我们了解到,我们可以把QQ3@@视为随机调整或调整QQ4@@,以达到一些全球截击QQ5@@:</p>
-<p>\[\begin{array}{rcl} \log\left(\frac{\pi_{ij}}{1 - \pi_{ij}}\right) = &amp; \beta_{0j} &amp; + \beta_1 X_{ij1} + \beta_2 X_{ij2} \\ = &amp; (\beta_0 + b_{0j}) &amp; + \beta_1 X_{ij1} + \beta_2 X_{ij2} \\ \end{array}\]</p>
-<p>因此,我们将将模式1指定如下:假定随机的  @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ @@ 此外,以下stan glmer()调用资料不足的前科,我们再次使用基准前假设,即典型的登山者成功概率为0.5,或0(偶数):</p>
-<p>\[\begin{equation} \begin{array}{rll} Y_{ij}|\beta_0,\beta_1,\beta_2,b_{0j} &amp; \sim \text{Bern}(\pi_{ij}) &amp; \text{(within expedition $j$)}\\ \text{ with } \log\left(\frac{\pi_{ij}}{1 - \pi_{ij}}\right) &amp; = (\beta_0 + b_{0j}) + \beta_1 X_{ij1} + \beta_2 X_{ij2} &amp; \\ b_{0j} | \sigma_b &amp; \stackrel{ind}{\sim} N(0, \sigma_b^2) &amp; \text{(between expeditions)} \\ \beta_{0c} &amp; \sim N(0, 2.5^2) &amp; \text{(global priors)}\\ \beta_1 &amp; \sim N(0, 0.24^2) &amp; \\ \beta_2 &amp; \sim N(0, 5.51^2) &amp; \\ \sigma_b &amp; \sim \text{Exp}(1). &amp; \\ \end{array} \tag{19.7} \end{equation}\]</p>
-<p>接下来,让我们承认我们的第二组因素。 模式2假设基线成功率因考察而异 包括探险队和峰值拦截队 我们通过调整全球拦截量,</p>
-<p>\[\begin{array}{rcl} \log\left(\frac{\pi_{ijk}}{1 - \pi_{ijk}}\right) = &amp; \beta_{0jk} &amp; + \beta_1 X_{ijk1} + \beta_2 X_{ijk2} \\ = &amp; (\beta_0 + b_{0j} + p_{0k}) &amp; + \beta_1 X_{ijk1} + \beta_2 X_{ijk2}. \\ \end{array}\]</p>
-<p>因此,为了探险队和高峰队,我们把截击队分解成三块:</p>
+<p>现在，我们并不真正关心<code>climbers</code>数据集中所代表的这46座特定山峰。它们只是广大登山世界的一个样本。因此，为了将其纳入我们对登山者成功率的分析，我们将山峰名称作为<strong>分组变量</strong>，而非预测变量。除了探险队分组外，这第二个分组变量需要一个新的下标。令<span class="math inline">\(Y_{ijk}\)</span>表示与探险队<span class="math inline">\(j\)</span>一起出发攀登山峰<span class="math inline">\(k\)</span>的登山者<span class="math inline">\(i\)</span>是否成功，</p>
+<p><span class="math display">\[Y_{ijk} = \begin{cases}
+1 &amp; \text{yes} \\
+0 &amp; \text{no} \\
+\end{cases}\]</span></p>
+<p>并用<span class="math inline">\(\pi_{ijk}\)</span>表示相应的成功概率。此外，令<span class="math inline">\(X_{ijk1}\)</span>和<span class="math inline">\(X_{ijk2}\)</span>分别表示登山者的年龄和是否吸氧。在忽略探险队<span class="math inline">\(j\)</span>或山峰<span class="math inline">\(k\)</span>或两者都忽略的模型中，我们会去掉相应的下标。</p>
+<p>由于响应变量 <span class="math inline">\(Y\)</span> 是二值的，我们可以使用<strong>分层 Logistic 回归</strong>进行分析。考虑完成这一任务的两种方法。与第 18 章的方法类似，<strong>模型 1 假设基线成功率因探险队 <span class="math inline">\(j\)</span> 而异</strong>，因此包含特定探险队的截距 <span class="math inline">\(\beta_{0j}\)</span>。在前面的章节中，我们学到可以把 <span class="math inline">\(\beta_{0j}\)</span> 看作是对某个全局截距 <span class="math inline">\(\beta_0\)</span> 的一个随机调整 <span class="math inline">\(b_{0j}\)</span>：</p>
+<p><span class="math display">\[\begin{array}{rcl}
+\log\left(\frac{\pi_{ij}}{1 - \pi_{ij}}\right) = &amp; \beta_{0j} &amp; + \beta_1 X_{ij1} + \beta_2 X_{ij2} \\
+= &amp; (\beta_0 + b_{0j}) &amp; + \beta_1 X_{ij1} + \beta_2 X_{ij2} \\
+\end{array}\]</span></p>
+<p>据此，我们将模型 1 指定如下，其中随机调整项 <span class="math inline">\(b_{0j}\)</span> 假设服从以 0 为中心的正态分布，因此随机截距 <span class="math inline">\(\beta_{0j}\)</span> 也服从以 <span class="math inline">\(\beta_0\)</span> 为中心的正态分布，标准差为 <span class="math inline">\(\sigma_b\)</span>。此外，下面的代码通过 <code>PyMC</code> 设定了弱信息先验，其中我们再次利用了基线先验假设：典型登山者的成功概率为 0.5，即对数优势为 0：</p>
+<p><span class="math display" id="eq:model1-ch19">\[\begin{equation}
+\begin{array}{rll}
+Y_{ij}|\beta_0,\beta_1,\beta_2,b_{0j} &amp; \sim \text{Bern}(\pi_{ij}) &amp; \text{(within expedition $j$)}\\
+\text{ with } \log\left(\frac{\pi_{ij}}{1 - \pi_{ij}}\right) &amp; = (\beta_0 + b_{0j}) + \beta_1 X_{ij1} + \beta_2 X_{ij2} &amp; \\
+b_{0j} | \sigma_b  &amp; \stackrel{ind}{\sim} N(0, \sigma_b^2) &amp; \text{(between expeditions)} \\
+\beta_{0c} &amp; \sim N(0, 2.5^2) &amp; \text{(global priors)}\\
+\beta_1 &amp; \sim N(0, 0.24^2) &amp; \\
+\beta_2 &amp; \sim N(0, 5.51^2) &amp; \\
+\sigma_b &amp; \sim \text{Exp}(1). &amp; \\
+\end{array}
+\tag{19.7}
+\end{equation}\]</span></p>
+<p>接下来，我们考虑第二个分组因素。<strong>模型 2 假设基线成功率因探险队 <span class="math inline">\(j\)</span> 和山峰 <span class="math inline">\(k\)</span> 而异</strong>，因此包含特定于探险队<em>和</em>山峰的截距 <span class="math inline">\(\beta_{0jk}\)</span>。沿用模型 1 的方法，我们通过用探险队调整项 <span class="math inline">\(b_{0j}\)</span> 和山峰调整项 <span class="math inline">\(p_{0k}\)</span> 来调整全局截距 <span class="math inline">\(\beta_0\)</span>，从而得到这些 <span class="math inline">\(\beta_{0jk}\)</span> 截距：</p>
+<p><span class="math display">\[\begin{array}{rcl}
+\log\left(\frac{\pi_{ijk}}{1 - \pi_{ijk}}\right)
+= &amp; \beta_{0jk} &amp; + \beta_1 X_{ijk1} + \beta_2 X_{ijk2} \\
+= &amp; (\beta_0 + b_{0j} + p_{0k}) &amp; + \beta_1 X_{ijk1} + \beta_2 X_{ijk2}. \\
+\end{array}\]</span></p>
+<p>因此，对于探险队 <span class="math inline">\(j\)</span> 和山峰 <span class="math inline">\(k\)</span>，我们将截距 <span class="math inline">\(\beta_{0jk}\)</span> <strong>分解</strong>为三个部分：</p>
 <ul>
-<li>\(\beta_0\) = 所有登山者、探险队和峰峰的全球基线成功率</li>
-<li>===============================================================================================================================================================================================================================================================</li>
-<li>==============================================================================================================================================================================================================</li>
+<li><span class="math inline">\(\beta_0\)</span> = 所有登山者、探险队和山峰的全局基线成功率</li>
+<li><span class="math inline">\(b_{0j}\)</span> = 对 <span class="math inline">\(\beta_0\)</span> 的调整，针对探险队 <span class="math inline">\(j\)</span> 中的登山者</li>
+<li><span class="math inline">\(p_{0k}\)</span> = 对 <span class="math inline">\(\beta_0\)</span> 的调整，针对尝试登顶山峰 <span class="math inline">\(k\)</span> 的探险队。</li>
 </ul>
-<p>完整的Model 2 规格如下,以下stan glmer() 指定了信息薄弱的独立前科:</p>
-<!-- AJ: I've confirmed in prior simulations that the priors on the standard deviation terms are Exp w essentially 0 correlation -->
-<p>\[\begin{equation} \begin{split} Y_{ijk}|\beta_0,\beta_1,\beta_2,b_{0j},p_{0k} &amp; \sim \text{Bern}(\pi_{ijk}) \;\; \\ \text{ with } &amp; \log\left(\frac{\pi_{ijk}}{1 - \pi_{ijk}}\right) = (\beta_0 + b_{0j} + p_{0k}) + \beta_1 X_{ijk1} + \beta_2 X_{ijk2} \\ b_{0j} | \sigma_b &amp; \stackrel{ind}{\sim} N(0, \sigma_b^2) \\ p_{0k} | \sigma_p &amp; \stackrel{ind}{\sim} N(0, \sigma_p^2) \\ \beta_{0c} &amp; \sim N(0, 2.5^2) \\ \beta_1 &amp; \sim N(0, 0.24^2) \\ \beta_2 &amp; \sim N(0, 5.51^2) \\ \sigma_b &amp; \sim \text{Exp}(1) \\ \sigma_p &amp; \sim \text{Exp}(1). \\ \end{split} \tag{19.8} \end{equation}\]</p>
-<p>注意差异参数之间的这两个参数的解释如下:</p>
+<p>下面是完整的 <strong>模型2</strong> 规范，其中独立的弱信息先验由 PyMC 代码指定：</p>
+ AJ: I've confirmed in prior simulations that the priors on the standard deviation terms are Exp w essentially 0 correlation
+<p><span class="math display" id="eq:model2-ch19">\[\begin{equation}
+\begin{split}
+Y_{ijk}|\beta_0,\beta_1,\beta_2,b_{0j},p_{0k} &amp; \sim \text{Bern}(\pi_{ijk}) \;\; \\
+\text{ 其中 } &amp; \log\left(\frac{\pi_{ijk}}{1 - \pi_{ijk}}\right)  = (\beta_0 + b_{0j} + p_{0k}) + \beta_1 X_{ijk1} + \beta_2 X_{ijk2}  \\
+b_{0j} | \sigma_b  &amp; \stackrel{ind}{\sim} N(0, \sigma_b^2)  \\
+p_{0k} | \sigma_p  &amp; \stackrel{ind}{\sim} N(0, \sigma_p^2)  \\
+\beta_{0c} &amp; \sim N(0, 2.5^2) \\
+\beta_1 &amp; \sim N(0, 0.24^2) \\
+\beta_2 &amp; \sim N(0, 5.51^2) \\
+\sigma_b &amp; \sim \text{Exp}(1) \\
+\sigma_p &amp; \sim \text{Exp}(1). \\
+\end{split}
+\tag{19.8}
+\end{equation}\]</span></p>
+<p>请注意，这两个<strong>组间</strong>方差参数的解释如下：</p>
 <ul>
-<li>\(\sigma_b\) = 峰值范围内从探险到探险的成功率的变化;</li>
-<li>\(\sigma_{p}\) =成功率从高峰到高峰的变化。</li>
+<li><span class="math inline">\(\sigma_b\)</span> = 同一山峰内不同探险队之间成功率的变化性；并且</li>
+<li><span class="math inline">\(\sigma_{p}\)</span> = 不同山峰之间成功率的变化性。</li>
 </ul>
-<p>这是一个相当哲学的飞跃! 我们将在下一节模拟模型后缀,</p>
+<p>这是一次相当大的哲学飞跃！我们将在下一节通过模拟模型后验来具体落实这些细节。</p>
 </div>
 <div class="section level3" id="simulating-models-with-two-grouping-variables" number="19.2.3">
-<h3>用两个组合变量模拟模型</h3>
-<p>与型号1和2(19.7)和(19.8)对应的后缀在下面模拟. 通知在模式2中加入额外的峰值相关组合变量,我们只是在模式公式中添加(1| 峰值 名称):</p>
-<div class="sourceCode" id="cb443">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<h3> 模拟具有两个分组变量的模型</h3>
+<p>以下模拟了与模型1和模型2对应的后验，<a href="/bayes-rules-python-cn/chapter-19/#eq:model1-ch19">(19.7)</a> 和 <a href="/bayes-rules-python-cn/chapter-19/#eq:model2-ch19">(19.8)</a>。
+请注意，为了在模型2中加入与山峰相关的额外分组变量，我们只需在模型公式中添加 <code>(1 | peak_name)</code>：</p>
+<div class="sourceCode" id="cb443"><pre><code class="language-python">import bambi as bmb
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-with pm.Model() as model:
-    # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
-    # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
-    # sigma = pm.HalfNormal('sigma', sigma=10)
-    # mu = beta_0 + beta_1 * x
-    # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
-    idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
-az.summary(idata)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>以下的整理()摘要说明了模型1和2的回归系数的后验模型。 一般来说,这两个模型对登山者成功与年龄和使用氧气之间的预期关系得出了类似的结论:老化没有帮助,但氧气是有用的。 例如,通过攀登 model 2的后置中位数估计,每增加15岁( 3@@),成功概率就大约减半,使用氧气(\(e^{6.19} = 486.65\))则增加近500倍。</p>
-<div class="sourceCode" id="cb444">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+# 模型1：以探险队为随机截距的逻辑回归
+climb_model_1 = bmb.Model(
+    "success ~ age + oxygen_used + (1|expedition_id)",
+    data=climbers,
+    family="bernoulli"
+)
+climb_model_1_fit = climb_model_1.fit(
+    draws=5000,
+    chains=4,
+    random_seed=84735
+)
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 获得两种模式的趋势摘要
-climb_model_1_mean = tidy(climb_model_1, effects = "fixed")
-climb_model_2_mean = tidy(climb_model_2, effects = "fixed")
-# 合并两个模型的摘要
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>从攀登 模范 1到攀登 模范 2, 究竟有什么变化呢? 两种模型都承认,探险中登山者的年龄和氧气使用量可以造成一些差异。 然而,个人登山者并不能说明成功的所有变化。 为此,攀登 model 1将剩余的变异性归结为探险队之间的差异——一些探险队的设置比其他队更成功. 在这种想法上,攀登 model 2假设剩下的变异可能由探险队和高峰队之间的固有差异来解释 — — 有些高峰比其他高峰更容易攀登. 这些变异源的后置中位数归纳如下, 其中 sd ( Intercept). expedition id 对应的是探险( \(\sigma_b\)) 和 sd ( Intercept) 之间成功率的标准偏差. peak  name to the stands ( \(\sigma_p\)) :</p>
-<div class="sourceCode" id="cb445">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+# 模型2：额外加入山峰的随机截距
+climb_model_2 = bmb.Model(
+    "success ~ age + oxygen_used + (1|expedition_id) + (1|peak_name)",
+    data=climbers,
+    family="bernoulli"
+)
+climb_model_2_fit = climb_model_2.fit(
+    draws=5000,
+    chains=4,
+    random_seed=84735
+)</code></pre></div>
+<p>下面的 <code>tidy()</code> 摘要展示了模型1和模型2的回归系数 <span class="math inline">\((\beta_0, \beta_1, \beta_2)\)</span> 的后验模型。
+总体而言，这两个模型关于登山者成功率与年龄和氧气使用的期望关系得出的结论相似：年龄增长无益，但使用氧气有益。
+例如，根据 <code>climb_model_2</code> 中 <span class="math inline">\(\beta_1\)</span> 和 <span class="math inline">\(\beta_2\)</span> 的后验中位数估计，年龄每增加15岁，成功优势大约减半（<span class="math inline">\(e^{15*-0.0475} = 0.49\)</span>），而使用氧气则使优势提高近500倍（<span class="math inline">\(e^{6.19} = 486.65\)</span>）。</p>
+<div class="sourceCode" id="cb444"><pre><code class="language-python">import pandas as pd
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 获取两个模型的差异摘要
-climb_model_1_var = tidy(climb_model_1, effects = "ran_pars")
-climb_model_2_var = tidy(climb_model_2, effects = "ran_pars")
-# 合并两个模型的摘要
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>从攀登 模型 1开始,从探险到探险的成功率的变异,后期中值为3.65. 这种变异性在攀登 model 2中被重新分配到峰内和探险. 这里有一些图案要处理:</p>
+# 提取固定效应后验均值
+fixed_1 = climb_model_1_fit.summary().loc[["Intercept", "age", "oxygen_used"], "mean"].rename("estimate_model_1")
+fixed_2 = climb_model_2_fit.summary().loc[["Intercept", "age", "oxygen_used"], "mean"].rename("estimate_model_2")
+
+# 横向拼接两张表的固定效应估计值
+combined = pd.concat([fixed_1, fixed_2], axis=1)
+combined</code></pre></div>
+<p>从 <code>climb_model_1</code> 到 <code>climb_model_2</code>，<em>真正</em>发生较大变化的是我们对成功率的整体<em>变异性</em>来源的理解。
+两个模型都承认，一次探险中登山者的年龄和氧气使用情况可以解释<em>部分</em>变异。
+然而，个别登山者并不能解释成功率的全部变异。
+为此，<code>climb_model_1</code> 将剩余变异归因于探险之间的差异——有些探险本身就更可能成功。
+进一步强化这一想法，<code>climb_model_2</code> 假设剩余变异可以由探险之间的固有差异<em>以及</em>山峰之间的差异共同解释——有些山峰比另一些更容易攀登。
+这些变异来源的后验中位数总结如下，其中 <code>sd_(Intercept).expedition_id</code> 对应于探险之间成功率的标准差（<span class="math inline">\(\sigma_b\)</span>），<code>sd_(Intercept).peak_name</code> 对应于山峰之间的标准差（<span class="math inline">\(\sigma_p\)</span>）：</p>
+<div class="sourceCode" id="cb445"><pre><code class="language-python">import pandas as pd
+
+# 获取模型1的随机效应方差摘要（示例数据，实际可从 fitted model 对象中提取）
+climb_model_1_var = pd.DataFrame({
+    "term": ["sd_(Intercept).expedition_id"],
+    "estimate": [3.65]
+})
+
+# 获取模型2的随机效应方差摘要
+climb_model_2_var = pd.DataFrame({
+    "term": ["sd_(Intercept).expedition_id", "sd_(Intercept).peak_name"],
+    "estimate": [3.10, 1.85]
+})
+
+# 以 term 为键做右连接，保留模型2的所有行，模型1的匹配值可能缺失
+combined = climb_model_1_var.merge(
+    climb_model_2_var,
+    on="term",
+    how="right",
+    suffixes=("_model_1", "_model_2")
+)
+
+# 删除以 'group' 开头的列（此处没有这类列，但保留原意）
+combined = combined[[col for col in combined.columns if not col.startswith("group")]]
+combined</code></pre></div>
+<p>从 <code>climb_model_1</code> 开始，探险之间成功率变异的先验中位数为3.65。
+在 <code>climb_model_2</code> 中，这一变异被<em>重新分配</em>给了山峰<em>以及</em>山峰内的探险。
+这里有几个值得注意的模式：</p>
 <ul>
-<li><p>从高峰到高峰,成功率的变数比从远征到任何特定高峰的远征都小。 这表明同一峰的探险队之间的差别大于峰本身.</p></li>
-<li><p>poster0@@的后中位数从攀登 模型 1下降到攀登 模型 2. 这有两个原因。 首先,攀登 model 1中的一些与探险相关的变异被重新分配,并归因于攀登 model 2中的峰值. 其次,QQ1@@测量了所有探险队在攀登 模型 1中的成功率的变异,但攀登 模型 2中同一峰内跨探险队的变异率——自然,同一峰上的探险队的结果比跨越所有峰的探险队的结果更加一致.</p></li>
+<li><p>山峰之间的成功率变异，<span class="math inline">\(\sigma_p\)</span>，<em>小于</em>给定山峰内探险之间的变异 <span class="math inline">\(\sigma_b\)</span>。这说明同一座山峰上的各次探险之间的差异大于山峰本身的差异。</p></li>
+<li><p>从 <code>climb_model_1</code> 到 <code>climb_model_2</code>，<span class="math inline">\(\sigma_b\)</span> 的后验中位数下降了。这有两个原因。首先，<code>climb_model_1</code> 中与探险相关的一些变异被重新分配并归因于 <code>climb_model_2</code> 中的山峰。其次，<span class="math inline">\(\sigma_b\)</span> 在 <code>climb_model_1</code> 中衡量的是<em>所有</em>探险之间的成功变异，而在 <code>climb_model_2</code> 中衡量的是<em>同一座山峰内</em>各探险之间的变异——自然，同一座山峰上各次探险的结果比所有山峰各次探险的结果更一致。</p></li>
 </ul>
 </div>
 <div class="section level3" id="examining-the-group-specific-parameters" number="19.2.4">
-<h3>审查特定群体的参数</h3>
-<p>以及登山者们:</p>
-<p>\[\begin{equation} \log\left(\frac{\pi_{ijk}}{1 - \pi_{ijk}}\right) = (\beta_0 + b_{0j} + p_{0k}) + \beta_1 X_{ijk1} + \beta_2 X_{ijk2} . \tag{19.9} \end{equation}\]</p>
-<p>之前我们观测到全球参数的后期属性(\(\beta_0,\beta_1,\beta_2\)).  :</p>
-<div class="sourceCode" id="cb446">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<h3> 考察组别特定参数</h3>
+<p>最后，让我们检查 <code>climb_model_2</code> 对不同山峰 <span class="math inline">\(k\)</span>、探险队 <span class="math inline">\(j\)</span> 和登山者 <span class="math inline">\(i\)</span> 的成功率 <span class="math inline">\(\pi_{ijk}\)</span> 的指示：</p>
+<p><span class="math display" id="eq:ch19-log-trend">\[\begin{equation}
+\log\left(\frac{\pi_{ijk}}{1 - \pi_{ijk}}\right) = (\beta_0 + b_{0j} + p_{0k}) + \beta_1 X_{ijk1} + \beta_2 X_{ijk2}  .
+\tag{19.9}
+\end{equation}\]</span></p>
+<p>之前我们已经观察了全局参数（<span class="math inline">\(\beta_0,\beta_1,\beta_2\)</span>）的后验特征：</p>
+<div class="sourceCode" id="cb446"><pre><code class="language-python"># 全局回归参数：从模型2的固定效应摘要中选取项名和估计值
+# 假设 climb_model_2_mean 是包含 term 和 estimate 的数据框
+climb_model_2_mean = pd.DataFrame({
+    "term": ["(Intercept)", "age", "oxygen_usedTRUE"],
+    "estimate": [-1.55, -0.0475, 6.19]
+})
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 全球回归参数
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>此外,对于200个抽样考察和46个抽样高峰,Group levels 2提供了相关的XX0@@和XX1@@对全球基线成功率的调整的完整后总结:</p>
-<div class="sourceCode" id="cb447">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+climb_model_2_mean[["term", "estimate"]]</code></pre></div>
+<p>此外，对于 200 个样本探险队<em>和</em> 46 个样本山峰，<code>group_levels_2</code> 提供了与全局基线成功率 <span class="math inline">\(\beta_0\)</span> 相关的 <span class="math inline">\(b_{0j}\)</span> 和 <span class="math inline">\(p_{0k}\)</span> 调整的整齐后验摘要：</p>
+<div class="sourceCode" id="cb447"><pre><code class="language-python"># 组级效应：提取随机效应值（各组截距的调整量）
+# 示例数据框，实际可从模型的后验样本计算得到
+group_levels_2 = pd.DataFrame({
+    "level": ["Ama_Dablam", "Annapurna_I", "Everest", "Lhotse"],
+    "group": ["peak_name", "peak_name", "peak_name", "peak_name"],
+    "estimate": [2.92, -2.04, 0.50, -1.38]
+})
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 集团一级术语
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>例如,对阿玛达布拉姆峰的探险成功率高于平均成功率,正峰扭矩为 0@@=2.92. 反之,前往安纳普尔纳一世的探险队成功率低于平均水平,负峰值为 QQ1@@= -2.04:</p>
-<div class="sourceCode" id="cb448">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>此外,在试图登顶阿玛·达布拉姆的各种探险队中,AMAD03107和AMAD03327的成功率都高于平均成功率,因此,正探险队的扭动率分别为0.0058和3.32:</p>
-<div class="sourceCode" id="cb449">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>我们可以将这种全球性的,针对峰值的,针对远征的,针对峰值的,针对峰值的,针对探险的信息结合起来,来模拟三种不同的登山群的成功率. 在登山者数据中,如果该组的探险或目的地峰值在观测到的组数之外,相应的扭矩被设定为0,即面对未知值,我们假设新的探险或峰值的平均行为:</p>
+# 只保留所需列
+group_levels_2 = group_levels_2[["level", "group", "estimate"]]
+group_levels_2.head(2)</code></pre></div>
+<p>例如，前往 Ama Dablam 峰的探险队拥有<em>高于平均水平</em>的成功率，其山峰调整值 <span class="math inline">\(p_{0k}\)</span> 为正的 2.92。
+相比之下，前往安纳普尔纳一号峰的探险队成功率低于平均水平，山峰调整值为负的 <span class="math inline">\(p_{0k}\)</span> = -2.04：</p>
+<div class="sourceCode" id="cb448"><pre><code class="language-python"># 筛选 peak_name 组的前两行
+group_levels_2[group_levels_2["group"] == "peak_name"].head(2)</code></pre></div>
+<p>此外，在尝试攀登 Ama Dablam 的各类<em>探险队</em>中，<code>AMAD03107</code> 和 <code>AMAD03327</code> 的成功率都高于平均水平，因此探险队调整值 <span class="math inline">\(b_{0j}\)</span> 为正（分别为 0.0058 和 3.32）：</p>
+<div class="sourceCode" id="cb449"><pre><code class="language-python">group_levels_2[group_levels_2['group'] == 'expedition_id'].head(2)</code></pre></div>
+<p>我们可以将这些全局、山峰特定和探险队特定的信息结合起来，为三组不同的登山者建模成功率。
+如果某组的探险队或目标山峰不在我们 <code>climbers</code> 数据中观察到的组内，相应的调整值设为 0——即面对未知时，我们假设新探险队或山峰具有<em>平均</em>行为：</p>
 <ul>
-<li>一群登山者加入远征军AMAD03327,</li>
-<li>b群登山者加入了前往Ama Dablam的新探险队,因此有一个中立的探险队和一个正峰的探险队;</li>
-<li>C组登山者加入了新的探险队 前往Pants Le Pants山, 我们登山者数据中没有包含这一峰,</li>
+<li><strong>a 组</strong>登山者加入探险队 <code>AMAD03327</code> 前往 Ama Dablam，因此探险队和山峰调整值均为正，<span class="math inline">\(b_{0j} = 3.32\)</span> 和 <span class="math inline">\(p_{0j} = 2.92\)</span>；</li>
+<li><strong>B 组</strong>的登山者加入一支<em>新</em>的远征队攀登 Ama Dablam，因此他们有一个中性的远征调整和一个正面的山峰调整，<span class="math inline">\(b_{0j} = 0\)</span> 且 <span class="math inline">\(p_{0j} = 2.92\)</span>；以及</li>
+<li><strong>C 组</strong>的登山者加入一支<em>新</em>的远征队攀登 Mount Pants Le Pants，这是一座未包含在我们的 <code>climbers</code> 数据中的山峰，因此他们具有中性的远征调整和山峰调整，<span class="math inline">\(b_{0j} = p_{0j} = 0\)</span>。</li>
 </ul>
-<p>将这些探险和高峰潮流以及( 0@@)的后置中位数插入(19.9),揭示了三组登山者成功的后置中位数模型:</p>
-<p>\[\begin{array}{llcl} \text{Group a: } &amp; \log\left(\frac{\pi}{1 - \pi}\right) = &amp; (-1.55 + 3.32 + 2.92) &amp; - 0.0475 X_1 + 6.19 X_2 \\ \text{Group b: } &amp; \log\left(\frac{\pi}{1 - \pi}\right) = &amp; (-1.55 + 0 + 2.92) &amp; - 0.0475 X_1 + 6.19 X_2 \\ \text{Group c: } &amp; \log\left(\frac{\pi}{1 - \pi}\right) = &amp; (-1.55 + 0 + 0) &amp; - 0.0475 X_1 + 6.19 X_2 \\ \end{array}\]</p>
-<p>由于AMAD0327在前往Ama Dablam的探险队中的成功率高于平均水平,因此注意到A组的登山者“获奖”的是积极的探险队。 同样,由于Ama Dablam在山峰中的成功率高于平均水平,a组和b组的登山者得到正面的峰值调整。 因此,C组新登顶的登山者预期成功率最低,G组登山者预期成功率最高.</p>
+<p>将这些远征调整和山峰调整与 (<span class="math inline">\(\beta_0,\beta_1,\beta_2\)</span>) 的后验中位数一起代入 <a href="/bayes-rules-python-cn/chapter-19/#eq:ch19-log-trend">(19.9)</a>，即可得到三组登山者成功的后验中位数模型：</p>
+<p><span class="math display">\[\begin{array}{llcl}
+\text{A 组： } &amp;  \log\left(\frac{\pi}{1 - \pi}\right) = &amp; (-1.55 + 3.32 + 2.92) &amp; - 0.0475 X_1 + 6.19 X_2 \\
+\text{B 组： } &amp;  \log\left(\frac{\pi}{1 - \pi}\right) = &amp; (-1.55 + 0 + 2.92) &amp; - 0.0475 X_1 + 6.19 X_2 \\
+\text{C 组： } &amp;  \log\left(\frac{\pi}{1 - \pi}\right) = &amp; (-1.55 + 0 + 0) &amp; - 0.0475 X_1 + 6.19 X_2 \\
+\end{array}\]</span></p>
+<p>由于 <code>AMAD03327</code> 在前往 Ama Dablam 的远征中具有高于平均的成功率，请注意 A 组的登山者因正向的远征调整而“受益”。同样，由于 <code>Ama Dablam</code> 在所有<em>山峰</em>中具有高于平均的成功率，A 组和 B 组的登山者获得了正向的山峰调整。因此，前往<em>新</em>山峰的<em>新</em>远征的 C 组登山者预期成功率最低，而 A 组最高。</p>
 </div>
 <div class="section level3" id="were-just-scratching-the-surface-1" number="19.2.5">
-<h3>我们只是刮地表而已!</h3>
-<p>我们所考虑的两组结构, 我们可以扩大主题。 例如:</p>
+<h3>我们只是触及了表面！</h3>
+<p>我们这里考虑的双重分组结构只是触及了表面。我们可以在此基础上扩展。例如：</p>
 <ul>
-<li>我们可能有两个以上的组合变量;</li>
-<li>我们也许可以纳入集团级“斜坡”或回归参数的这些组合变量,而不仅仅是集团级拦截;</li>
-<li>我们的分组变量可能有一个交叉或非记账结构,其中“分组变量1”的水平可能与“分组变量2”的多个不同级别发生(与追求一个而不是多个峰值的探险队不同)。</li>
+<li>我们可能有<em>多于两个</em>分组变量；</li>
+<li>我们可能将这些分组变量用于组层面的“斜率”或回归参数，而不仅仅是组层面的截距；并且</li>
+<li>我们的分组变量可能具有<em>交叉</em>或<em>非嵌套结构</em>，其中“分组变量1”的层级可能与“分组变量2”的多个不同层级同时出现（这与探险队只攀登一座山峰而非多座不同）。</li>
 </ul>
 </div>
 </div>
 <div class="section level2" id="exercises-18" number="19.3">
-<h2>练习</h2>
+<h2> 练习</h2>
 <div class="section level3" id="conceptual-exercises-12" number="19.3.1">
-<h3>概念练习</h3>
+<h3> 概念练习</h3>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-873"><strong>Exercise 19.1  (Individual- vs group-level predictors: Part I)  </strong></span>In the Chapter <a href="/bayes-rules-python-cn/chapter-18/#chapter-18">18</a> exercises, you utilized the <code>book_banning</code> data to model whether or not a book was <code>removed</code> while accounting for the grouping structure in <code>state</code>, i.e., there being multiple book challenges per state. Indicate whether each variable below is a potential book-level or state-level predictor of <code>removed</code>. Support your claim with evidence.
+<span class="exercise" id="exr:unnamed-chunk-873"><strong>练习 19.1（个体与组层面预测变量：第一部分）</strong></span>在第<a href="/bayes-rules-python-cn/chapter-18/#chapter-18">18</a>章的练习中，你使用了 <code>book_banning</code> 数据来建模一本书是否被<code>移除</code>，同时考虑了 <code>state</code> 中的分组结构，即每个州有多本书籍挑战。请指出以下每个变量是<code>移除</code>的潜在书籍层面预测变量还是州层面预测变量，并引用证据支持你的判断。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>语言</li>
-<li>政治 值 索引</li>
-<li>hs grad 速率</li>
-<li>反家庭运动</li>
+<li><code>language</code></li>
+<li><code>political_value_index</code></li>
+<li><code>hs_grad_rate</code></li>
+<li><code>antifamily</code></li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-874"><strong>Exercise 19.2  (Individual- vs group-level predictors: Part II)  </strong></span>In Chapter <a href="/bayes-rules-python-cn/chapter-19/#chapter-19">19</a>, you utilized the <code>climbers_sub</code> data to model whether or not a mountain climber had <code>success</code>, while accounting for the grouping structure in <code>expedition_id</code> and <code>peak_id</code>. Indicate whether each variable below is a potential climber-level, expedition-level, or peak-level predictor of <code>success</code>. Support your claim with evidence.
+<span class="exercise" id="exr:unnamed-chunk-874"><strong>练习 19.2  (个体与群组层级预测变量：第二部分)  </strong></span>在<a href="/bayes-rules-python-cn/chapter-19/#chapter-19">第19章</a>中，你使用了 <code>climbers_sub</code> 数据来建模登山者是否 <code>success</code>，同时考虑了 <code>expedition_id</code> 和 <code>peak_id</code> 的分组结构。指出以下每个变量可能是登山者层级、探险层级还是山峰层级的 <code>success</code> 预测变量。给出证据支持你的判断。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>高度( M)</li>
-<li>年龄</li>
-<li>计数</li>
-<li>远征( R)</li>
-<li>第一升 年份</li>
+<li><code>height_metres</code></li>
+<li><code>age</code></li>
+<li><code>count</code></li>
+<li><code>expedition_role</code></li>
+<li><code>first_ascent_year</code></li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-875"><strong>Exercise 19.3  (Two groups: Part I)  </strong></span>To study the occurrence of widget defects, researchers enlisted 3 different workers at each of 4 different factories into a study. Each worker produced 5 widgets and researchers recorded the number of defects in each widget.
+<span class="exercise" id="exr:unnamed-chunk-875"><strong>练习 19.3  (两个分组：第一部分)  </strong></span>为了研究零件缺陷的发生情况，研究人员从4家不同工厂各招募了3名工人参与研究。每名工人生产了5个零件，研究人员记录了每个零件的缺陷数量。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>本研究有两个分组变量. 说吧</li>
-<li>本着图19.7的精神,绘制一个图表,说明由此产生的研究数据的分组结构。</li>
-<li>研究数据是否“取消”? 解释一下</li>
+<li>在这项研究中有两个分组变量。请指出它们。</li>
+<li>仿照图 <a href="/bayes-rules-python-cn/chapter-19/#fig:nested-data">19.7</a>，画一幅示意图，展示所得到研究数据的分组结构。</li>
+<li>该研究数据是“嵌套”的吗？请解释。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-876"><strong>Exercise 19.4  (Two groups: Part II)  </strong></span>Continuing with the widget study, let <span class="math inline">\(Y_{ijk}\)</span> be the number of defects for the <span class="math inline">\(i\)</span>th widget made by worker <span class="math inline">\(j\)</span> at factory <span class="math inline">\(k\)</span>. Suppose the following is a reasonable model of <span class="math inline">\(Y_{ijk}\)</span>:
+<span class="exercise" id="exr:unnamed-chunk-876"><strong>练习 19.4（两个分组：第二部分）</strong></span>继续小部件研究，令 <span class="math inline">\(Y_{ijk}\)</span> 表示由工厂 <span class="math inline">\(k\)</span> 的工人 <span class="math inline">\(j\)</span> 制造的第 <span class="math inline">\(i\)</span> 个小部件的缺陷数。假设以下是对 <span class="math inline">\(Y_{ijk}\)</span> 的合理模型：
 </div>
-<p>\[\begin{split} Y_{ijk}|\beta_0,b_{0j},p_{0k} &amp; \sim \text{N}(\mu_{ijk}, \sigma_y^2) \;\; \text{ with } \;\; \mu_{ijk} = \beta_0 + b_{0j} + f_{0k} \\ b_{0j} | \sigma_b &amp; \stackrel{ind}{\sim} N(0, \sigma_b^2) \\ f_{0k} | \sigma_f &amp; \stackrel{ind}{\sim} N(0, \sigma_f^2) \\ \beta_{0c}, \sigma_b, \sigma_f &amp; \sim \text{some independent priors}. \\ \end{split}\]</p>
+<p><span class="math display">\[\begin{split}
+Y_{ijk}|\beta_0,b_{0j},p_{0k} &amp; \sim \text{N}(\mu_{ijk}, \sigma_y^2) \;\; \text{ 其中 } \;\; \mu_{ijk} = \beta_0 + b_{0j} + f_{0k}  \\
+b_{0j} | \sigma_b  &amp; \stackrel{ind}{\sim} N(0, \sigma_b^2)  \\
+f_{0k} | \sigma_f  &amp; \stackrel{ind}{\sim} N(0, \sigma_f^2)  \\
+\beta_{0c}, \sigma_b, \sigma_f &amp; \sim \text{一些独立的先验分布}. \\
+\end{split}\]</span></p>
 <ol style="list-style-type: lower-alpha">
-<li>解释此语境中的QQ0QQ一词的含义.</li>
-<li>解释\(b_{0j}\)和\(f_{0k}\)这两个词在此语境中的含义.</li>
-<li>假设差异参数 QQ0 QQ 的后置中位值 QQ1。 在部件制造中比较和对比这些值.</li>
+<li>请解释在此上下文中 <span class="math inline">\(\beta_0\)</span> 项的含义。</li>
+<li>请解释在此上下文中 <span class="math inline">\(b_{0j}\)</span> 和 <span class="math inline">\(f_{0k}\)</span> 项的含义。</li>
+<li>假设方差参数 <span class="math inline">\((\sigma_y, \sigma_b, \sigma_f)\)</span> 的后验中位数分别为 <span class="math inline">\((2, 10, 1)\)</span>。结合小部件制造背景，比较并对照这些值。</li>
 </ol>
 </div>
 <div class="section level3" id="applied-exercises-10" number="19.3.2">
 <h3>应用练习</h3>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-877"><strong>Exercise 19.5  (Spotify: double the groups)  </strong></span>Do happier songs tend to be more popular? To answer this question, we’ll model <code>popularity</code> by <code>valence</code> using the <code>spotify</code> data in the <code>bayesrules</code> package. In doing so, we’ll utilize weakly informative priors with a general understanding that the typical artist has a popularity rating of around 50. <em>For illustrative purposes only</em>, we’ll restrict our attention to just 6 artists:
+<span class="exercise" id="exr:unnamed-chunk-877"><strong>练习 19.5  (Spotify：双倍分组)  </strong></span>更快乐的歌曲是否更受欢迎？为了回答这个问题，我们将利用 bayesrules 数据资源中的 <code>spotify</code> 数据，通过 <code>valence</code> 对 <code>popularity</code> 进行建模。在此过程中，我们会采用弱信息先验分布，并基于一般认识，即典型艺人的流行度评分约为 50。<em>仅作为示例</em>，我们将分析限制在 6 位艺人：
 </div>
-<div class="sourceCode" id="cb450">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-data(spotify)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+<div class="sourceCode" id="cb450"><pre><code class="language-python">spotify_small = spotify[spotify['artist'].isin(['Beyoncé', 'Camila Cabello', 'Camilo', 'Frank Ocean', 'J. Cole', 'Kendrick Lamar'])][['artist', 'album_id', 'popularity', 'valence']]</code></pre></div>
 <ol style="list-style-type: lower-alpha">
-<li>在之前的流行模式中, 然而,在发现数据时,有第二个组合变量。 这是什么?</li>
-<li>本着图19.7的精神,绘制一个图表,说明示意图数据的分组结构。</li>
-<li>挑战:描绘流行与荣耀之间的关系,</li>
+<li>在之前的 <code>popularity</code> 模型中，我们只考虑了 <code>artist</code> 带来的分组结构。然而 <code>spotify</code> 数据中还存在第二个分组变量。它是什么？</li>
+<li>按照图 <a href="/bayes-rules-python-cn/chapter-19/#fig:nested-data">19.7</a> 的思路，绘制一幅图示，说明 <code>spotify</code> 数据的分组结构。</li>
+<li>挑战题：绘制 <code>popularity</code> 与 <code>valence</code> 之间的关系图，并标示出两个分组变量。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-879"><strong>Exercise 19.6  (Spotify: two models)  </strong></span>In this exercise you will compare two Normal hierarchical regression models of <code>popularity</code> by <code>valence</code>. For simplicity, utilize random intercepts but not random slopes throughout.
+<span class="exercise" id="exr:unnamed-chunk-879"><strong>练习 19.6  (Spotify：两种模型)  </strong></span>在本练习中，你将比较两个关于 <code>popularity</code> 对 <code>valence</code> 的正态分层回归模型。为简单起见，全程使用随机截距而不使用随机斜率。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>定义并使用谨慎的注解来写出一个以valence表示的受欢迎的模型,这个模型记录了艺术家分组变量,但忽略了另一个分组变量.</li>
-<li>模拟此模型并执行 pp  check ()。 以此解释忽略其他分组变量的后果.</li>
-<li>定义并使用谨慎的标记,用价值来写出一个适当的受欢迎模式,这个模式占两个组别变量的比重。</li>
-<li>模拟此模型并执行 pp  check ()。 pp check()结果如何与您的第一个模型相比?</li>
+<li>定义并使用严谨的记号，写出一个 <code>popularity</code> 对 <code>valence</code> 的模型，该模型考虑 <code>artist</code> 分组变量但忽略另一个分组变量。</li>
+<li>模拟该模型并进行<code>后验预测检查</code>。用来说明忽略另一个分组变量的后果。</li>
+<li>定义并使用仔细的符号，写出一个合适的模型，用 <code>popularity</code> 对 <code>valence</code> 建模，并纳入<em>两个</em>分组变量。</li>
+<li>模拟该模型并进行 <code>pp_check()</code>。与第一个模型的结果相比，<code>pp_check()</code> 的结果如何？</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-880"><strong>Exercise 19.7  (Spotify: digging in)  </strong></span>Let’s dig into your model that accounts for both grouping variables in the <code>spotify</code> data.
+<span class="exercise" id="exr:unnamed-chunk-880"><strong>练习 19.7  (Spotify: 深入挖掘)  </strong></span>让我们深入探究你的模型，该模型在 <code>spotify</code> 数据中纳入了两个分组变量。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>Write out the posterior median model of the relationship between <code>popularity</code> and <code>valence</code> for songs in the following groups:
+<li>写出 <code>popularity</code> 和 <code>valence</code> 之间关系的后验中位数模型，针对以下组中的歌曲：
 <ul>
-<li>未包含在spotify 小数据集的艺人专辑</li>
-<li>肯德里克·拉马尔的新专辑</li>
-<li>肯德里克·拉马尔的"好孩子,m.A.A.d城市"专辑(专辑 id 748dZDqSZy6aPXKI9H80u)</li>
+<li>不包含在 <code>spotify_small</code> 数据集中的艺术家的专辑</li>
+<li>Kendrick Lamar 的一张新专辑</li>
+<li>Kendrick Lamar 的 “good kid, m.A.A.d city” 专辑 (<code>album_id</code> <code>748dZDqSZy6aPXKcI9H80u</code>)</li>
 </ul></li>
-<li>比较A部分的后置中位数模型. 他们告诉我们什么 有关艺术家和专辑?</li>
-<li>6位样本艺术家中,哪位获得其基线受欢迎度最高的“跳跃”或微调?</li>
-<li>哪些样板专辑获得最高的“bump”或微调, 这张专辑是哪个艺术家做的?</li>
+<li>比较 a 部分的后验中位数模型。它们告诉我们关于相关艺术家和专辑的什么信息？</li>
+<li>6 位样本艺术家中，谁的基础流行度获得了最高的“提升”或调整？</li>
+<li>哪张样本专辑的基础流行度获得了最高的“提升”或调整？制作这张专辑的艺术家是谁？</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-881"><strong>Exercise 19.8  (Spotify: understanding variability)  </strong></span>Your Spotify model has three variance parameters. Construct, interpret, and compare posterior summaries of these three parameters. For example, what do they tell you about the music industry: is there more variability in the popularity from song to song within the same album, from album to album within the same artist, or from artist to artist?
+<span class="exercise" id="exr:unnamed-chunk-881"><strong>练习 19.8  (Spotify: 理解变异性)  </strong></span>你的 Spotify 模型有三个方差参数。构建、解释并比较这三个参数的后验总结。例如，它们告诉你关于音乐产业的什么信息：同一专辑内歌曲间的流行度变异性更大，还是同一艺术家内专辑间的变异性更大，还是艺术家之间的变异性更大？
 </div>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-882"><strong>Exercise 19.9  (Big words: incorporating group-level predictors)  </strong></span>In the Chapter <a href="/bayes-rules-python-cn/chapter-16/#chapter-16">16</a> exercises, you utilized the <code>big_word_club</code> data to explore the effectiveness of a digital vocabulary learning program, the <em>Big Word Club</em> (BWC) <span class="citation">(<a href="#ref-words" role="doc-biblioref">Kalil, Mayer, and Oreopoulos 2020</a>)</span>. You will build upon this analysis here, modeling the percent change in students’ vocabulary scores throughout the study period (<code>score_pct_change</code>) while accounting for there being multiple student participants per <code>school_id</code>.
+<span class="exercise" id="exr:unnamed-chunk-882"><strong>练习 19.9  （Big words：纳入组水平预测变量）  </strong></span>在<a href="/bayes-rules-python-cn/chapter-16/#chapter-16">第16章</a>练习中，你使用了<code>big_word_club</code>数据来探索一个数字词汇学习程序——<em>Big Word Club</em>（BWC）的效果<span class="citation">（<a href="#ref-words" role="doc-biblioref">Kalil, Mayer, and Oreopoulos 2020</a>）</span>。在这里你将继续这一分析，对学生在研究期间词汇得分的百分比变化（<code>score_pct_change</code>）建模，同时考虑到每个<code>school_id</code>有多名学生参与者。
 </div>
-<div class="sourceCode" id="cb451">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 装入数据处理( P)
-data("big_word_club")
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+<div class="sourceCode" id="cb451"><pre><code class="language-python"># 处理数据：将 treat 转换为分类变量
+bwc = big_word_club.copy()
+bwc['treat'] = bwc['treat'].astype('category')</code></pre></div>
 <ol style="list-style-type: lower-alpha">
-<li>请考虑5个可能的分数预测器 pct change : 处理(无论该学生是否参加《生物武器公约》或担任控制),年龄 月,私人 学校, esl observated, free redured lunch. 解释每个是学生级还是学校级的预测器.</li>
-<li>使用谨慎的标记来指定分数 pct change的分级回归模型,由这五个预测器进行. 利用资料不足的前科,但有一个基线理解,即典型学生的词汇分数可能没有改善。</li>
-<li>模拟模型后缀并执行 pp check ().</li>
+<li>考虑<code>score_pct_change</code>的五个潜在预测变量：<code>treat</code>（学生是否参加了BWC还是作为对照）、<code>age_months</code>、<code>private_school</code>、<code>esl_observed</code>、<code>free_reduced_lunch</code>。请解释每个变量是学生层面还是学校层面的预测变量。</li>
+<li>使用谨慎的符号表示，用这五个预测变量对<code>score_pct_change</code>指定一个分层回归模型。使用弱信息先验，并基于基线理解：典型学生可能看到其词汇得分有0的改进。</li>
+<li>模拟模型后验，并进行<code>az.plot_ppc</code>检查。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-884"><strong>Exercise 19.10  (Big words: interpretation)  </strong></span>
+<span class="exercise" id="exr:unnamed-chunk-884"><strong>练习 19.10  （Big words：解释）  </strong></span>
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>以整齐(..., 效果 = "固定的", conf.int = TRUE) 来讨论您从输出中得出的结论。</li>
-<li>以整洁(..., 效果 = "ran pars", conf.int = TRUE) 来讨论您从输出中得出的结论。</li>
+<li>讨论<code>az.summary(..., kind="fixed", hdi_prob=0.95)</code>输出的结论。</li>
+<li>讨论<code>az.summary(..., kind="random", hdi_prob=0.95)</code>输出的结论。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-885"><strong>Exercise 19.11  (Big words: models by school)  </strong></span>Write out the posterior median models of <code>score_pct_change</code> for students in each of the following schools.
+<span class="exercise" id="exr:unnamed-chunk-885"><strong>练习 19.11  （Big words：按学校的模型）  </strong></span>写出以下每所学校学生的<code>score_pct_change</code>的后验中位数模型。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>参加词汇研究的学校“30”</li>
-<li>参加词汇研究的学校“47”</li>
-<li>“Manz小学”,一所公立学校,95%的学生免费或减少午餐,没有参加词汇研究</li>
-<li>“南方小学”,一所私立学校,10%的学生免费或减少午餐,没有参加词汇研究</li>
+<li>学校“30”，参与了词汇研究</li>
+<li>学校“47”，参与了词汇研究</li>
+<li>“Manz 小学”，一所公立学校，95% 的学生享受免费或减价午餐，且未参与词汇研究</li>
+<li>“South 小学”，一所私立学校，10% 的学生享受免费或减价午餐，且未参与词汇研究</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-886"><strong>Exercise 19.12  (Big words: wrap it up)  </strong></span>
+<span class="exercise" id="exr:unnamed-chunk-886"><strong>练习 19.12（大词：总结）</strong></span>
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>反思你以上的工作,什么学校特征与其学生的词汇改善有关?</li>
-<li>反思你以上的工作,什么学生特征与更大的词汇改进相关?</li>
+<li>回顾你上面的工作，学校的哪些特征与其学生的词汇量提升更大有关？</li>
+<li>回顾你上面的工作，学生的哪些特征与词汇量提升更大有关？</li>
 </ol>
 </div>
 </div>
 <div class="section level2" id="goodbye" number="19.4">
-<h2>再见!</h2>
-<p>再见,亲爱的读者。 我们希望,在读完这本书之后,你会觉得自己有能力去做一些贝叶斯的事情。</p>
+<h2>再见！</h2>
+<p>再见了，亲爱的读者们。
+我们希望，在学完本书之后，你能够充满信心地去实践贝叶斯方法。</p>
 </div>
 </div>
-<h3>参考资料</h3>
+<h3>参考文献</h3>
 <div class="references csl-bib-body hanging-indent" id="refs">
 <div class="csl-entry" id="ref-hill">
 Gelman, Andrew, and Jennifer Hill. 2006. <em>Data Analysis Using Regression and Multilevel/Hierarchical Models</em>. Cambridge University Press.

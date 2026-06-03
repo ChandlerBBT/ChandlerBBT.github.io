@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-
+html
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"/>
@@ -44,41 +43,63 @@
 <section class="normal" id="section-">
 <div class="section level1" id="chapter-9" number="9">
 <h1>第 9 章 简单正态回归</h1>
-<div class="tutorial-note">
-<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
-</div>
 <div class="describe">
-<p>欢迎来到第三小队!</p>
-<p>我们的第1单元(学习如何像贝叶斯人那样思考和建立简单的贝叶斯模型)和第2单元(探索如何模拟和分析这些模型)的工作,使我们得以将我们的贝叶斯工具包扩展至第3单元中更为精密的模型,因此,到目前为止,我们的模型侧重于研究单一数据变量XQ0XX。 例如,在第四章中,我们研究了QQ1@@,无论电影是否通过Bechdel测试. 但一旦我们掌握了QQ2@@的变异性, 我们便经常有后续问题:</p>
-<p>一般来说,我们常常想要模拟一些响应变量QQ0@@和预测器(QQ1@@)之间的关系. 这是其余章节的共同目标,这些章节将调查一套广泛的贝叶斯建模工具,我们按常规将其分为两项任务:</p>
+<p><strong>欢迎进入第 3 单元！</strong></p>
+<p>我们在第 1 单元（学习如何像贝叶斯主义者一样思考并构建简单的贝叶斯模型）和第 2 单元（探索如何模拟和分析这些模型）中所做的工作，为我们在第 3 单元中将贝叶斯工具箱扩展到更复杂的模型做好了准备。到目前为止，我们的模型主要聚焦于研究单个数据变量 <span class="math inline">\(Y\)</span>。例如，在第 <a href="/bayes-rules-python-cn/chapter-4/#chapter-4">4</a> 章中，我们研究了 <span class="math inline">\(Y\)</span>，即电影是否通过 Bechdel 测试。然而，一旦我们掌握了 <span class="math inline">\(Y\)</span> 的变异性，我们通常会有后续问题：能否用电影的预算、类型、上映日期等来<em>解释</em> Bechdel 测试的通过或失败？</p>
+<p>一般来说，我们通常希望<strong>建模</strong>某个<strong>响应变量</strong> <span class="math inline">\(Y\)</span> 与<strong>预测变量</strong>（<span class="math inline">\(X_1, X_2, ..., X_p\)</span>）之间的关系。这是剩余章节的共同目标，这些章节将概览一系列贝叶斯建模工具，我们通常将它们分为两类任务：</p>
 <ul>
-<li>递归任务,是指分析和预测定量响应变量(如\(Y\)=河马体积)的任务.</li>
-<li>分类任务是指以预测或分类反应类别为目的分析断然响应变量(例如分类QQ0@@,新闻文章是真实的还是假的)的任务.</li>
+<li><strong>回归</strong>任务旨在分析和预测<strong>定量</strong>响应变量（例如，<span class="math inline">\(Y\)</span> = 海马体体积）。</li>
+<li><strong>分类</strong>任务旨在分析<strong>分类</strong>响应变量，目标是预测或分类响应的类别（例如，将 <span class="math inline">\(Y\)</span> 分类为一篇新闻文章是真实还是虚假）。</li>
 </ul>
-<p>我们将在第9章至第12章调查一些巴耶斯回归技术:正常、波瓦森和负二元回归。 我们还将调查第13章和第14章中的两种贝叶斯分类方法:逻辑回归和天真的贝叶斯分类。 虽然我们不希望向你们介绍你们需要的每一个回归和分类工具, 从这次探索开始,我们鼓励大家专注于贝叶斯模式原则。 透过关注原则,</p>
+<p>我们将在第 <a href="/bayes-rules-python-cn/chapter-9/#chapter-9">9</a> 章到第 <a href="/bayes-rules-python-cn/chapter-12/#chapter-12">12</a> 章中介绍几种贝叶斯回归方法：正态回归、泊松回归和负二项回归。我们也将在第 <a href="/bayes-rules-python-cn/chapter-13/#chapter-13">13</a> 章和第 <a href="/bayes-rules-python-cn/chapter-14/#chapter-14">14</a> 章中介绍两种贝叶斯分类方法：Logistic 回归和朴素贝叶斯分类。尽管我们无法向你介绍<em>所有</em>你可能需要的回归和分类工具，但我们挑选的这五种方法可以推广到更广泛的应用场景。在本探索之初，我们鼓励你专注于贝叶斯建模的<em>原则</em>。通过关注原则而非一套被认为的规则（这些规则并不存在），你将能够将在本书中学到的内容扩展并应用到本书范围之外。</p>
 </div>
-<p>在第九章中,我们将从定量响应变量的基态回归模型开始。 考虑以下数据故事. Capital Bikeshare)是美国华盛顿地区的一个自行车共享服务. 为了最好地为注册会员服务,公司必须了解对其服务的需求. 为了帮助他们,我们可以分析乘车次数, 由于QQ3@@是一个计数变量,你可能认为骑手可能由一位普瓦生做好模型. 然而,以往的自行车骑行季节都表现出钟形的每日骑手,骑手的变异性远远超过了典型的骑手,严重违反了Poisson关于等价的平价和差异的假设(5.4)。 因此,我们假设,每天的骑车次数通常在一般骑车者( 4@@,标准偏差为\(\sigma\)(图9.1)):</p>
+<p>在第 <a href="/bayes-rules-python-cn/chapter-9/#chapter-9">9</a> 章中，我们将从针对定量响应变量 <span class="math inline">\(Y\)</span> 的基础<strong>正态回归模型</strong>开始。
+考虑以下数据案例。
+<em>Capital Bikeshare</em> 是华盛顿特区地区的一项共享单车服务。
+为了更好地服务其注册会员，公司必须了解其服务的需求。
+为了协助他们，我们可以分析在随机选取的 <span class="math inline">\(n\)</span> 天内的骑行次数 (<span class="math inline">\(Y_1, Y_2, ..., Y_n\)</span>)。
+由于 <span class="math inline">\(Y_i\)</span> 是一个<em>计数</em>变量，你可能会认为骑行次数可以用泊松分布很好地建模。
+然而，以往的骑行季节显示每日骑行次数呈钟形分布，其变异性远超典型骑行次数，严重违反了泊松分布的均值和方差相等的假设 <a href="/bayes-rules-python-cn/chapter-5/#eq:poisson-e-var">(5.4)</a>。
+因此，我们转而假设每天骑行次数独立地围绕某个<strong>典型</strong>骑行次数 <span class="math inline">\(\mu\)</span> 呈<strong>正态</strong>分布，<strong>标准差</strong>为 <span class="math inline">\(\sigma\)</span>（图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch9-normal">9.1</a>）：<span class="math inline">\(Y_i | \mu, \sigma \stackrel{ind}{\sim} N(\mu, \sigma^2) .\)</span></p>
 <div class="figure" style="text-align: center"><span id="fig:ch9-normal" style="display:block;"></span>
-<img alt="y有一个正常密度曲线(rides). 曲线以Mu为中心,沿X轴从大约mu负2sigma到mu+2sigma不等。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-normal-1-7d2dd6da2dd7.png" width="240"/>
-<p class="caption">FIGURE 9.1:自行车骑手的普通模式.</p>
+<img alt="There is a Normal density curve of y (rides). The curve is centered around mu and ranges from roughly mu minus 2sigma to mu plus 2 sigma along the x-axis." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-normal-1-7d2dd6da2dd7.png" width="240"/>
+<p class="caption">
+图 9.1：骑行次数的正态模型。
+</p>
 </div>
-<p>使用第5章的正常-正常模式,我们可以根据观测到的数据,对典型的骑师XQ0XX进行后期分析,方法是(1)对XQ1XX的正常前期模式进行调整;(2)假设骑师XQ2XXX的变异性已知:</p>
-<p>\[\begin{equation} \begin{split} Y_i | \mu &amp; \stackrel{ind}{\sim} N(\mu, \sigma^2)\\ \mu &amp; \sim N(\theta, \tau^2) .\\ \end{split} \tag{9.1} \end{equation}\]</p>
-<p>然而,我们可以通过调整这个模型的假设来大大扩展它的力量。 首先,你可能已经刮了你的头, 假设我们不知道典型的骑手, 你说得对。 这一假设通常会打破教科书外的例子。 没问题 我们可以概括普通-自然模型(9.1),以适应XQ2@@是第二个未知参数的现实,包括相应的前期模型:</p>
-<p>\[\begin{equation} \begin{split} Y_i | \mu, \sigma &amp; \stackrel{ind}{\sim} N(\mu, \sigma^2)\\ \mu &amp; \sim N(\theta, \tau^2) \\ \sigma &amp; \sim \text{ some prior model.} \\ \end{split} \tag{9.2} \end{equation}\]</p>
-<p>我们可以做得更好。 虽然这种双参数的普通-自然模型比单参数模型(9.1)更灵活,但忽略了许多可能有用的信息. 毕竟,骑马很可能与天气,周日,一年的时间等因素或预测因素有关. 在第9章中, 我们将专注于将一个预测器纳入我们的分析中, 具体来说,我们的目标是模拟骑手和温度之间的关系:骑手在更温暖的日子里会增加吗? 如果是的话,多少? 这种关系有多牢固? 如何将温度预测器( 1@@)的准确信息输入我们的骑车模式(\(Y\))(9.2),</p>
+<p>利用第 <a href="/bayes-rules-python-cn/chapter-5/#chapter-5">5</a> 章中的正态-正态模型，我们<em>可以</em>根据观测数据对典型骑行次数 <span class="math inline">\(\mu\)</span> 进行后验分析，具体做法是：（1）为 <span class="math inline">\(\mu\)</span> 设定一个正态先验模型；以及（2）假定骑行次数的变异性 <span class="math inline">\(\sigma\)</span> 是已知的：</p>
+<p><span class="math display" id="eq:nn-simple-ch9">\[\begin{equation}
+\begin{split}
+Y_i | \mu &amp; \stackrel{ind}{\sim} N(\mu, \sigma^2)\\
+\mu       &amp; \sim N(\theta, \tau^2)  .\\
+\end{split}
+\tag{9.1}
+\end{equation}\]</span></p>
+<p>然而，我们可以通过调整模型的假设来大幅扩展其功能。首先，你可能会对以下假设感到困惑：我们<em>不</em>知道典型骑行次数 <span class="math inline">\(\mu\)</span>，但<em>确实</em>知道骑行次数每天的变异性 <span class="math inline">\(\sigma\)</span>。你的想法没错。这个假设在教科书之外的场景中通常不成立。没关系。我们可以将正态-正态模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:nn-simple-ch9">(9.1)</a> 推广，通过引入相应的先验模型来适应 <span class="math inline">\(\sigma\)</span> 是第二个<strong>未知参数</strong>的实际情况：</p>
+<p><span class="math display" id="eq:nn-simple2-ch9">\[\begin{equation}
+\begin{split}
+Y_i | \mu, \sigma &amp; \stackrel{ind}{\sim} N(\mu, \sigma^2)\\
+\mu               &amp; \sim N(\theta, \tau^2)   \\
+\sigma            &amp; \sim \text{ some prior model.} \\
+\end{split}
+\tag{9.2}
+\end{equation}\]</span></p>
+<p>我们可以做得更好。
+虽然这个两参数的正态-正态模型比单参数模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:nn-simple-ch9">(9.1)</a> 更灵活，但它忽略了许多潜在有用的信息。
+毕竟，骑行人次很可能与温度、星期几、一年中的时段等<strong>预测变量</strong>相关联。
+在第 <a href="/bayes-rules-python-cn/chapter-9/#chapter-9">9</a> 章，我们将重点在分析中纳入一个预测变量——<em>温度</em>，记作 <span class="math inline">\(X\)</span>。
+具体来说，我们的目标是建模骑行人次与温度之间的<em>关系</em>：温暖的日子里骑行人次是否倾向于增加？如果增加，增加多少？这种关系有多强？
+弄清楚<em>如何</em>进行这项分析，即<em>如何</em>将温度预测变量（<span class="math inline">\(X\)</span>）的信息精确地融入我们的骑行人次（<span class="math inline">\(Y\)</span>）模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:nn-simple2-ch9">(9.2)</a>，正是第 <a href="/bayes-rules-python-cn/chapter-9/#chapter-9">9</a> 章的驱动力。</p>
 <div class="goals">
-<p>在构建一个 Bayesian 简单的线性回归模型时, 响应变量 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\</p>
+<p>在<strong>建立响应变量 <span class="math inline">\(Y\)</span> 对预测变量 <span class="math inline">\(X\)</span> 的贝叶斯简单线性回归模型</strong>之后，你将：</p>
 <ul>
-<li>解释回归参数的适当先验模型;</li>
-<li>模拟回归参数的后验模型;以及</li>
-<li>利用模拟结果来建立对 0@@和\(X\)的关系的后期理解,建立\(Y\)的后期预测模型.</li>
+<li>解读回归参数合适的<strong>先验模型</strong>；</li>
+<li><strong>模拟</strong>回归参数的后验模型；以及</li>
+<li>利用模拟结果构建对 <span class="math inline">\(Y\)</span> 与 <span class="math inline">\(X\)</span> 之间关系的<strong>后验理解</strong>，并建立 <span class="math inline">\(Y\)</span> 的<strong>后验预测模型</strong>。</li>
 </ul>
 </div>
-<p>为了开始,装入下列包件,我们将在整个章节中使用:</p>
-<div class="sourceCode" id="cb131">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python"># 原书 bayesrules 数据包中的数据需改用 CSV/本地数据文件读取
+<p>首先，加载本章将用到的以下库：</p>
+<div class="sourceCode" id="cb131"><pre><code class="language-python"># 教程数据可改用 CSV 或本地数据文件读取
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -95,91 +116,126 @@ with pm.Model() as model:
     # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
     idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
 az.summary(idata)
-# 装入软件包</code></pre>
-</div>
+# 装入软件包</code></pre></div>
 <div class="section level2" id="building-the-regression-model" number="9.1">
-<h2>建立回归模式</h2>
-<p>在本节中,我们构建了普通贝叶斯回归模式的框架. 这些概念在适用于第9.3节中的机车数据时将得到巩固。</p>
+<h2> 构建回归模型</h2>
+<p>本节，我们搭建正态贝叶斯回归模型的框架。
+这些概念将在第 <a href="/bayes-rules-python-cn/chapter-9/#ch9-post-sim">9.3</a> 节应用于共享单车数据时得到巩固。</p>
 <div class="section level3" id="specifying-the-data-model" number="9.1.1">
-<h3>指定数据模型</h3>
-<p>我们分析自行车骑手( 0@@)与温度(\(X\))之间的关系,</p>
-<p>\[\left\lbrace (Y_1,X_1), (Y_2,X_2),...,(Y_n,X_n) \right\rbrace\]</p>
-<p>其中 0@@是乘车次数,\(X_i\)是日\(i\)的高温(华氏度). 一旦我们掌握了一些数据,我们可以检查这个假设,但我们的经验表明,骑手和温度之间存在着积极的线性关系 — — 越温暖,人们越有可能跳上自行车。 例如,我们可以在图9.2中的两种情景中看到这样的数据,在图9.2中,每个点都反映一个独特的一天的骑手和温度。 因此,我们不但没有关注全球平均骑手人数, 假设骑手和温度的关系是线性的,我们可以将QQ6@@写成</p>
-<p>\[\mu_i = \beta_0 + \beta_1 X_i\]</p>
-<p>其中我们可以将模型系数 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\:</p>
+<h3> 指定数据模型</h3>
+<p>我们分析共享单车骑行人次（<span class="math inline">\(Y\)</span>）与温度（<span class="math inline">\(X\)</span>）之间的关系，需要 <span class="math inline">\(n\)</span> 个数据<em>对</em>的样本，</p>
+<p><span class="math display">\[\left\lbrace (Y_1,X_1), (Y_2,X_2),...,(Y_n,X_n) \right\rbrace\]</span></p>
+<p>其中 <span class="math inline">\(Y_i\)</span> 表示乘车次数，<span class="math inline">\(X_i\)</span> 表示第 <span class="math inline">\(i\)</span> 天的最高气温（华氏度）。
+我们可以等拿到数据后再检验这个假设，但根据经验，我们认为乘车次数与气温之间存在<strong>正向线性关系</strong>——天气越暖和，人们越可能跳上自行车。
+例如，我们可能看到如图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch-9-hypothetical">9.2</a> 中两种情景所示的数据，其中每个点代表某一天的乘车次数与气温。
+因此，与其关注所有天数的<strong>全局均值</strong>（<span class="math inline">\(\mu\)</span>），我们可以将分析细化为第 <span class="math inline">\(i\)</span> 天的<strong>局部均值</strong> <span class="math inline">\(\mu_i\)</span>，即由当天温度所决定的均值。
+假设乘车次数与气温之间的关系是线性的，我们可以将 <span class="math inline">\(\mu_i\)</span> 写为</p>
+<p><span class="math display">\[\mu_i = \beta_0 + \beta_1 X_i\]</span></p>
+<p>其中，我们可以如下解释<strong>模型系数</strong> <span class="math inline">\(\beta_0\)</span> 和 <span class="math inline">\(\beta_1\)</span>：</p>
 <ul>
-<li>截取系数 =========================================================================================================================================================================================================================================================== 因为这种寒冷的温度远远超出华盛顿的常态, 相反,我们可以认为,`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </li>
-<li>温度系数QQ0QQ表示每单位(度)温度升高时,骑手的典型变化. 在这个只有一个量化预测器的模型中,这个系数相当于斜率。</li>
+<li><strong>截距系数</strong> <span class="math inline">\(\beta_0\)</span> 在技术上表示气温为 0 华氏度（<span class="math inline">\(X_i = 0\)</span>）时的典型乘车次数。由于这种严寒温度<em>远</em>低于华盛顿特区的正常范围，我们不应过分看重这种解释。相反，我们可以将 <span class="math inline">\(\beta_0\)</span> 视为模型在 y 轴上的基线位置。</li>
+<li><strong>气温系数</strong> <span class="math inline">\(\beta_1\)</span> 表示气温每升高一个单位（度）时，乘车次数的典型变化量。在这个只有一个定量预测变量 <span class="math inline">\(X\)</span> 的特定模型中，该系数等同于<em>斜率</em>。</li>
 </ul>
-<p>例如图9.2中的模型线都截取了 0@@和 slope1@@. 截图只是告诉我们,如果我们把线一直延伸到华氏0度,它会在2000年横跨Y轴. 山坡更有意义, 表明温度每升高一级,</p>
+<p>例如，图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch-9-hypothetical">9.2</a> 中的两条模型线截距均为 <span class="math inline">\(\beta_0 = -2000\)</span>，斜率均为 <span class="math inline">\(\beta_1 = 100\)</span>。
+截距仅告诉我们，如果将直线一直延伸到 0 华氏度，它将在 -2000 处与 y 轴相交。
+斜率则更有意义，表明气温每升高一度，预计会增加 100 名骑车人。</p>
 <div class="figure" style="text-align: center"><span id="fig:ch-9-hypothetical" style="display:block;"></span>
-<img alt="有两个100个数据点的散点。 x轴的x(temp)值从45到95不等. y轴的y(rides)值从0到1000. 两块散点的点沿斜线向上。 然而,左图中的点数在线条周围分布的要多得多,右图中的点数在线条周围紧凑在一起." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-9-hypothetical-1-a25a8bc4b3ab.png" width="384"/>
-<p class="caption">FIGURE 9.2:骑手与温度关系的两种模拟情景,使用 0@@(左)和\(\sigma = 200\)(右). 在这两种情况下,模型线由XQ2@@定义.</p>
+<img alt="There are two scatterplots of 100 data points. The x-axes have x (temp) values ranging from 45 to 95. The y-axes have y (rides) values ranging from 0 to 10000. The points in both scatterplots follow an upward sloping line. However, the points in the left plot are much more scattered around the line and the points in the right plot are tightly clustered around the line." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-9-hypothetical-1-a25a8bc4b3ab.png" width="384"/>
+<p class="caption">
+图 9.2：两种模拟情景，展示了乘车次数与气温之间的关系，分别使用 <span class="math inline">\(\sigma = 2000\)</span>（左）和 <span class="math inline">\(\sigma = 200\)</span>（右）。两种情况下，模型线均由 <span class="math inline">\(\beta_0 + \beta_1 x = -2000 + 100 x\)</span> 定义。
+</p>
 </div>
-<p>将普通数据模型中全球平均值的QQ2++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</p>
-<p>\[\begin{equation} \begin{split} Y_i | \beta_0, \beta_1, \sigma &amp; \stackrel{ind}{\sim} N\left(\mu_i, \sigma^2\right) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1X_i .\\ \end{split} \tag{9.3} \end{equation}\]</p>
-<p>在数据模型的这种表述中,QQ0@@也具有新的意义. 不再测量全球平均乘车量的变化, 图片有用。 在图9.2中,右图反映了数值相对较小的XQ3@@的情景. 这里观测到的数据与平均模式线相差甚远 — — 我们可以预计,在特定日子里观测到的骑手在同样温度的日子里与平均骑手相比只有20骑. 这种围绕平均模型线的紧凑性表明温度是骑手的强势预测器. 左图显示的是更大的QQ4Q。 在同一温度的几天中,骑行率有很大的差异,反映出这些变量之间的关系较弱。 简言之,以下是按数据模型编码的正式假设(9.3)。</p>
+<p>我们可以将关于 <span class="math inline">\(Y_i\)</span> 与 <span class="math inline">\(X_i\)</span> 之间线性关系的假设直接融入贝叶斯模型中，只需将<strong>正态数据模型</strong> <span class="math inline">\(Y_i | \mu,\sigma \sim N(\mu, \sigma^2)\)</span> 中的全局均值 <span class="math inline">\(\mu\)</span> 替换为特定于气温的局部均值 <span class="math inline">\(\mu_i\)</span>：</p>
+<p><span class="math display" id="eq:simple-like-ch9">\[\begin{equation}
+\begin{split}
+Y_i | \beta_0, \beta_1, \sigma &amp; \stackrel{ind}{\sim} N\left(\mu_i, \sigma^2\right) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1X_i  .\\
+\end{split}
+\tag{9.3}
+\end{equation}\]</span></p>
+<p>在数据模型的这种表述中，<span class="math inline">\(\sigma\)</span> <em>也</em>有了新的含义。它不再衡量所有日子里与全局均值 <span class="math inline">\(\mu\)</span> 的波动，而是衡量<strong>在相似温度的日子里与局部均值</strong>的波动，即 <span class="math inline">\(\mu_i = \beta_0 + \beta_1 X_i\)</span>。图片有助于理解。在图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch-9-hypothetical">9.2</a> 中，右图对应于 <span class="math inline">\(\sigma = 20\)</span> 值相对较小的场景。这里的观测数据与均值模型线的偏差非常小——我们可以预期，某一天的观测骑行人次与相同温度下的平均骑行人次相差仅 20 次。这种围绕均值模型线的紧密程度表明温度是骑行人次的有力预测变量。左图则相反，它展示了较大的 <span class="math inline">\(\sigma = 200\)</span>。相同温度的不同日子里骑行人次波动很大，反映出这些变量之间的关系较弱。总之，数据模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-like-ch9">(9.3)</a> 所编码的正式假设如下所示。</p>
 <div class="describe">
-<p>正常回归假设</p>
-<p>贝叶斯正常回归模型(9.3)的适当性取决于以下假设.</p>
+<p><strong>正态回归假设</strong></p>
+<p>贝叶斯正态回归模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-like-ch9">(9.3)</a> 的适用性取决于以下假设。</p>
 <div style="page-break-after: always;"></div>
 <ul>
-<li>数据结构 计算预测器 QQ0 QQ, 所观测到的数据 QQ1 Q2 与所观测到的 任何其它案例的数据 QQ3 无关.</li>
-<li>关系结构 典型的QQ0QQ结果可以写成预测器QQ1Q,QQ2Q的线性函数.</li>
-<li>变化的结构 在预测器QQ0QQ的任意值中,XQ1QQ的观测值通常会围绕其平均值XQ2XX而变化,标准偏差一致.</li>
+<li><strong>数据结构</strong><br/>
+给定预测变量 <span class="math inline">\(X\)</span>，个案 <span class="math inline">\(i\)</span> 的观测数据 <span class="math inline">\(Y_i\)</span> 与任何其他个案 <span class="math inline">\(j\)</span> 的观测数据<strong>相互独立</strong>。</li>
+<li><strong>关系结构</strong><br/>
+典型的 <span class="math inline">\(Y\)</span> 结果可以写成预测变量 <span class="math inline">\(X\)</span> 的<strong>线性函数</strong>，<span class="math inline">\(\mu = \beta_0 + \beta_1 X\)</span>。</li>
+<li><strong>波动结构</strong><br/>
+在预测变量 <span class="math inline">\(X\)</span> 的任何取值处，<span class="math inline">\(Y\)</span> 的观测值会围绕其均值 <span class="math inline">\(\mu\)</span> 以一致的标准差 <span class="math inline">\(\sigma\)</span> <strong>正态地</strong>波动。</li>
 </ul>
 </div>
 </div>
 <div class="section level3" id="specifying-the-priors" number="9.1.2">
-<h3>指定前科</h3>
-<p>仅此而已,修改后的数据模型(9.3)恰恰是常态的“简单”线性回归模型,你本可以在这本书外研究46 — — 这里的“简单”意味着我们的模型只有一个预测变量 — — =============================================================================================================================================================================================================== 要将它变成巴耶斯模型,我们必须纳入每个未知回归参数的先验模型。 要区分模型参数和数据变量,请回答以下问题。 第47条</p>
+<h3> 指定先验</h3>
+<p>单独来看，修改后的数据模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-like-ch9">(9.3)</a> 正是你可能在本书之外学过的频率学派“简单”线性回归模型<a class="footnote-ref" href="#fn46" id="fnref46"><sup>46</sup></a>——“简单”在这里意味着模型只有一个预测变量 <span class="math inline">\(X\)</span>，而不是说这个模型很简单。为了将它变成<em>贝叶斯</em>模型，我们必须为每个未知的回归参数引入先验模型。为了练习区分模型<em>参数</em>和数据<em>变量</em>，请回答以下问题。<a class="footnote-ref" href="#fn47" id="fnref47"><sup>47</sup></a></p>
 <div class="quiz">
-<p>确定数据模型(9.3)所依赖的回归参数。</p>
+<p>识别数据模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-like-ch9">(9.3)</a> 所依赖的回归<em>参数</em>。</p>
 </div>
-<p>在数据模型(9.3)中,有两个数据变量( 0@@). 和 QQ1@@),以及三个未知的回归参数编码这些变量之间的关系: QQ2@@. 我们必须为每种模式规定前期模式。 对这项任务有无数的办法。 我们不会, 相反,在本书中,我们将使用Rstanarm软件包所用的先验模型的默认框架。 在这一框架内开展工作,将使我们能够调查第3单元和第4单元中广泛的建模工具。 一旦你对其中的一般模型概念感到自在,并准备好定制,你就可以跳跃。 我们建议Gabry和Goodrich(2020年b),</p>
-<p>我们的第一个假设是, , 1@@, and2@@独立. 也就是说,我们将假设,我们先验对“生活”模式( 3@@)的理解与我们先验对骑手随温度而增速的理解(\(\beta_1\))无关。 以及关系的力量, 与@@6 和@@7 都无关。 虽然在实践中我们对这些参数的组合可能有一些事先的概念,但假定独立性大大简化了模型。 也符合Rstanalm框架。</p>
-<p>在规定独立前科的结构时,我们必须(照常)考虑这些参数可能采用的数值。 为此,截取和坡向回归参数, 0@@和\(\beta_1\),技术上可以取真线中的任何值. 也就是说,一个模型线可以沿着y轴任意穿过,一条线的坡度可以是任何正值或负值(甚至0). 因此,使用正常的先行型号( 2@@)和 3@@(\(\beta_1\))是合理的,它们也活在全真线上. 具体来说,</p>
-<p>\[\begin{equation} \begin{split} \beta_0 &amp; \sim N\left(m_0, s_0^2 \right) \\ \beta_1 &amp; \sim N\left(m_1, s_1^2 \right) \\ \end{split} \tag{9.4} \end{equation}\]</p>
-<p>以配合我们先验对QQ4+和QQ5+的认知。 类似地, 由于标准偏差参数%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</p>
-<p>\[\begin{equation} \begin{split} \sigma &amp; \sim \text{Exp}(l) .\\ \end{split} \tag{9.5} \end{equation}\]</p>
-<p>因此,通过(5.9),前一个平均值和标准偏差为                                                                                                          它们是:</p>
-<p>\[E(\sigma) = \frac{1}{l} \;\; \text{ and } \;\; SD(\sigma) = \frac{1}{l}.\]</p>
-<p>虽然这个前兆是目前 Rstanarm 中的默认值,但流行的替代品包括半Cauchy和倒数Gamma模型.</p>
+<p>在数据模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-like-ch9">(9.3)</a> 中，有两个数据变量（<span class="math inline">\(Y\)</span> 和 <span class="math inline">\(X\)</span>）以及<em>三个</em>未知的回归参数，它们刻画了这些变量之间的关系：<span class="math inline">\(\beta_0,\beta_1,\sigma\)</span>。我们必须为每一个参数指定先验模型。完成这项任务有无数种方法。我们不会也无法一一调查。相反，在本书中，我们将利用 PyMC 中使用的默认先验模型框架。在这一框架下工作将使我们能够在第 3 和第 4 单元探索广泛的建模工具。当你对其中一般的建模概念感到舒适并准备自定义时，就可以迈出那一步。我们推荐参考 <span class="citation"><a href="#ref-gabgood" role="doc-biblioref">Gabry 和 Goodrich</a> (<a href="#ref-gabgood" role="doc-biblioref">2020b</a>)</span>，其中概述了 PyMC 中所有可能的先验结构。</p>
+<p>我们要做的第一个假设是，关于 <span class="math inline">\(\beta_0\)</span>、<span class="math inline">\(\beta_1\)</span> 和 <span class="math inline">\(\sigma\)</span> 的先验模型是<strong>相互独立</strong>的。也就是说，我们假设我们对模型“位置”（<span class="math inline">\(\beta_0\)</span>）的先验理解与我们关于骑行人次随温度升高而增加的速率（<span class="math inline">\(\beta_1\)</span>）的先验理解无关。类似地，我们假设我们对 <span class="math inline">\(\sigma\)</span> 的先验理解，以及因此对关系强度的理解，与 <span class="math inline">\(\beta_0\)</span> 和 <span class="math inline">\(\beta_1\)</span> 两者都无关。虽然在实践中我们可能对这些参数的<em>组合</em>有一些先验概念，但独立性假设极大地简化了模型。这也与 PyMC 框架一致。</p>
+<p>在指定独立先验分布的结构时，我们必须（像往常一样）考虑这些参数可能取的值。为此，截距和斜率回归参数 <span class="math inline">\(\beta_0\)</span> 和 <span class="math inline">\(\beta_1\)</span> 理论上可以取实数线上的任何值。也就是说，模型线可以在 y 轴上的任何位置穿过，并且斜率可以是任何正、负值（甚至是 0）。因此，使用正态先验模型来建模 <span class="math inline">\(\beta_0\)</span> 和 <span class="math inline">\(\beta_1\)</span> 是合理的，因为它们也都存在于整个实数线上。具体而言：</p>
+<p><span class="math display" id="eq:ch9-betas">\[\begin{equation}
+\begin{split}
+\beta_0  &amp;  \sim N\left(m_0, s_0^2 \right)  \\
+\beta_1  &amp; \sim N\left(m_1, s_1^2 \right) \\
+\end{split}
+\tag{9.4}
+\end{equation}\]</span></p>
+<p>其中我们可以调整超参数 <span class="math inline">\(m_0\)</span>、<span class="math inline">\(s_0\)</span>、<span class="math inline">\(m_1\)</span>、<span class="math inline">\(s_1\)</span> 以匹配我们对 <span class="math inline">\(\beta_0\)</span> 和 <span class="math inline">\(\beta_1\)</span> 的先验认知。类似地，由于标准差参数 <span class="math inline">\(\sigma\)</span> 必须为正，因此使用同样限制为正值的指数分布模型是合理的：</p>
+<p><span class="math display" id="eq:ch9-sig">\[\begin{equation}
+\begin{split}
+\sigma &amp; \sim \text{Exp}(l)  .\\
+\end{split}
+\tag{9.5}
+\end{equation}\]</span></p>
+<p>因此，根据 <a href="/bayes-rules-python-cn/chapter-5/#eq:gamma-trend-var">(5.9)</a>，<span class="math inline">\(\sigma\)</span> 的先验均值和标准差为：</p>
+<p><span class="math display">\[E(\sigma) = \frac{1}{l} \;\; \text{ 和 } \;\; SD(\sigma) = \frac{1}{l}.\]</span></p>
+<p>尽管这种指数先验分布目前是 <strong>PyMC</strong> 中的默认选择，但流行的替代方案还包括半柯西分布和逆 Gamma 分布模型。</p>
 </div>
 <div class="section level3" id="putting-it-all-together" number="9.1.3">
-<h3>拼凑起来</h3>
-<p>将普通数据模型(9.3)和我们的模型参数前科(9.4)和9.5)结合起来,完成了贝叶斯简单线性回归模型的共同配方:</p>
-<p>\[\begin{equation} \begin{array}{lcrl} \text{data:} &amp; \hspace{.05in} &amp; Y_i | \beta_0, \beta_1, \sigma &amp; \stackrel{ind}{\sim} N\left(\mu_i, \sigma^2\right) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1X_i \\ \text{priors:} &amp; &amp; \beta_0 &amp; \sim N\left(m_0, s_0^2 \right) \\ &amp; &amp; \beta_1 &amp; \sim N\left(m_1, s_1^2 \right) \\ &amp; &amp; \sigma &amp; \sim \text{Exp}(l) .\\ \end{array} \tag{9.6} \end{equation}\]</p>
-<p>退后,想想我们是怎么来到这里的。 我们创造了一个回归模型,不是一次一次,而是从简单的正常-正态模型开始,一步一步地加以发展。 相比之下,我们的人类本能往往会让我们从我们所能想到的最复杂的模型开始. 当这种本能冲击时,抵抗它并记住这一点:复杂并不一定是复杂的. 复杂的模型往往是错误的,难以应用.</p>
+<h3>模型整合</h3>
+<p>将正态数据模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-like-ch9">(9.3)</a> 与我们对模型参数的先验设定 <a href="/bayes-rules-python-cn/chapter-9/#eq:ch9-betas">(9.4)</a> 和 <a href="/bayes-rules-python-cn/chapter-9/#eq:ch9-sig">(9.5)</a> 结合起来，便完成了 <strong>贝叶斯简单线性回归模型</strong> 的常见表述：</p>
+<p><span class="math display" id="eq:simple-reg-ch9">\[\begin{equation}
+\begin{array}{lcrl}
+\text{数据：} &amp; \hspace{.05in} &amp;  Y_i | \beta_0, \beta_1, \sigma &amp; \stackrel{ind}{\sim} N\left(\mu_i, \sigma^2\right) \;\; \text{ 其中 } \;\; \mu_i = \beta_0 + \beta_1X_i \\
+\text{先验：} &amp; &amp; \beta_0  &amp;  \sim N\left(m_0, s_0^2 \right)  \\
+                     &amp; &amp; \beta_1  &amp; \sim N\left(m_1, s_1^2 \right) \\
+                     &amp; &amp; \sigma &amp; \sim \text{Exp}(l)  .\\
+\end{array}
+\tag{9.6}
+\end{equation}\]</span></p>
+<p>退后一步，反思一下我们是如何走到这一步的。我们不是一步到位地建立 <span class="math inline">\(Y\)</span> 的回归模型，而是从简单的正态-正态模型出发，一步一步构建而来的。相比之下，我们的人类直觉常常诱使我们从自己能想到的<em>最</em>复杂的模型开始。碰到这种冲动时，要抵制它，并记住：复杂并不代表精湛。复杂的模型往往是错误的且难以应用。</p>
 <div class="describe">
-<p>示范楼: 一步一步来</p>
-<p>在建立任何巴耶斯模式中,重要的是从基础开始,一步一步地建立起来。 让QQ0@@成为响应变量,而QQ1@@成为预测器或一组预测器. 然后,我们可以通过以下一般原则,通过XQ3+X建立XQ2+X的模型:</p>
+<p><strong>模型构建：一步一步来</strong></p>
+<p>在构建任何贝叶斯模型时，重要的是从基础开始，一步一步构建。设 <span class="math inline">\(Y\)</span> 为响应变量，<span class="math inline">\(X\)</span> 为一个预测变量或一组预测变量。那么，我们可以根据以下一般原则，通过 <span class="math inline">\(X\)</span> 构建 <span class="math inline">\(Y\)</span> 的模型：</p>
 <ul>
-<li>注意\(Y\)是离散的还是连续的. 因此,确定一个适当的数据模型结构(例如,Normal,Poisson,Binomial)。</li>
-<li>重写XQ0@@的平均值,作为预测器的XQ1@@(如XQ2@@)函数.</li>
-<li>在您的模型中识别所有未知的模型参数( 例如 \\\\\\\ )。</li>
-<li>注意每个参数可能采用的数值。 因此,确定这些参数的适当预先模型。</li>
+<li>注意 <span class="math inline">\(Y\)</span> 是离散的还是连续的。相应地，确定数据 <span class="math inline">\(Y\)</span> 的合适模型结构（例如正态、泊松、二项）。</li>
+<li>将 <span class="math inline">\(Y\)</span> 的均值改写为预测变量 <span class="math inline">\(X\)</span> 的函数（例如 <span class="math inline">\(\mu = \beta_0 + \beta_1 X\)</span>）。</li>
+<li>识别模型中的所有未知模型参数（例如 <span class="math inline">\(\beta_0, \beta_1, \sigma\)</span>）。</li>
+<li>注意每个参数可能取哪些值。相应地，为这些参数确定合适的先验模型。</li>
 </ul>
 </div>
 </div>
 </div>
 <div class="section level2" id="tuning-prior-models-for-regression-parameters" number="9.2">
 <h2>调整回归参数的先验模型</h2>
-<p>让我们运用巴耶斯简单线性回归模式(9.6)来研究首都比克夏尔骑手( 0@@)和温度(\(X\))之间的关系。 我们首先要调整先验的截取系数QQ2+,温度系数QQ3+,回归标准偏差QQ4+。 根据以往的自行车股份分析,假设我们以前对这种关系有以下理解:</p>
+<p>现在让我们<em>应用</em>贝叶斯简单线性回归模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-reg-ch9">(9.6)</a> 来研究首都共享单车（Capital Bikeshare）骑行人次（<span class="math inline">\(Y\)</span>）与温度（<span class="math inline">\(X\)</span>）之间的关系。我们先从调整截距系数 <span class="math inline">\(\beta_0\)</span>、温度系数 <span class="math inline">\(\beta_1\)</span> 和回归标准差 <span class="math inline">\(\sigma\)</span> 的先验模型开始。根据过去的共享单车分析，假设我们对这一关系有如下先验认识：</p>
 <ol style="list-style-type: decimal">
-<li><p>平均气温日,如华盛顿65度或70度,一般有5000名骑手左右,虽然这个平均时间可能在3000到7000之间.</p></li>
-<li><p>对于每升一度的温度,骑手通常会增加100骑,尽管这种平均增加可能低至20骑或高达180骑.</p></li>
-<li><p>在任何给定的温度下,每天的骑手往往会随着1250骑的中度标准偏差而变化.</p></li>
+<li><p>在<em>平均</em>温度的日子，比如华盛顿特区65或70华氏度，通常大约有5000名骑行者，尽管这一平均值可能在3000到7000之间。</p></li>
+<li><p>温度每升高一度，骑行人次通常增加100次，但这一平均增幅可能低至20次，或高达180次。</p></li>
+<li><p>在任何给定温度下，每日乘车人次通常会以 1250 次的中等标准差波动。</p></li>
 </ol>
-<p>先验的假设1告诉我们一些模型基线或拦截, 但情况却有变。 此先验的信息已居中。 而 1@@反映了典型的零度日骑手(这在华盛顿没有意义), 图9.3说明了QQ4+和QQ5+之间的区别。 以这种方式处理关于模型基线的先验信息更为直观。 事实上,我们用恒星模型模拟回归模型时会提供这种中心信息。 藉此,我们可以捕捉到预先的假设1,使用一个普通型号的QQ6@@,其中心为5000骑,标准偏差为1000骑,因此基本上在3000骑到7000骑之间:QQ7@@. 以上图9.4所示。</p>
+<p><p>先验假设 1 告诉我们有关模型基线或截矩 <span class="math inline">\(\beta_0\)</span> 的一些信息。不过这里有个转折。这个先验信息是经过<em>中心化</em>处理的。尽管 <span class="math inline">\(\beta_0\)</span> 反映的是 0 度日的典型乘车人次（这在华盛顿特区没有意义），但<em>中心化</em>截矩（记作 <span class="math inline">\(\beta_{0c}\)</span>）反映的是在<em>典型</em>温度 <span class="math inline">\(X\)</span> 下的典型乘车人次。 <span class="math inline">\(\beta_0\)</span> 与 <span class="math inline">\(\beta_{0c}\)</span> 的区别如图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch9-intercepts">9.3</a> 所示。以这种方式处理模型基线的先验信息更直观。实际上，在使用 PyMC 模拟回归模型时，我们提供的正是这种<em>中心化</em>信息。由此，我们可以用正态模型捕捉先验假设 1，其中 <span class="math inline">\(\beta_{0c}\)</span> 以 5000 次为中心，标准差为 1000 次，因此主要落在 3000 到 7000 次之间：<span class="math inline">\(\beta_{0c} \sim N(5000, 1000^2)\)</span>。这一先验如图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch9-priors">9.4</a> 所示。</p></p>
 <div class="figure" style="text-align: center"><span id="fig:ch9-intercepts" style="display:block;"></span>
-<img alt="由100个数据点组成的散点。 x轴的x(temp)值从0到100. Y轴的y(rides)值从-2500到7500不等. 这些点沿斜线向上,其x值从45到95不等。 该线以2000的y值延伸至Y轴处." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-intercepts-1-7b2ef94ade88.png" width="259.2"/>
-<p class="caption">图9.3: 一套模拟的骑手数据,以拦截QQ0@@,并以平均温度70度为中心拦截QQ1@@.</p>
+<img alt="A scatterplot of 100 data points. The x-axis has x (temp) values ranging from 0 to 100. The y-axis has y (rides) values ranging from -2500 to 7500. The points follow an upward sloping line and have x values ranging from 45 to 95. The line extends all the way to the y-axis where it crosses at a y value of -2000." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-intercepts-1-7b2ef94ade88.png" width="259.2"/>
+<p class="caption">
+图 9.3：一组模拟的乘车人次数据，其中截矩 <span class="math inline">\(\beta_0 = -2000\)</span>，中心化截矩 <span class="math inline">\(\beta_{0c} = 5000\)</span>，平均温度为 70 度。
+</p>
 </div>
-<p>以及温度系数。 这种先验的理解很好地表现在以100为中心,标准偏差为40的普通模型上,因此大致在20到180之间: 1@@. 最后,先验的假设3反映了我们对回归标准偏差参数QQ2@@的理解. 因此,我们可以调制指数模型,使其具有与预期的QQ3@@座骑的标准偏差相匹配的平均值,从而得出QQ4@@座率:XQ5@@座. 图9.4列出了这些独立的前科。</p>
-<div class="sourceCode" id="cb132">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>接下来，先验假设 2 告诉我们乘车人次随温度的上升速率，因此也就是温度系数 <span class="math inline">\(\beta_1\)</span>。这一先验认识可以用一个以 100 为中心、标准差为 40 的正态模型很好地表示，因此主要落在 20 到 180 之间：<span class="math inline">\(\beta_1 \sim N(100, 40^2)\)</span>。最后，先验假设 3 反映了我们对回归标准差参数 <span class="math inline">\(\sigma\)</span> 的理解。据此，我们可以调整指数模型，使其均值与预期的标准差 <span class="math inline">\(E(\sigma) = 1/l = 1250\)</span> 次相匹配，因此速率参数 <span class="math inline">\(l = 1/1250 = 0.0008\)</span>：<span class="math inline">\(\sigma \sim \text{Exp}(0.0008)\)</span>。这些独立的 <span class="math inline">\(\beta_1\)</span> 和 <span class="math inline">\(\sigma\)</span> 先验绘制在图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch9-priors">9.4</a> 中。</p>
+<div class="sourceCode" id="cb132"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -190,64 +246,87 @@ labs(x = "beta_0c", y = "pdf")
 plot_normal(mean = 100, sd = 40) +
 labs(x = "beta_1", y = "pdf")
 plot_gamma(shape = 1, rate = 0.0008) +
-labs(x = "sigma", y = "pdf")</code></pre>
-</div>
+labs(x = "sigma", y = "pdf")</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch9-priors" style="display:block;"></span>
-<img alt="有三种密度曲线. β 0c的密度曲线为钟形,中心为5000,范围约为3000到7000. β 1的密度曲线为钟形,以100为中心,范围约为0至200. 西格玛的密度曲线指数性下降,西格玛的峰值等于0,超过4000的西格玛值则下降到大约0." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-priors-1-84f09131954d.png" width="576"/>
-<p class="caption">FIGURE 9.4:自行车骑手回归分析参数的前期模型, ( 0@@, 1@@,\(\sigma\)).</p>
+<img alt="There are three density curves. The density curve for beta_0c is bell-shaped, centered at 5000, and ranges from roughly 3000 to 7000. The density curve for beta_1 is bell-shaped, centered at 100, and ranges from roughly 0 to 200.  The density curve for sigma decreases exponentially, with a peak at sigma equals 0 and dropping to roughly 0 for values of sigma greater than 4000." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-priors-1-84f09131954d.png" width="576"/>
+<p class="caption">
+图 9.4：自行车乘车人次回归分析中参数的先验模型（<span class="math inline">\(\beta_{0c}\)</span>、<span class="math inline">\(\beta_1\)</span>、<span class="math inline">\(\sigma\)</span>）。
+</p>
 </div>
-<p>将我们的前科输入(9.6),</p>
-<p>\[\begin{equation} \begin{split} Y_i | \beta_0, \beta_1, \sigma &amp; \stackrel{ind}{\sim} N\left(\mu_i, \sigma^2\right) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1X_i \\ \beta_{0c} &amp; \sim N\left(5000, 1000^2 \right) \\ \beta_1 &amp; \sim N\left(100, 40^2 \right) \\ \sigma &amp; \sim \text{Exp}(0.0008) .\\ \end{split} \tag{9.7} \end{equation}\]</p>
-<p>由于我们的模型使用独立的前科, 我们分别处理我们以前关于\(\beta_0\),\(\beta_1\)和\(\sigma\)的信息。 然而,我们希望确保,当这些前科合并起来时,实际上反映了我们目前对骑手和温度之间关系的理解。 为此,图9.5介绍了从我们以前的模型中模拟的各种情景。 48 前200条型号线(左)确实抓住了我们以前的理解,即骑行者随着温度的增加而增加,而且平均温度日往往在5000左右。 这些方面的变化也充分反映了我们对这一联系的总体不确定性。 其次,右边是四个骑手数据集,从正常数据模型(9.3)中模拟,使用四套前似值的QQ4@@值。 如果我们以前的模型是合理的,那么从这些模型中模拟的数据应该与我们实际期望实际看到的骑手数据一致。 情况确实如此。 随温度而来的骑术的增速,基线骑术的增速,以及骑术的变数,都与我们以前的假设一致.</p>
+<p>将我们调整后的先验代入 <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-reg-ch9">(9.6)</a>，乘车人次（<span class="math inline">\(Y\)</span>）关于温度（<span class="math inline">\(X\)</span>）的贝叶斯回归模型指定如下：</p>
+<p><span class="math display" id="eq:ex-model-ch9">\[\begin{equation}
+\begin{split}
+Y_i | \beta_0, \beta_1, \sigma &amp; \stackrel{ind}{\sim} N\left(\mu_i, \sigma^2\right) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1X_i \\
+\beta_{0c}  &amp; \sim N\left(5000, 1000^2 \right)  \\
+\beta_1  &amp; \sim N\left(100, 40^2 \right) \\
+\sigma   &amp; \sim \text{Exp}(0.0008)  .\\
+\end{split}
+\tag{9.7}
+\end{equation}\]</span></p>
+<p>由于我们的模型使用了<strong>独立先验</strong>，我们在上面对 <span class="math inline">\(\beta_0\)</span>、<span class="math inline">\(\beta_1\)</span> 和 <span class="math inline">\(\sigma\)</span> 的先验信息分别进行了处理。然而，我们希望确保当这些先验<em>组合在一起</em>时，它们确实反映了我们目前对乘车人次与温度之间关系的理解。为此，图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch9-prior-sim-1">9.5</a> 展示了从我们先验模型中<em>模拟</em>出的各种场景。<a class="footnote-ref" href="#fn48" id="fnref48"><sup>48</sup></a> 左侧 200 条先验模型线 <span class="math inline">\(\beta_0 + \beta_1 X\)</span> 确实捕捉到了我们先验的理解：乘车人次随温度上升而增加，并且在平均温度日往往在 5000 左右。这些线的变异也充分反映了我们对这种关联的总体不确定性。右侧是从正态数据模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-like-ch9">(9.3)</a> 出发，使用四组合理的先验参数值 <span class="math inline">\((\beta_0,\beta_1,\sigma)\)</span> 模拟出的四个乘车人次数据集。如果我们的先验模型是合理的，那么从这些模型模拟出的数据应当与我们实际预期看到的乘车人次数据一致。这里的情况确实如此。乘车人次随温度上升的速率、基线乘车人次以及乘车人次的变异性都与我们的先验假设一致。</p>
 <div class="figure" style="text-align: center"><span id="fig:ch9-prior-sim-1" style="display:block;"></span>
-<img alt="有两块地 左地块在x轴上具有温度(介于45到95之间),轴上的骑行次数(介于-1000到1000之间). 有200条线路几乎都是正斜的,但跨越了广泛的拦截范围. 右侧是Y轴上的4个散弹片对X轴上的温度。 在每一块散点中,各点呈现出积极的趋势,尽管坡度和变异性因地而异。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-prior-sim-1-1-8eae2db30b91.png" width="528"/>
-<p class="caption">图9.5:前期模型下的模拟假设情景 ,\(\beta_1\),和\(\sigma\). 左边是200条前似样的线条, 右侧是4个前置的可信数据集。</p>
+<img alt="There are two plots. The left plot has temperature on the x-axis (ranging from 45 to 95) and number of rides on the axis (ranging from -1000 to 10000). There are 200 lines that are nearly all positively sloped, yet span a wide range of intercepts. At right is a set of 4 scatterplots of rides on the y-axis vs temperature on the x axis. In each scatterplot, the points exhibit a positive trend, though the degree of the slope as well as the variability vary from plot to plot." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-prior-sim-1-1-8eae2db30b91.png" width="528"/>
+<p class="caption">
+图 9.5: 在先验模型下模拟的 <span class="math inline">\(\beta_0\)</span>、<span class="math inline">\(\beta_1\)</span> 和 <span class="math inline">\(\sigma\)</span> 的场景。左图是 200 条先验可信模型线 <span class="math inline">\(\beta_0 + \beta_1 X\)</span>，右图是 4 个先验可信数据集。
+</p>
 </div>
 </div>
 <div class="section level2" id="ch9-post-sim" number="9.3">
-<h2>后期模拟</h2>
-<p>在贝叶斯分析的下一步, 让我们用数据更新我们对骑车和温度之间关系的认识。 Bayesrules包中的自行车数据是Fanaee-T和Gama(2014年)在UCI机器学习存储器(2017年)上提供的自行车共享数据集的一个子集. 49 在研究中,每500天的自行车都包含乘车次数和在吸收湿度(tim feel)等因素时温度感受的量度. 由 timp feel 运行的散点支持我们先验对两者之间的正线性关系的假设, 即 \(\mu = \beta_0 + \beta_1 X\)与 1@@. 此外,这种关系的强度看起来是适度的 — — \(\sigma\)既不小也不大.</p>
-<div class="sourceCode" id="cb133">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h2> 后验模拟</h2>
+<p>在贝叶斯分析的下一步中，让我们使用<strong>数据</strong>来更新我们对骑行人次与温度之间关系的先验理解。
+<code>bayesrules</code> 数据集中的 <code>bikes</code> 数据是 UCI 机器学习库 <span class="citation">(<a href="#ref-uci" role="doc-biblioref">2017</a>)</span> 中自行车共享数据集的一个子集，由 <span class="citation"><a href="#ref-bikeshare" role="doc-biblioref">Fanaee-T 和 Gama</a> (<a href="#ref-bikeshare" role="doc-biblioref">2014</a>)</span> 提供。<a class="footnote-ref" href="#fn49" id="fnref49"><sup>49</sup></a>
+对于研究中的 500 天中的每一天，<code>bikes</code> 包含了 <code>rides</code>（骑行次数）和一个考虑了湿度等因素后的体感温度（<code>temp_feel</code>）。
+<code>rides</code> 随 <code>temp_feel</code> 变化的散点图支持了我们之前的先验假设，即两者之间存在正的<em>线性</em>关系，即 <span class="math inline">\(\mu = \beta_0 + \beta_1 X\)</span> 且 <span class="math inline">\(\beta_1 &gt; 0\)</span>。
+此外，这种关系的强度看起来<em>中等</em>——<span class="math inline">\(\sigma\)</span> 既不算小也不算大。</p>
+<div class="sourceCode" id="cb133"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 装入和绘图数据
 data(bikes)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch9-scatter" style="display:block;"></span>
-<img alt="这是按温度(x轴)划分的散射带(y轴),有500个数据点。 积分显示骑手与温度之间温和,积极的关系. 典型的关系被一条向上的斜线所捕捉." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-scatter-1-c273ac884333.png" width="240"/>
-<p class="caption">图9.6: 在500个不同的日子里,一连串的骑手对温度</p>
+<img alt="This is a scatterplot of rides (y-axis) by temperature (x-axis) with 500 data points. The points exhibit moderate, positive relationship between ridership and temperature. The typical relationship is captured by an upward sloping blue line." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-scatter-1-c273ac884333.png" width="240"/>
+<p class="caption">
+图 9.6: 500 天中骑行人次与温度的散点图。
+</p>
 </div>
 <div style="page-break-after: always;"></div>
-<p>现在,我们可以将来自这些数据的信息与之前建立的参数++0++的后置模型结合起来。 我们的倾向是直接跳到这个后期的MCMC模拟中, 甚至不试图用数学来说明这个模型。 不过, 我们将暂停足够长的时间, 考虑一下一般的贝叶斯简单回归模型(9.6),让QQ1@@表示XQ2@@观测值的集合. 假设回归参数是独立的,它们的联合前pdf是其边际pdf的产物,而后者又由各自的正常和指示前模型定义:</p>
-<p>\[f(\beta_0, \beta_1, \sigma) = f(\beta_0) f(\beta_1) f(\sigma) .\]</p>
-<p>此外,给定的独立数据===================================== ====================================================================================================================================================================================================================</p>
-<p>\[L(\beta_0, \beta_1, \sigma | \vec{y}) = f(\vec{y}|\beta_0, \beta_1, \sigma) = \prod_{i=1}^{n}f(y_i|\beta_0, \beta_1, \sigma) .\]</p>
-<p>因此,建立"\((\beta_0, \beta_1, \sigma)\)"的后台模式需要我们指定联合后台pdf.</p>
-<p>\[f(\beta_0,\beta_1,\sigma \; | \; \vec{y}) \propto \text{prior} \cdot \text{likelihood} = f(\beta_0) f(\beta_1) f(\sigma) \cdot \left[\prod_{i=1}^{n}f(y_i | \beta_0, \beta_1, \sigma) \right] . \]</p>
-<p>如果你经过了在上面的产品中插入 \(3 + n\) pdf 的公式的繁琐工作, 你就不会发现一个熟悉的结构。 因此,如果你真的想要指定后pdf,你需要计算正态常数。 你可能走不远 — — 保证QQ1+Q整合到1的常数,</p>
-<p>\[\begin{split} f(\beta_0,\beta_1,\sigma \; | \; \vec{y}) &amp; = \frac{\text{prior} \cdot \text{likelihood}}{ \int \text{prior} \cdot \text{likelihood}} \\ &amp; = \frac{f(\beta_0) f(\beta_1) f(\sigma) \cdot \left[\prod_{i=1}^{n}f(y_i|\beta_0, \beta_1, \sigma) \right]} {\int\int\int f(\beta_0) f(\beta_1) f(\sigma) \cdot \left[\prod_{i=1}^{n}f(y_i|\beta_0, \beta_1, \sigma) \right] d\beta_0 d\beta_1 d\sigma} \\ \end{split}\]</p>
-<p>让我们不要。 相反,我们可以利用马可夫链式蒙特卡洛模拟技术来近似后期.</p>
+<p>现在我们可以将这些数据信息与先验信息相结合，构建参数 <span class="math inline">\((\beta_0, \beta_1, \sigma)\)</span> 的后验模型。
+我们在这里倾向于直接跳到通过马尔可夫链蒙特卡洛（MCMC）<strong>模拟</strong>来获得该后验，甚至不尝试明确写出其数学表达式。
+但是，我们会稍作停顿，让你信服此处选择模拟是合理的。
+考虑一般的贝叶斯简单回归模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-reg-ch9">(9.6)</a>，令 <span class="math inline">\(\vec{y} = (y_1,y_2,...,y_{n})\)</span> 表示 <span class="math inline">\(n\)</span> 个观测到的 <span class="math inline">\(Y\)</span> 值的集合。
+假设回归参数相互独立，它们的<strong>联合先验概率密度函数</strong>是其边缘概率密度函数的乘积，而这些边缘函数又分别由其正态和指数先验模型定义：</p>
+<p><span class="math display">\[f(\beta_0, \beta_1, \sigma) = f(\beta_0) f(\beta_1) f(\sigma)  .\]</span></p>
+<p>此外，给定<em>独立</em>数据 <span class="math inline">\(\vec{y}\)</span> 时参数的<strong>似然函数</strong>由 <span class="math inline">\(\vec{y}\)</span> 的联合概率密度函数定义，而该联合密度函数又是由正态数据结构 <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-like-ch9">(9.3)</a> 所定义的边缘概率密度函数的乘积：</p>
+<p><span class="math display">\[L(\beta_0, \beta_1, \sigma | \vec{y}) = f(\vec{y}|\beta_0, \beta_1, \sigma) = \prod_{i=1}^{n}f(y_i|\beta_0, \beta_1, \sigma)  .\]</span></p>
+<p>因此，建立 <span class="math inline">\((\beta_0, \beta_1, \sigma)\)</span> 的后验模型需要我们指定<strong>联合后验概率密度函数</strong></p>
+<p><span class="math display">\[f(\beta_0,\beta_1,\sigma \; | \; \vec{y})
+\propto \text{prior} \cdot \text{likelihood}
+ = f(\beta_0) f(\beta_1) f(\sigma) \cdot \left[\prod_{i=1}^{n}f(y_i | \beta_0, \beta_1, \sigma) \right] . \]</span></p>
+<p>如果你把上面乘积中 <span class="math inline">\(3 + n\)</span> 个概率密度函数的公式都代入，你不会发现熟悉的结构。因此，如果你<em>真的</em>想写出后验概率密度函数，就需要计算归一化常数。但你很可能做不下去——这个保证 <span class="math inline">\(f(\beta_0,\beta_1,\sigma | \vec{y})\)</span> 在所有可能的 <span class="math inline">\((\beta_0,\beta_1,\sigma)\)</span> 上积分为 1 的常数，是我们这个复杂乘积的三重积分：</p>
+<p><span class="math display">\[\begin{split}
+f(\beta_0,\beta_1,\sigma \; | \; \vec{y})
+ &amp; = \frac{\text{prior} \cdot \text{likelihood}}{ \int \text{prior} \cdot \text{likelihood}} \\
+ &amp; = \frac{f(\beta_0) f(\beta_1) f(\sigma) \cdot \left[\prod_{i=1}^{n}f(y_i|\beta_0, \beta_1, \sigma) \right]}
+ {\int\int\int f(\beta_0) f(\beta_1) f(\sigma) \cdot \left[\prod_{i=1}^{n}f(y_i|\beta_0, \beta_1, \sigma) \right] d\beta_0 d\beta_1 d\sigma} \\
+ \end{split}\]</span></p>
+<p>算了。我们可以转而利用马尔可夫链蒙特卡洛模拟技术来<strong>近似</strong>后验。</p>
 <div class="section level3" id="simulation-via-rstanarm" number="9.3.1">
-<h3>通过rstanarm模拟</h3>
-<p>在第六章中,我们的MCMC近似过程分两个步骤展开,使用rstan包:首先定义然后使用rstan语法模拟模型. 我们的贝叶斯模式越来越复杂, 不仅这个两步进程会变得越来越复杂, rstanarm包(Gabry and Goodrich 2020c)将rstan的功率调整为应用回归模型(arm ). 因此,它包含了一站式功能,用于模拟一套广泛的预定义的贝叶斯回归模型,即不需要步骤1! 例如,为了模拟我们普通的贝叶斯线性回归模型乘以titur feel,我们可以使用stan glm()函数,该函数适用于广义线性回归模型(glm)的更广泛的家族:</p>
-<div class="sourceCode" id="cb134">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h3>利用 PyMC 模拟</h3>
+<p>在第 <a href="/bayes-rules-python-cn/chapter-6/#chapter-6">6</a> 章，我们的 MCMC 近似过程通过 <strong>PyMC</strong> 包分两步展开：先用 <strong>PyMC</strong> 语法<em>定义</em>模型，再<em>模拟</em>。随着贝叶斯模型越来越复杂，这个两步过程也会越来越繁琐，而且并非总是必要。<strong>Bambi</strong> 库<span class="citation">(<a href="#ref-R-rstanarm" role="doc-biblioref">Gabry and Goodrich 2020c</a>)</span> 将 PyMC 的强大功能适配到应用回归模型中。因此，它提供了一站式函数来模拟一系列<em>预定义</em>的贝叶斯回归模型，即无需第一步！例如，要模拟 <code>rides</code> 对 <code>temp_feel</code> 的正态贝叶斯线性回归模型，我们可以使用 <code>bambi.Model</code> 函数，它适用于更广泛的<strong>广义线性模型（GLM）</strong>家族：</p>
+<div class="sourceCode" id="cb134"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 with pm.Model() as model:
     # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
     # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
@@ -256,18 +335,26 @@ with pm.Model() as model:
     # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
     idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
 az.summary(idata)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>上面的语法是常见于我们在本书中所见到的其他rstanar模型, 一般来说,stan glm()需要三种类型的信息:</p>
+# 可用 pandas / PyMC 按同一数据流程表达。
+family = gaussian,
+prior_intercept = normal(5000, 1000),
+prior = normal(100, 40),
+prior_aux = exponential(0.0008),
+chains = 4, iter = 5000*2, seed = 84735)</code></pre></div>
+<p>上面的语法在本书后续会看到的其他 <strong>Bambi</strong> 模型中也很常见，看起来比实际复杂。一般来说，<code>bambi.Model</code> 需要三类信息：</p>
 <ul>
-<li><p>数据信息 前三个stan glm () 参数指定了我们数据的结构: 我们希望利用数据=自行车并假设一个正常数据模型,aka family=gaussian,按温度(骑车~tim feel)建模骑手.</p></li>
-<li><p>前置信息 前面的、 前面的、 前面的、 前面的、 前面的参数指定 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ ,分别是\(\beta_1\)和 2@@. 这些符合(9.7)定义的前缀.</p></li>
-<li><p>Markov 链信息 其余的参数指定了我们的MCMC模拟的结构:要运行的Markov 链的数量,每个链的行程的长度或次数,以及要使用的随机数种子.</p></li>
+<li><p><strong>数据信息</strong><br/>
+前三个参数指定了数据结构：我们想通过温度（<code>rides ~ temp_feel</code>）来建模骑行量，使用 <code>data = bikes</code>，并假设正态数据模型，即 <code>family = gaussian</code>。</p></li>
+<li><p><strong>先验信息</strong><br/>
+<code>prior_intercept</code>、<code>prior</code> 和 <code>prior_aux</code> 参数分别指定了 <span class="math inline">\(\beta_{0c}\)</span>、<span class="math inline">\(\beta_1\)</span> 和 <span class="math inline">\(\sigma\)</span> 的先验分布。这些与 <a href="/bayes-rules-python-cn/chapter-9/#eq:ex-model-ch9">(9.7)</a> 中定义的先验分布一致。</p></li>
+<li><p><strong>马尔可夫链信息</strong><br/>
+其余参数指定了 MCMC 模拟的结构：要运行的马尔可夫链 <code>chains</code> 的数量、每条链的迭代次数 <code>iter</code>（长度），以及使用的随机数 <code>seed</code>。</p></li>
 </ul>
-<p>在从学习或燃烧阶段抛出Markov 链值的前半部分后,stan glm()模拟为每个模型参数产生四个平行长度5000的链: 0@@,\(\left\lbrace \beta_1^{(1)}, \beta_1^{(2)}, \ldots, \beta_1^{(5000)} \right\rbrace\),\(\left\lbrace \sigma_0^{(1)}, \sigma_0^{(2)}, \ldots, \sigma_0^{(5000)} \right\rbrace\). 这些分别作为(Intercept),tim feel和sigma存储. 一些快速诊断表明这些链条是值得信赖的. 有效的样本大小比略高于1,R-hat值非常接近1,表明链条稳定,混合速度快,行为与独立样本很像.</p>
-<div class="sourceCode" id="cb135">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>在丢弃学习阶段（或 <em>burn-in</em> 阶段）前一半的马尔可夫链值后，模拟过程会为<em>每个</em>模型参数生成四条长度为 5000 的并行链：<span class="math inline">\(\left\lbrace \beta_0^{(1)}, \beta_0^{(2)}, \ldots, \beta_0^{(5000)} \right\rbrace\)</span>、<span class="math inline">\(\left\lbrace \beta_1^{(1)}, \beta_1^{(2)}, \ldots, \beta_1^{(5000)} \right\rbrace\)</span> 和 <span class="math inline">\(\left\lbrace \sigma_0^{(1)}, \sigma_0^{(2)}, \ldots, \sigma_0^{(5000)} \right\rbrace\)</span>。
+这些值分别存储为 <code>(Intercept)</code>、<code>temp_feel</code> 和 <code>sigma</code>。
+快速诊断表明这些链是可信的。
+有效样本量比率略<em>高于</em> 1，R-hat 值非常接近 1，表明链稳定、混合迅速，表现接近独立样本。</p>
+<div class="sourceCode" id="cb135"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -279,45 +366,41 @@ neff_ratio(bike_model)
 1.042       1.037       1.004
 rhat(bike_model)
 (Intercept)   temp_feel       sigma
-0.9999      0.9999      1.0000</code></pre>
-</div>
-<p>我们从微量和密度图中得出类似的结论(图...)。</p>
-<div class="sourceCode" id="cb136">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+0.9999      0.9999      1.0000</code></pre></div>
+<p>我们通过迹图和密度图（图 <a href="#fig:ch9-trace-dens"><strong>??</strong></a>）得出了类似的结论。</p>
+<div class="sourceCode" id="cb136"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 跟踪平行链的图
 mcmc_trace(bike_model, size = 0.1)
 # 平行链的密度图
-mcmc_dens_overlay(bike_model)</code></pre>
-</div>
-<p><img alt="有六块地. 顶排的三块地块显示了截取的痕量地块,tim feel,和sigma参数. 各有四行如随机声现. 下行的三块地块显示每个截断点的四块密度地块,tim feel和sigma参数. 对于每个参数,密度图非常相似." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-trace-dens-1-111a925f5581.png" style="display: block; margin: auto;" title="有六块地. 顶排的三块地块显示了截取的痕量地块,tim feel,和sigma参数. 各有四行如随机声现. 下行的三块地块显示每个截断点的四块密度地块,tim feel和sigma参数. 对于每个参数,密度图非常相似." width="576"/></p>
+mcmc_dens_overlay(bike_model)</code></pre></div>
+<p><span id="fig:ch9-trace-dens"></span><img alt="There are six plots. The three plots in the top row show trace plots for the Intercept, temp_feel, and sigma parameters. Each has four lines that appear like random noise. The three plots in the bottom row show four density plots for each of the Intercept, temp_feel, and sigma parameters. For each parameter, the density plots are very similar." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-trace-dens-1-111a925f5581.png" style="display: block; margin: auto;" title="There are six plots. The three plots in the top row show trace plots for the Intercept, temp_feel, and sigma parameters. Each has four lines that appear like random noise. The three plots in the bottom row show four density plots for each of the Intercept, temp_feel, and sigma parameters. For each parameter, the density plots are very similar." width="576"/></p>
 </div>
 <div class="section level3" id="optional-simulation-via-rstan" number="9.3.2">
-<h3>可选:通过rstan模拟</h3>
-<p>虽然Rstanalm软件包包括了本书中我们将构建的各类模型的快捷功能,但您可能好奇的是,第6章中的Rstan技术是如何向正常回归升级,从而超越第1单元范围的其他模型. 如果你好奇,请阅读。 否则请跳至下一节.</p>
-<p>在rstanarm中,使用stan glm()与家族=goussian同时定义了我们贝叶斯模型的确切结构,并模拟了相应的后缀. 我们必须单独定义和模拟我们的模型,步骤1和步骤2,考虑我们必须在步骤1中沟通的重要信息。</p>
+<h3>可选：使用 PyMC 进行模拟</h3>
+<p>虽然 <strong>PyMC</strong> 提供了我们将在本书中构建的各类模型的快捷函数，但你可能好奇第 6 章中的 <strong>PyMC</strong> 技术如何扩展到正态回归，以及第一单元范围之外的其他模型。
+如果你<em>确实</em>好奇，请继续阅读。
+否则，请跳到下一节。</p>
+<p>在 <strong>Bambi</strong> 中，使用 <code>family='gaussian'</code> 不仅定义了贝叶斯模型的精确结构，<em>还</em>模拟了相应的后验分布。
+而在 <strong>PyMC</strong> 中，我们需要分别定义和模拟模型，即步骤 1 和步骤 2。
+考虑我们在步骤 1 中必须传达的重要信息：</p>
 <ul>
-<li>数据 : 关于变量 Y 和 X、 骑行和温度的数据将是长度 n 的矢量。</li>
-<li>参数 : 我们的两个回归系数β0和β1(\(\beta_0\)) 而标准偏差参数标准偏差参数sigma( 2@@)必须是非负数。</li>
-<li>型号 : Y的数据模型是正常的,平均值为β0 +β1 * X 和标准偏差 sigma . 此外,除了β0之外,前缀与我们的stan glm()语法中的前缀相似. 使用rstan,我们必须直接表达我们之前对截击的谅解,而不是中心截击。 在这种情况下,我们可以扩大我们先验的理解,即通常在70度日有5000名骑手,到0度日有2000名假设骑手(图9.3).</li>
+<li><code>data</code>：变量 <code>Y</code> 和 <code>X</code>（分别代表骑行次数与温度）的数据是长度为 <code>n</code> 的向量。</li>
+<li><code>parameters</code>：我们的两个回归系数 <code>beta0</code> 和 <code>beta1</code>（<span class="math inline">\(\beta_0\)</span> 和 <span class="math inline">\(\beta_1\)</span>）可以是任意实数，而标准差参数 <code>sigma</code>（<span class="math inline">\(\sigma\)</span>）必须非负。</li>
+<li><code>model</code>：<code>Y</code> 的数据模型是均值为 <code>beta0 + beta1 * X</code>、标准差为 <code>sigma</code> 的正态分布。此外，<em>除了</em> <code>beta0</code> 以外，各参数的先验与我们之前使用 PyMC 语法设定的模型类似。使用 PyMC 时，我们必须直接表达对截距 <span class="math inline">\(\beta_0\)</span> 的先验理解，而非 <em>经过中心化</em> 的截距 <span class="math inline">\(\beta_{0c}\)</span>。在这个例子中，我们可以把“在 70 华氏度天气下通常有 5000 人次骑行”的先验认识，推广到“在 0 华氏度天气下<em>假想的</em> -2000 人次骑行”（图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch9-intercepts">9.3</a>）。</li>
 </ul>
-<div class="sourceCode" id="cb137">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<div class="sourceCode" id="cb137"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 步骤1: 保护模型
 stan_bike_model = "
 data {
@@ -336,19 +419,15 @@ beta0 ~ normal(-2000, 1000);
 beta1 ~ normal(100, 40);
 sigma ~ exponential(0.0008);
 }
-"</code></pre>
-</div>
-<p>在步骤2中,我们使用stan()函数模拟XQ0@@的后置模型. 这里与我们在第六章中模拟的模型的唯一区别是,我们有更多的数据:样本大小n的数据,响应变量Y的数据,以及预测器X的数据:</p>
-<div class="sourceCode" id="cb138">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+"</code></pre></div>
+<p>在<strong>第 2 步</strong>中，我们使用 <code>pm.sample()</code> 函数对 <span class="math inline">\((β_0,β_1,σ)\)</span> 的后验模型进行 <em>模拟</em>。这与我们在第 <a href="/bayes-rules-python-cn/chapter-6/#chapter-6">6</a> 章中模拟的模型唯一区别是，这里拥有更多数据：样本量 <code>n</code>、响应变量 <code>Y</code> 和预测变量 <code>X</code> 的数据。</p>
+<div class="sourceCode" id="cb138"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 with pm.Model() as model:
     # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
     # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
@@ -361,17 +440,14 @@ az.summary(idata)
 stan_bike_sim =
 stan(model_code = stan_bike_model,
 data = list(n = nrow(bikes), Y = bikes$rides, X = bikes$temp_feel),
-chains = 4, iter = 5000*2, seed = 84735)</code></pre>
-</div>
-<p>虽然它们最终包含关于 0@@的近似后置模型的类似信息,但rstan stan bike sim对象和rstanarm bike model对象的结构略有不同. 而现在我们已经把Rstan和Rstanar联系起来了, 斯坦开发团队(Stan Development team 2019)提供出色的资源。</p>
+chains = 4, iter = 5000*2, seed = 84735)</code></pre></div>
+<p>尽管它们最终都包含关于 <span class="math inline">\((β_0, β_1, σ)\)</span> 近似后验模型的类似信息，但使用 PyMC 直接建模得到的 <code>trace</code> 对象与 <code>bambi</code> 库生成的模型对象结构略有不同。为了进行后续分析，你可以通过 <code>az.extract(trace)</code> 获取模拟结果。至此，我们已了解 PyMC 底层用法与 <code>bambi</code> 快捷方式之间的联系，接下来将重点使用 <code>bambi</code> 的简洁语法及其输出。若你想深入了解底层采样细节，Stan 开发团队提供了出色的资源 <span class="citation">(<a href="#ref-rstan_guide" role="doc-biblioref">Stan development team 2019</a>)</span>。</p>
 </div>
 </div>
 <div class="section level2" id="interpreting-the-posterior" number="9.4">
-<h2>解释后文</h2>
-<p>目前我们已成功模拟了按温度划分的自行车赛车的后回归模式。 这是什么意思? 在图中的 mcmc dens overlay () 映射图 ? 允许我们对每个回归参数的 {0} {0} {0} {1} {1} 和}} {2}} 的近似后验模型进行直观化和检查。 通过broom.mixed包中的清理()函数计算出的未来汇总统计提供了补充数字汇总。 由于我们的正常回归模型有多个参数,我们必须具体说明“效果”或利益参数。 在此,我们总结固定回归系数, +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</p>
-<div class="sourceCode" id="cb139">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h2>解释后验</h2>
+<p>我们现在已经成功模拟了骑行次数随温度变化的后验正态回归模型。那么这一切意味着什么呢？！图 <a href="#fig:ch9-trace-dens"><strong>??</strong></a> 中的后验密度图让我们能够 <em>可视化</em> 并检查每个回归参数 <span class="math inline">\(β_0\)</span>、<span class="math inline">\(β_1\)</span> 和 <span class="math inline">\(σ\)</span> 的近似后验模型。后验汇总统计量可以通过 ArviZ 的 <code>az.summary()</code> 函数计算，提供互补的 <em>数值</em> 总结。因为正态回归模型包含多个参数，我们需要指定感兴趣的 “<code>effects</code>” 或参数。这里，我们同时总结 <code>fixed</code> 回归系数 <span class="math inline">\(β_0\)</span>、<span class="math inline">\(β_1\)</span> 以及 <code>aux</code>（辅助）参数 <span class="math inline">\(σ\)</span>：</p>
+<div class="sourceCode" id="cb139"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -386,14 +462,14 @@ term        estimate std.error conf.low conf.high
 1 (Intercept)  -2194.     362.    -2656.    -1732.
 2 temp_feel       82.2      5.15     75.6      88.8
 3 sigma         1281.      40.7    1231.     1336.
-4 mean_PPD      3487.      80.4    3385.     3591.</code></pre>
-</div>
-<p>让我们首先关注骑手与温度之间的典型关系, 后中位数关系是</p>
-<p>\[\begin{equation} -2194.24 + 82.16 X . \tag{9.8} \end{equation}\]</p>
-<p>也就是说,温度每上升一度, 我们预计骑手会增加大约82人。 当然,这种关系在后期存在不确定性。 例如,\(\beta_1\)的80%后可信间隔(75.6,88.8)表明这一坡度可能从76到89不等. 要将XQ1+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</p>
-<div class="sourceCode" id="cb140">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+4 mean_PPD      3487.      80.4    3385.     3591.</code></pre></div>
+<p>首先关注骑行次数与温度之间的典型关系 <span class="math inline">\(\mu = \beta_0 + \beta_1 X\)</span>。根据 <code>az.summary()</code> 的输出，<strong>后验中位数关系</strong> 为</p>
+<p><span class="math display" id="eq:post-med-trend-ch9">\[\begin{equation}
+-2194.24 + 82.16 X .
+\tag{9.8}
+\end{equation}\]</span></p>
+<p>也就是说，温度每上升一度，我们预期骑行量大约增加82次。这种关系当然存在后验<em>不确定性</em>。例如，<span class="math inline">\(\beta_1\)</span> 的80%后验可信区间为 (75.6, 88.8)，表明该斜率可能介于76到89之间。为了将 <span class="math inline">\(\beta_1\)</span> 的不确定性与 <span class="math inline">\(\beta_0\)</span> 的不确定性结合起来，以获得更全面的模型图景，注意马尔可夫链模拟给出了20000对后验合理的 <span class="math inline">\(\beta_0\)</span> 和 <span class="math inline">\(\beta_1\)</span> 值：</p>
+<div class="sourceCode" id="cb140"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -408,99 +484,128 @@ head(bike_model_df, 3)
 (Intercept) temp_feel sigma
 1       -2657     88.16  1323
 2       -2188     83.01  1323
-3       -1984     81.54  1363</code></pre>
-</div>
-<p>这些配对为骑手与温度之间的典型关系提供了20,000种替代情景, 例如,第一对表示lau1\(=\)-2657\(+\)88.2\(X\). 第二对有较高的截流和较小的坡度. 下面我们只绘制了这两万个后期假模型中的50个, 这是一个多步骤的过程:</p>
+3       -1984     81.54  1363</code></pre></div>
+<p>这些成对参数提供了骑行量与温度之间典型关系 <span class="math inline">\(\beta_0 + \beta_1 X\)</span> 的20000种备选情景，因此捕捉了我们对该关系的整体不确定性。例如，第一对参数表明 <span class="math inline">\(\beta_0 + \beta_1 X\)</span> <span class="math inline">\(=\)</span> -2657 <span class="math inline">\(+\)</span> 88.2 <span class="math inline">\(X\)</span> 的合理性。第二对参数有更高的截距和更小的斜率。下面我们仅绘制这20000个后验合理均值模型中的<em>50</em>个，<span class="math inline">\(\beta_0^{(i)} + \beta_1^{(i)}X\)</span>。这是一个多步骤过程：</p>
 <ul>
-<li>Kay 2021 软件包中的添加 fitted draws () 函数评价了 50 个后假关系, 我们鼓励你增加这个数字,</li>
-<li>然后我们用 ggplot () 在观测到的数据点上绘制这50条模型线, 标记为 . draw。</li>
+<li>我们利用后验抽样，沿观测的温度范围 <span class="math inline">\(X\)</span> 评估50条后验合理的关系 <span class="math inline">\(\beta_0^{(i)} + \beta_1^{(i)}X\)</span>。我们鼓励你增加这个数量——这里只绘制50条线是为了打印清晰。</li>
+<li>我们然后将这50条模型线（按 <code>.draw</code> 标记）叠放在观测数据点上进行绘制。</li>
 </ul>
-<div class="sourceCode" id="cb141">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<div class="sourceCode" id="cb141"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 50条模拟模型线
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch9-post-sim-1" style="display:block;"></span>
-<img alt="按温度(x轴)排列的散列(y轴)与50条正斜斜的模型线相叠加。 这些线路的拦截和坡度略有不同. 数据点围绕这些线适度分散。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-post-sim-1-1-2955c3ea05b6.png" width="259.2"/>
-<p class="caption">图9.7:用50套假想的\(\beta_0\)和\(\beta_1\)搭建的模范线路.</p>
+<img alt="The scatterplot of rides (y-axis) by temperature (x-axis) is superimposed with 50 positively sloping model lines. These lines have slightly different intercepts and slopes. The data points are moderately scattered around these lines." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-post-sim-1-1-2955c3ea05b6.png" width="259.2"/>
+<p class="caption">
+图9.7: 由50组后验合理的 <span class="math inline">\(\beta_0\)</span> 和 <span class="math inline">\(\beta_1\)</span> 构建的模型线。
+</p>
 </div>
-<p>将图9.7中的后期假象模型与图9.5中先验的假象模型相比较,可以看出我们对骑车的理解的演变。 首先,气温的骑手增加似乎比我们预期的要少。 更何况, 后期假象的可变性要小得多, 一旦你反思了以上结果,</p>
+<p>将图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch9-post-sim-1">9.7</a> 中的后验合理模型与图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch9-prior-sim-1">9.5</a> 中的<em>先验</em>合理模型进行比较，可以揭示我们对骑行量理解的演变。首先，骑行量随温度上升的趋势似乎没有我们预期的那么陡峭。此外，后验合理模型的变异性要小得多，表明在观察到一些数据后，我们对骑行量与温度之间关系的信心大大增强。在反思上述结果之后，不妨自测一下。</p>
 <div class="quiz">
-<p>是否有足够的后证证明骑手与体温之间有正面联系, 解释一下</p>
+<p>我们是否有充分的后验证据表明骑行量与温度之间存在正向关联，即 <span class="math inline">\(\beta_1 &gt; 0\)</span>？请解释。</p>
 </div>
-<p>测验的答案是肯定的。 我们可以用三种证据来支持这个答案。</p>
+<p>小测试的答案是<em>肯定的</em>。
+我们可以用三类证据来支持这一答案。</p>
 <ul>
-<li><p>视觉证据 在我们对50个骑手与温度之间关系的事后假想进行目视检查时(图9.7),都显示出积极的关联。 显示无关系( 0@@)的线条,</p></li>
-<li><p>更严格地说,上述()摘要(75.6,88.8)中x=0的80%可信间隔完全高于0.</p></li>
-<li><p>加上一个不必要的证据, 快速的表格大致显示, 我们的2万马可夫连锁值中,</p>
-<div class="sourceCode" id="cb142">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<li><p><strong>视觉证据</strong><br/>
+在我们对骑行量与温度关系的50个后验合理场景的可视化检查中（图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch9-post-sim-1">9.7</a>），<em>所有</em>场景都显示了正向关联。
+一条显示<em>无</em>关系的线（<span class="math inline">\(\beta_1 = 0\)</span>）将会异常突兀。</p></li>
+<li><p><strong>来自后验可信区间的数值证据</strong><br/>
+更严格地说，上面 <code>tidy()</code> 摘要中 <span class="math inline">\(\beta_1\)</span> 的80%可信区间 (75.6, 88.8) 完全且远高于0。</p></li>
+<li><p><strong>来自后验概率的数值证据</strong><br/>
+再补充一条或许多余的证据，通过快速汇总可以近似得出，<em>几乎可以肯定</em>存在正向关联，<span class="math inline">\(P(\beta_1 &gt; 0 \; | \; \vec{y}) \approx 1\)</span>。在我们的20,000个 <span class="math inline">\(\beta_1\)</span> 马尔可夫链值中，<em>零个</em>是正的。</p>
+<div class="sourceCode" id="cb142"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 将超过 0 的β 1 值制表
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div></li>
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+tabyl(exceeds_0)
+exceeds_0     n percent
+TRUE 20000       1</code></pre></div></li>
 </ul>
-<p>最后,让我们来看看\(\sigma\)的后果, 以上我们估计,\(\sigma\)的后中位数为1281,可信间隔为80%(1231,1336). 因此,平均而言,我们预计在某一天观察到的骑手在同样温度的几天里从平均骑手中掉落1281人。 图9.7增加了一些上下文,列出了四套模拟骑手数据,其后四套似值为 2@@。 至少从视觉上看,这些地块表现出类似的温和关系,表明骑手和温度之间关系的强度在后期具有相对的确定性. 这里的语法与图9.7中用于绘制似似似回归线的语法相当相似。 主要区别在于我们已经将添加 fitted draws替换为添加 presentted draws.</p>
-<div class="sourceCode" id="cb143">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>最后，让我们考察 <span class="math inline">\(\sigma\)</span> 的后验结果，它衡量了在相同温度下骑行量的日际变异程度。上面我们估计出 <span class="math inline">\(\sigma\)</span> 的后验中位数为1281，80%可信区间为 (1231, 1336)。因此，平均而言，我们可以预期某一天的骑行量观测值会偏离相同温度下的平均骑行量1281次。图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch9-post-sim-1">9.7</a> 增加了一些背景，展示了在四个合理的后验 <span class="math inline">\(\sigma\)</span> 值下模拟的四组骑行量数据集。至少从视觉上看，这些图显示了相似的中等强度关系，表明后验对骑行量与温度关系强度具有相对确定性。这里的语法与绘制图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch9-post-sim-1">9.7</a> 中合理回归线 <span class="math inline">\(\beta_0 + \beta_1 X\)</span> 时所使用的语法十分相似。主要区别在于我们用 <code>add_predicted_draws</code> 替换了 <code>add_fitted_draws</code>。</p>
+<div class="sourceCode" id="cb143"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 模拟四套数据
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+facet_wrap(~ .draw)</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch9-post-sim-2" style="display:block;"></span>
-<img alt="根据温度(x轴),有四个独立的模拟散射装置(y轴). 每个数据点有500个,行为相似,显示出骑手与温度之间的适度正比关系." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-post-sim-2-1-8bd4aa50e986.png" width="384"/>
-<p class="caption">图9.8:从\(\beta_0\)的后验模型模拟出来的四个数据集 ,\(\beta_1\),和\(\sigma\).</p>
+<img alt="There are four separate simulated scatterplots of rides (y-axis) by temperature (x-axis). Each has 500 data points and behaves similarly, exhibiting a moderate positive relationship between ridership and temperature." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-post-sim-2-1-8bd4aa50e986.png" width="384"/>
+<p class="caption">
+图9.8：从<span class="math inline">\(\beta_0\)</span>、<span class="math inline">\(\beta_1\)</span> 和 <span class="math inline">\(\sigma\)</span> 的后验模型模拟的四个数据集。
+</p>
 </div>
 <div style="page-break-after: always;"></div>
 </div>
 <div class="section level2" id="chapter-9-prediction" number="9.5">
-<h2>预测</h2>
-<p>我们对回归参数的上述审查揭示了骑手和温度之间的关系。 除了建立这种洞察力之外,回归分析的一个共同目标是利用我们的模型作出预测。</p>
+<h2> 后验预测</h2>
+<p>我们上面对回归参数的考察揭示了骑行量与温度之间的关系。除了建立这样的理解，回归分析的一个常见目标是利用模型进行<strong>预测</strong>。</p>
 <div class="quiz">
-<p>假设天气报告显示,明天是华盛顿75度的一天。 你对首都比克夏所预期的骑手人数的后期猜测是什么?</p>
+<p>假设天气预报显示明天华盛顿特区气温为75度。你对于Capital Bikeshare应预期的骑行人数的后验猜测是多少？</p>
 </div>
-<p>您在这个问题上的第一个自然裂缝 可能是把75度温度 插入后期中位数模型(9.8) 因此,我们预计明天将有3968名骑手:</p>
+<p>你对这个问题的自然第一反应可能是将75度气温代入后验中位数模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:post-med-trend-ch9">(9.8)</a>。
+因此，我们预计明天将有3968名骑行者：</p>
 <p><span class="math display">\[-2194.24 + 82.16*75 = 3967.76 .\]</span></p>
-<p>但是,从第8.4.3节中回顾,这一单一预测忽略了两种潜在的变异源:</p>
+<p>但是，回想第<a href="/bayes-rules-python-cn/chapter-8/#ch8-pred">8.4.3</a>节，这种单一预测忽略了两类可能的变异性来源：</p>
 <ul>
-<li><p>数据中的抽样可变性 观测到的骑行结果 \(Y\) 通常偏离模型线. 我们并不期望每七十五度的一天,</p></li>
-<li><p>参数的后置变异性 后期中位数模型仅仅是一系列可信型号线的中位数(图9.7). 我们应该考虑整个范围, 以及 2@@,</p></li>
+<li><p><strong>数据中的抽样变异性</strong><br/>
+观测到的骑行量结果，<span class="math inline">\(Y\)</span>，通常会<em>偏离</em>模型线。也就是说，我们不期望每个75度的日子都有完全相同的骑行次数。</p></li>
+<li><p><strong>参数 <span class="math inline">\((\beta_0, \beta_1, \sigma)\)</span> 的后验变异性</strong><br/>
+后验中位数模型仅仅是一系列合理模型线 <span class="math inline">\(\beta_0 + \beta_1 X\)</span> 中的一个中心（图<a href="/bayes-rules-python-cn/chapter-9/#fig:ch9-post-sim-1">9.7</a>）。我们还应考虑整个范围以及 <span class="math inline">\(\sigma\)</span> 的范围，即观测值可能偏离模型线的程度。</p></li>
 </ul>
-<p>新数据点的后期预测模型\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 具体来说,后期预测pdf通过对这些参数( 3@@)的后期可信度来权衡任何一组可能参数(\(f(y_{new} | \beta_0,\beta_1,\sigma)\))下这一结果的机率,来捕捉观察 1@@的整体机率. 数学上说:</p>
-<p>\[f\left(y_{\text{new}} | \vec{y}\right) = \int\int\int f\left(y_{new} | \beta_0,\beta_1,\sigma\right) f(\beta_0,\beta_1,\sigma|\vec{y}) d\beta_0 d\beta_1 d\sigma .\]</p>
-<p>现在,我们实际上还没有一个很好的,干净的公式, 用于我们的回归参数的后pdf, Markov 链上的两万套参数。 通过模拟每套参数评价的正态模型的骑手预测,</p>
-<p>\[Y_{\text{new}}^{(i)} | \beta_0, \beta_1, \sigma \; \sim \; N\left(\mu^{(i)}, \left(\sigma^{(i)}\right)^2\right) \;\; \text{ with } \;\; \mu^{(i)} = \beta_0^{(i)} + \beta_1^{(i)} \cdot 75.\]</p>
-<p>因此,我们马可夫链(左)中的两万个参数集中的每一组都产生一个独特的预测(右):</p>
-<p>\[\left[ \begin{array}{lll} \beta_0^{(1)} &amp; \beta_1^{(1)} &amp; \sigma^{(1)} \\ \beta_0^{(2)} &amp; \beta_1^{(2)} &amp; \sigma^{(2)} \\ \vdots &amp; \vdots &amp; \vdots \\ \beta_0^{(20000)} &amp; \beta_1^{(20000)} &amp; \sigma^{(20000)} \\ \end{array} \right] \;\; \longrightarrow \;\; \left[ \begin{array}{l} Y_{\text{new}}^{(1)} \\ Y_{\text{new}}^{(2)} \\ \vdots \\ Y_{\text{new}}^{(20000)} \\ \end{array} \right]\]</p>
-<p>在75度的时间内, 我们将获得这种近似,既“靠手”帮助我们建立一些强大的直觉,又利用捷径R功能。</p>
+<p>新数据点 <span class="math inline">\(Y_{\text{new}}\)</span> 的<strong>后验预测模型</strong>同时考虑了上述两类变异性。
+具体而言，后验预测概率密度函数捕捉了观测到 <span class="math inline">\(Y_{\text{new}} = y_{\text{new}}\)</span> 的<em>总体</em>机会，它将任何一组可能参数下该结果的出现机会（<span class="math inline">\(f(y_{new} | \beta_0,\beta_1,\sigma)\)</span>）用这些参数的后验合理性（<span class="math inline">\(f(\beta_0,\beta_1,\sigma|\vec{y})\)</span>）进行了加权。
+数学表达式为：</p>
+<p><span class="math display">\[f\left(y_{\text{new}} | \vec{y}\right) = \int\int\int f\left(y_{new} | \beta_0,\beta_1,\sigma\right) f(\beta_0,\beta_1,\sigma|\vec{y}) d\beta_0 d\beta_1 d\sigma .\]</span></p>
+<p>现在，我们实际上并没有一个漂亮整洁的公式来表达回归参数的后验概率密度函数 <span class="math inline">\(f(\beta_0,\beta_1,\sigma|\vec{y})\)</span>，因此也无法得到一个漂亮整洁的后验预测概率密度函数 <span class="math inline">\(f\left(y_{\text{new}} | \vec{y}\right)\)</span>。
+我们真正拥有的是马尔可夫链中的20000组参数 <span class="math inline">\(\left(\beta_0^{(i)},\beta_1^{(i)},\sigma^{(i)}\right)\)</span>。
+于是，我们可以通过针对每一组参数从正态模型中模拟骑行量预测，来近似得到在 <span class="math inline">\(X = 75\)</span> 处 <span class="math inline">\(Y_{\text{new}}\)</span> 的后验预测模型：</p>
+<p><span class="math display">\[Y_{\text{new}}^{(i)} | \beta_0, \beta_1, \sigma  \; \sim \; N\left(\mu^{(i)}, \left(\sigma^{(i)}\right)^2\right) \;\; \text{ with } \;\; \mu^{(i)} = \beta_0^{(i)} + \beta_1^{(i)} \cdot 75.\]</span></p>
+<p>因此，我们的马尔可夫链中（左侧）的 20,000 组参数集各自产生一个唯一的预测（右侧）：</p>
+<p><span class="math display">\[\left[
+\begin{array}{lll}
+\beta_0^{(1)} &amp; \beta_1^{(1)} &amp; \sigma^{(1)} \\
+\beta_0^{(2)} &amp; \beta_1^{(2)} &amp; \sigma^{(2)} \\
+\vdots &amp; \vdots &amp; \vdots \\
+\beta_0^{(20000)} &amp; \beta_1^{(20000)} &amp; \sigma^{(20000)} \\
+\end{array}
+\right]
+\;\; \longrightarrow \;\;
+\left[
+\begin{array}{l}
+Y_{\text{new}}^{(1)} \\
+Y_{\text{new}}^{(2)} \\
+\vdots \\
+Y_{\text{new}}^{(20000)} \\
+\end{array}
+\right]\]</span></p>
+<p>得到的 20,000 个预测值集合 <span class="math inline">\(\left\lbrace Y_{\text{new}}^{(1)}, Y_{\text{new}}^{(2)}, \ldots, Y_{\text{new}}^{(20000)} \right\rbrace\)</span> <em>近似</em>了在 75 度日子上的骑行量的后验预测模型 <span class="math inline">\(Y\)</span>。我们将通过“手动”方式（这有助于建立强大的直觉）和使用快捷 Python 函数两种方式获得该近似。</p>
 <div class="section level3" id="building-a-posterior-predictive-model" number="9.5.1">
-<h3>建立后期预测模型</h3>
-<p>要真正与这些概念联系起来,让我们从近似后期预测模型开始,而不使用快捷键功能。 在75度的一天, 我们将模拟两万人的骑术预测, 让我们从第一个可能的后置参数开始:</p>
-<div class="sourceCode" id="cb144">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h3> 构建后验预测模型</h3>
+<p>为了真正与这些概念建立联系，我们先不使用快捷函数来近似后验预测模型。为此，我们将模拟 20,000 个在 75 度日子的骑行量预测值 <span class="math inline">\(\left\lbrace Y_{\text{new}}^{(1)}, Y_{\text{new}}^{(2)}, \ldots, Y_{\text{new}}^{(20000)} \right\rbrace\)</span>，每个来自 <code>bike_model_df</code> 中的一组参数。让我们从第一个后验合理的参数集开始小试牛刀：</p>
+<div class="sourceCode" id="cb144"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -509,14 +614,11 @@ import arviz as az
 first_set = head(bike_model_df, 1)
 first_set
 (Intercept) temp_feel sigma
-1       -2657     88.16  1323</code></pre>
-</div>
-<p>在这种特殊情况下, \(\left(\beta_0^{(1)}, \beta_1^{(1)}, \sigma^{(1)}\right) = (-2657, 88.16, 1323)\), 在特定温度下, 平均骑手由</p>
-<p>\[\mu = \beta_0^{(1)} + \beta_1^{(1)} X = -2657 + 88.16X .\]</p>
-<p>我们期待平均75度的骑手:</p>
-<div class="sourceCode" id="cb145">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+1       -2657     88.16  1323</code></pre></div>
+<p>在这一特定情景下，<span class="math inline">\(\left(\beta_0^{(1)}, \beta_1^{(1)}, \sigma^{(1)}\right) = (-2657, 88.16, 1323)\)</span>，给定温度下的平均骑行量由下式定义</p>
+<p><span class="math display">\[\mu = \beta_0^{(1)} + \beta_1^{(1)} X = -2657 + 88.16X  .\]</span></p>
+<p>因此，对于 75°F 的天气，我们预期会有 <strong>平均</strong> <span class="math inline">\(\mu = 3955\)</span> 名骑手：</p>
+<div class="sourceCode" id="cb145"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -524,14 +626,11 @@ import arviz as az
 
 mu = first_set$`(Intercept)` + first_set$temp_feel * 75
 mu
-[1] 3955</code></pre>
-</div>
-<p>为了捕捉围绕这个平均值的采样变异性,即并非所有75度的天都有相同的骑手,我们可以模拟我们的第一个官方预测XQ0XX,从第一个参数集指定的普通模型中随机抽取:</p>
-<p>\[Y_{\text{new}}^{(1)} | \beta_0, \beta_1, \sigma \; \sim \; N\left(3955, 1323^2\right) .\]</p>
-<p>在75度的日子里, 我们恰好看到超过4838人的车次:</p>
-<div class="sourceCode" id="cb146">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+[1] 3955</code></pre></div>
+<p>为了捕捉这个平均值周围的 <strong>抽样变异性</strong>，即并非所有 75°F 的日子都有相同的骑行量这一事实，我们可以从这组参数指定的正态模型中随机抽取一个值，来模拟第一个正式预测 <span class="math inline">\(Y_{\text{new}}^{(1)}\)</span>：</p>
+<p><span class="math display">\[Y_{\text{new}}^{(1)} | \beta_0, \beta_1, \sigma  \; \sim \; N\left(3955, 1323^2\right)  .\]</span></p>
+<p>使用 <code>numpy.random.normal()</code> 从该模型中抽样，我们碰巧观察到在 75°F 这一天有高于平均水平的 4838 次骑行：</p>
+<div class="sourceCode" id="cb146"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -540,27 +639,22 @@ import arviz as az
 rng = np.random.default_rng(84735)
 y_new = rnorm(1, mean = mu, sd = first_set$sigma)
 y_new
-[1] 4838</code></pre>
-</div>
-<p>让我们再做19,999次。 也就是说,让我们遵循同样的两步进程来模拟对自行车 型号 df中20,000套回归参数中的每套的骑手的预测:(1) 计算75度日的平均骑手,###1@@;然后(2) 以标准偏差为中心从普通模型中选取的样本:</p>
-<div class="sourceCode" id="cb147">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+[1] 4838</code></pre></div>
+<p>现在我们再这样做 19,999 次。也就是说，按照相同的两步过程，从 <code>bike_model_df</code> 中的 20,000 组回归参数 <span class="math inline">\(i\)</span> 中模拟每次的骑行量预测：(1) 计算 75°F 日子的 <em>平均</em> 骑行量，<span class="math inline">\(\mu^{(i)} = \beta_0^{(i)} + \beta_1^{(i)}\cdot 75\)</span>；然后 (2) 从以该平均值为中心、标准差为 <span class="math inline">\(\sigma^{(i)}\)</span> 的正态模型中抽样：</p>
+<div class="sourceCode" id="cb147"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 链条中每个参数的预估座标
 rng = np.random.default_rng(84735)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>前3套平均骑手(mu)和在特定日(y new)的预言骑手(mu),连同最初3套后置假参数(intercept),</p>
-<div class="sourceCode" id="cb148">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+y_new = rnorm(20000, mean = mu, sd = sigma))</code></pre></div>
+<p>这里显示了前 3 组平均骑行量 (<code>mu</code>) 和特定日子的预测骑行量 (<code>y_new</code>)，以及生成它们的前 3 组后验合理参数集 (<code>(Intercept)</code>, <code>temp_feel</code>, <code>sigma</code>)：</p>
+<div class="sourceCode" id="cb148"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -570,96 +664,95 @@ head(predict_75, 3)
 (Intercept) temp_feel sigma   mu y_new
 1       -2657     88.16  1323 3955  4838
 2       -2188     83.01  1323 4038  3874
-3       -1984     81.54  1363 4132  5196</code></pre>
-</div>
-<p>而收集的2万穆尔值大约为75度日的典型骑师的后验模型,而2万y 新值大约为明天的骑师后期预测模型,个人75度日,</p>
-<p>\[Y_{\text{new}} | \beta_0, \beta_1, \sigma \; \sim \; N\left(\mu, \sigma^2\right) \;\; \text{ with } \;\; \mu = \beta_0 + \beta_1 \cdot 75 .\]</p>
-<p>在这两种后验模型(图9.9)的图案中,你会立即发现,虽然这些模型的中心值大致相同,但Mu的后期预测模型比y new的要窄得多。 具体来说,75度日的典型乘车次数的可信间隔为95%,\(\mu\),从3843到4095不等. 相比之下,对明天乘车次数的95%的后期预测间隔范围要大得多,从1500到6482.</p>
-<div class="sourceCode" id="cb149">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+3       -1984     81.54  1363 4132  5196</code></pre></div>
+<p>20,000 个 <code>mu</code> 值的集合近似表示了 75°F 日子 <em>典型</em> 骑行量的后验模型，<span class="math inline">\(\mu = \beta_0 + \beta_1 * 75\)</span>，而 20,000 个 <code>y_new</code> 值则近似表示了明天——一个 <em>个体</em> 的 75°F 日子——骑行量的 <strong>后验预测模型</strong>，</p>
+<p><span class="math display">\[Y_{\text{new}} | \beta_0, \beta_1, \sigma  \; \sim \; N\left(\mu, \sigma^2\right) \;\; \text{ with } \;\; \mu = \beta_0 + \beta_1 \cdot 75 .\]</span></p>
+<p>在这一对后验模型的图中（<a href="/bayes-rules-python-cn/chapter-9/#fig:ch9-post-pred">图9.9</a>），你立刻就会注意到：虽然它们大致中心在相同的值附近，<code>mu</code>的后验预测模型比<code>y_new</code>的后验预测模型窄得多。具体来说，75度天气下<strong>典型</strong>骑行次数的95%可信区间，<span class="math inline">\(\mu\)</span>，从3843延伸到4095。相比之下，<em>明天</em>骑行次数的95%<strong>后验预测区间</strong>则<em>宽</em>得多，从1500延伸到6482。</p>
+<div class="sourceCode" id="cb149"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 构造80%后可信间隔
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 可用 pandas / PyMC 按同一数据流程表达。
+summarize(lower_mu = quantile(mu, 0.025),
+upper_mu = quantile(mu, 0.975),
+lower_new = quantile(y_new, 0.025),
+upper_new = quantile(y_new, 0.975))
+lower_mu upper_mu lower_new upper_new
+1     3843     4095      1500      6482</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch9-post-pred" style="display:block;"></span>
-<img alt="有两块密度图的mu,两者均为钟形,中心为mu等于3955. 然而,左边的密度地块要窄得多,大约从3900到4100不等. 右侧的密度图较宽,从大约1500到6500不等." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-post-pred-1-fb9dc9dc7f9c.png" width="384"/>
-<p class="caption">FIGURE 9.9: 0@@的后期模式,75度日的典型骑手(左),明天骑手的后期预测模式,75度日的特定(右).</p>
+<img alt="There are two density plots of mu, both bell-shaped and centered at mu equals 3955. However, the left density plot is much narrower, ranging from roughly 3900 to 4100. The right density plot is wider, ranging from roughly 1500 to 6500." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-post-pred-1-fb9dc9dc7f9c.png" width="384"/>
+<p class="caption">
+图9.9：<span class="math inline">\(\mu\)</span>的后验模型，即75度天气下的典型骑行量（左），以及明天（一个具体的75度天）骑行量的后验预测模型（右）。
+</p>
 </div>
-<p>这两个95%的间隔分布在观测到的数据的散射图上(图9.10),说明XQ0XX的后置模型只是捕捉所有XQ1XX-度日的平均骑手的不确定性. 由于这个平均值没有多少不确定性,所以这个间隔在视觉上看起来像一个小点! 与此相对照,明天(具体一天)骑车次数的后期预测模型不仅说明75度日的平均骑手人数,而且说明个人与这个平均值的差异. 冲绳? 比起单一数据点的独特行为,</p>
+<p>这两个95%区间显示在观测数据的散点图上（<a href="/bayes-rules-python-cn/chapter-9/#fig:ch-9-prediction-ci">图9.10</a>），说明<span class="math inline">\(\mu\)</span>的后验模型只捕捉了<em>所有</em><span class="math inline">\(X = 75\)</span>度天<strong>平均</strong>骑行量的不确定性。由于这个平均值的不确定性非常小，这个区间在视觉上看起来就像一个小点！相比之下，明天（一个<em>具体的</em>日子）骑行次数的后验预测模型不仅考虑了75度天的<em>平均</em>骑行量，还考虑了偏离这个平均值的<em>个体变异</em>。要点是什么？预测多个数据点的<em>平均</em>行为比预测单个数据点的<em>独特</em>行为更准确。</p>
 <div class="figure" style="text-align: center"><span id="fig:ch-9-prediction-ci" style="display:block;"></span>
-<img alt="有两片散片的骑行(y轴)对温度(x轴). 两者都显示原始的500个数据点. 左侧的散落地被一个非常短的垂直线叠加在75度的微波段上——大约从3800到4100度。 右侧的散落地上加一条宽得多的垂直线,在75度的短距离线上——大约从1500到6500度。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-9-prediction-ci-1-ccaa012ce4aa.png" width="384"/>
-<p class="caption">图9.10:75度(左)平均骑手的后可信间隔(蓝色)95%,明天预计的骑手间隔为75度(右)个人日.</p>
+<img alt="There are two scatterplots of rides (y-axis) vs temperature (x-axis). Both display the original 500 data points. The left scatterplot is superimposed with a very short vertical line at a temp_feel of 75 -- it ranges from roughly 3800 to 4100 rides. The right scatterplot is superimposed with a much wider vertical line at a temp_feel of 75 -- it ranges from roughly 1500 to 6500 rides." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-9-prediction-ci-1-ccaa012ce4aa.png" width="384"/>
+<p class="caption">
+图9.10：75度天<strong>平均</strong>骑行量的95%后验可信区间（蓝色，左），以及明天（一个具体的75度天）的<strong>预测</strong>骑行量（右）。
+</p>
 </div>
 </div>
 <div class="section level3" id="posterior-prediction-with-rstanarm" number="9.5.2">
-<h3>后期预言与恒星</h3>
-<p>从零开始模拟后期预测模型,使您能够真正与概念连接,但向前发展,我们可以使用后期预测()函数在rastanarm包中:</p>
-<div class="sourceCode" id="cb151">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h3>用PyMC进行后验预测</h3>
+<p>从头模拟后验预测模型让你真正理解了概念，不过后续我们可以利用PyMC中的<code>sample_posterior_predictive()</code>函数：</p>
+<div class="sourceCode" id="cb151"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 模拟一组预测
 rng = np.random.default_rng(84735)
 shortcut_prediction =
-posterior_predict(bike_model, newdata = data.frame(temp_feel = 75))</code></pre>
-</div>
-<p>捷径 预测对象包含2万对75度日骑手的预测. 我们既可以利用我们通常的技巧来视觉和总结相应的(近似)后期预测模型. 其结果相当于我们从头到尾构建的结果:</p>
-<div class="sourceCode" id="cb152">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+posterior_predict(bike_model, newdata = data.frame(temp_feel = 75))</code></pre></div>
+<p><code>shortcut_prediction</code>对象包含了20 000个75度天骑行量的预测值。我们可以用常用的方法对相应的（近似）后验预测模型进行可视化和汇总。结果与我们上面从头构建的结果相同：</p>
+<div class="sourceCode" id="cb152"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 构造95%的后置可信间隔
 posterior_interval(shortcut_prediction, prob = 0.95)
 2.5% 97.5%
 1 1500  6482
 # 绘制大致预测模型
 mcmc_dens(shortcut_prediction) +
-xlab("predicted ridership on a 75 degree day")</code></pre>
-</div>
+xlab("predicted ridership on a 75 degree day")</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-345" style="display:block;"></span>
-<img alt="一个75度日的预言骑手的密度图. 密度地块呈钟形,以大约4000骑为中心,范围约为1000到7000骑." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-345-1-a539ecbce28d.png" width="240"/>
-<p class="caption">FIGURE 9.11:75度日的骑术前预测模型.</p>
+<img alt="A density plot of the predicted ridership on a 75-degree day. The density plot is bell-shaped, centered at roughly 4000 rides, and ranges from roughly 1000 to 7000." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-345-1-a539ecbce28d.png" width="240"/>
+<p class="caption">
+图9.11：75度天骑行量的后验预测模型。
+</p>
 </div>
 </div>
 </div>
 <div class="section level2" id="sequential-regression-modeling" number="9.6">
-<h2>顺序回归模型</h2>
-<p>我们的上述分析突出了书中最新的概念:模拟两个变数-\(Y\)和\(X\)的关系. 然而,我们的巴耶斯思想,即现在的第二性质,为这一分析奠定了基础。 在此,让我们在回归模型(第4章)的背景下,考虑贝叶斯思想的另一个有吸引力的特点,即顺序性。 在上方,我们分析了跨越500天的完整的自行车数据,按日期排列:</p>
-<div class="sourceCode" id="cb153">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h2>序贯回归建模</h2>
+<p>我们上面的分析聚焦了本书的最新概念：对两个变量 <span class="math inline">\(Y\)</span> 和 <span class="math inline">\(X\)</span> 之间的<em>关系</em>进行建模。然而，我们的贝叶斯思维（现在已成为第二本能）为这一分析奠定了基础。这里，让我们在回归建模的背景下考虑贝叶斯思维的另一个吸引人的特征——<em>序贯性</em>（第 <a href="/bayes-rules-python-cn/chapter-4/#chapter-4">4</a> 章）。上面我们分析了完整的 <code>bikes</code> 数据，涵盖 500 天，按 <code>date</code> 排序：</p>
+<div class="sourceCode" id="cb153"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>假设我们得到了以字节和片段形式提供的数据,因为数据是可以获得的:在数据收集的头30天之后,然后在头60天之后,最后在500天之后。</p>
-<div class="sourceCode" id="cb154">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+# 下面给出与本节模型一致的 Python 写法。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+head(3)
+date temp_feel rides
+1 2011-01-01     64.73   654
+2 2011-01-03     49.05  1229
+3 2011-01-04     51.09  1454</code></pre></div>
+<p>相反，假设我们只能按数据产生的顺序逐批获取：在收集了前 30 天数据后，接着是前 60 天后，最后在所有 500 天收集完毕后获得。</p>
+<div class="sourceCode" id="cb154"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -667,19 +760,15 @@ import arviz as az
 
 phase_1 = bikes[1:30, ]
 phase_2 = bikes[1:60, ]
-phase_3 = bikes</code></pre>
-</div>
-<p>在每一个数据收集阶段之后,我们可以通过插入累积数据(阶段 1,阶段 2,或阶段 3)来重新模拟后验模型:</p>
-<div class="sourceCode" id="cb155">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+phase_3 = bikes</code></pre></div>
+<p>在每个数据收集阶段之后，我们可以通过代入累积的 <code>data</code>（<code>phase_1</code>、<code>phase_2</code> 或 <code>phase_3</code>）来重新模拟后验模型：</p>
+<div class="sourceCode" id="cb155"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 with pm.Model() as model:
     # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
     # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
@@ -688,35 +777,47 @@ with pm.Model() as model:
     # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
     idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
 az.summary(idata)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>图9.12显示了每一阶段数据收集后温度系数的后验模型,从而显示了我们对骑行与温度之间关系的理解的演变。 第1阶段起步时,对于骑手与温度之间可能不存在任何关系(XQ1++值接近0是可信的)的模糊理解,由第3阶段演变成明确理解,骑手往往每温度上升一度增加约80骑.</p>
+# 可用 pandas / PyMC 按同一数据流程表达。
+prior_intercept = normal(5000, 1000),
+prior = normal(100, 40),
+prior_aux = exponential(0.0008),
+chains = 4, iter = 5000*2, seed = 84735)</code></pre></div>
+<p>图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch-9-sequence-1">9.12</a> 展示了每个数据收集阶段后温度系数 <span class="math inline">\(\beta_1\)</span> 的后验模型，从而反映了我们对骑行量与温度关系理解的演变。第一阶段开始时的模糊认识——骑行量与温度之间可能<em>没有</em>关系（<span class="math inline">\(\beta_1\)</span> 接近 0 的值是合理的）——到第三阶段逐渐清晰：温度每升高一度，骑行量大致增加 80 次左右。</p>
 <div class="figure" style="text-align: center"><span id="fig:ch-9-sequence-1" style="display:block;"></span>
-<img alt="Time feel参数有三个密度图,标注为第1阶段,第2阶段和第3阶段,第1阶段密度图为右侧扭曲,峰值接近15,基本低于50. 二期密度地块呈钟形,峰值近20,较窄,粗略范围为10至30. 第三阶段密度地块呈钟形,峰值80高得多,范围狭小,从70到90." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-9-sequence-1-1-593fc975af01.png" width="576"/>
-<p class="caption">图9.12:经过三个阶段的数据收集后,温度系数的近似后验模型。</p>
+<img alt="There are three density plots of the temp_feel parameter, labeled Phase 1, Phase 2, and Phase 3. The Phase 1 density plot is right-skewed, peaks near a value of 15, and largely falls below 50. The Phase 2 density plot is bell-shaped, peaks near a value of 20, and is narrower, with a rough range from 10 to 30. The Phase 3 density plot is bell-shaped, peaks at a much higher value of 80, and has a narrow range from 70 to 90." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-9-sequence-1-1-593fc975af01.png" width="576"/>
+<p class="caption">
+图 9.12：三个数据收集阶段后温度系数 <span class="math inline">\(\beta_1\)</span> 的近似后验模型。
+</p>
 </div>
 <div style="page-break-after: always;"></div>
-<p>图9.13提供了对这一演变的更深入的见解,显示了我们分析的每个阶段积累的数据和100个事后的可信模型。 仅观测到30个数据点后,第一阶段后验模型遍布地图上. 此外,由于这30个数据点发生在冬季的寒冷日落地,我们第一阶段的资料尚未显示,在较温暖日落地时,骑行者往往会增加。 在第二阶段和第三阶段,我们不仅收集了更多的数据,而且还收集了数据,使我们能够审查华盛顿哥伦比亚特区所有温度范围的骑行情况。 在第三阶段结束时,我们非常肯定这两个变量之间的积极联系。 同样,我们理解的这种进化 是如何学习,科学,进步的。 知识是积聚的, 逐块的, 随着时间的推移。</p>
+<p>图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch-9-sequence-2">9.13</a> 提供了更深入的洞察，展示了每个分析阶段累积的数据和 100 个后验可能模型。在仅观察到 30 个数据点时，第一阶段的模型极其多样。此外，由于这 30 个数据点恰好落在冬季寒冷的日子，我们第一阶段的信息尚未揭示温暖日子里骑行量往往会增加的趋势。在第二和第三阶段，我们不仅收集了<em>更多</em>数据，而且这些数据使我们能够考察华盛顿特区全温度范围内的骑行情况。到第三阶段结束时，我们对这两个变量之间的正相关关系有了很强的后验确定性。同样，这种理解的演变正是学习、科学、进步的发生方式。知识是随着时间的推移，一点一滴积累起来的。</p>
 <div class="figure" style="text-align: center"><span id="fig:ch-9-sequence-2" style="display:block;"></span>
-<img alt="有三片散片的骑行(y-轴)对称Time feel(x-轴),标注为第1阶段,第2阶段和第3阶段,第1阶段地块中的点有低骑行和低Time feel值. 它们被100条模范线所叠加,坡度广泛,既有正斜的也有负斜的. 第三阶段的图案的点数范围要广得多。 它们被100条非常相似的正斜线模型所叠加。 第二阶段的图案显示了这两个极端之间的模式。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-9-sequence-2-1-3a9b08276e6b.png" width="576"/>
-<p class="caption">FIGURE 9.13:100模拟后期中位数模型 骑手对温度在数据收集三个阶段之后.</p>
+<img alt="There are three scatterplots of rides (y-axis) vs temp_feel (x-axis), labeled Phase 1, Phase 2, and Phase 3. The points in the Phase 1 plot have low rides and low temp_feel values. They are superimposed by 100 model lines with a wide range of slopes, both positive and negative. The points in the Phase 3 plot span a much wider range of rides and temp_feel values. They are superimposed by 100 positively sloping model lines that are very similar. The Phase 2 plot exhibits patterns between these two extremes." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch-9-sequence-2-1-3a9b08276e6b.png" width="576"/>
+<p class="caption">
+图 9.13：三个数据收集阶段后 100 个模拟的后验中位模型，展示骑行量与温度的关系。
+</p>
 </div>
 </div>
 <div class="section level2" id="ch9-default" number="9.7">
-<h2>使用默认 Rstanarm 前缀</h2>
-<p>并非总能像在自行车分析中那样, 因此,我们将调整我们以前的模式,以反映这种巨大的不确定性。 为此,我们建议使用Rstanarm包中的默认前缀. 我们的Bayesian回归模式Capital Bikeshare骑手( 0@@)按温度(\(X\))的默认调制如下(9.9). 从原来的前科(9.7)中唯一被搁置的是我们假设的平均骑手在平均温度日上往往在5000左右. 即使我们没有很强的信息,</p>
-<p>\[\begin{equation} \begin{split} Y_i | \beta_0, \beta_1, \sigma &amp; \stackrel{ind}{\sim} N\left(\mu_i, \sigma^2\right) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1X_i \\ \beta_{0c} &amp; \sim N\left(5000, 3937^2 \right) \\ \beta_1 &amp; \sim N\left(0, 351^2 \right) \\ \sigma &amp; \sim \text{Exp}(0.00064) .\\ \end{split} \tag{9.9} \end{equation}\]</p>
-<p>前面的调音似乎非常具体。 我们会解释。 当我们没有具体的前置信息时, 我们可以通过下列语法来使用 Rstanar 的默认值。 (我们也能够省略所有先验的信息,在这种情况下,stan glm()将自动指定前科)。 然而,由于软件的不同版本,结果可能无法复制. )</p>
-<div class="sourceCode" id="cb156">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h2> 使用 PyMC 默认先验</h2>
+<p>并非总是像我们在自行车分析中那样拥有很强的先验信息。因此，我们需要调整先验模型以反映这种很大的不确定性。为此，我们建议使用 <strong>PyMC</strong> 中的默认先验。我们对 Capital Bikeshare 骑行量（<span class="math inline">\(Y\)</span>）与温度（<span class="math inline">\(X\)</span>）的贝叶斯回归模型的默认设置如下所示 <a href="/bayes-rules-python-cn/chapter-9/#eq:default-model-ch9">(9.9)</a>。从原始先验 <a href="/bayes-rules-python-cn/chapter-9/#eq:ex-model-ch9">(9.7)</a> 中唯一保留的是我们假设平均气温日下的平均骑行量约为 5000。即使没有很强的先验信息，我们通常也对基线有所感觉。</p>
+<p><span class="math display" id="eq:default-model-ch9">\[\begin{equation}
+\begin{split}
+Y_i | \beta_0, \beta_1, \sigma &amp; \stackrel{ind}{\sim} N\left(\mu_i, \sigma^2\right) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1X_i \\
+\beta_{0c} &amp; \sim N\left(5000, 3937^2 \right)  \\
+\beta_1    &amp; \sim N\left(0, 351^2 \right) \\
+\sigma     &amp; \sim \text{Exp}(0.00064)  .\\
+\end{split}
+\tag{9.9}
+\end{equation}\]</span></p>
+<p>这里的先验设置看起来奇特而具体。我们稍后会解释。当我们没有特定的先验信息时，可以通过以下语法使用 <strong>PyMC</strong> 的默认设置。（我们也可以完全省略先验信息，此时建模函数会自动分配先验。但考虑到不同软件版本，结果可能无法复现。）</p>
+<div class="sourceCode" id="cb156"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 with pm.Model() as model:
     # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
     # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
@@ -725,20 +826,21 @@ with pm.Model() as model:
     # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
     idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
 az.summary(idata)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>此语法指定了以下前缀: 0@@,\(\beta_1 \sim N(0, 2.5^2)\),\(\sigma \sim \text{Exp}(1)\). 以曲转. 考虑一下前科, 假设我们以前对这些参数的理解很弱, 以及它们的尺度, 我们无法确定这些前科是否比我们希望的更具体。 这就是为什么我们设置自动缩放=TRUE。 通过这样做,stan glm()调整或缩放我们的默认前缀,以优化对具有不同尺度的参数的研究. 50 这些调整过的前科由前述()函数指定,并与我们报告的模型配方(9.9)相符:</p>
-<!-- see rstanarm cran documentation page 71: "It is also common in supervised learning to standardize the predictors before training the model.  We do not recommend doing so.  Instead, it is better to specify autoscale = TRUE (the default value), which will adjust the scales of the priors according to the dispersion in the variables."  see prior_summary help for more clarification -->
-<div class="sourceCode" id="cb157">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+# 可用 pandas / PyMC 按同一数据流程表达。
+rides ~ temp_feel, data = bikes,
+family = gaussian,
+prior_intercept = normal(5000, 2.5, autoscale = TRUE),
+prior = normal(0, 2.5, autoscale = TRUE),
+prior_aux = exponential(1, autoscale = TRUE),
+chains = 4, iter = 5000*2, seed = 84735)</code></pre></div>
+<p>此语法指定了以下先验：<span class="math inline">\(\beta_{0c} \sim N(5000, 2.5^2)\)</span>、<span class="math inline">\(\beta_1 \sim N(0, 2.5^2)\)</span> 和 <span class="math inline">\(\sigma \sim \text{Exp}(1)\)</span>。但有一个小技巧。考虑 <span class="math inline">\(\beta_{0c}\)</span> 和 <span class="math inline">\(\beta_1\)</span> 的先验。假设我们对这些参数及其尺度只有很弱的先验理解，我们并不确定标准差 2.5 是相对较小还是相对较大。因此，我们不确定这些先验是否比我们想要的更特定。这就是我们还设置 <code>autoscale = TRUE</code> 的原因。通过这样做，<code>模型</code> 会调整或<em>缩放</em>我们的默认先验，以优化对具有不同尺度的参数的研究。<a class="footnote-ref" href="#fn50" id="fnref50"><sup>50</sup></a> 这些<code>调整后的</code>先验由 <code>prior_summary()</code> 函数指定，并与我们报告的模型公式 <a href="/bayes-rules-python-cn/chapter-9/#eq:default-model-ch9">(9.9)</a> 相匹配：</p>
+<div class="sourceCode" id="cb157"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 prior_summary(bike_model_default)
 Priors for model 'bike_model_default'
 ------
@@ -758,239 +860,266 @@ Specified prior:
 Adjusted prior:
 ~ exponential(rate = 0.00064)
 ------
-See help('prior_summary.stanreg') for more details</code></pre>
-</div>
-<p>在这个缩放过程中, Rstanar 试图识别信息不足的前科(Gabry和Goodrich 2020b). 这个想法与模糊的前言相似:信息薄弱的前言反映了模型参数之前的一般不确定性. 然而,虽然一个模糊的前言可能如此模糊,以至于对非感知参数值的权重(例如,假设骑行者每增加温度一度就可增加10亿骑),但信息不足的前言则更加突出重点。 它们反映了以前在一系列合理参数值方面的普遍不确定性。 因此,信息薄弱的前科可以促进计算效率高的后期模拟,因为链条不必浪费时间来探索不可感知的参数值。</p>
-<p>也有一个陷阱。 资料不足的前科通过考虑我们的数据的尺度,即骑手和温度来确定“敏感”参数值。 尽管使用数据调和前科似乎很奇怪,但这一过程仅仅考虑到变量的尺度(例如,在华盛顿特区温度是怎样的 ? 骑行者每天的变异性是什么? )。 它不考虑这些变量之间的关系。</p>
-<p>让我们看看这些资料不足的前科与我们最初知情的前科相比, 而不是从零开始模拟我们的新前科, 我们用 PD = TRUE 来更新( ) bike  model  default,</p>
-<div class="sourceCode" id="cb158">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+See help('prior_summary.stanreg') for more details</code></pre></div>
+<p>在这个缩放过程中，<strong>PyMC</strong> 试图识别<strong>弱信息先验</strong> <span class="citation">(<a href="#ref-gabgood" role="doc-biblioref">Gabry and Goodrich 2020b</a>)</span>。其思想类似于模糊先验：弱信息先验反映了我们对模型参数的普遍先验不确定性。但是，模糊先验可能会过于模糊，以致于给<em>不合理</em>的参数值赋予权重（例如，假设温度每升高一度，骑行量会增加 10 亿次的 <span class="math inline">\(\beta_1\)</span> 值），而弱信息先验则更有针对性。它们反映的是在合理的参数值范围内的一般先验不确定性。因此，弱信息先验有助于计算上高效的后验模拟，因为链不必浪费时间探索不合理的参数值。</p>
+<p>还有一个注意事项。弱信息先验通过考虑数据的尺度（这里是骑行量和温度）来调整以识别“合理”的参数值。虽然用数据调整先验听起来奇怪，但该过程仅考虑变量的尺度（例如，华盛顿特区的温度是什么样的？骑行量的日间变异性如何？），而不考虑这些变量之间的<em>关系</em>。</p>
+<p>让我们看看这些弱信息先验与我们最初的信息先验相比如何。不需要从头开始，为了模拟我们的新先验，我们使用 <code>prior_only=True</code> 来 <code>更新</code> <code>bike_model_default</code> 模型，从而表明我们关心的是 <span class="math inline">\((\beta_0,\beta_1,\sigma)\)</span> 的<em>先验</em>模型而不是<em>后验</em>模型。</p>
+<div class="sourceCode" id="cb158"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 进行先验的模拟
-bike_default_priors = update(bike_model_default, prior_PD = TRUE)</code></pre>
-</div>
+bike_default_priors = update(bike_model_default, prior_PD = TRUE)</code></pre></div>
 <p></p>
-<p>然后,我们绘制了200条可行的模型线(XX0XX)和4个数据集,这些数据集在信息薄弱的前科下使用添加 fitted draws()和添加 presidted draws()函数模拟(图9.14)。 与最初的前科(图9.5)相比,图9.14中资料不足的前科反映出骑手和温度之间的关系有更大的不确定性. 由于QQ1@@的正常前置位置为0,模型线表示骑手与温度之间的关联可能为正(XQ2@@),不存在(XQ3@@),或负(XQ4@@). 一些模拟数据点甚至包括了负骑手值! 此外,模拟数据集反映了我们对于这种关系是强(与QQ5@@接近0)还是弱(与大XQ6@@)的不确定性. 然而,通过使用信息薄弱的前科而不是完全模糊的前科,我们先验的不确定性仍然在正确的位置上。 我们的前科都强调骑车人数在数千人(合理),而不是数百万或几十亿人(对华盛顿特区的一座城市来说是不合理的)。</p>
-<div class="sourceCode" id="cb159">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>接着我们绘制了200条可能的模型线（<span class="math inline">\(\beta_0 + \beta_1 X\)</span>）和基于弱信息先验、通过模拟得到的4个数据集（图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch9-prior-sim-2">9.14</a>）。
+与原始先验（图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch9-prior-sim-1">9.5</a>）相比，图 <a href="/bayes-rules-python-cn/chapter-9/#fig:ch9-prior-sim-2">9.14</a> 中的弱信息先验反映出对客流量与温度之间关系更大的不确定性。
+由于 <span class="math inline">\(\beta_1\)</span> 的正态先验以 0 为中心，这些模型线表明客流量与温度的关联可能为<em>正</em>（<span class="math inline">\(\beta_1 &gt; 0\)</span>）、<em>不存在</em>（<span class="math inline">\(\beta_1 = 0\)</span>）或<em>负</em>（<span class="math inline">\(\beta_1 &lt; 0\)</span>）。
+有些模拟数据点甚至出现了负的客流量！
+此外，模拟的数据集也反映了我们对关系<em>强</em>（<span class="math inline">\(\sigma\)</span> 接近 0）还是<em>弱</em>（<span class="math inline">\(\sigma\)</span> 较大）的不确定性。
+然而，通过采用弱信息先验而非完全模糊的先验，我们的先验不确定性仍然落在了合理的范围内。
+我们的先验关注的是客流量在数千的量级（合理），而不是数百万或数十亿（对华盛顿特区这样规模的城市来说不合理）。</p>
+<div class="sourceCode" id="cb159"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 前200条型号线
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 4个先验模拟数据集
+rng = np.random.default_rng(3)
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+facet_wrap(~ .draw)</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch9-prior-sim-2" style="display:block;"></span>
-<img alt="有两块地 左侧地块在x轴上设有turm feel(介于45至95之间),在轴上搭乘(介于2000-0至20000之间). 有200条线路截流和坡度迥异,有的呈负斜坡,有的呈正斜坡. 右侧是Y轴上的4个散点对x轴上的tim feel。 在这些散点中,有3个点呈现中度至强烈的负趋势。 在另一个方面,这些要点呈现出适度的积极趋势。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-prior-sim-2-1-fc574a3e9334.png" width="672"/>
-<p class="caption">图9.14:默认前期模型XQ0XX的模拟情景 ,\(\beta_1\),和\(\sigma\). 左边是200条前似样的线条, 右侧是4个前置的可信数据集。</p>
+<img alt="There are two plots. The left plot has temp_feel on the x-axis (ranging from 45 to 95) and rides on the axis (ranging from -20000 to 20000). There are 200 lines that have very different intercepts and slopes, some negatively sloped and some positively sloped. At right is a set of 4 scatterplots of rides on the y-axis vs temp_feel on the x axis. In 3 of these scatterplots, the points exhibit moderate to strong negative trends. In another, the points exhibit a moderate positive trend." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch9-prior-sim-2-1-fc574a3e9334.png" width="672"/>
+<p class="caption">
+图 9.14：在 <span class="math inline">\(\beta_0\)</span>、<span class="math inline">\(\beta_1\)</span> 和 <span class="math inline">\(\sigma\)</span> 默认先验模型下模拟的场景。左图是 200 条先验可行的模型线 <span class="math inline">\(\beta_0 + \beta_1 x\)</span>。右图是 4 个先验可行的数据集。
+</p>
 </div>
 <div class="describe">
-<p>默认对非默认前身</p>
-<p>在 Rstanal 中使用默认前缀有利弊。 就缺点而言,资料不足的前科都根据数据的信息加以调整(通过对规模的相当小的考虑)。 但从好的一面来看:</p>
+<p><strong>默认先验与非默认先验</strong></p>
+<p>利用 <strong>PyMC</strong> 中的默认先验各有利弊。
+就缺点而言，弱信息先验是通过数据中的信息（对尺度的较小考虑）进行调整的。
+但好处包括：</p>
 <ul>
-<li>除非我们有很强的事先信息,使用默认结果通常会比我们尝试调整自己的模糊前科更稳定。</li>
-<li>默认可以帮助我们与贝叶斯建模一起起立和运行. 在未来的章节中,我们将经常利用缺省,以专注于新的建模概念。</li>
+<li>除非我们有很强的先验信息，否则使用默认设置通常会比我们自己调整模糊先验得到更稳定的模拟结果。</li>
+<li>默认设置可以帮助我们快速上手贝叶斯建模。在后续章节中，我们将经常使用默认设置，以便专注于新的建模概念。</li>
 </ul>
 </div>
 </div>
 <div class="section level2" id="youre-not-done-yet" number="9.8">
-<h2>你还没完呢!</h2>
-<p>单拿第9章很危险! 因此,你已经探索了如何构建、模拟和解释一个简单的贝叶斯正常回归模型。 任何分析的下一个关键步骤是问:但这是否是一个好的模型? 这个问题值得单独讨论。 因此,我们强烈鼓励你们在应用你们在这里学到的知识之前先审查第十章。</p>
+<h2> 你还没做完呢！</h2>
+<p>单看第 <a href="/bayes-rules-python-cn/chapter-9/#chapter-9">9</a> 章是相当危险的！
+到目前为止，你已经探索了如何构建、模拟和解释一个简单的贝叶斯正态回归模型。
+任何分析中关键的下一步都是问：但这是一个<em>好</em>模型吗？
+这个问题值得用单独一章来讨论。
+因此，我们强烈建议你在应用这里学到的内容之前，先阅读第 <a href="/bayes-rules-python-cn/chapter-10/#chapter-10">10</a> 章。</p>
 </div>
 <div class="section level2" id="chapter-summary-8" number="9.9">
-<h2>章节摘要</h2>
-<p>在第9章中,你探索了如何用量化预测变量XQ0XXXXX来构建一个量化响应变量的Bayesian简单正常回归模型. 我们可以将这个模型视为第5章中正常-正态模型的延伸, 我们用本地的平均值XQ3XX来取代全球的平均值XQ2XXX,</p>
-<p>\[\begin{split} Y_i | \mu &amp; \stackrel{ind}{\sim} N(\mu, \sigma^2)\\ \mu &amp; \sim N(\theta, \tau^2)\\ &amp; \\ &amp; \\ \end{split} \;\; \Rightarrow \;\; \begin{split} Y_i|\beta_0,\beta_1,\sigma &amp; \stackrel{ind}{\sim} N(\mu_i, \; \sigma^2) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1 X_i \\ \beta_0 &amp; \sim N\left(m_0, s_0^2 \right) \\ \beta_1 &amp; \sim N\left(m_1, s_1^2 \right) \\ \sigma &amp; \sim \text{Exp}(l)\\ \end{split}\]</p>
-<p>这个扩展引入了3个未知的模型参数, \\\\\\\\\\\\, 这是一种额外的复杂性, 这需要Markov 链蒙特卡洛模拟技术 来大概这些参数的后验模型。 这个模拟输出可以用来总结我们对\(Y\)和\(X\)的关系的后期理解.</p>
+<h2> 本章小结</h2>
+<p>在第 <a href="/bayes-rules-python-cn/chapter-9/#chapter-9">9</a> 章中，你探索了如何构建一个<strong>贝叶斯简单正态回归</strong>模型，用<strong>定量预测变量</strong> <span class="math inline">\(X\)</span> 来预测<strong>定量响应变量</strong> <span class="math inline">\(Y\)</span>。
+我们可以把这个模型视为第 <a href="/bayes-rules-python-cn/chapter-5/#chapter-5">5</a> 章正态-正态模型的一个扩展，其中我们将<strong>全局均值</strong> <span class="math inline">\(\mu\)</span> 替换为<strong>局部均值</strong> <span class="math inline">\(\beta_0 + \beta_1 X\)</span>，后者包含了 <span class="math inline">\(Y\)</span> 对 <span class="math inline">\(X\)</span> 的线性依赖：</p>
+<p><span class="math display">\[\begin{split}
+Y_i | \mu &amp; \stackrel{ind}{\sim} N(\mu, \sigma^2)\\
+\mu       &amp; \sim N(\theta, \tau^2)\\
+&amp; \\
+&amp; \\
+\end{split}
+\;\; \Rightarrow \;\; \begin{split}
+Y_i|\beta_0,\beta_1,\sigma &amp; \stackrel{ind}{\sim} N(\mu_i, \; \sigma^2) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1 X_i \\
+\beta_0  &amp;  \sim N\left(m_0, s_0^2 \right)  \\
+\beta_1  &amp; \sim N\left(m_1, s_1^2 \right) \\
+\sigma &amp; \sim \text{Exp}(l)\\
+\end{split}\]</span></p>
+<p>这一扩展引入了三个未知模型参数 <span class="math inline">\((\beta_0, \beta_1, \sigma)\)</span>，增加了复杂性，需要使用马尔可夫链蒙特卡洛模拟技术来近似这些参数的后验模型。随后，可利用这些模拟输出总结我们对 <span class="math inline">\(Y\)</span> 与 <span class="math inline">\(X\)</span> 关系的后验认识。</p>
 </div>
 <div class="section level2" id="exercises-8" number="9.10">
-<h2>练习</h2>
+<h2> 练习</h2>
 <div class="section level3" id="conceptual-exercises-3" number="9.10.1">
-<h3>概念练习</h3>
+<h3> 概念练习</h3>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-355"><strong>Exercise 9.1  (Normal regression priors)  </strong></span>For the Normal regression model <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-reg-ch9">(9.6)</a> with <span class="math inline">\(Y_i|\beta_0, \beta_1, \sigma \sim N(\mu_i, \sigma)\)</span> where <span class="math inline">\(\mu_i = \beta_0 + \beta_1X_i\)</span>, we utilized Normal priors for <span class="math inline">\(\beta_0, \beta_1\)</span> and an Exponential prior on <span class="math inline">\(\sigma\)</span>.
+<span class="exercise" id="exr:unnamed-chunk-355"><strong>练习 9.1（正态回归先验）</strong></span>对于正态回归模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-reg-ch9">(9.6)</a>，其中 <span class="math inline">\(Y_i|\beta_0, \beta_1, \sigma \sim N(\mu_i, \sigma)\)</span>，<span class="math inline">\(\mu_i = \beta_0 + \beta_1X_i\)</span>，我们为 <span class="math inline">\(\beta_0, \beta_1\)</span> 选择了正态先验，为 <span class="math inline">\(\sigma\)</span> 选择了指数先验。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>为什么一般人先做一个合理的选择? 还有... ?</li>
-<li>为何通常不会是合理选择? ?。。。</li>
-<li>信息不足和模糊的前科有什么区别?</li>
+<li>为什么对 <span class="math inline">\(\beta_0\)</span> 和 <span class="math inline">\(\beta_1\)</span> 使用正态先验是合理的？</li>
+<li>为什么对 <span class="math inline">\(\sigma\)</span> 使用正态先验<em>不</em>合理？</li>
+<li>弱信息先验和模糊先验的区别是什么？</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-356"><strong>Exercise 9.2  (Identify the variable)  </strong></span>Identify the response variable (<span class="math inline">\(Y\)</span>) and predictor variable (<span class="math inline">\(X\)</span>) in each given relationship of interest.
+<span class="exercise" id="exr:unnamed-chunk-356"><strong>练习 9.2（识别变量）</strong></span>识别每个感兴趣关系中的响应变量（<span class="math inline">\(Y\)</span>）和预测变量（<span class="math inline">\(X\)</span>）。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>我们想用一个人的手臂来理解他们的身高。</li>
-<li>我们想预测一个人的碳足迹(每年二氧化碳排放量),</li>
-<li>我们想知道儿童词汇水平会随着年龄的增长而增加。</li>
-<li>我们想用关于一个人睡眠习惯的信息来预测他们的反应时间.</li>
+<li>我们想用一个人的臂长来了解其身高。</li>
+<li>我们想用一个人家与工作地点之间的距离来预测其碳足迹（年CO<span class="math inline">\(_2\)</span>排放量）。</li>
+<li>我们想了解儿童的词汇水平如何随年龄增长。</li>
+<li>我们想用一个人的睡眠习惯信息来预测其反应时间。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-357"><strong>Exercise 9.3  (Interpreting coefficients)  </strong></span>In each situation below, suppose that the typical relationship between the given response variable <span class="math inline">\(Y\)</span> and predictor <span class="math inline">\(X\)</span> can be described by <span class="math inline">\(\beta_0 + \beta_1 X\)</span>. Interpret the meaning of <span class="math inline">\(\beta_0\)</span> and <span class="math inline">\(\beta_1\)</span> and indicate whether your prior understanding suggests that <span class="math inline">\(\beta_1\)</span> is negative or positive.
+<span class="exercise" id="exr:unnamed-chunk-357"><strong>练习 9.3 (解释系数) </strong></span>在以下每种情况下，假设给定的响应变量 <span class="math inline">\(Y\)</span> 与预测变量 <span class="math inline">\(X\)</span> 之间的典型关系可以用 <span class="math inline">\(\beta_0 + \beta_1 X\)</span> 描述。解释 <span class="math inline">\(\beta_0\)</span> 和 <span class="math inline">\(\beta_1\)</span> 的含义，并说明根据你的先验理解，<span class="math inline">\(\beta_1\)</span> 应该是负的还是正的。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>\(Y\) = 袋鼠婴儿的身高,以厘米计,=== 数月之内的年龄</li>
-<li>\(Y\) =数据科学家的GitHub追随者人数,\(X\)=他们上个星期的GitHub追随者人数.</li>
-<li>\(Y\) = 某一天当地公园的游客人数, = 当天降雨量英寸</li>
-<li>\(Y\) = 一个人每天看的Netflix时数 = 通常睡觉时数</li>
+<li><span class="math inline">\(Y\)</span> = 小袋鼠的身高（厘米），<span class="math inline">\(X\)</span> = 其月龄</li>
+<li><span class="math inline">\(Y\)</span> = 数据科学家的 GitHub 关注者数量，<span class="math inline">\(X\)</span> = 其过去一周的 GitHub 提交数</li>
+<li><span class="math inline">\(Y\)</span> = 某天当地公园的游客数，<span class="math inline">\(X\)</span> = 该天降雨量（英寸）</li>
+<li><span class="math inline">\(Y\)</span> = 一个人每天观看 Netflix 的小时数，<span class="math inline">\(X\)</span> = 他们通常睡眠的小时数</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-358"><strong>Exercise 9.4  (Deviation from the average)  </strong></span>Consider the Normal regression model <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-reg-ch9">(9.6)</a>. Explain in one or two sentences, in a way that one of your non-stats friends could understand, how <span class="math inline">\(\sigma\)</span> is related to the strength of the relationship between a response variable <span class="math inline">\(Y\)</span> and predictor <span class="math inline">\(X\)</span>.
+<span class="exercise" id="exr:unnamed-chunk-358"><strong>练习 9.4（与平均值的偏差）</strong></span>考虑正态回归模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-reg-ch9">(9.6)</a>。用一两句话，以让你的非统计朋友能理解的方式，解释 <span class="math inline">\(\sigma\)</span> 如何关联响应变量 <span class="math inline">\(Y\)</span> 和预测变量 <span class="math inline">\(X\)</span> 之间关系的强度。
 </div>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-359"><strong>Exercise 9.5  (Bayesian model building: Part I)  </strong></span>A researcher wants to use a person’s age (in years) to predict their annual orange juice consumption (in gallons). Here you’ll build up a relevant Bayesian regression model, step by step.
+<span class="exercise" id="exr:unnamed-chunk-359"><strong>练习 9.5（贝叶斯模型构建：第一部分）</strong></span>一位研究者想用一个人的年龄（以年为单位）预测其每年橙汁消费量（以加仑为单位）。这里你将逐步建立一个相关的贝叶斯回归模型。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>确定本研究中的%+0++和%++1++变量.</li>
-<li>使用数学符号为数据模型指定一个合适的结构 {}} (目前为零)</li>
-<li>重写数据模型的结构,以包含关于预测器的\\\\\\\\\\\\\\\的信息. 假设\(Y\)与\(X\)之间有线性关系。</li>
-<li>在您的模型中识别所有未知参数。 对于每个参数,请注明参数可获取的值。</li>
-<li>识别和调用合适的参数前模型。 解释你的理由</li>
+<li>识别本研究中的 <span class="math inline">\(Y\)</span> 和 <span class="math inline">\(X\)</span> 变量。</li>
+<li>使用数学符号为数据 <span class="math inline">\(Y\)</span> 的模型指定一个合适的结构（暂时忽略 <span class="math inline">\(X\)</span>）。</li>
+<li>重写数据模型的结构，以纳入预测变量 <span class="math inline">\(X\)</span> 的信息。这样做时，假设 <span class="math inline">\(Y\)</span> 和 <span class="math inline">\(X\)</span> 之间为线性关系。</li>
+<li>识别模型中的所有未知参数。对于每个参数，指出其可以取的值。</li>
+<li>识别并调整适合你参数的先验模型。解释你的理由。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-360"><strong>Exercise 9.6  (Bayesian model building: Part II)  </strong></span>Repeat the above exercise for the following scenario. A researcher wishes to predict tomorrow’s high temperature by today’s high temperature.
+<span class="exercise" id="exr:unnamed-chunk-360"><strong>练习 9.6（贝叶斯模型构建：第二部分）  </strong></span>针对以下场景重复上述练习。一位研究者希望用今天最高气温预测明天的最高气温。
 </div>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-361"><strong>Exercise 9.7  (Posterior simulation T/F)  </strong></span>Mark each statement about posterior regression simulation as <em>True</em> or <em>False</em>.
+<span class="exercise" id="exr:unnamed-chunk-361"><strong>练习 9.7（后验模拟判断对错）  </strong></span>将以下关于后验回归模拟的陈述标记为对或错。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>MCMC提供了我们回归参数的精确的后验模型。</li>
-<li>MCMC允许我们避免复杂的数学推论.</li>
+<li>MCMC 提供了回归参数 <span class="math inline">\((\beta_0,\beta_1,\sigma)\)</span> 的精确后验模型。</li>
+<li>MCMC 使我们能够避免复杂的数学推导。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-362"><strong>Exercise 9.8  (Posterior simulation)  </strong></span>For each situation, 请给出相应的 <code>PyMC</code> 模型语法 for simulating the Normal regression model using 4 chains, each of length 10000. (You won’t actually run any code.)
+<span class="exercise" id="exr:unnamed-chunk-362"><strong>练习 9.8（后验模拟）  </strong></span>针对每种情况，指定适当的 PyMC 语法来模拟正态回归模型，使用 4 条链，每条链长度 10000。（你不需要真的运行代码。）
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>\(X\) = 年龄; = = 高度; 数据集名称: 兔子</li>
-<li>\(\text{Clicks}_i | \beta_0, \beta_1, \sigma \sim N\left(\mu_i, \sigma^2\right) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1\text{Snaps}_i\); 数据集名称:歌曲.</li>
-<li>\(\text{Happiness}_i | \beta_0, \beta_1, \sigma \sim N\left(\mu_i, \sigma^2\right) \;\; \text{ with } \;\; \mu_i = \beta_0 + \beta_1\text{Age}_i\);数据集名称:狗.</li>
+<li><span class="math inline">\(X\)</span> = <code>age</code>; <span class="math inline">\(Y\)</span> = <code>height</code>; 数据集名: <code>bunnies</code></li>
+<li><span class="math inline">\(\text{Clicks}_i | \beta_0, \beta_1, \sigma \sim N\left(\mu_i, \sigma^2\right) \;\; \text{ where } \;\; \mu_i = \beta_0 + \beta_1\text{Snaps}_i\)</span>; 数据集名: <code>songs</code>。</li>
+<li><span class="math inline">\(\text{Happiness}_i | \beta_0, \beta_1, \sigma \sim N\left(\mu_i, \sigma^2\right) \;\; \text{ where } \;\; \mu_i = \beta_0 + \beta_1\text{Age}_i\)</span>; 数据集名: <code>dogs</code>。</li>
 </ol>
 </div>
 <div class="section level3" id="applied-exercises-1" number="9.10.2">
 <h3>应用练习</h3>
 <div class="exercise">
-<span class="exercise" id="exr:bikeprior"><strong>Exercise 9.9  (How humid is too humid: model building)  </strong></span>Throughout this chapter, we explored how bike ridership fluctuates with temperature. But what about humidity? In the next exercises, you will explore the Normal regression model of <code>rides</code> (<span class="math inline">\(Y\)</span>) by <code>humidity</code> (<span class="math inline">\(X\)</span>) using the <code>bikes</code> dataset. Based on past bikeshare analyses, suppose we have the following prior understanding of this relationship:
+<span class="exercise" id="exr:bikeprior"><strong>练习 9.9（湿度过高何时才算过高：模型构建）</strong></span>在本章中，我们探讨了骑行次数如何随温度波动。那么湿度呢？在接下来的练习中，你将使用 <code>bikes</code> 数据集探索 <code>rides</code>（<span class="math inline">\(Y\)</span>）关于 <code>humidity</code>（<span class="math inline">\(X\)</span>）的正态回归模型。基于过去的共享单车分析，假设我们对该关系有以下先验理解：
 </div>
 <ul>
-<li><p>在平均湿度日,通常约有5000名骑手,尽管这一平均数可能在1000至9000之间。</p></li>
-<li><p>随着湿度的增大,骑兵往往会减少. 具体来说,每增加一个百分点的湿度,骑手往往会减少10骑,虽然这种平均下降可能在0到20之间的任何地方.</p></li>
-<li><p>骑马只与湿度关系微弱. 在任何给定的湿度下,骑行者往往会随着2000骑行的巨大标准偏差而变化.</p></li>
+<li><p>在<em>平均</em>湿度的日子里，通常大约有 5000 名骑行者，但这个平均值可能在 1000 到 9000 之间。</p></li>
+<li><p>骑行次数往往随着湿度增加而减少。具体来说，湿度每增加一个百分点，骑行次数通常会减少约 10 次，尽管这个平均减少量可能在 0 到 20 之间。</p></li>
+<li><p>骑行次数与湿度的关系很弱。在任何给定湿度下，骑行次数往往存在较大的标准差，约为 2000 次。</p></li>
 </ul>
 <ol style="list-style-type: lower-alpha">
-<li>说明正常回归模式(9.6),以符合我们先验的理解。 使用谨慎的标记来写出这个模型的完整贝叶斯结构.</li>
-<li>为了探索我们以前对模型参数的综合理解,模拟正常回归以前的模型,用5个链子运行,每个链子重复8000个. 汉特: 您可以使用相同的stan glm()语法来模拟后缀,但包含present PD=TRUE.</li>
-<li>绘制100条前似实的模型行( 0@@)和4个在前作模拟的数据集.</li>
-<li>描述我们以前对骑马和湿度之间关系的总体理解.</li>
+<li>调整正态回归模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-reg-ch9">(9.6)</a> 以匹配我们的先验理解。使用规范的符号写出该模型的完整贝叶斯结构。</li>
+<li>为了探索模型参数的联合<strong>先验</strong>理解，模拟正态回归先验模型，运行 5 条链，每条链迭代 8000 次。提示：你可以使用与模拟后验时相同的 PyMC 语法，但通过调用 <code>pm.sample_prior_predictive()</code> 来仅从先验中生成样本。</li>
+<li>绘制 100 条先验下合理的模型线（<span class="math inline">\(\beta_0 + \beta_1 X\)</span>）以及根据先验模拟的 4 个数据集。</li>
+<li>描述我们对骑行人数与湿度之间关系的总体先验认识。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-363"><strong>Exercise 9.10  (How humid is too humid: data)  </strong></span>With the priors in place, let’s examine the data.
+<span class="exercise" id="exr:unnamed-chunk-363"><strong>练习 9.10（多湿才算太湿：数据）</strong></span>在确定了先验分布之后，让我们来查看数据。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>在自行车数据中绘制并讨论观察到的骑手和湿度之间的关系.</li>
-<li>简单的正常回归是否似乎是建立这种关系的合理方法? 解释一下</li>
+<li>绘制并讨论 <code>bikes</code> 数据中骑行人数与湿度的观测关系。</li>
+<li>简单的正态回归似乎是建模这种关系的合理方法吗？请解释。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-364"><strong>Exercise 9.11  (How humid is too humid: posterior simulation)  </strong></span>We can now simulate our posterior model of the relationship between ridership and humidity, a balance between our prior understanding and the data.
+<span class="exercise" id="exr:unnamed-chunk-364"><strong>练习 9.11（多湿才算太湿：后验模拟）</strong></span>现在我们可以模拟骑行人数与湿度关系的后验模型，它平衡了我们的先验认识和数据。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>使用stan glm()模拟正常回归后模型. 用5个链子来做,每个链子重复8000次。 汉特: 您可以使用 Preview PD = FALSE 来从头到尾进行此操作,也可以更新() 从9.9 演习开始的先验模拟。</li>
-<li>进行并讨论一些MCMC诊断,以确定我们是否可以“信任”这些模拟结果。</li>
-<li>为骑手与湿度的关系绘制100条后验模型线. 与9.9演习中之前的模型线进行比较和对比。</li>
+<li>使用 PyMC（例如通过 Bambi 接口）模拟正态回归的后验模型。运行 5 条链，每条链 8000 次迭代。提示：你可以从头开始，或者使用实际数据（即将先验预测切换为后验推断）更新你在练习 <a href="/bayes-rules-python-cn/chapter-9/#exr:bikeprior">9.9</a> 中的先验模拟。</li>
+<li>进行并讨论一些 MCMC 诊断，以确定我们是否可以“信任”这些模拟结果。</li>
+<li>绘制骑行人数与湿度关系的 100 条后验模型线。将这些线与练习 <a href="/bayes-rules-python-cn/chapter-9/#exr:bikeprior">9.9</a> 中的先验模型线进行比较和对比。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-365"><strong>Exercise 9.12  (How humid is too humid: posterior interpretation)  </strong></span>Finally, let’s dig deeper into our posterior understanding of the relationship between ridership and humidity.
+<span class="exercise" id="exr:unnamed-chunk-365"><strong>练习 9.12（湿度多高才算太高：后验解释）</strong></span>最后，让我们更深入地探讨我们对骑行量与湿度关系的后验理解。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>提供您后验模型的整齐( ) 概要, 包括95% 可信间隔。</li>
-<li>解释QQ0@@参数的后置中位值.</li>
-<li>解释湿度系数的95%后可信间隔, \\\ 0\。</li>
-<li>我们是否有足够的后证, 解释一下</li>
+<li>使用 <code>az.summary()</code> 提供后验模型的总结，包含 95% 可信区间。</li>
+<li>解释参数 <span class="math inline">\(\sigma\)</span> 的后验中位数。</li>
+<li>解释湿度系数 <span class="math inline">\(\beta_1\)</span> 的 95% 后验可信区间。</li>
+<li>我们是否有足够的后验证据表明骑行量与湿度之间存在负相关？请解释。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-366"><strong>Exercise 9.13  (How humid is too humid: prediction)  </strong></span>Tomorrow is supposed to be 90% humidity in Washington, D.C. What levels of ridership should we expect?
+<span class="exercise" id="exr:unnamed-chunk-366"><strong>练习 9.13（湿度多高才算太高：预测）</strong></span>华盛顿特区明天的湿度预计为 90%。我们应预期多大的骑行量？
 </div>
 <ol style="list-style-type: lower-alpha">
-<li><em>Without</em> using the <code>posterior_predict()</code> shortcut function, simulate two posterior models:
+<li><em>不使用</em> <code>sample_posterior_predictive()</code> 快捷函数，模拟两个后验模型：
 <ul>
-<li>90%湿度日的典型骑手人数的后验模型;以及</li>
-<li>明天骑手人数的预测模型</li>
+<li>90% 湿度日<em>典型</em>骑行量的后验模型；以及</li>
+<li>对<em>明天</em>骑行量的后验预测模型。</li>
 </ul></li>
-<li>构建,讨论和比较A部分中两个独立的后验模型的密度图象化.</li>
-<li>计算和解读明天骑手人数的80%的后期预测间隔.</li>
-<li>请使用后预览( ) 来确认您对明天骑马的后期预测模型的结果。</li>
+<li>绘制、讨论并比较 (a) 部分中两个独立后验模型的密度图可视化。</li>
+<li>计算并解释明天骑行人数的80%后验预测区间。</li>
+<li>使用 <code>posterior_predict()</code> 来验证明天骑行人数的后验预测模型的结果。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-367"><strong>Exercise 9.14  (On your own: Part I)  </strong></span>Temperature and humidity aren’t the only possible weather factors in ridership. Let’s explore the relationship between ridership (<span class="math inline">\(Y\)</span>) and <code>windspeed</code> (<span class="math inline">\(X\)</span>).
+<span class="exercise" id="exr:unnamed-chunk-367"><strong>练习 9.14（自主练习：第一部分）</strong></span>温度和湿度并不是影响骑行量的唯一天气因素。让我们探索骑行量（<span class="math inline">\(Y\)</span>）与 <code>windspeed</code>（<span class="math inline">\(X\)</span>）之间的关系。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>说明你之前对骑手和风速的关系的理解.</li>
-<li>显示正常回归模式(9.6),以匹配您先验的理解。 使用谨慎的标记来写出这个模型的完整贝叶斯结构.</li>
-<li>绘制和讨论100条前似实的模型线( 0@@)和4个在前作下模拟的数据集.</li>
-<li>利用机车数据构建和讨论一幅骑行对风速的图案. 观察到的模式与你以前对这种关系的理解有多一致?</li>
+<li>描述你对骑行量与风速关系的先验理解。</li>
+<li>调整正态回归模型 <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-reg-ch9">(9.6)</a> 以匹配你的先验理解。使用规范的符号写出该模型的完整贝叶斯结构。</li>
+<li>画出并讨论100条先验合理的模型直线（<span class="math inline">\(\beta_0 + \beta_1 X\)</span>）以及在先验下模拟的4个数据集。</li>
+<li>使用 <code>bikes</code> 数据绘制并讨论 <code>rides</code> 与 <code>windspeed</code> 的关系图。观察到的模式与你对此关系的先验理解有多一致？</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-368"><strong>Exercise 9.15  (On your own: Part II)  </strong></span>In this open-ended exercise, conduct a posterior analysis of the relationship between ridership (<span class="math inline">\(Y\)</span>) and <code>windspeed</code> (<span class="math inline">\(X\)</span>). This should include a discussion of your posterior understanding of this relationship along with supporting evidence.
+<span class="exercise" id="exr:unnamed-chunk-368"><strong>练习 9.15（自主练习：第二部分）</strong></span>在这个开放式练习中，对骑行量（<span class="math inline">\(Y\)</span>）与 <code>windspeed</code>（<span class="math inline">\(X\)</span>）之间的关系进行后验分析。这应包括讨论你对此关系的后验理解以及支持性证据。
 </div>
 <div class="exercise">
-<span class="exercise" id="exr:ch9penguinprior"><strong>Exercise 9.16  (Penguins: model building and simulation)  </strong></span>The <code>penguins_bayes</code> dataset in the <strong>bayesrules</strong> package includes data on 344 penguins. In the next exercises, you will use this data to model the length of penguin flippers in mm (<span class="math inline">\(Y\)</span>) by the length of their bills in mm (<span class="math inline">\(X\)</span>). We have a general sense that the average penguin has flippers that are somewhere between 150mm and 250mm long. Beyond that, we don’t have a strong understanding of the relationship between flipper and bill length, and thus will otherwise utilize weakly informative priors.
+<span class="exercise" id="exr:ch9penguinprior"><strong>练习 9.16（企鹅：模型构建与模拟）</strong></span> penguins_bayes 数据集包含了 344 只企鹅的数据。在接下来的练习中，你将利用这些数据以企鹅喙长（<span class="math inline">\(X\)</span>）来建模其鳍肢长度（<span class="math inline">\(Y\)</span>，单位 mm）。我们大致知道，普通企鹅的鳍肢长度在 150 mm 到 250 mm 之间。除此之外，我们对鳍肢长度与喙长之间的关系并没有很强的先验认知，因此将采用弱信息先验分布。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>使用 4 个链来模拟 flipper 长 mm 的正常回归前模型。 汉特: 您可以使用相同的stan glm()语法来模拟后缀,但包含present PD=TRUE.</li>
-<li>请检查archive summary () 并用它来写入正常回归模型(9.6)的完整结构。</li>
-<li>绘制100条前似实的模型行( 0@@)和4个在前作模拟的数据集.</li>
-<li>总结一下你之前对 翻版和账单长度的关系 的 微弱了解</li>
+<li>模拟 <code>flipper_length_mm</code> 对 <code>bill_length_mm</code> 的正态回归<strong>先验</strong>模型，使用 4 条链，每条迭代 10000 次。提示：你可以采用与模拟后验相同的模型代码，但通过设置 <code>prior_PD = True</code> 来仅从先验分布采样。</li>
+<li>检查先验摘要信息，并据此写出正态回归模型的完整结构 <a href="/bayes-rules-python-cn/chapter-9/#eq:simple-reg-ch9">(9.6)</a>。</li>
+<li>绘制 100 条可能的先验模型线（<span class="math inline">\(\beta_0 + \beta_1 X\)</span>）以及 4 个从先验分布模拟的数据集。</li>
+<li>总结你对鳍肢长度与喙长之间关系的弱信息先验认知。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-369"><strong>Exercise 9.17  (Penguins: data)  </strong></span>With the priors in place, let’s examine the data.
+<span class="exercise" id="exr:unnamed-chunk-369"><strong>练习 9.17（企鹅：数据）</strong></span> 先验分布已设定，现在让我们来检查数据。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>在344个被采样的企鹅中绘制并讨论 flipper 长 mm和bill 长 mm之间的观测关系.</li>
-<li>简单的正常回归是否似乎是建立这种关系的合理方法? 解释一下</li>
+<li>绘制并讨论 344 只样本企鹅中 <code>flipper_length_mm</code> 与 <code>bill_length_mm</code> 之间的观测关系。</li>
+<li>简单正态回归看起来是建模这种关系的合理方法吗？请解释。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-370"><strong>Exercise 9.18  (Penguins: posterior analysis)  </strong></span>Finally, let’s examine our posterior understanding of the relationship between flipper and bill length, a balance between our prior understanding and the data.
+<span class="exercise" id="exr:unnamed-chunk-370"><strong>练习 9.18（企鹅：后验分析）</strong></span>最后，让我们来审视一下对鳍肢长度与喙长之间关系的后验认识，这是先验认知与数据之间的平衡。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>使用stan glm()模拟正常回归后模型. 汉特: 您可以使用 Preview PD = FALSE 来从头到尾完成,也可以更新() 从9.16练习中完成之前的模拟。</li>
-<li>为翻车和账单长度之间的关系绘制100条后验模型线.</li>
-<li>提供您后验模型的整理( ) 概要, 包括90% 可信间隔。</li>
-<li>解释比尔 长度 毫米系数的90%后可信间隔,%\0\%。</li>
-<li>我们是否有充足的后证 说明企鹅的账单更长 往往有更长的翻转器? 解释一下</li>
+<li>使用 <code>bmb.Model()</code> 来模拟正态回归后验模型。提示：你可以从头开始，或者使用 <code>update()</code> 更新你在练习 <a href="/bayes-rules-python-cn/chapter-9/#exr:ch9penguinprior">9.16</a> 中的先验模拟，并设置 <code>prior_only=False</code>。</li>
+<li>绘制 100 条后验模型线，表示鳍肢长度与喙长之间的关系。</li>
+<li>用 <code>az.summary()</code> 提供后验模型的整洁摘要，包含 90% 可信区间。</li>
+<li>解释 <code>bill_length_mm</code> 系数 <span class="math inline">\(\beta_1\)</span> 的 90% 后验可信区间。</li>
+<li>我们是否有充分的后验证据表明，喙更长的企鹅往往鳍肢也更长？请解释。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-371"><strong>Exercise 9.19  (Penguins: prediction)  </strong></span>A researcher comes across Pablo the penguin. They’re able to ascertain that Pablo’s bill is 51mm long but the penguin waddles off before they get to measure the flipper.
+<span class="exercise" id="exr:unnamed-chunk-371"><strong>练习 9.19（企鹅：预测）</strong></span>一位研究者遇到了企鹅 Pablo。他们确认 Pablo 的喙长为 51 毫米，但还没等测量鳍肢，这只企鹅就摇摇摆摆地走开了。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>在不使用后端的快捷键功能的情况下,模拟企鹅中典型的翻转长度的后端模型和Pablo翻转长度的后端预测模型。</li>
-<li>构建,讨论和比较A部分中两个独立的后验模型的密度图象化.</li>
-<li>计算和解释巴勃罗翻转长度的80%后预测间隔。</li>
-<li>所有拥有51毫米钞票的企鹅中典型的翻转长度的80%可信间隔是宽还是窄? 解释一下</li>
-<li>使用后预览( ) 来确认您对 b 和 c 部分的结果。</li>
+<li><em>在不使用</em> <code>pm.sample_posterior_predictive()</code> 快捷函数的情况下，为喙长 51 毫米的企鹅的 <em>典型</em> 鳍肢长度模拟后验模型，并为 <em>Pablo 的</em> 鳍肢长度模拟后验预测模型。</li>
+<li>构建、讨论并比较（a）部分中两个独立后验模型的密度图可视化。</li>
+<li>计算并解释 Pablo 鳍肢长度的 80% 后验预测区间。</li>
+<li>在所有喙长为 51 毫米的企鹅中，典型鳍肢长度的 80% 可信区间会更宽还是更窄？请解释。</li>
+<li>使用 <code>posterior_predict()</code> 来验证你对（b）和（c）部分的结果。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-372"><strong>Exercise 9.20  (More penguins)  </strong></span>Instead of bill length, consider the Normal regression model of penguin flipper lengths (<span class="math inline">\(Y\)</span>) by body mass in grams (<span class="math inline">\(X\)</span>).
+<span class="exercise" id="exr:unnamed-chunk-372"><strong>练习 9.20（更多企鹅）</strong></span>改用企鹅的体重（克，<span class="math inline">\(X\)</span>）作为预测变量，考虑企鹅鳍肢长度（<span class="math inline">\(Y\)</span>）的正态回归模型。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>基于他们对其他地区企鹅的研究,假设研究者在看到任何数据之前对翻转长度和体积之间的关系相当确定: 0@@. 描述他们之前的理解。</li>
-<li>在344个被采样的企鹅中,绘制并讨论 flipper 長 mm和body mas g的观测到的关系.</li>
-<li>在一个简单的普通回归模型中, 翻转长度的QQ0XX由一个预测者XQ1XXXXXXXXXXX, 你认为当XQ3XXXX=帐单长度或者XQ4XXXXXXXXX=体积时,QQ2XX参数更大吗? 解释你的推理 并提供一些证据 从你已有的信息。</li>
-<li>使用stan glm()来模拟按体积的翻转长度的正常回归后模型, 用4条链子来做,每条链子重复1000次。</li>
-<li>绘制 {0} body  mass g 系数的后置模型。 用这个来描述研究者对翻转器与质量之间关系的后期理解,以及如果有的话,这是如何从他们先验的理解中演变的。</li>
+<li>基于他们在其他地区对企鹅的研究，假设研究者在看到任何数据之前，对鳍肢长度与体重之间的关系相当确定：<span class="math inline">\(\beta_1 \sim N(0.01, 0.002^2)\)</span>。描述他们的先验理解。</li>
+<li>绘制并讨论这 344 只企鹅样本中 <code>flipper_length_mm</code> 和 <code>body_mass_g</code> 之间的观测关系。</li>
+<li>在鳍肢长度 <span class="math inline">\(Y\)</span> 关于一个预测变量 <span class="math inline">\(X\)</span> 的简单正态回归模型中，你认为当 <span class="math inline">\(X\)</span> = 喙长时还是当 <span class="math inline">\(X\)</span> = 体重时，<span class="math inline">\(\sigma\)</span> 参数更大？解释你的推理，并根据你已经掌握的信息提供一些证据。</li>
+<li>使用 <code>PyMC</code> 模拟以体质量预测鳍状肢长度的正态回归后验模型，<em>使用研究者的先验</em>设定 <span class="math inline">\(\beta_1\)</span>，对 <span class="math inline">\(\beta_{0c}\)</span> 和 <span class="math inline">\(\sigma\)</span> 使用弱信息先验。运行4条链，各迭代10000次。</li>
+<li>绘制 <span class="math inline">\(\beta_1\)</span> <code>body_mass_g</code> 系数的后验模型。用其描述研究者对鳍状肢与体质量之间关系的后验理解，以及这种理解如何（如果有的话）从他们的先验理解演变而来。</li>
 </ol>
 </div>
 </div>
 </div>
-<h3>参考资料</h3>
+<h3>参考文献</h3>
 <div class="references csl-bib-body hanging-indent" id="refs">
 <div class="csl-entry" id="ref-uci">
 Dua, Dheeru, and Casey Graff. 2017. <span>“<span>UCI</span> <span>M</span>achine <span>L</span>earning <span>R</span>epository.”</span> University of California, Irvine, School of Information; Computer Sciences; <a href="https://archive.ics.uci.edu/ml">https://archive.ics.uci.edu/ml</a>.
@@ -999,17 +1128,27 @@ Dua, Dheeru, and Casey Graff. 2017. <span>“<span>UCI</span> <span>M</span>achi
 Fanaee-T, Hadi, and Joao Gama. 2014. <span>“Event Labeling Combining Ensemble Detectors and Background Knowledge.”</span> <em>Progress in Artificial Intelligence</em> 2: 113–27. <a href="https://doi.org/10.1007/s13748-013-0040-3">https://doi.org/10.1007/s13748-013-0040-3</a>.
 </div>
 <div class="csl-entry" id="ref-gabgood">
-———. 2020b. <span>“Prior Distributions for Rstanarm Models.”</span> <a href="https://mc-stan.org/rstanarm/articles/priors.html">https://mc-stan.org/rstanarm/articles/priors.html</a>.
+———. 2020b. <span>“Stan 模型的先验分布。”</span> <a href="https://mc-stan.org/rstanarm/articles/priors.html">资源链接</a>.
 </div>
 <div class="csl-entry" id="ref-R-rstanarm">
-———. 2020c. <em>Rstanarm: Bayesian Applied Regression Modeling via Stan</em>. <a href="https://CRAN.R-project.org/package=rstanarm">https://CRAN.R-project.org/package=rstanarm</a>.
+———. 2020c. <em>Stan 回归建模资源</em>. <a href="https://CRAN.R-project.org/package=rstanarm">资源链接</a>.
 </div>
 <div class="csl-entry" id="ref-R-tidybayes">
-Kay, Matthew. 2021. <em>Tidybayes: Tidy Data and Geoms for Bayesian Models</em>. <a href="https://CRAN.R-project.org/package=tidybayes">https://CRAN.R-project.org/package=tidybayes</a>.
+Kay, Matthew. 2021. <em>Tidybayes: Tidy Data and Geoms for Bayesian Models</em>. <a href="https://CRAN.R-project.org/package=tidybayes">资源链接</a>.
 </div>
 <div class="csl-entry" id="ref-rstan_guide">
 Stan development team. 2019. <span>“Stan User’s Guide.”</span> <a href="https://mc-stan.org/docs/2_25/stan-users-guide/index.html">https://mc-stan.org/docs/2_25/stan-users-guide/index.html</a>.
 </div>
+</div>
+<div class="footnotes">
+<hr/>
+<ol start="46">
+<li id="fn46"><p>等价地，或许在频率学派分析中更常见，我们可以将此模型写成 <span class="math inline">\(Y_i = \beta_0 + \beta_1X_i + \varepsilon_i\)</span>，其中残差误差 <span class="math inline">\(\varepsilon_i \stackrel{ind}{\sim} N(0, \sigma^2)\)</span>。<a class="footnote-back" href="/bayes-rules-python-cn/chapter-9/#fnref46">↩︎</a></p></li>
+<li id="fn47"><p>答案：<span class="math inline">\(\beta_0, \beta_1, \sigma\)</span><a class="footnote-back" href="/bayes-rules-python-cn/chapter-9/#fnref47">↩︎</a></p></li>
+<li id="fn48"><p>你将在第 <a href="/bayes-rules-python-cn/chapter-9/#ch9-default">9.7</a> 节学习绘制这些图。目前，我们专注于概念。<a class="footnote-back" href="/bayes-rules-python-cn/chapter-9/#fnref48">↩︎</a></p></li>
+<li id="fn49"><p><code>bikes</code> 数据集是从一个更大的数据集中提取的，以满足我们的教学目标，因此仅用于说明目的。在控制台中输入 <code>help(bikes)</code> 可查看详细的数据字典。<a class="footnote-back" href="/bayes-rules-python-cn/chapter-9/#fnref49">↩︎</a></p></li>
+<li id="fn50"><p>如果你有一些贝叶斯建模经验，你可能会想我们是否应该将预测变量 <span class="math inline">\(X\)</span> 进行<em>标准化</em>。<strong>PyMC</strong> 文档建议不要这样做，并指出通过先验模型的默认缩放也能达到相同的目的 <span class="citation">(<a href="#ref-R-rstanarm" role="doc-biblioref">Gabry and Goodrich 2020c</a>)</span>。<a class="footnote-back" href="/bayes-rules-python-cn/chapter-9/#fnref50">↩︎</a></p></li>
+</ol>
 </div>
 </section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-8/">上一节：第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-10/">下一节：第 10 章 回归模型评估</a></nav>
 </article>

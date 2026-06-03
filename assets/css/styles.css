@@ -688,6 +688,21 @@ img {
   background: var(--green-soft);
 }
 
+.sidebar-sections {
+  display: grid;
+  gap: 2px;
+  margin: -2px 0 6px 12px;
+  padding-left: 10px;
+  border-left: 1px solid var(--line);
+}
+
+.tutorial-sidebar a.section-link {
+  padding: 4px 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .tutorial-content {
   min-width: 0;
   padding: 0 0 48px;
@@ -732,7 +747,7 @@ img {
 .tutorial-content img {
   max-width: 100%;
   height: auto;
-  margin: 20px 0;
+  margin: 20px auto;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--paper-strong);
@@ -740,13 +755,26 @@ img {
   cursor: zoom-in;
 }
 
+.tutorial-content .figure,
+.tutorial-content .caption,
+.tutorial-content caption {
+  text-align: center;
+}
+
+.tutorial-content table {
+  width: auto;
+  max-width: 100%;
+  margin: 24px auto;
+}
+
 .tutorial-content pre {
   overflow-x: auto;
   margin: 22px 0;
   padding: 18px;
   border-radius: var(--radius);
-  background: var(--graphite);
-  color: white;
+  border: 1px solid #bfd8dc;
+  background: #eef7f8;
+  color: var(--ink);
 }
 
 .tutorial-content code {
@@ -775,6 +803,18 @@ img {
 .python-note {
   border-left-color: var(--green);
   background: var(--green-soft);
+}
+
+.footnotes {
+  margin-top: 42px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.footnotes a {
+  color: var(--green);
 }
 
 .chapter-nav {

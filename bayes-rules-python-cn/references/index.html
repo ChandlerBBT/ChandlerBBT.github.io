@@ -1,13 +1,13 @@
-<!doctype html>
+html
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="参考文献 | Bayes Rules! 中文 Python 改写教程">
-  <title>参考文献 | Chandler&#x27;s AI Productivity Notes</title>
-  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/assets/css/styles.css">
-  <script>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="参考文献 | Bayes Rules! 中文 Python 改写教程" name="description"/>
+<title>参考文献 | Chandler's AI Productivity Notes</title>
+<link href="/assets/img/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="/assets/css/styles.css" rel="stylesheet"/>
+<script>
     window.MathJax = {
       tex: {
         inlineMath: [["$", "$"], ["\\(", "\\)"]],
@@ -17,38 +17,32 @@
       svg: { fontCache: "global" }
     };
   </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 </head>
 <body>
-  <a class="skip-link" href="#content">跳到正文</a>
-  <header class="site-header">
-    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
-      <span class="brand-mark">C</span>
-      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
-    </a>
-    <nav class="site-nav" aria-label="主导航">
-      <a href="/">首页</a>
-      <a href="/posts/" aria-current="page">最新文章</a>
-      <a href="/tags/">主题</a>
-      <a href="/about/">关于</a>
-    </nav>
-  </header>
-  <main id="content" class="tutorial-page">
-    <div class="tutorial-layout">
-
+<a class="skip-link" href="#content">跳到正文</a>
+<header class="site-header">
+<a aria-label="Chandler's AI Productivity Notes 首页" class="brand" href="/">
+<span class="brand-mark">C</span>
+<span class="brand-name">Chandler's AI Productivity Notes</span>
+</a>
+<nav aria-label="主导航" class="site-nav">
+<a href="/">首页</a>
+<a aria-current="page" href="/posts/">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+</nav>
+</header>
+<main class="tutorial-page" id="content">
+<div class="tutorial-layout">
 <aside class="tutorial-sidebar">
-  <h2>教程目录</h2>
-  <nav><a href="/bayes-rules-python-cn/">首页</a><a href="/bayes-rules-python-cn/foreword/">前言</a><a href="/bayes-rules-python-cn/preface/">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a href="/bayes-rules-python-cn/references/" aria-current="page">参考文献</a></nav>
+<h2>教程目录</h2>
+<nav><a href="/bayes-rules-python-cn/">首页</a><a href="/bayes-rules-python-cn/foreword/">前言</a><a href="/bayes-rules-python-cn/preface/">序言</a><a href="/bayes-rules-python-cn/about-the-authors/">作者简介</a><a href="/bayes-rules-python-cn/chapter-1/">第 1 章 贝叶斯图景总览</a><a href="/bayes-rules-python-cn/chapter-2/">第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-3/">第 3 章 Beta-二项贝叶斯模型</a><a href="/bayes-rules-python-cn/chapter-4/">第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-5/">第 5 章 共轭族</a><a href="/bayes-rules-python-cn/chapter-6/">第 6 章 近似后验分布</a><a href="/bayes-rules-python-cn/chapter-7/">第 7 章 MCMC 的底层机制</a><a href="/bayes-rules-python-cn/chapter-8/">第 8 章 后验推断与预测</a><a href="/bayes-rules-python-cn/chapter-9/">第 9 章 简单正态回归</a><a href="/bayes-rules-python-cn/chapter-10/">第 10 章 回归模型评估</a><a href="/bayes-rules-python-cn/chapter-11/">第 11 章 扩展正态回归模型</a><a href="/bayes-rules-python-cn/chapter-12/">第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-13/">第 13 章 Logistic 回归</a><a href="/bayes-rules-python-cn/chapter-14/">第 14 章 朴素贝叶斯分类</a><a href="/bayes-rules-python-cn/chapter-15/">第 15 章 分层模型的魅力</a><a href="/bayes-rules-python-cn/chapter-16/">第 16 章 无预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-17/">第 17 章 含预测变量的正态分层模型</a><a href="/bayes-rules-python-cn/chapter-18/">第 18 章 非正态分层回归与分类</a><a href="/bayes-rules-python-cn/chapter-19/">第 19 章 加入更多层级</a><a aria-current="page" href="/bayes-rules-python-cn/references/">参考文献</a></nav>
 </aside>
-
-      <article class="tutorial-content">
-        <section class="normal" id="section-">
+<article class="tutorial-content">
+<section class="normal" id="section-">
 <div class="section level1 unnumbered" id="references">
 <h1>参考文献</h1>
-<div class="tutorial-note">
-<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
-</div>
-
 <div class="references csl-bib-body hanging-indent" id="refs">
 <div class="csl-entry">
 Antonio, Nuno, Ana de Almeida, and Luis Nunes. 2019. <span>“Hotel Booking Demand Datasets.”</span> <em>Data in Brief</em> 22: 41–49. <a href="https://www.sciencedirect.com/science/article/pii/S2352340918315191">https://www.sciencedirect.com/science/article/pii/S2352340918315191</a>.
@@ -96,7 +90,7 @@ Brooks, Steve, Andrew Gelman, Galin Jones, and Xiao-Li Meng. 2011. <em>Handbook 
 Cards Against Humanity. 2017. <span>“<span>P</span>ulse of the <span>N</span>ation.”</span> <a href="https://thepulseofthenation.com/">https://thepulseofthenation.com/</a>.
 </div>
 <div class="csl-entry">
-Carreño, Edwin Javier Castillo, and Edilberto Cepeda Cuervo. 2017. <em>Bayeslongitudinal: Adjust Longitudinal Regression Models Using <span>B</span>ayesian Methodology</em>. <a href="https://CRAN.R-project.org/package=bayeslongitudinal">https://CRAN.R-project.org/package=bayeslongitudinal</a>.
+Carreño, Edwin Javier Castillo, and Edilberto Cepeda Cuervo. 2017. <em>Bayeslongitudinal: Adjust Longitudinal Regression Models Using <span>B</span>ayesian Methodology</em>. <a href="https://CRAN.R-project.org/package=bayeslongitudinal">资源链接</a>.
 </div>
 <div class="csl-entry">
 D’Ignazio, Catherine, and Lauren F Klein. 2020. <em>Data Feminism</em>. MIT Press.
@@ -129,13 +123,13 @@ Fast, Shannon, and Thomas Hegland. 2011. <span>“Book Challenges: A Statistical
 Firke, Sam. 2021. <em>Janitor: Simple Tools for Examining and Cleaning Dirty Data</em>. <a href="https://github.com/sfirke/janitor">https://github.com/sfirke/janitor</a>.
 </div>
 <div class="csl-entry">
-Gabry, Jonah, and Ben Goodrich. 2020a. <span>“Estimating Generalized Linear Models with Group-Specific Terms with Rstanarm.”</span> <a href="https://mc-stan.org/rstanarm/articles/glmer.html">https://mc-stan.org/rstanarm/articles/glmer.html</a>.
+Gabry, Jonah, and Ben Goodrich. 2020a. <span>“使用 Stan 估计含组别项的广义线性模型。”</span> <a href="https://mc-stan.org/rstanarm/articles/glmer.html">资源链接</a>.
 </div>
 <div class="csl-entry">
-———. 2020b. <span>“Prior Distributions for Rstanarm Models.”</span> <a href="https://mc-stan.org/rstanarm/articles/priors.html">https://mc-stan.org/rstanarm/articles/priors.html</a>.
+———. 2020b. <span>“Stan 模型的先验分布。”</span> <a href="https://mc-stan.org/rstanarm/articles/priors.html">资源链接</a>.
 </div>
 <div class="csl-entry">
-———. 2020c. <em>Rstanarm: Bayesian Applied Regression Modeling via Stan</em>. <a href="https://CRAN.R-project.org/package=rstanarm">https://CRAN.R-project.org/package=rstanarm</a>.
+———. 2020c. <em>Stan 回归建模资源</em>. <a href="https://CRAN.R-project.org/package=rstanarm">资源链接</a>.
 </div>
 <div class="csl-entry">
 Gabry, Jonah, Daniel Simpson, Aki Vehtari, Michael Betancourt, and Andrew Gelman. 2019. <span>“Visualization in <span>B</span>ayesian Workflow.”</span> <em>J. R. Stat. Soc. A</em> 182: 389–402. <a href="https://doi.org/10.1111/rssa.12378">https://doi.org/10.1111/rssa.12378</a>.
@@ -153,7 +147,7 @@ Goodman, Steven. 2011. <span>“A Dirty Dozen: Twelve p-Value Misconceptions.”
 Gorman, Kristen B., Tony D. Williams, and William R. Fraser. 2014. <span>“Ecological Sexual Dimorphism and Environmental Variability Within a Community of <span>A</span>ntarctic Penguins (<span>G</span>enus <span>P</span>ygoscelis).”</span> <em>PLoS ONE</em> 9(3) (e90081). <a href="https://doi.org/10.1371/journal.pone.0090081">https://doi.org/10.1371/journal.pone.0090081</a>.
 </div>
 <div class="csl-entry">
-Guo, Jiqiang, Jonah Gabry, Ben Goodrich, and Sebastian Weber. 2020. <em>Rstan: R Interface to Stan</em>. <a href="https://CRAN.R-project.org/package=rstan">https://CRAN.R-project.org/package=rstan</a>.
+Guo, Jiqiang, Jonah Gabry, Ben Goodrich, and Sebastian Weber. 2020. <em>Stan 建模计算资源</em>. <a href="https://CRAN.R-project.org/package=rstan">资源链接</a>.
 </div>
 <div class="csl-entry">
 Hadavas, Chloe. 2020. <span>“How Automation Bias Encourages the Use of Flawed Algorithms.”</span> <em>Slate</em>. <a href="https://slate.com/technology/2020/03/ice-lawsuit-hijacked-algorithm.html">https://slate.com/technology/2020/03/ice-lawsuit-hijacked-algorithm.html</a>.
@@ -162,16 +156,16 @@ Hadavas, Chloe. 2020. <span>“How Automation Bias Encourages the Use of Flawed 
 Harmon, Amy. 2019. <span>“As Cameras Track <span>D</span>etroit’s Residents, a Debate Ensues over Racial Bias.”</span> <em>New York Times</em>, July. <a href="https://www.nytimes.com/2019/07/08/us/detroit-facial-recognition-cameras.html">https://www.nytimes.com/2019/07/08/us/detroit-facial-recognition-cameras.html</a>.
 </div>
 <div class="csl-entry">
-Horst, Allison, Alison Hill, and Kristen Gorman. 2020. <em>Palmerpenguins: <span>P</span>almer <span>A</span>rchipelago (<span>A</span>ntarctica) Penguin Data</em>. <a href="https://cran.r-project.org/web/packages/palmerpenguins/index.html">https://cran.r-project.org/web/packages/palmerpenguins/index.html</a>.
+Horst, Allison, Alison Hill, and Kristen Gorman. 2020. <em>Palmerpenguins: <span>P</span>almer <span>A</span>rchipelago (<span>A</span>ntarctica) Penguin Data</em>. <a href="https://cran.r-project.org/web/packages/palmerpenguins/index.html">资源链接</a>.
 </div>
 <div class="csl-entry">
 Kalil, Ariel, Susan Mayer, and Philip Oreopoulos. 2020. <span>“Closing the Word Gap with <span>B</span>ig <span>W</span>ord <span>C</span>lub: Evaluating the Impact of a Tech-Based Early Childhood Vocabulary Program.”</span> <em>Ann Arbor, MI: Inter-University Consortium for Political and Social Research [Distributor]</em>. <a href="https://doi.org/10.3886/E117330V1">https://doi.org/10.3886/E117330V1</a>.
 </div>
 <div class="csl-entry">
-Kay, Matthew. 2021. <em>Tidybayes: Tidy Data and Geoms for Bayesian Models</em>. <a href="https://CRAN.R-project.org/package=tidybayes">https://CRAN.R-project.org/package=tidybayes</a>.
+Kay, Matthew. 2021. <em>Tidybayes: Tidy Data and Geoms for Bayesian Models</em>. <a href="https://CRAN.R-project.org/package=tidybayes">资源链接</a>.
 </div>
 <div class="csl-entry">
-Kim, Albert Y., Chester Ismay, and Jennifer Chunn. 2020. <em>Fivethirtyeight: Data and Code Behind the Stories and Interactives at <span>F</span>ive<span>T</span>hirty<span>E</span>ight</em>. <a href="https://CRAN.R-project.org/package=fivethirtyeight">https://CRAN.R-project.org/package=fivethirtyeight</a>.
+Kim, Albert Y., Chester Ismay, and Jennifer Chunn. 2020. <em>Fivethirtyeight: Data and Code Behind the Stories and Interactives at <span>F</span>ive<span>T</span>hirty<span>E</span>ight</em>. <a href="https://CRAN.R-project.org/package=fivethirtyeight">资源链接</a>.
 </div>
 <div class="csl-entry">
 Laird, N., and J. Ware. 1982. <span>“Random-Effects Models for Longitudinal Data.”</span> <em>Biometrics</em> 38 4: 963–74.
@@ -195,7 +189,7 @@ McElreath, Richard. 2019. <span>“Statistical <span>R</span>ethinking Winter 20
 McGrayne, Sharon. 2012. <em>The Theory That Would Not Die - <span>H</span>ow <span>B</span>ayes’ <span>R</span>ule Cracked the <span>E</span>nigma Code, Hunted down <span>R</span>ussian Submarines and Emerged Triumphant from Two Centuries of Controversy</em>. Yale University Press.
 </div>
 <div class="csl-entry">
-Meyer, David, Evgenia Dimitriadou, Kurt Hornik, Andreas Weingessel, and Friedrich Leisch. 2021. <em>E1071: Misc Functions of the Department of Statistics, Probability Theory Group (Formerly: E1071), TU Wien</em>. <a href="https://CRAN.R-project.org/package=e1071">https://CRAN.R-project.org/package=e1071</a>.
+Meyer, David, Evgenia Dimitriadou, Kurt Hornik, Andreas Weingessel, and Friedrich Leisch. 2021. <em>E1071: Misc Functions of the Department of Statistics, Probability Theory Group (Formerly: E1071), TU Wien</em>. <a href="https://CRAN.R-project.org/package=e1071">资源链接</a>.
 </div>
 <div class="csl-entry">
 Milgram, Stanley. 1963. <span>“Behavioral Study of Obedience.”</span> <em>Journal of Abnormal and Social Psychology</em> 67: 371–78.
@@ -270,10 +264,10 @@ Wasserstein, Ronald L. 2016. <span>“The <span>ASA</span>’s Statement on p-Va
 Wickham, Hadley. 2016. <em>Ggplot2: Elegant Graphics for Data Analysis</em>. Springer-Verlag New York. <a href="https://ggplot2.tidyverse.org">https://ggplot2.tidyverse.org</a>.
 </div>
 <div class="csl-entry">
-———. 2021. <em>Forcats: Tools for Working with Categorical Variables (Factors)</em>. <a href="https://CRAN.R-project.org/package=forcats">https://CRAN.R-project.org/package=forcats</a>.
+———. 2021. <em>Forcats: Tools for Working with Categorical Variables (Factors)</em>. <a href="https://CRAN.R-project.org/package=forcats">资源链接</a>.
 </div>
 <div class="csl-entry">
-Wickham, Hadley, Romain François, Lionel Henry, and Kirill Müller. 2021. <em>Dplyr: A Grammar of Data Manipulation</em>. <a href="https://CRAN.R-project.org/package=dplyr">https://CRAN.R-project.org/package=dplyr</a>.
+Wickham, Hadley, Romain François, Lionel Henry, and Kirill Müller. 2021. <em>Dplyr: A Grammar of Data Manipulation</em>. <a href="https://CRAN.R-project.org/package=dplyr">资源链接</a>.
 </div>
 <div class="csl-entry">
 Williams, Graham J. 2011. <em>Data Mining with <span>Rattle</span> and <span>R</span>: The Art of Excavating Data for Knowledge Discovery</em>. Use r! Springer. <a href="https://www.amazon.com/gp/product/1441998896/ref=as_li_qf_sp_asin_tl?ie=UTF8&amp;tag=togaware-20&amp;linkCode=as2&amp;camp=217145&amp;creative=399373&amp;creativeASIN=1441998896">https://www.amazon.com/gp/product/1441998896/ref=as_li_qf_sp_asin_tl?ie=UTF8&amp;tag=togaware-20&amp;linkCode=as2&amp;camp=217145&amp;creative=399373&amp;creativeASIN=1441998896</a>.
@@ -284,19 +278,19 @@ Winter, Bodo, and Sven Grawunder. 2012. <span>“The Phonetic Profile of <span>K
 </div>
 </div>
 </section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-19/">上一节：第 19 章 加入更多层级</a></nav>
-      </article>
-    </div>
-  </main>
-  <footer class="site-footer">
-    <div>
-      <strong>AI 提效研究笔记</strong>
-      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
-    </div>
-    <div class="footer-links">
-      <a href="/feed.xml">RSS</a>
-      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
-    </div>
-  </footer>
-  <script src="/assets/js/site.js"></script>
+</article>
+</div>
+</main>
+<footer class="site-footer">
+<div>
+<strong>AI 提效研究笔记</strong>
+<p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+</div>
+<div class="footer-links">
+<a href="/feed.xml">RSS</a>
+<a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+</div>
+</footer>
+<script src="/assets/js/site.js"></script>
 </body>
 </html>

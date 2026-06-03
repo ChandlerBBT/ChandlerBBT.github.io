@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-
+html
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"/>
@@ -44,594 +43,806 @@
 <section class="normal" id="section-">
 <div class="section level1" id="chapter-3" number="3">
 <h1>第 3 章 Beta-二项贝叶斯模型</h1>
-<div class="tutorial-note">
-<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
-</div>
-<p>每四年,美国人就去投票投票投票给美国总统. 考虑以下设想。 “Michelle”决定竞选总统, 整个选举季节, 尽管米歇尔的支持率徘徊在45 %左右,但她在沉闷的日子里进行了35 %左右的民意调查,在最佳的日子里在竞选路线上进行了55 %左右的民意调查(图3.1(左方))。</p>
+<p>每隔四年，美国人就会前往投票站为美国总统投下自己的一票。设想以下场景：“Michelle”决定竞选总统，而你是她在明尼苏达州的竞选经理。因此，你在整个选举季中进行了30次不同的民意调查。尽管Michelle的支持率一直在45%左右徘徊，但她在最低迷的日子里支持率约为35%，在竞选活动中最好的日子里约为55%（<a href="/bayes-rules-python-cn/chapter-3/#fig:prior-election-ch3">图3.1</a>（左））。</p>
 <div class="figure" style="text-align: center"><span id="fig:prior-election-ch3" style="display:block;"></span>
-<img alt="两块地 左侧显示一个直方图,在x轴上有民意测验结果,并算上y轴. 直方图的插件大约在0.35到0.55之间. 该模型大致对称,模式在0.45左右. 正确的图像显示一个密度图,其中x轴上的希腊字母pi和y轴上的f(pi). 该模型密度值最高,约为0.45. 0.35-0.55范围以外的密度接近0." loading="lazy" src="/assets/img/bayes-rules-python-cn/prior-election-ch3-1-97805b161835.png" width="432"/>
-<p class="caption">FIGURE 3.1:明尼苏达人前30次投票支持米歇尔总统(左)的结果,</p>
+<img alt="Two plots. The left one shows an histogram that has poll results on the x-axis and count on the y-axis. The bins of the histogram are between about 0.35 to 0.55. The model approximately symmetrical with a mode around 0.45. The right image shows a density plot with the Greek letter pi on the x axis and f(pi) on the y-axis. The model has highest density value at around 0.45. The densities outside of the 0.35-0.55 range are almost 0." loading="lazy" src="/assets/img/bayes-rules-python-cn/prior-election-ch3-1-97805b161835.png" width="432"/>
+<p class="caption">
+图3.1：之前30次明尼苏达州选民对Michelle竞选总统支持率的民调结果（左）以及关于她当前竞选支持率<span class="math inline">\(\pi\)</span>的相应连续先验模型（右）。
+</p>
 </div>
-<p>选举是动态的,因此米歇尔的支持总是在不断变化。 以及目前支持米歇尔的明尼苏达人的比例。 事实上,我们可以将这些信息重组为正式的前期概率模型 QQ1@@. 卡斯帕罗夫在围棋中击败深蓝的概率。 在这种情况下,我们大大地过度简化了现实,以适应入门的贝叶斯模式。 主要是,我们假设QQ3@@只能是0.2,0.5或0.8,其相应的机率由离散概率模型定义. 然而,在米歇尔对选举的支持和卡斯帕罗夫的围棋技巧的现实中,QQ4@@可以在0到1之间有任何价值. 我们可以反映这个现实, 并通过构建一个连续的概率模型, 图3.1(右)中的曲线表示一个合理的前期。 我们将在第3.1节详细审查持续模式。 目前,只要注意到这一曲线保留了过去民意调查中的总体信息和变异性 — — 米歇尔的支持点在0到1之间,但很可能在0.45左右。</p>
-<p>需要一些新的工具。 但巴耶斯分析的精神将保持不变. 无论我们的参数QQ1@@是连续的还是离散的,QQ2@@的后验模型将结合先验的见解和数据. 并建立米歇尔的选举模式。 将这部作品概括为基本Beta-Binomial Bayesian模式。 Beta-Binomial的力量在于其广泛的应用. 米歇尔支持选举, 你也可以想象贝叶斯的分析, 我们有兴趣模拟使用公交车的人的比例, 延迟的列车的比例, 喜欢猫而不是狗的人的比例,等等。 Beta-Binomial模型提供了我们需要的工具,</p>
+<p>选举是动态的，因此Michelle的支持率始终在变化。然而，这些过去的民调提供了关于<span class="math inline">\(\pi\)</span>（即<em>当前</em>支持Michelle的明尼苏达州选民比例）的<strong>先验</strong>信息。事实上，我们可以将这些信息重新组织成一个关于<span class="math inline">\(\pi\)</span>的正式先验概率模型。我们在<a href="/bayes-rules-python-cn/chapter-2/#cousin-cole">2.3节</a>中做过一个类似的例子，当时<span class="math inline">\(\pi\)</span>是Kasparov在国际象棋中击败Deep Blue的概率。在那个例子中，我们为了适应入门级贝叶斯模型的框架，极大地简化了现实。主要是我们假设<span class="math inline">\(\pi\)</span>只能取0.2、0.5或0.8，其对应的可能性由一个<em>离散</em>概率模型定义。然而，在Michelle的选举支持和Kasparov的国际象棋水平的现实中，<span class="math inline">\(\pi\)</span>可以是0到1之间的<em>任意</em>值。我们可以通过构建<span class="math inline">\(\pi\)</span>的<strong>连续先验概率模型</strong>来反映这一现实，并进行更细致的贝叶斯分析。一个合理的先验由<a href="/bayes-rules-python-cn/chapter-3/#fig:prior-election-ch3">图3.1</a>（右）中的<em>曲线</em>表示。我们将在<a href="/bayes-rules-python-cn/chapter-3/#ch3-prior">3.1节</a>中详细探讨连续模型。现在，只需注意这条曲线保留了以往民调的总体信息和变异性——Michelle的支持率<span class="math inline">\(\pi\)</span>可以在0到1之间变化，但最可能的值在0.45左右。</p>
+<p>采用这种更细致、更连续的观点来看待Michelle的支持率<span class="math inline">\(\pi\)</span>需要一些新工具。但是，贝叶斯分析的<em>精髓</em>保持不变。无论我们的参数<span class="math inline">\(\pi\)</span>是连续还是离散，<span class="math inline">\(\pi\)</span>的后验模型都将结合先验和数据的见解。接下来，你将深入细节，<em>构建</em>Michelle的选举模型。随后，你将把这项工作推广到基础的<strong>Beta-二项</strong>贝叶斯模型。Beta-二项模型的强大之处在于其广泛的应用。Michelle的选举支持率<span class="math inline">\(\pi\)</span>并非唯一取值在[0,1]上的兴趣变量。你还可以想象在一些贝叶斯分析中，我们感兴趣的是对使用公共交通的人口比例、晚点的火车比例、喜欢猫胜过狗的人口比例等进行建模。Beta-二项模型为我们在这些情境下研究感兴趣的比例<span class="math inline">\(\pi\)</span>提供了所需的工具。</p>
 <div class="goals">
 <ul>
-<li>使用和调谐连续的前科。 您将学习如何解释和调制一个连续的 Beta 前置模型, 以反映您先验关于 \\\ 0\\\\\ 的信息。</li>
-<li>使用诸如平均值、模式和差异等属性来解释和交流前期和后验模型的特性。</li>
-<li>构建比例=============================================================================================================================================================================================================================================================</li>
+<li><strong>使用并调整连续先验。</strong>你将学习如何解释和调整连续的Beta先验模型，以反映你对<span class="math inline">\(\pi\)</span>的先验信息。</li>
+<li><strong>使用均值、众数和方差等性质来解释和交流先验与后验模型</strong>的特征。</li>
+<li><strong>构建基础的Beta-二项模型</strong>，用于比例<span class="math inline">\(\pi\)</span>。</li>
 </ul>
 </div>
 <div class="describe">
-<p>开始</p>
-<p>为了准备本章,请注意我们将在分析过程中使用三个希腊字母: 0@@=pi,\(\alpha\)=α, 2@@=β. 此外,装入以下包件:</p>
-<p>库(bayesrules) 库( tdyverse)</p>
+<p><strong>准备工作</strong></p>
+<p>在开始本章之前，请注意我们在整个分析中将使用三个希腊字母：<span class="math inline">\(\pi\)</span>（pi）、<span class="math inline">\(\alpha\)</span>（alpha）和<span class="math inline">\(\beta\)</span>（beta）。此外，请加载以下库：</p>
+<p><code>import pymc as pm</code><br/>
+<code>import arviz as az</code><br/>
+<code>import pandas as pd</code><br/>
+<code>import numpy as np</code><br/>
+<code>import matplotlib.pyplot as plt</code></p>
 </div>
 <div class="section level2" id="ch3-prior" number="3.1">
-<h2>Beta 先验的模式</h2>
-<p>在明尼苏达人中建立米歇尔支持选举的巴耶斯选举模式时, 我们的连续先验概率模型 QQ1@@ 由概率密度函数 (pdf) 在图3.1 中指定。 虽然看起来相当不同,但这种连续的pdf的作用与表2.7中的离散概率质量函数(pmf) \(f(\pi)\):指定所有可能值的\(\pi\)和每个值的相对合理性相同. 也就是说, QQ5能接受哪些价值, 此外,在计算QQ6XQ的所有可能结果时,pdf集成或拥有面积为1, 类似于离散的pmf和1。</p>
+<h2> Beta先验模型</h2>
+<p>在构建米歇尔在明尼苏达人中选举支持率 \(\pi\) 的贝叶斯选举模型时，我们照例从先验分布开始。我们的<em>连续</em>先验概率模型由图 <a href="/bayes-rules-python-cn/chapter-3/#fig:prior-election-ch3">3.1</a> 中的<strong>概率密度函数（pdf）</strong>指定。虽然它看起来截然不同，但这个连续 pdf 的作用与表 <a href="/bayes-rules-python-cn/chapter-2/#tab:chessprior">2.7</a> 中的离散概率质量函数（pmf）\(f(\pi)\) 相同：指定 \(\pi\) 的所有可能取值以及每个取值的相对合理性。也就是说，\(f(\pi)\) 回答：\(\pi\) 可以取哪些值，哪些值比另一些更合理？此外，在考虑 \(\pi\) 的<em>所有</em>可能结果时，pdf 的<em>积分</em>或面积等于 1，就像离散 pmf 的<em>总和</em>为 1 一样。</p>
 <div class="describe">
-<p>连续概率模型</p>
-<p>让QQ0QQ成为具有概率密度函数QQ1X的连续随机变量. 之后,QQ2@@有以下属性:</p>
+<p><strong>连续概率模型</strong></p>
+<p>设 \(\pi\) 是一个连续随机变量，其<strong>概率密度函数</strong>为 \(f(\pi)\)。那么 \(f(\pi)\) 具有以下性质：</p>
 <ul>
-<li>\(f(\pi) \ge 0\);</li>
-<li>\(\int_\pi f(\pi)d\pi = 1\),即\(f(\pi)\)下的面积为1;和</li>
-<li>当 QQ0@@ 当 QQ1@@ 当, 即任意两个可能的值 QQ2@@ 和 QQ3@@ 之间的区域对应 QQ4@@ 位于这个范围内的概率.</li>
+<li>\(f(\pi) \ge 0\)；</li>
+<li>\(\int_\pi f(\pi)d\pi = 1\)，即 \(f(\pi)\) 下的面积为 1；且</li>
+<li>当 \(a \le b\) 时，\(P(a &lt; \pi &lt; b) = \int_a^b f(\pi) d\pi\)，即任意两个可能值 \(a\) 和 \(b\) 之间的面积对应于 \(\pi\) 落在此范围内的概率。</li>
 </ul>
 <div style="page-break-after: always;"></div>
-<p>解释 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #</p>
-<p>如此一来, 连续的pdf不能解释为概率。 相反,QQ1@@可以用来比较XQ2@@的两个不同值的可信度:越大XQ3@@,对应的XQ4@@的值就越可信.</p>
+<p><strong>解读 \(f(\pi)\)</strong></p>
+<p>\(f(\pi) &gt; 1\) 是可能的，因此连续 pdf <em>不能</em>被解释为概率。相反，\(f(\pi)\) 可用于<em>比较</em> \(\pi\) 的两个不同取值的合理性：\(f(\pi)\) 越大，相应的 \(\pi\) 取值越合理。</p>
 </div>
-<p>注:如果组件对您来说是新的,请不要担心。 您不需要进行任何整合来继续这本书。</p>
+<p><strong>注意：</strong>如果你不熟悉积分，不必担心。继续阅读本书，你不需要进行任何积分运算。</p>
 <div class="section level3" id="beta-foundations" number="3.1.1">
-<h3>Beta 基金会</h3>
-<p>下一步是将图3.1(右)中我们之前的图片转换成正式的概率模型, 我们必须为 pdf 确定一个公式。 在概率世界中,有各种常见的"名"型号,其中的pdf和性质都得到了很好的研究. 其中,这里自然会关注Beta概率模型。 与Michelle的支持XQ2QX一样,一个Beta随机变量是连续的,并被限制在[0]上生活. 以及如何调谐Beta, 以反映我们先验对Michelle的支持。 让我们从Beta概率模型的一般定义开始。</p>
+<h3> Beta 基础</h3>
+<p>下一步是将图 <a href="/bayes-rules-python-cn/chapter-3/#fig:prior-election-ch3">3.1</a>（右）中先验分布的<em>图像</em>转化为 \(\pi\) 的正式概率模型。也就是说，我们必须为 pdf \(f(\pi)\) 指定一个公式。在概率领域，有许多常见的“有名”模型，它们的 pdf 和性质已被深入研究。在这里，自然地我们会聚焦于<strong>Beta 概率模型</strong>。与米歇尔的支持率 \(\pi\) 一样，Beta 随机变量是连续的，且取值限制在 [0,1] 区间。在本节中，你将探索 Beta 模型的<em>性质</em>以及如何<strong>调节</strong> Beta 模型以反映我们对米歇尔支持率 \(\pi\) 的先验理解。让我们从 Beta 概率模型的一般定义开始。</p>
 <div class="describe">
-<p>贝塔模式</p>
-<p>让 QQ0 QQ成为随机变量, 它可以在 0 到 1 之间取任何值, 即 QQ1。 由Beta模型, 形状超参数 + 3 + 和 + 4 + :</p>
-<p>\[\pi \sim \text{Beta}(\alpha, \beta).\]</p>
+<p><strong>Beta 模型</strong></p>
+<p>设 \(\pi\) 是一个随机变量，它可以取 0 到 1 之间的任何值，即 \(\pi \in [0,1]\)。那么 \(\pi\) 的变异性可以通过具有<strong>形状超参数</strong> \(\alpha &gt; 0\) 和 \(\beta &gt; 0\) 的 Beta 模型来很好地建模：</p>
+<p><span class="math display">\[\pi \sim \text{Beta}(\alpha, \beta).\]</span></p>
 <p>Beta 模型由连续 pdf 指定</p>
-<p>################################################################################################################################################################################################################################################################ 有趣的是:当QQ2@@是正整数时,XQ3@@简化为QQ4@@.</p>
+<p><span class="math display" id="eq:beta-pdf">\[\begin{equation}
+f(\pi) = \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha)\Gamma(\beta)} \pi^{\alpha-1} (1-\pi)^{\beta-1} \;\; \text{ for } \pi \in [0,1] \tag{3.1}
+\end{equation}\]</span>
+其中 \(\Gamma(z) = \int_0^\infty x^{z-1}e^{-y}dx\)，且 \(\Gamma(z + 1) = z \Gamma(z)\)。有趣的事实：当 \(z\) 为正整数时，\(\Gamma(z)\) 简化为 \(\Gamma(z) = (z-1)!\)。
+</p>
 </div>
 <div class="describe">
-<p>超参数</p>
-<p>超参数是一个在先验模型中使用的参数.</p>
+<p><strong>超参数</strong></p>
+<p>超参数是用于先验模型的参数。</p>
 </div>
-<p>这个模型最好通过玩耍来理解. 图3.2 将Beta pdf @@ 0@@在各种形状的超参数下, 检查一下Beta pdf可以采取的各种形状. 以体现我们先验对 3@@的理解, 例如,注意当我们设定QQ6QQ(中左图)时,Beta模型从0到1是平的. 在此设定中,Beta模型相当于也许更熟悉的模型,标准制服.</p>
+<p>通过实际操作最能理解这个模型。图 <a href="/bayes-rules-python-cn/chapter-3/#fig:beta-tuning">3.2</a> 绘制了在不同<strong>形状超参数</strong> \(\alpha\) 和 \(\beta\) 下的 Beta pdf \(f(\pi)\)。观察 Beta pdf 可以呈现的各种形状。这种灵活性意味着我们可以通过调整 \(\alpha\) 和 \(\beta\) 来<em>调节</em> Beta 模型，以反映我们对 \(\pi\) 的先验理解。例如，请注意当设置 \(\alpha = \beta = 1\)（中间左侧图）时，Beta 模型在 0 到 1 之间是<em>平坦</em>的。在此设置下，Beta 模型等同于可能更熟悉的模型——标准均匀分布。</p>
 <div class="describe">
-<p>标准统一型号</p>
-<p>当QQ0QQ承担0到1之间的任何价值,</p>
-<p>\[\pi \sim \text{Unif}(0,1)\]</p>
-<p>与pdf &amp; # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ###### # # # # # # # # # # # # # # # # # # # # Unif(0,1)模型是Beta( 2@@)在\(\alpha = \beta = 1\)时的特例.</p>
+<p><strong>标准均匀分布模型</strong></p>
+<p>当 <span class="math inline">\(\pi\)</span> 取 0 到 1 之间的任何值都具有同等可能性时，我们可以用标准均匀分布建模 <span class="math inline">\(\pi\)</span></p>
+<p><span class="math display">\[\pi \sim \text{Unif}(0,1)\]</span></p>
+<p>其概率密度函数为 <span class="math inline">\(f(\pi) = 1\)</span>，其中 <span class="math inline">\(\pi \in [0,1]\)</span>。Unif(0,1) 模型是 Beta(<span class="math inline">\(\alpha,\beta\)</span>) 在 <span class="math inline">\(\alpha = \beta = 1\)</span> 时的特例。</p>
 </div>
 <div class="figure" style="text-align: center"><span id="fig:beta-tuning" style="display:block;"></span>
-<img alt="该地块有9个(3乘3)Beta密度地块的图表. 在左上方的图中,我们看到Beta(1,5)模型。 此型号以0为模式下架. 上中位模型为Beta(1,2),直线坡度为-2. 右上方的图案为Beta(3,7),以0.25为模式右侧切换. 左中位模型为Beta(1,1),它是Y=1.的直线. 中行,中列型号为Beta(5,5),是一种对称型号,平均和模式为0.5. 皮值在0.10至0.90之间有明显的密度。 右中位模型为Beta(20,20),是一种对称模型,平均和模式为0.5. 0.30至0.70的皮值有明显的密度。 下部由Beta(7,3)Beta(2,1)和Beta(5,1)模型组成,它们是第一行地块的反射." loading="lazy" src="/assets/img/bayes-rules-python-cn/beta-tuning-1-ee74b56c43ff.png" width="384"/>
-<p class="caption">图3.2:贝塔(\(\alpha,\beta\)) ) pdfs QQ1@@在各种形状的超参数下 \(\alpha\)和 \(\beta\)(黑色曲线). 平均线和模式分别以蓝色固线和虚线表示.</p>
+<img alt="The plot has 9 (3 by 3) graphs of Beta density plots. In the upper left plot we see Beta(1,5) model. This model is concave down with a mode at 0. Upper middle model is Beta(1,2) with a straight line slope of -2. The upper right plot is Beta (3,7) is right-skewed with a mode at 0.25. The middle left model is Beta (1,1) which is a straight line at y = 1. The middle row, middle column model is Beta (5,5) and it is a symmetric model with a mean and mode at 0.5. Pi values ranging from 0.10 to 0.90 have noticeable densities. The middle right model is Beta(20,20) and it is a symmetric model with a mean and mode at 0.5. Pi values from 0.30 to 0.70 have noticeable densities. The lower consists of Beta(7,3) Beta(2,1) and Beta(5,1) models which are reflections of the plots in the first row." loading="lazy" src="/assets/img/bayes-rules-python-cn/beta-tuning-1-ee74b56c43ff.png" width="384"/>
+<p class="caption">
+图 3.2：不同形状超参数 <span class="math inline">\(\alpha\)</span> 和 <span class="math inline">\(\beta\)</span> 下的 Beta(<span class="math inline">\(\alpha,\beta\)</span>) 概率密度函数 <span class="math inline">\(f(\pi)\)</span>（黑色曲线）。均值和众数分别用蓝色实线和虚线表示。
+</p>
 </div>
-<p>花一分钟看看您是否能够识别一些其他的图案, 在形状的超参数XQ0XX和XQ1XX中, 24个</p>
+<p>花一分钟看看你是否能找出形状超参数 <span class="math inline">\(\alpha\)</span> 和 <span class="math inline">\(\beta\)</span> 如何反映 <span class="math inline">\(\pi\)</span> 的<strong>典型</strong>值以及 <span class="math inline">\(\pi\)</span> 的<strong>变异性</strong>。<a class="footnote-ref" href="#fn24" id="fnref24"><sup>24</sup></a></p>
 <div class="quiz">
 <ol style="list-style-type: decimal">
-<li><p>如何描述贝塔的典型行为(\\\\\\\) )变数 \(\pi\) 当\(\alpha = \beta\)? (a) 右侧受窃,QQ3+X往往小于0.5.b) 与QQ4+X往往小于0.5.c) 左侧受窃,QQ5+X往往小于0.5.</p></li>
-<li><p>使用与上面相同的选项, 您将如何描述一个 beta( XQ0) 的典型行为。 )变数 \(\pi\) 当\(\alpha &gt; \beta\)?</p></li>
-<li><p>对于哪一种模型来说, o\(\pi\), Beta( 20, 20) 或 Beta( 5, 5) 的假值有更大的可变性 ?</p></li>
+<li><p>当 <span class="math inline">\(\alpha = \beta\)</span> 时，你会如何描述 Beta(<span class="math inline">\(\alpha,\beta\)</span>) 变量 <span class="math inline">\(\pi\)</span> 的典型行为？<br/>
+a) 右偏，<span class="math inline">\(\pi\)</span> 倾向于小于 0.5。<br/>
+b) 对称，<span class="math inline">\(\pi\)</span> 倾向于在 0.5 附近。<br/>
+c) 左偏，<span class="math inline">\(\pi\)</span> 倾向于大于 0.5。</p></li>
+<li><p>使用与上面相同的选项，当 <span class="math inline">\(\alpha &gt; \beta\)</span> 时，你会如何描述 Beta(<span class="math inline">\(\alpha,\beta\)</span>) 变量 <span class="math inline">\(\pi\)</span> 的典型行为？</p></li>
+<li><p>哪个模型的 <span class="math inline">\(\pi\)</span> 可能值的变异性更大，Beta(20,20) 还是 Beta(5,5)？</p></li>
 </ol>
 </div>
-<p>我们可以用数值测量来支持我们对 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 平均(或“预期值”)和XQ1@@模式提供了衡量中心趋势的尺度,或典型的。 从概念上讲, 平均值为 \(\pi\), 而模式为 \(\pi\), 也就是 \(\pi\), 其中 pdf 5@@ 的值最大化。 图3.2分别用实线和虚线表示这些措施。 注意当QQ6+Q小于QQ7+Q(上行)时,Beta pdf右倾,因此平均值超过QQ8+Q,两者均低于0.5. 当QQ9@@大于QQ10@@(下行)时则相反. 当QQ11@@和QQ12@@相等(中行)时,Beta pdf是围绕0.5的常见平均值和模式对称的. 这些趋势反映了中间值的公式,表示 QQ13 QQ,以及一个Beta(XQ14 QQ)变量 QQ15 Q:25的模式.</p>
-<p>\[\begin{equation} \begin{split} E(\pi) &amp; = \frac{\alpha}{\alpha + \beta} \\ \text{Mode}(\pi) &amp; = \frac{\alpha - 1}{\alpha + \beta - 2} \;\;\; \text{ when } \; \alpha, \beta &gt; 1. \\ \end{split} \tag{3.2} \end{equation}\]</p>
-<p>例如,XQ0@@变量XQ1@@的中心倾向可以描述为:</p>
-<p>\[E(\pi) = \frac{5}{5 + 5} = 0.5 \;\; \text{ and } \;\; \text{Mode}(\pi) = \frac{5 - 1}{5 + 5 - 2} = 0.5 .\]</p>
-<p>图3.2还显示了\(\pi\)的变异规律. 例如,由于数值往往更接近平均值0.5,所以QQ1@@中的变异性对于Beta(20,20)模型比Beta(5,5)模型小. 我们可以通过差异来测量一个Beta( 2@@)的随机变量\(\pi\)的可变性.</p>
-<p>\[\begin{equation} \text{Var}(\pi) = \frac{\alpha \beta}{(\alpha + \beta)^2(\alpha + \beta + 1)} . \tag{3.3} \end{equation}\]</p>
-<p>粗略来说, 差异度测量了%\ 0\\ 值与平均值的典型平方距离,% 1\。 由于差异因此有平方单位, 通常更容易与标准偏差配合,</p>
-<p>\[\text{SD}(\pi) := \sqrt{\text{Var}(\pi)} .\]</p>
-<p>例如,QQ0@@变量的值QQ1@@往往偏离其平均值0.5乘0.151,而QQ2@@变量的值则偏差0.5乘0.078:</p>
-<p>\[\sqrt{\frac{5 \cdot 5}{(5 + 5)^2(5 + 5 + 1)}} = 0.151 \;\;\; \text{ and } \;\;\; \sqrt{\frac{20 \cdot 20}{(20 + 20)^2(20 + 20 + 1)}} = 0.078 .\]</p>
-<p>上面的公式不会神奇地突然冒出来。 它们是通过对Beta pdf(3.1)适用对平均值、模式和差异的一般定义获得的。 下面我们提供这些定义,但你可以跳过这些定义而不造成任何后果。</p>
+<p>我们可以通过数值测量来支持对 <span class="math inline">\(\pi\)</span> 行为的观察。
+<strong>均值</strong>（或“期望值”）和<strong>众数</strong>提供了<strong>集中趋势的度量</strong>，即<em>典型</em>值所在。
+从概念上讲，均值捕捉了 <span class="math inline">\(\pi\)</span> 的<em>平均</em>值，而众数捕捉了 <span class="math inline">\(\pi\)</span> 的<em>最可能</em>值，即使得概率密度函数 <span class="math inline">\(f(\pi)\)</span> 最大化的 <span class="math inline">\(\pi\)</span> 值。
+这些度量分别在图 <a href="/bayes-rules-python-cn/chapter-3/#fig:beta-tuning">3.2</a> 中用实线和虚线表示。
+注意，当 <span class="math inline">\(\alpha\)</span> 小于 <span class="math inline">\(\beta\)</span> 时（上行），Beta 概率密度函数右偏，因此均值超过众数，且两者都低于 0.5。
+当 <span class="math inline">\(\alpha\)</span> 大于 <span class="math inline">\(\beta\)</span> 时（下行），情况相反。
+当 <span class="math inline">\(\alpha\)</span> 和 <span class="math inline">\(\beta\)</span> 相等时（中间行），Beta 概率密度函数关于均值和众数 0.5 对称。
+这些趋势反映了 Beta(<span class="math inline">\(\alpha, \beta\)</span>) 变量 <span class="math inline">\(\pi\)</span> 的均值 <span class="math inline">\(E(\pi)\)</span> 和众数的公式：<a class="footnote-ref" href="#fn25" id="fnref25"><sup>25</sup></a></p>
+<p><span class="math display" id="eq:beta-trend">\[\begin{equation}
+\begin{split}
+E(\pi) &amp; = \frac{\alpha}{\alpha + \beta} \\
+\text{Mode}(\pi) &amp; = \frac{\alpha - 1}{\alpha + \beta - 2} \;\;\; \text{ when } \; \alpha, \beta &gt; 1. \\
+\end{split}
+\tag{3.2}
+\end{equation}\]</span></p>
+<p>例如，一个 <span class="math inline">\(\text{Beta}(5,5)\)</span> 变量 <span class="math inline">\(\pi\)</span> 的集中趋势可以描述为</p>
+<p><span class="math display">\[E(\pi) = \frac{5}{5 + 5} = 0.5 \;\; \text{ and } \;\; \text{Mode}(\pi) = \frac{5 - 1}{5 + 5 - 2} = 0.5 .\]</span></p>
+<p>图 <a href="/bayes-rules-python-cn/chapter-3/#fig:beta-tuning">3.2</a> 还揭示了 <span class="math inline">\(\pi\)</span> 的 <strong>变异</strong> 模式。
+例如，当值更靠近均值 0.5 时，<span class="math inline">\(\pi\)</span> 在 Beta(20,20) 模型中的变异性小于 Beta(5,5) 模型。
+我们可以通过 <strong>方差</strong> 来度量 Beta(<span class="math inline">\(\alpha,\beta\)</span>) 随机变量 <span class="math inline">\(\pi\)</span> 的变异性</p>
+<p><span class="math display" id="eq:beta-variability">\[\begin{equation}
+\text{Var}(\pi) = \frac{\alpha \beta}{(\alpha + \beta)^2(\alpha + \beta + 1)} .
+\tag{3.3}
+\end{equation}\]</span></p>
+<p>大致而言，方差度量 <span class="math inline">\(\pi\)</span> 值到其均值 <span class="math inline">\(E(\pi)\)</span> 的典型 <em>平方</em> 距离。
+由于方差的单位是平方，通常使用 <strong>标准差</strong> 更容易，它度量 <span class="math inline">\(\pi\)</span> 值到 <span class="math inline">\(E(\pi)\)</span> 的典型 <em>非平方</em> 距离：</p>
+<p><span class="math display">\[\text{SD}(\pi) := \sqrt{\text{Var}(\pi)}  .\]</span></p>
+<p>例如，一个 <span class="math inline">\(\text{Beta}(5,5)\)</span> 变量 <span class="math inline">\(\pi\)</span> 的值通常偏离其均值 0.5 约 0.151，而一个 <span class="math inline">\(\text{Beta}(20,20)\)</span> 变量的值通常仅偏离 0.5 约 0.078：</p>
+<p><span class="math display">\[\sqrt{\frac{5 \cdot 5}{(5 + 5)^2(5 + 5 + 1)}} = 0.151 \;\;\; \text{ and } \;\;\; \sqrt{\frac{20 \cdot 20}{(20 + 20)^2(20 + 20 + 1)}} = 0.078  .\]</span></p>
+<p>上述公式并非凭空出现。<br/>
+它们是将均值、众数和方差的一般定义应用于 Beta 概率密度函数 <a href="/bayes-rules-python-cn/chapter-3/#eq:beta-pdf">(3.1)</a> 得到的结果。<br/>
+我们在下面给出这些定义，但你可以跳过，不会影响阅读。</p>
 <div class="describe">
-<p>衡量中心趋势与可变性背后的理论</p>
-<p>让 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ################################################ 考虑两个共同的度量, QQ3的平均值或预期值捕捉QQ4@@的加权平均值,其中每个可能的QQ5@@的数值以相应的pdf值加权:XQ9@@ QQ6@@的模式捕捉QQ7@@的最可信值,即pdf被最大化的QQ8@@值:</p>
-<p>\[\text{Mode}(\pi) = \text{argmax}_\pi f(\pi).\]</p>
-<p>接下来,考虑在 0@@的变异性的两个共同度量. QQ1@@中的差异大致衡量了可能QQ2@@值的典型或预期平方距离:</p>
-<p>\[\text{Var}(\pi) = E((\pi - E(\pi))^2) = \int (\pi - E(\pi))^2 \cdot f(\pi) d\pi.\]</p>
-<p>QQ0@@的标准偏差大致衡量了可能QQ1@@值的典型或预期距离:</p>
-<p>\[\text{SD}(\pi) := \sqrt{\text{Var}(\pi)} .\]</p>
-<p>注: 若 0@@与pmf\(f(\pi)\)离散,</p>
+<p><strong>测量集中趋势与变异性的理论基础</strong></p>
+<p>设 <span class="math inline">\(\pi\)</span> 是一个连续随机变量，概率密度函数为 <span class="math inline">\(f(\pi)\)</span>。考虑两种常见的 <span class="math inline">\(\pi\)</span> <strong>集中趋势</strong>的度量。<br/>
+<span class="math inline">\(\pi\)</span> 的<strong>均值</strong>或<strong>期望值</strong>捕捉了 <span class="math inline">\(\pi\)</span> 的加权平均，其中每个可能的 <span class="math inline">\(\pi\)</span> 值以对应的概率密度函数值作为权重：<br/>
+<span class="math display">\[E(\pi) = \int \pi \cdot f(\pi)d\pi.\]</span>
+<span class="math inline">\(\pi\)</span> 的<strong>众数</strong>捕捉了 <span class="math inline">\(\pi\)</span> <em>最可能</em>的取值，即概率密度函数取得最大值时的 <span class="math inline">\(\pi\)</span> 值：</p>
+<p><span class="math display">\[\text{Mode}(\pi) = \text{argmax}_\pi f(\pi).\]</span></p>
+<p>接下来，考虑两种常见的 <span class="math inline">\(\pi\)</span> <strong>变异性</strong>度量。<br/>
+<span class="math inline">\(\pi\)</span> 的<strong>方差</strong>大致衡量了各个可能的 <span class="math inline">\(\pi\)</span> 值与其均值之间的典型或期望平方距离：</p>
+<p><span class="math display">\[\text{Var}(\pi) = E((\pi - E(\pi))^2) = \int (\pi - E(\pi))^2 \cdot f(\pi) d\pi.\]</span></p>
+<p><span class="math inline">\(\pi\)</span> 的<strong>标准差</strong>大致衡量了各个可能的 <span class="math inline">\(\pi\)</span> 值与其均值之间的典型或期望距离：</p>
+<p><span class="math display">\[\text{SD}(\pi) := \sqrt{\text{Var}(\pi)}  .\]</span></p>
+<p>注意：如果 <span class="math inline">\(\pi\)</span> 是<em>离散</em>的，其概率质量函数为 <span class="math inline">\(f(\pi)\)</span>，我们只需将 <span class="math inline">\(\int\)</span> 替换为 <span class="math inline">\(\sum\)</span>。</p>
 </div>
 </div>
 <div class="section level3" id="tuning-the-beta-prior" number="3.1.2">
-<h3>调整 beta 先验</h3>
-<p>来反映我们先验关于米歇尔竞选支持的信息。 我们在图3.1(左)中看到,在过去的30个民意测验中,米歇尔的平均支持率在45个百分点左右,尽管她大致接受的民意测验低至25个百分点,高至65个百分点. 我们的beta( QQ4) 之前应该有类似的模式。 例如,我们想要选择QQ5++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 或者,经过一些调整,</p>
-<p>\[\alpha \approx \frac{9}{11} \beta .\]</p>
-<p>在试验和错误过程中,我们使用plot beta()在bayesrules包中绘制Beta模型,其中含有满足这一制约的QQ0++和QQ1+++对(例如Beta(9,11),Beta(27,33),Beta(45,55)). 其中,我们发现Beta(45,55)密切抓住了旧民意测验的典型结果和变化:</p>
-<div class="sourceCode" id="cb24">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<h3> 调整 Beta 先验</h3>
+<p>了解了 Beta(<span class="math inline">\(\alpha,\beta\)</span>) 模型的工作原理，现在我们来<em>调整</em>形状超参数 <span class="math inline">\(\alpha\)</span> 和 <span class="math inline">\(\beta\)</span>，以反映我们关于 Michelle 选举支持率 <span class="math inline">\(\pi\)</span> 的先验信息。<br/>
+我们在图 <a href="/bayes-rules-python-cn/chapter-3/#fig:prior-election-ch3">3.1</a>（左）中看到，在以往的 30 次民意调查中，Michelle 的平均支持率约为 45 个百分点，不过她的最低支持率大约为 25 个百分点，最高约为 65 个百分点。<br/>
+我们的 Beta(<span class="math inline">\(\alpha,\beta\)</span>) 先验应该具有类似的模式。<br/>
+例如，我们希望选择 <span class="math inline">\(\alpha\)</span> 和 <span class="math inline">\(\beta\)</span>，使得 <span class="math inline">\(\pi\)</span> 的值倾向于在 0.45 附近，即 <span class="math inline">\(E(\pi) = \alpha/(\alpha + \beta) \approx 0.45\)</span>。<br/>
+或者，移项后得到：</p>
+<p><span class="math display">\[\alpha \approx \frac{9}{11} \beta  .\]</span></p>
+<p>在试错过程中，我们使用 <strong>bayesrules</strong> Python 库中的 <code>plot_beta()</code> 函数，绘制满足该约束的 <span class="math inline">\(\alpha\)</span> 和 <span class="math inline">\(\beta\)</span> 配对下的 Beta 模型（例如 Beta(9,11)、Beta(27,33)、Beta(45,55)）。<br/>
+在这些模型中，我们发现 Beta(45,55) 紧密地捕捉到了历史民调的典型结果<em>和</em>变异性：</p>
+<div class="sourceCode" id="cb24"><pre><code class="language-python">import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import beta
 
-# 绘制 Beta( 45, 55) 上
-plot_beta(45, 55)</code></pre>
-</div>
+# 绘制 Beta(45, 55) 先验
+x = np.linspace(0, 1, 200)
+plt.plot(x, beta.pdf(x, 45, 55))
+plt.xlabel("pi")
+plt.ylabel("密度")
+plt.title("Beta(45, 55) 先验分布")
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:plot-beta" style="display:block;"></span>
-<img alt="图像显示一个密度图,其中x轴上的希腊字母pi和y轴上的f(pi). 该模型密度值最高,约为0.45. 0.35-0.55范围以外的密度接近0." loading="lazy" src="/assets/img/bayes-rules-python-cn/plot-beta-1-ee06b3bbc14b.png" width="240"/>
-<p class="caption">图3.3:贝塔(45,55)概率密度函数.</p>
+<img alt="Image shows a density plot with the Greek letter pi on the x axis and f(pi) on the y-axis. The model has highest density value at around 0.45. The densities outside of the 0.35-0.55 range are almost 0." loading="lazy" src="/assets/img/bayes-rules-python-cn/plot-beta-1-ee06b3bbc14b.png" width="240"/>
+<p class="caption">
+图 3.3：Beta(45,55) 的概率密度函数。
+</p>
 </div>
 <div style="page-break-after: always;"></div>
-<p>因此,米歇尔选举支助的合理先行模式是:</p>
-<p>\[\pi \sim \text{Beta}(45,55)\]</p>
-<p>与前pdf + + + + 后插入 45 和 55 进入 (3.1) ,</p>
-<p>\[\begin{equation} f(\pi) = \frac{\Gamma(100)}{\Gamma(45)\Gamma(55)}\pi^{44}(1-\pi)^{54} \;\; \text{ for } \pi \in [0,1] . \tag{3.4} \end{equation}\]</p>
-<p>到(3.2)时,这一模式规定,米歇尔的选举支助最有可能在45个百分点左右,并且具有先验的平均和先验模式。</p>
-<p>\[\begin{equation} E(\pi) = \frac{45}{45 + 55} = 0.4500 \;\; \text{ and } \;\; \text{Mode}(\pi) = \frac{45 - 1}{45 + 55 - 2} = 0.4490 . \tag{3.5} \end{equation}\]</p>
-<p>此外,通过(3.3),前一次标准偏差0.05来描述XQ0@@中的潜在变异. 也就是说,我们先验关于米歇尔可能获得选举支持的其他假设往往比先验的45%的平均值差5个百分点:</p>
-<p>\[\begin{equation} \begin{split} \text{Var}(\pi) &amp; = \frac{45 \cdot 55}{(45 + 55)^2(45 + 55 + 1)} = 0.0025 \\ \text{SD}(\pi) &amp; = \sqrt{0.0025} = 0.05.\\ \end{split} \tag{3.6} \end{equation}\]</p>
+<p>因此，一个<em>合理的</em> Michelle 选举支持率先验模型是</p>
+<p><span class="math display">\[\pi \sim \text{Beta}(45,55)\]</span></p>
+<p>将 45 和 55 代入 <a href="/bayes-rules-python-cn/chapter-3/#eq:beta-pdf">(3.1)</a> 式后得到的 <strong>先验概率密度函数</strong> <span class="math inline">\(f(\pi)\)</span></p>
+<p><span class="math display" id="eq:michelle-prior-pdf">\[\begin{equation}
+f(\pi) = \frac{\Gamma(100)}{\Gamma(45)\Gamma(55)}\pi^{44}(1-\pi)^{54} \;\; \text{ for } \pi \in [0,1]  .
+\tag{3.4}
+\end{equation}\]</span></p>
+<p>根据 <a href="/bayes-rules-python-cn/chapter-3/#eq:beta-trend">(3.2)</a> 式，该模型表明米歇尔的选举支持率最可能在 45 个百分点左右，其 <strong>先验均值</strong> 和 <strong>先验众数</strong> 为</p>
+<p><span class="math display" id="eq:michelle-prior-trend">\[\begin{equation}
+E(\pi) = \frac{45}{45 + 55} = 0.4500 \;\; \text{ and } \;\; \text{Mode}(\pi) = \frac{45 - 1}{45 + 55 - 2} = 0.4490  .
+\tag{3.5}
+\end{equation}\]</span></p>
+<p>而且，根据 <a href="/bayes-rules-python-cn/chapter-3/#eq:beta-variability">(3.3)</a> 式，<span class="math inline">\(\pi\)</span> 的潜在变异性由 <strong>先验标准差</strong> 0.05 来描述。也就是说，我们关于米歇尔可能选举支持率的其他先验假设往往会偏离 45% 的先验均值 5 个百分点：</p>
+<p><span class="math display" id="eq:michelle-prior-var">\[\begin{equation}
+\begin{split}
+\text{Var}(\pi) &amp; = \frac{45 \cdot 55}{(45 + 55)^2(45 + 55 + 1)} = 0.0025 \\
+\text{SD}(\pi)  &amp; = \sqrt{0.0025} = 0.05.\\
+\end{split}
+\tag{3.6}
+\end{equation}\]</span></p>
 </div>
 </div>
 <div class="section level2" id="the-binomial-data-model-likelihood-function" number="3.2">
-<h2>二进制数据模型和概率函数</h2>
-<p>在对米歇尔选举支持的分析中, 你计划对明尼苏达人进行新的民意调查 并记录支持米歇尔的号码 其结果取决于并因此提供对QQ3的洞察力 — — 米歇尔的实际支持越大,XQ4 — — 往往就越大。 以及任何投票支持你候选人米歇尔(Michelle)的概率。 从我们第2.3.2节的工作来看,只要有XQ8XX,XX9XX就是Binomial。 具体来说,</p>
-<p>\[Y | \pi \sim \text{Bin}(50, \pi)\]</p>
-<p>以条件 pmf =================</p>
-<p>\[\begin{equation} f(y|\pi) = P(Y=y | \pi) = \left(\!\!\begin{array}{c} 50 \\ y \end{array}\!\!\right) \pi^y (1-\pi)^{50-y} . \tag{3.7} \end{equation}\]</p>
-<p>鉴于它在贝叶斯分析中的重要性,值得再次强调二元模型的细节。 首先, 有条件的pmf QQ0 QQ 给出了一个假设问题的答案:如果米歇尔的支持是一些给定的QQ1 的值, 那么50个投票人中有多少人 我们可以支持她吗? 图3.4将这个pmf绘制在可能QQ3@@的范围之下. 如果米歇尔的支持率很低(最高排), 如果她的支持是高的(下行),QQ6@@也有可能是高的.</p>
+<h2>二项数据模型与似然函数</h2>
+<p>在对米歇尔选举支持率 <span class="math inline">\(\pi\)</span> 的贝叶斯分析第二步中，你准备收集一些数据。你计划进行一项新的民意调查，调查 <span class="math inline">\(n = 50\)</span> 名明尼苏达州居民，并记录 <span class="math inline">\(Y\)</span>，即支持米歇尔的人数。结果依赖于 <span class="math inline">\(\pi\)</span>，因此也将提供对 <span class="math inline">\(\pi\)</span> 的深入认识——米歇尔的实际支持率越高，<span class="math inline">\(Y\)</span> 往往越大。为了对 <span class="math inline">\(Y\)</span> 对 <span class="math inline">\(\pi\)</span> 的依赖关系进行<em>建模</em>，我们可以对这次民意调查做出以下假设：1) 选民们回答调查时<em>相互独立</em>；2) 任何一名受访选民支持你的候选人米歇尔的<em>概率</em>为 <span class="math inline">\(\pi\)</span>。根据我们在第 <a href="/bayes-rules-python-cn/chapter-2/#chapter-2-binomial-likelihood">2.3.2</a> 节中的工作，在<em>给定</em> <span class="math inline">\(\pi\)</span> 的条件下，<span class="math inline">\(Y\)</span> 服从二项分布。具体来说，</p>
+<p><span class="math display">\[Y | \pi \sim \text{Bin}(50, \pi)\]</span></p>
+<p>其条件概率质量函数 <span class="math inline">\(f(y|\pi)\)</span> 定义于 <span class="math inline">\(y \in \{0,1,2,...,50\}\)</span>，</p>
+<p><span class="math display" id="eq:michelle-pmf">\[\begin{equation}
+f(y|\pi) = P(Y=y | \pi) = \left(\!\!\begin{array}{c} 50 \\ y \end{array}\!\!\right) \pi^y (1-\pi)^{50-y}  .
+\tag{3.7}
+\end{equation}\]</span></p>
+<p>鉴于其在我们的贝叶斯分析中的重要性，有必要再次强调二项模型的细节。首先，条件概率质量函数 <span class="math inline">\(f(y|\pi)\)</span> 回答了一个<em>假设性</em>问题：<em>如果</em>米歇尔的支持率是某个给定的 <span class="math inline">\(\pi\)</span> 值，那么这 <span class="math inline">\(50\)</span> 名受访选民中，我们可能会预期有多少人支持她，即 <span class="math inline">\(Y = y\)</span>？图 <a href="/bayes-rules-python-cn/chapter-3/#fig:binoms-3">3.4</a> 绘制了在一系列可能的 <span class="math inline">\(\pi\)</span> 值下该概率质量函数的图形。这些图形使我们更形式化地理解：<em>如果</em>米歇尔的支持率 <span class="math inline">\(\pi\)</span> 较低（顶行），那么民意调查结果 <span class="math inline">\(Y\)</span> 也很可能较低。<em>如果</em>她的支持率较高（底行），<span class="math inline">\(Y\)</span> 也很可能较高。</p>
 <div class="figure" style="text-align: center"><span id="fig:binoms-3" style="display:block;"></span>
-<img alt="图像显示 9 个不同的 pi 值的 y (50, pi) 模型的 pmfs。 在x轴上是y,在y轴上是f(y|pi). 当pi为0.1时,图案的模式为y=5,而y=30的概率非常低. 当pi为0.2模式为10,当pi为0.3模式为15. 随着Pi的增加,模型向右移动. 当pi是0.9,那么模式是45。 所有的数字都显示一个黑色的线条,代表当y是30时的pmf. 当pi为0.6时此线最高,当pi为0.5和0.4时此线相对显著." loading="lazy" src="/assets/img/bayes-rules-python-cn/binoms-3-1-ba91f591855b.png" width="480"/>
-<p class="caption">图3.4:本(50, @@0) ) pmf QQ1@@ 绘制的值为 QQ2@@ . 以黑色显示投票数据的观察值。</p>
+<img alt="The image shows pmfs of a Binomial(50, pi) model of y for 9 different pi values. On the x-axis is y, on the y-axis is f(y|pi). When pi is 0.1 the plot has a mode at y = 5 and probability of y = 30 is very low. When pi is 0.2 mode is 10, when pi is 0.3 mode is 15. As pi increases, the model shifts to the right. When pi is 0.9 then mode is 45. All of the figures show a black line which represents the pmf when y is 30. This line is highest when pi is 0.6 and relatively noticeable when pi is 0.5 and 0.4." loading="lazy" src="/assets/img/bayes-rules-python-cn/binoms-3-1-ba91f591855b.png" width="480"/>
+<p class="caption">
+图 3.4: Bin(50, <span class="math inline">\(\pi\)</span>) 的概率质量函数 <span class="math inline">\(f(y|\pi)\)</span> 在 <span class="math inline">\(\pi \in \{0.1, 0.2, \ldots, 0.9\}\)</span> 取值下的图形。在观测到的民意调查数据 <span class="math inline">\(Y = 30\)</span> 处的概率质量函数以黑色突出显示。
+</p>
 </div>
-<p>投票人支持米歇尔! 图3.4中pmfs中的黑线突出了这一结果。 为了集中关注与所观察到的投票数据相符的这些结果,我们将这些黑线抽取出来,并在单一的地块中进行比较(图3.5)。 这代表着Michelle在XQ4@@的每个潜在支持水平上, 事实上,这组离散的情景代表了在0到1之间(黑色曲线)任何XQ6XX定义的完全连续概率函数XQ5XX的一小撮点.</p>
+<p>在<em>现实</em>中，我们最终观察到这次民意调查取得了巨大成功：<span class="math inline">\(Y = 30\)</span> 名受访选民（<span class="math inline">\(n = 50\)</span>，占 60%）支持米歇尔！这一结果在图 <a href="/bayes-rules-python-cn/chapter-3/#fig:binoms-3">3.4</a> 的各概率质量函数中用黑色线条突出显示。为了只关注这些与观测到的民意调查数据相匹配的结果，我们将这些黑色线条提取出来，并在单一图中进行比较（图 <a href="/bayes-rules-python-cn/chapter-3/#fig:likelihood-election-ch3">3.5</a>）。它们表示观测到的民意调查数据 <span class="math inline">\(Y = 30\)</span> 在米歇尔支持率 <span class="math inline">\(\pi\)</span> 的各个可能水平（<span class="math inline">\(\{0.1,0.2,\ldots,0.9\}\)</span>）处的<em>似然度</em>。实际上，这个离散的情景集合代表了完整的连续<strong>似然函数</strong> <span class="math inline">\(L(\pi | y=30)\)</span> 上的一小部分点，该似然函数定义于 <span class="math inline">\(\pi\)</span> 在 0 到 1 之间的任意值（黑色曲线）。</p>
 <div class="figure" style="text-align: center"><span id="fig:likelihood-election-ch3" style="display:block;"></span>
-<img alt="在x轴上是pi值,在y轴上是pi概率,因为y是30. 显示概率曲线。 此外,有9条垂直线评价为0.1,0.2,.0.9. 概率函数达到最大值0.6,而概率为0.5和0.7,也很明显,但并不那么高。 对于其余的Pi值,概率几乎为零." loading="lazy" src="/assets/img/bayes-rules-python-cn/likelihood-election-ch3-1-466dfabfa952.png" width="240"/>
-<p class="caption">FIGURE 3.5:米歇尔的竞选支持的概率功能, {}}{}{}}}{}{}}}}因为观察的民调中, 垂直线代表XQQ4@@在XQ5@@评价的似然.</p>
+<img alt="On the x-axis are pi values and on the y-axis are the likelihood of pi given that y is 30. The likelihood curve is shown. In addition there are 9 vertical lines evaluated at 0.1, 0.2, ....0.9. The likelihood function reaches the maximum value at 0.6 and the likelihood at 0.5 and 0.7 are also noticeable but not as high. For the rest of the pi values the likelihood is almost zero." loading="lazy" src="/assets/img/bayes-rules-python-cn/likelihood-election-ch3-1-466dfabfa952.png" width="240"/>
+<p class="caption">
+图 3.5: 在观测到的民意调查中，<span class="math inline">\(Y = 30\)</span> 名受访明尼苏达州居民支持米歇尔（总 <span class="math inline">\(n = 50\)</span>）的条件下，米歇尔选举支持率 <span class="math inline">\(\pi\)</span> 的似然函数 <span class="math inline">\(L(\pi | y = 30)\)</span>。竖线表示在 <span class="math inline">\(\pi \in \{0.1,0.2,\ldots,0.9\}\)</span> 处计算的似然度。
+</p>
 </div>
 <div style="page-break-after: always;"></div>
-<p>提醒注意,似然函数是通过将 Binomial pmf 转向其头来定义的. 把QQ0+++作为观测到的数据和XQ1++++作为未知数据,与我们实际情况相匹配,XX2+++的二元概率函数从XQ3+++插入二元pmf(3.7)中产生:</p>
-<p>\[\begin{equation} L(\pi | y=30) = \left(\!\!\begin{array}{c} 50 \\ 30 \end{array}\!\!\right) \pi^{30} (1-\pi)^{20} \; \; \text{ for } \pi \in [0,1] . \tag{3.8} \end{equation}\]</p>
-<p>以图3.5为例, 50名投票人中,</p>
-<p>\[L(\pi = 0.6 | y = 30) = \left(\!\!\begin{array}{c} 50 \\ 30 \end{array}\!\!\right) 0.6^{30} 0.4^{20} \approx 0.115\]</p>
-<p>但是只有0.042,如果她的基本支持是\\\\\\\\} 编号 :</p>
-<p>\[L(\pi = 0.5 | y = 30) = \left(\!\!\begin{array}{c} 50 \\ 30 \end{array}\!\!\right) 0.5^{30} 0.5^{20} \approx 0.042 .\]</p>
-<p>提供观察投票数据的相对兼容性。 QQ4QQQ在QQ5QQQQQQQQQQQQ5QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ 这有道理! 如果假设的QQ6QQ值是0.6, 我们观察民意测验结果的似然就越小 — — 0. 因此,如果事实上米歇尔的基本支持率低至30%或高达90%,那么在新的民意调查中我们就不可能看到60%的支持率。</p>
+<p>回想一下，似然函数是通过将二项概率质量函数倒过来使用定义的。将 <span class="math inline">\(Y = 30\)</span> 视为观测数据，<span class="math inline">\(\pi\)</span> 视为未知，这与我们的实际情况相符。<span class="math inline">\(\pi\)</span> 的二项似然函数由将 <span class="math inline">\(y = 30\)</span> 代入二项概率质量函数 <a href="/bayes-rules-python-cn/chapter-3/#eq:michelle-pmf">(3.7)</a> 得出：</p>
+<p><span class="math display" id="eq:michelle-likelihood">\[\begin{equation}
+L(\pi | y=30) = \left(\!\!\begin{array}{c} 50 \\ 30 \end{array}\!\!\right) \pi^{30} (1-\pi)^{20} \; \; \text{ for } \pi \in [0,1]  .
+\tag{3.8}
+\end{equation}\]</span></p>
+<p>例如，与我们在图 <a href="/bayes-rules-python-cn/chapter-3/#fig:likelihood-election-ch3">3.5</a> 中看到的一致，如果她的真实支持率是 <span class="math inline">\(\pi = 0.6\)</span>，那么 50 名被调查选民中有 <span class="math inline">\(Y = 30\)</span> 人支持 Michelle 的概率为 0.115：</p>
+<p><span class="math display">\[L(\pi = 0.6 | y = 30) = \left(\!\!\begin{array}{c} 50 \\ 30 \end{array}\!\!\right) 0.6^{30} 0.4^{20} \approx 0.115\]</span></p>
+<p>但如果她的真实支持率是 <span class="math inline">\(\pi = 0.5\)</span>，则仅为 0.042：</p>
+<p><span class="math display">\[L(\pi = 0.5 | y = 30) = \left(\!\!\begin{array}{c} 50 \\ 30 \end{array}\!\!\right) 0.5^{30} 0.5^{20} \approx 0.042  .\]</span></p>
+<p>这里还要记住，<span class="math inline">\(L(\pi|y = 30)\)</span> 是 <em><span class="math inline">\(\pi\)</span> 的函数</em>，它揭示了观测到的民调数据 <span class="math inline">\(Y = 30\)</span> 与不同 <span class="math inline">\(\pi \in [0,1]\)</span> 值的相对兼容性。<span class="math inline">\(L(\pi|y=30)\)</span> 在 <span class="math inline">\(\pi = 0.6\)</span> 时达到<em>最大</em>，这表明当 Michelle 的<em>真实</em>支持率也是 60% 时，<em>调查中</em>观察到 60% 支持率最有可能。这很合理！假设的 <span class="math inline">\(\pi\)</span> 值与 0.6 相差越远，我们观察到当前民调结果的可能性就越小——对于 <span class="math inline">\(\pi\)</span> 值低于 0.3 或高于 0.9 的情况，<span class="math inline">\(L(\pi | y = 30)\)</span> 实际上降为 0。因此，如果 Michelle 的真实支持率低至 30% 或高达 90%，我们几乎不可能在新民调中观察到 60% 的支持率。</p>
 </div>
 <div class="section level2" id="the-beta-posterior-model" number="3.3">
-<h2>Beta 后台模式</h2>
-<p>我们的贝叶斯模式有两块, 即米歇尔支持的Beta前期模式,</p>
-<p>\[\begin{split} Y | \pi &amp; \sim \text{Bin}(50, \pi) \\ \pi &amp; \sim \text{Beta}(45, 55). \\ \end{split}\]</p>
+<h2> Beta 后验模型</h2>
+<p>我们的贝叶斯模型现在已有两个部分——描述米歇尔支持率 <span class="math inline">\(\pi\)</span> 的 Beta 先验模型和描述民意调查数据 <span class="math inline">\(Y\)</span> 对 <span class="math inline">\(\pi\)</span> 依赖关系的二项模型：</p>
+<p><span class="math display">\[\begin{split}
+Y | \pi &amp; \sim \text{Bin}(50, \pi)  \\
+    \pi &amp; \sim \text{Beta}(45, 55). \\
+\end{split}\]</span></p>
 <div class="figure" style="text-align: center"><span id="fig:like-election-ch3" style="display:block;"></span>
-<img alt="两条曲线用一个图表覆盖。 x轴读作pi. 一个曲线在前面贴上标签,另一个则贴上标签(标定)似然. 前曲线的pi值大多在0.35到0.55之间,模式为0.45. 缩放概率曲线的pi值在0.45到0.75之间,模式约为0.60." loading="lazy" src="/assets/img/bayes-rules-python-cn/like-election-ch3-1-04d9b29f8615.png" width="384"/>
-<p class="caption">FIGURE 3.6:前期型号为\(\pi\),加上\(\pi\)的(标)概率函数,考虑到新民调结果,\(n = 50\)的\(Y = 30\)被明尼苏达人所支持.</p>
+<img alt="Two curves are overlaid in one graph. The x axis reads pi. One curve is labeled prior and the other is labeled (scaled) likelihood. The prior curve has mostly pi values ranging from 0.35 to 0.55 and a mode of 0.45. the scaled likelihood curve has pi values ranging from 0.45 to 0.75 and a mode around 0.60." loading="lazy" src="/assets/img/bayes-rules-python-cn/like-election-ch3-1-04d9b29f8615.png" width="384"/>
+<p class="caption">
+图 3.6：<span class="math inline">\(\pi\)</span> 的先验模型以及根据最新民调结果（在 <span class="math inline">\(n = 50\)</span> 名受访明尼苏达州居民中 <span class="math inline">\(Y = 30\)</span> 人支持米歇尔）得到的 <span class="math inline">\(\pi\)</span> 的（按比例缩放后的）似然函数。
+</p>
 </div>
-<p>这些谜题的片段在图3.6中一并显示,仅为了与前作的视觉比较,概率函数被缩放到1.26 之前和数据,按概率计算,并不完全一致。 与最新民调数据相比, 然而,这两种见解对我们的分析都是宝贵的。 我们不应该无视新民意调查支持旧民意, 也不应该抛弃先验的资讯, 与贝叶斯人一样,我们可以构建一个后验模型,将前期信息与数据信息相结合。</p>
+<p>这些拼图的碎片共同呈现在图 <a href="/bayes-rules-python-cn/chapter-3/#fig:like-election-ch3">3.6</a> 中，其中仅为了与先验分布进行视觉比较，才将似然函数按比例缩放使其积分值为 1。<a class="footnote-ref" href="#fn26" id="fnref26"><sup>26</sup></a>
+先验分布与数据（通过似然函数体现）并不完全一致。
+基于早期民调构建的先验分布比最新民调数据对米歇尔竞选支持率的预期略悲观一些。
+然而，这两种信息对我们的分析都很有价值。
+正如我们不应因新数据而忽视旧数据，我们也不应因最新情况而舍弃之前的先验信息（这也是很好的人生建议）。
+以贝叶斯思维方式思考，我们可以构建一个融合了先验信息和数据信息的<span class="math inline">\(\pi\)</span> 后验模型。</p>
 <div class="quiz">
-<p>哪些情节反映了米歇尔当选后支持的正确模式?</p>
-<p><img alt="三个独立的地块被标注为Plot A,Plot B和C. 在所有三个地块中,x轴代表pi,前和(缩放)概率曲线相同. 之前的密度大多为pi值在0.35到0.55之间,模式为0.45. 缩放概率曲线的pi值从0.45到0.75,模式约为0.60. 后文虽异. 在Plot A中,后面是前人左边的(因此是似然)。 在Plot B中,后缀介于前缀和似然之间. 在Plot C中,后人属于似然权(因此属于前人)." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-105-1-462b0c1c5d90.png" style="display: block; margin: auto;" title="三个独立的地块被标注为Plot A,Plot B和C. 在所有三个地块中,x轴代表pi,前和(缩放)概率曲线相同. 之前的密度大多为pi值在0.35到0.55之间,模式为0.45. 缩放概率曲线的pi值从0.45到0.75,模式约为0.60. 后文虽异. 在Plot A中,后面是前人左边的(因此是似然)。 在Plot B中,后缀介于前缀和似然之间. 在Plot C中,后人属于似然权(因此属于前人)." width="576"/></p>
+<p>哪幅图反映了米歇尔竞选支持率 <span class="math inline">\(\pi\)</span> 的正确后验模型？</p>
+<p><img alt="Three separate plots are labeled as Plot A, Plot B, and C. In all the three plots, the x-axis represents pi and the prior and (scaled) likelihood curves are the same. The prior density has mostly pi values ranging from 0.35 to 0.55 and a mode of 0.45. The scaled likelihood curve has pi values ranging from 0.45 to 0.75 and a mode around 0.60. The posterior however differs. In Plot A the posterior is the left of the prior (and thus the likelihood). In Plot B, the posterior is between the prior and the likelihood. In Plot C, the posterior is to the right of the likelihood (and thus the prior)." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-105-1-462b0c1c5d90.png" style="display: block; margin: auto;" title="Three separate plots are labeled as Plot A, Plot B, and C. In all the three plots, the x-axis represents pi and the prior and (scaled) likelihood curves are the same. The prior density has mostly pi values ranging from 0.35 to 0.55 and a mode of 0.45. The scaled likelihood curve has pi values ranging from 0.45 to 0.75 and a mode around 0.60. The posterior however differs. In Plot A the posterior is the left of the prior (and thus the likelihood). In Plot B, the posterior is between the prior and the likelihood. In Plot C, the posterior is to the right of the likelihood (and thus the prior)." width="576"/></p>
 </div>
-<p>plot(b)是\(\pi\)的后验模型在数据之前的相对悲观和乐观之间达成平衡的唯一情节. 您可以在 Bayesrules 软件包中使用 plot beta binomial () 函数复制这个正确的后缀, 插入先验的超参数 QQ1@@ ) 和数据( QQ3@@ 投票人支持 Michelle 的 XX2@@ ):</p>
-<div class="sourceCode" id="cb25">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>图 (b) 是唯一一幅 <span class="math inline">\(\pi\)</span> 的后验模型在先验的相对悲观与数据的乐观之间取得平衡的图。
+你可以通过相应的绘图函数重现这一正确的后验分布，代入先验超参数 <span class="math inline">\((\alpha = 45, \beta = 55\)</span>) 和数据（<span class="math inline">\(n = 50\)</span> 名受访选民中有 <span class="math inline">\(y = 30\)</span> 人支持米歇尔）：</p>
+<div class="sourceCode" id="cb25"><pre><code class="language-python">import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import beta
 
-plot_beta_binomial(alpha = 45, beta = 55, y = 30, n = 50)</code></pre>
-</div>
+# 先验参数
+alpha_prior = 45
+beta_prior = 55
+# 观测数据
+y = 30
+n = 50
+# 后验参数
+alpha_post = alpha_prior + y
+beta_post = beta_prior + n - y
+
+# 绘制先验和后验
+x = np.linspace(0, 1, 200)
+plt.plot(x, beta.pdf(x, alpha_prior, beta_prior), label=f"先验 Beta({alpha_prior},{beta_prior})")
+plt.plot(x, beta.pdf(x, alpha_post, beta_post), label=f"后验 Beta({alpha_post},{beta_post})")
+plt.xlabel("pi")
+plt.ylabel("密度")
+plt.legend()
+plt.title("先验与后验分布")
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:post-election-ch3" style="display:block;"></span>
-<img alt="图中显示了本章中前一个情节中后期掉落到前期和似然之间的地块B." loading="lazy" src="/assets/img/bayes-rules-python-cn/post-election-ch3-1-25c9bf991679.png" width="384"/>
-<p class="caption">FIGURE 3.7:前pdf,缩放概率函数,以及后pdf 米歇尔的竞选支持 ##0 #.</p>
+<img alt="The figure shows Plot B from a previous plot in this chapter where posterior falls between the prior and the likelihood." loading="lazy" src="/assets/img/bayes-rules-python-cn/post-election-ch3-1-25c9bf991679.png" width="384"/>
+<p class="caption">
+图 3.7：米歇尔竞选支持率 <span class="math inline">\(\pi\)</span> 的先验概率密度函数、按比例缩放后的似然函数和后验概率密度函数。
+</p>
 </div>
-<p>在其平衡行为中,此处的后人略“接近”前人,而不是似然。 (我们将获得第4章为何如此的直觉) 米歇尔的支持率同样可能高于或低于赢得明尼苏达州50%的门槛。 此外,将先验的信息和数据结合起来,后期可信值的范围已经缩小:我们可以相当肯定,米歇尔的支持率在35%至65%之间。</p>
-<p>你可能也认得一些新事物:与前作一样, 这与前作一样,后作似乎是一种Beta( 1@@)模型,其中的形状参数已经更新,将前作的信息和数据结合起来. 确实如此。 在观察投票结果( 2@@)的基础上,</p>
-<p>\[\pi | (Y = 30) \sim \text{Beta}(75,75)\]</p>
-<p>并有一个对应的pdf,其来源如下(3.1) :</p>
-<p>\[\begin{equation} f(\pi | y = 30) = \frac{\Gamma(150)}{\Gamma(75)\Gamma(75)}\pi^{74} (1-\pi)^{74} \;\; \text{ for } \pi \in [0,1] . \tag{3.9} \end{equation}\]</p>
-<p>在支持这一主张之前, bayesrules 包中的总结 beta binomial () 函数概括了XQ1@@的上后模型中的典型值和可变性. 这些计算直接来自将先验和之后的Beta参数应用到(3.2)和(3.3)中:</p>
-<div class="sourceCode" id="cb26">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>在这一平衡过程中，这里的后验分布略“偏向”先验分布而非似然函数。
+（我们将在第 <a href="/bayes-rules-python-cn/chapter-4/#chapter-4">4</a> 章获得关于为什么会如此的直观理解。）
+后验分布集中在 <span class="math inline">\(\pi = 0.5\)</span> 表明，米歇尔的支持率高于或低于赢得明尼苏达州所需的 50% 门槛的可能性相当。
+此外，结合先验与数据的信息后，后验可能值的范围缩小了：我们可以相当肯定地说，米歇尔的支持率在 35% 到 65% 之间。</p>
+<p>你可能还会注意到一个新特点：与先验分布一样，<span class="math inline">\(\pi\)</span> 的后验模型也是连续的，且定义在 [0,1] 区间上。也就是说，与先验类似，后验看起来是参数已经更新、结合了先验信息和数据信息的 Beta(<span class="math inline">\(\alpha,\beta\)</span>) 模型。事实确实如此。以观测到的民调结果（<span class="math inline">\(Y = 30\)</span>）为条件，米歇尔选举支持率的后验模型为 Beta(75, 75)：</p>
+<p><span class="math display">\[\pi | (Y = 30) \sim \text{Beta}(75,75)\]</span></p>
+<p>其对应的概率密度函数由 <a href="/bayes-rules-python-cn/chapter-3/#eq:beta-pdf">(3.1)</a> 给出：</p>
+<p><span class="math display" id="eq:michelle-posterior">\[\begin{equation}
+f(\pi | y = 30) = \frac{\Gamma(150)}{\Gamma(75)\Gamma(75)}\pi^{74} (1-\pi)^{74} \;\; \text{ for } \pi \in [0,1]  .
+\tag{3.9}
+\end{equation}\]</span></p>
+<p>在用数学证明这一结论之前，我们先来看看你对米歇尔选举支持率 <span class="math inline">\(\pi\)</span> 的认识是如何演变的。贝叶斯分析库中的 <code>summarize_beta_binomial()</code> 函数总结了 <span class="math inline">\(\pi\)</span> 的先验模型和后验模型的典型值与变异性。这些计算直接来自将先验和后验的 Beta 参数代入 <a href="/bayes-rules-python-cn/chapter-3/#eq:beta-trend">(3.2)</a> 和 <a href="/bayes-rules-python-cn/chapter-3/#eq:beta-variability">(3.3)</a> 式：</p>
+<div class="sourceCode" id="cb26"><pre><code class="language-python">import pandas as pd
+from scipy.stats import beta
 
-summarize_beta_binomial(alpha = 45, beta = 55, y = 30, n = 50)
-model alpha beta mean  mode      var      sd
-1     prior    45   55 0.45 0.449 0.002450 0.04950
-2 posterior    75   75 0.50 0.500 0.001656 0.04069</code></pre>
-</div>
-<p>比较一下投票数据对后台模式的影响。 在观察50人中有30人支持米歇尔的民意调查后,</p>
-<p>\[E(\pi) = 0.45 \;\; \text{ vs } \;\; E(\pi | Y = 30) = 0.50 .\]</p>
-<p>根据投票数据,</p>
-<p>\[\text{SD}(\pi) \approx 0.0495 \;\; \text{ vs } \;\; \text{SD}(\pi | Y = 30) \approx 0.0407 .\]</p>
-<p>如果你愿意接受我们的说法, “\(\pi\)”的后期模式是Beta(75,75), 然而,我们强烈建议大家考虑后期建筑的魔法. 通过这个过程可以帮助你进一步发展贝叶斯模型的直觉. 与我们先验的贝叶斯模式一样, \(\pi\)的后期条件pdf在前pdf \(f(\pi)\)和通过贝叶斯规则(2.12)的概率函数 3@@之间达成了平衡:</p>
-<p>\[f(\pi | y = 30) = \frac{f(\pi)L(\pi|y = 30)}{f(y = 30)}.\]</p>
-<p>从第2.3.6节中回顾到, \(f(y = 30)\)是一个正态的常数, 我们不需要计算常数, 相反,我们可以利用后pdf与前pdf(3.4)和概率函数(3.8)的产品成正比这一事实来简化后置构造:</p>
-<p>\[\begin{split} f(\pi | y = 30) &amp; \propto f(\pi) L(\pi | y=30) \\ &amp; = \frac{\Gamma(100)}{\Gamma(45)\Gamma(55)}\pi^{44}(1-\pi)^{54} \cdot \left(\!\!\begin{array}{c} 50 \\ 30 \end{array}\!\!\right) \pi^{30} (1-\pi)^{20} \\ &amp; = \left[\frac{\Gamma(100)}{\Gamma(45)\Gamma(55)}\left(\!\!\begin{array}{c} 50 \\ 30 \end{array}\!\!\right) \right] \cdot \pi^{74} (1-\pi)^{74} \\ &amp; \propto \pi^{74} (1-\pi)^{74} . \\ \end{split}\]</p>
-<p>在计算中的第三行中,我们把常数和依赖于 \\\\\\\\的元素合并成两个不同的块. 我们放弃了所有不依赖QQ1的常数。 我们不需要这些。 我们所关心的,</p>
-<p>\[f(\pi | y=30) = c\pi^{74} (1-\pi)^{74} \propto \pi^{74} (1-\pi)^{74} .\]</p>
-<p>我们可以通过计算pdf整合到1的正态常数( 0@@)来完成这个后pdf的定义:</p>
-<p>我们不需要计算。 \(\pi\)的pdf是由它对于\(\pi\)的结构依赖来定义的,即pdf的内核. 请注意, \(f(\pi|y=30)\) 与正版 Beta( 75, 75) pdf 的内核相同 :</p>
-<p>\[f(\pi | y=30) = \frac{\Gamma(150)}{\Gamma(75)\Gamma(75)} \pi^{74} (1-\pi)^{74} \propto \pi^{74} (1-\pi)^{74} .\]</p>
-<p>校对:Soup 魔术 对于从未正常化的后pdf或内核中识别QQ2@@的后置模型的额外实践,请接受以下的测试. 27个</p>
+# 参数
+alpha_prior = 45
+beta_prior = 55
+y = 30
+n = 50
+
+# 先验汇总（Beta 分布无直接 mode 方法，手动计算）
+prior_mean = alpha_prior / (alpha_prior + beta_prior)
+prior_mode = (alpha_prior - 1) / (alpha_prior + beta_prior - 2) if alpha_prior &gt; 1 and beta_prior &gt; 1 else float('nan')
+prior_var = (alpha_prior * beta_prior) / ((alpha_prior + beta_prior)**2 * (alpha_prior + beta_prior + 1))
+prior_sd = prior_var**0.5
+
+# 后验参数
+alpha_post = alpha_prior + y
+beta_post = beta_prior + n - y
+
+posterior_mean = alpha_post / (alpha_post + beta_post)
+posterior_mode = (alpha_post - 1) / (alpha_post + beta_post - 2) if alpha_post &gt; 1 and beta_post &gt; 1 else float('nan')
+posterior_var = (alpha_post * beta_post) / ((alpha_post + beta_post)**2 * (alpha_post + beta_post + 1))
+posterior_sd = posterior_var**0.5
+
+# 构造数据框
+summary_df = pd.DataFrame({
+    "model": ["prior", "posterior"],
+    "alpha": [alpha_prior, alpha_post],
+    "beta": [beta_prior, beta_post],
+    "mean": [prior_mean, posterior_mean],
+    "mode": [prior_mode, posterior_mode],
+    "var": [prior_var, posterior_var],
+    "sd": [prior_sd, posterior_sd]
+})
+
+print(summary_df)</code></pre></div>
+<p>通过比较可以看清民调数据对后验模型的影响。主要是，在观测到50人中有30人支持米歇尔的民调后，她的基础支持率 <span class="math inline">\(\pi\)</span> 的期望值从约45% 微微上调到了50%：</p>
+<p><span class="math display">\[E(\pi) = 0.45 \;\; \text{ vs } \;\; E(\pi | Y = 30) = 0.50  .\]</span></p>
+<p>此外，模型内部的变异性减小了，这表明在民调数据下，<span class="math inline">\(\pi\)</span> 的合理后验取值范围变得更窄：</p>
+<p><span class="math display">\[\text{SD}(\pi) \approx 0.0495 \;\; \text{ vs } \;\; \text{SD}(\pi | Y = 30) \approx 0.0407  .\]</span></p>
+<p>如果你相信我们所说的，即 <span class="math inline">\(\pi\)</span> 的后验模型是 Beta(75,75)，那么你可以直接跳到第 <a href="/bayes-rules-python-cn/chapter-3/#ch3-bbmodel">3.4</a> 节，并且仍然为本书后续内容做好准备。不过，我们强烈建议你思考一下构建后验的奇妙过程。经历这个过程可以帮助你进一步培养贝叶斯建模的直觉。与我们之前的贝叶斯模型一样，<span class="math inline">\(\pi\)</span> 的后验条件概率密度函数通过贝叶斯法则 <a href="/bayes-rules-python-cn/chapter-2/#eq:bayesvariables">(2.12)</a> 在先验概率密度函数 <span class="math inline">\(f(\pi)\)</span> 和似然函数 <span class="math inline">\(L(\pi|y = 30)\)</span> 之间取得平衡：</p>
+<p><span class="math display">\[f(\pi | y = 30) = \frac{f(\pi)L(\pi|y = 30)}{f(y = 30)}.\]</span></p>
+<p>回顾第 <a href="/bayes-rules-python-cn/chapter-2/#shortcut-2">2.3.6</a> 节，<span class="math inline">\(f(y = 30)\)</span> 是一个<strong>归一化常数</strong>，即对于 <span class="math inline">\(\pi\)</span> 而言它是一个常数，它使得后验概率密度函数 <span class="math inline">\(f(\pi | y = 30)\)</span> 的积分等于 1。<strong>我们不需要为了构建后验模型而计算归一化常数。</strong>相反，我们可以利用后验概率密度函数<em>正比于</em>先验概率密度函数 <a href="/bayes-rules-python-cn/chapter-3/#eq:michelle-prior-pdf">(3.4)</a> 和似然函数 <a href="/bayes-rules-python-cn/chapter-3/#eq:michelle-likelihood">(3.8)</a> 的乘积这一事实来简化后验的构建：</p>
+<p><span class="math display">\[\begin{split}
+f(\pi | y = 30)
+&amp; \propto f(\pi) L(\pi | y=30)  \\
+&amp; = \frac{\Gamma(100)}{\Gamma(45)\Gamma(55)}\pi^{44}(1-\pi)^{54} \cdot \left(\!\!\begin{array}{c} 50 \\ 30 \end{array}\!\!\right) \pi^{30} (1-\pi)^{20}  \\
+&amp; = \left[\frac{\Gamma(100)}{\Gamma(45)\Gamma(55)}\left(\!\!\begin{array}{c} 50 \\ 30 \end{array}\!\!\right) \right] \cdot \pi^{74} (1-\pi)^{74}  \\
+&amp; \propto \pi^{74} (1-\pi)^{74}  . \\
+\end{split}\]</span></p>
+<p>在我们计算的第三行中，我们将常数和依赖于 <span class="math inline">\(\pi\)</span> 的部分分成了两块。在最后一行，我们做了一个很大的简化：我们丢弃了所有不依赖于 <span class="math inline">\(\pi\)</span> 的常数。我们不需要这些。相反，我们关心的是 <span class="math inline">\(f(\pi | y=30)\)</span> 对 <span class="math inline">\(\pi\)</span> 的依赖关系：</p>
+<p><span class="math display">\[f(\pi | y=30) = c\pi^{74} (1-\pi)^{74} \propto \pi^{74} (1-\pi)^{74}  .\]</span></p>
+<p>我们<em>可以</em>通过计算使概率密度函数积分为 1 的归一化常数 <span class="math inline">\(c\)</span> 来完成这个后验概率密度函数的定义：</p>
+<p><span class="math display">\[1 = \int f(\pi | y=30) d\pi = \int c \cdot \pi^{74} (1-\pi)^{74} d\pi \;\; \Rightarrow \; \; c = \frac{1}{\int \pi^{74} (1-\pi)^{74} d\pi}.\]</span>
+但同样，我们并不需要真的去计算这个值。
+<span class="math inline">\(\pi\)</span> 的概率密度函数由其结构对 <span class="math inline">\(\pi\)</span> 的依赖关系——即该密度函数的 <strong>核</strong>——来定义。
+这里请注意，<span class="math inline">\(f(\pi|y=30)\)</span> 与 <a href="/bayes-rules-python-cn/chapter-3/#eq:michelle-posterior">(3.9)</a> 式中的归一化 Beta(75,75) 密度函数具有 <em>相同</em> 的核：</p>
+<p><span class="math display">\[f(\pi | y=30) = \frac{\Gamma(150)}{\Gamma(75)\Gamma(75)} \pi^{74} (1-\pi)^{74} \propto \pi^{74} (1-\pi)^{74}  .\]</span></p>
+<p>未归一化的后验概率密度函数 <span class="math inline">\(f(\pi | y=30)\)</span> 与未归一化的 Beta(75,75) 密度函数相吻合，这证实了我们的断言：<span class="math inline">\(\pi | (Y=30) \sim \text{Beta}(75,75)\)</span>。
+很神奇吧。
+为了进一步练习如何从未归一化的后验密度函数或核中识别 <span class="math inline">\(\pi\)</span> 的后验模型，请完成下面的小测验。<a class="footnote-ref" href="#fn27" id="fnref27"><sup>27</sup></a></p>
 <div class="quiz">
-<p>对于下面的每一种情景,从它的不常态的pdf中找出正确的Beta后验模型.</p>
+<p>对于下面每种情形，请根据未归一化概率密度函数识别出 <span class="math inline">\(\pi \in [0,1]\)</span> 的正确的 Beta 后验模型。</p>
 <ol style="list-style-type: lower-alpha">
-<li>\(f(\pi|y) \propto \pi^{3 - 1}(1-\pi)^{12 - 1}\)</li>
-<li>\(f(\pi|y) \propto \pi^{11}(1-\pi)^{2}\)</li>
-<li>\(f(\pi|y) \propto 1\)</li>
+<li><span class="math inline">\(f(\pi|y) \propto \pi^{3 - 1}(1-\pi)^{12 - 1}\)</span></li>
+<li><span class="math inline">\(f(\pi|y) \propto \pi^{11}(1-\pi)^{2}\)</span></li>
+<li><span class="math inline">\(f(\pi|y) \propto 1\)</span></li>
 </ol>
 </div>
-<p>现在,与其从内核中识别一个模型,不如从实践中识别模型的内核. 28个</p>
+<p>现在，反过来，练习从模型中识别核。<a class="footnote-ref" href="#fn28" id="fnref28"><sup>28</sup></a></p>
 <div class="quiz">
-<p>识别下面每个pdf的内核.</p>
+<p>识别以下每个概率密度函数的核。</p>
 <ol style="list-style-type: decimal">
-<li><span class="math inline">\(f(\pi|y) = ye^{-\pi y}\)</span> for <span class="math inline">\(\pi &gt; 0\)</span>
+<li><span class="math inline">\(f(\pi|y) = ye^{-\pi y}\)</span> 对于 <span class="math inline">\(\pi &gt; 0\)</span>
 <ol style="list-style-type: lower-alpha">
-<li>\(y\)</li>
-<li>\(e^{-\pi}\)</li>
-<li>\(ye^{-\pi}\)</li>
-<li>\(e^{-\pi y}\)</li>
+<li><span class="math inline">\(y\)</span></li>
+<li><span class="math inline">\(e^{-\pi}\)</span></li>
+<li><span class="math inline">\(ye^{-\pi}\)</span></li>
+<li><span class="math inline">\(e^{-\pi y}\)</span></li>
 </ol></li>
-<li><span class="math inline">\(f(\pi|y) = \frac{2^y}{(y-1)!} \pi^{y-1}e^{-2\pi}\)</span> for <span class="math inline">\(\pi &gt; 0\)</span>
+<li><span class="math inline">\(f(\pi|y) = \frac{2^y}{(y-1)!} \pi^{y-1}e^{-2\pi}\)</span> 对于 <span class="math inline">\(\pi &gt; 0\)</span>
 <ol style="list-style-type: lower-alpha">
-<li>\(\pi^{y-1}e^{-2\pi}\)</li>
-<li>\(\frac{2^y}{(y-1)!}\)</li>
-<li>\(e^{-2\pi}\)</li>
-<li>\(\pi^{y-1}\)</li>
+<li><span class="math inline">\(\pi^{y-1}e^{-2\pi}\)</span></li>
+<li><span class="math inline">\(\frac{2^y}{(y-1)!}\)</span></li>
+<li><span class="math inline">\(e^{-2\pi}\)</span></li>
+<li><span class="math inline">\(\pi^{y-1}\)</span></li>
 </ol></li>
-<li>\(f(\pi) = 3\pi^2\) \(\pi \in [0,1]\)</li>
+<li><span class="math inline">\(f(\pi) = 3\pi^2\)</span> 对于 <span class="math inline">\(\pi \in [0,1]\)</span></li>
 </ol>
 </div>
 </div>
 <div class="section level2" id="ch3-bbmodel" number="3.4">
-<h2>β-比诺米亚模型</h2>
-<p>在上一节中, 投票结果(在投票结果中, 这是比较普通的Beta-Binomial模型的特殊情况:</p>
-<p>\[\begin{split} Y | \pi &amp; \sim \text{Bin}(n, \pi) \\ \pi &amp; \sim \text{Beta}(\alpha, \beta). \\ \end{split}\]</p>
-<p>这个一般模型有庞大的应用, 适用于任何存在 [0] 的利益参数的设置, 例如,QQ4@@可能是硬币对头币的倾向和数据QQ5@@记录了在QQ6@@硬币翻转系列中观察到的头币数量. 或是使用社交媒体的成年人比例, 无论设置如何,在观察XQQ12@@试验成功后,XQ13@@的后缀可以用Beta模型来描述,该模型揭示了前缀(通过XQ14@@和XQ15@@)和数据(通过XQ16@@和XQ17@@)的影响:</p>
-<p>\[\begin{equation} \pi | (Y = y) \sim \text{Beta}(\alpha + y, \beta + n - y) . \tag{3.10} \end{equation}\]</p>
-<p>从(3.2)和(3.3)中测算出后中央倾向和可变性:</p>
-<p>\[\begin{equation} \begin{split} E(\pi | Y=y) &amp; = \frac{\alpha + y}{\alpha + \beta + n} \\ \text{Mode}(\pi | Y=y) &amp; = \frac{\alpha + y - 1}{\alpha + \beta + n - 2} \\ \text{Var}(\pi | Y=y) &amp; = \frac{(\alpha + y)(\beta + n - y)}{(\alpha + \beta + n)^2(\alpha + \beta + n + 1)}.\\ \end{split} \tag{3.11} \end{equation}\]</p>
-<p>重要的是,请注意后方遵循与前方相同的概率模型的不同参数化——前方和后方都是具有不同调子的beta模型. 在这种情况下,我们说Beta( 0@@)模型是对应的Bin(\(n,\pi\))数据模型之前的集合符. 我们下面的工作将强调,共性简化了后期建筑,因此可以成为巴耶斯建模中可取的地产.</p>
+<h2>Beta-二项模型</h2>
+<p>在上一节中，我们为 Michelle 的选举支持率 <span class="math inline">\(\pi\)</span> 建立了基本的 Beta-二项模型。在建模过程中，我们假设了一个特定的 Beta(45,55) 先验分布以及特定的民调结果（在 <span class="math inline">\(n=50\)</span> 名受访选民中，<span class="math inline">\(Y=30\)</span> 人支持你的候选人）。这只是更一般的 Beta-二项模型的一个特例：</p>
+<p><span class="math display">\[\begin{split}
+Y | \pi &amp; \sim \text{Bin}(n, \pi) \\
+\pi &amp; \sim \text{Beta}(\alpha, \beta). \\
+\end{split}\]</span></p>
+<p>这个一般模型应用广泛，适用于任何兴趣参数 <span class="math inline">\(\pi\)</span> 取值在 [0,1] 上的场景，你可以使用任意调整的 Beta 先验分布，以及任何数据 <span class="math inline">\(Y\)</span>，<span class="math inline">\(Y\)</span> 是在 <span class="math inline">\(n\)</span> 次固定、独立的试验中“成功”的次数，每次试验成功的概率为 <span class="math inline">\(\pi\)</span>。例如，<span class="math inline">\(\pi\)</span> 可能代表一枚硬币正面朝上的倾向，数据 <span class="math inline">\(Y\)</span> 记录了在 <span class="math inline">\(n\)</span> 次抛硬币中观测到的正面次数。或者 <span class="math inline">\(\pi\)</span> 可能代表使用社交媒体的成年人比例，我们通过抽样 <span class="math inline">\(n\)</span> 名成年人并记录其中使用社交媒体的人数 <span class="math inline">\(Y\)</span> 来了解 <span class="math inline">\(\pi\)</span>。无论什么场景，在观测到 <span class="math inline">\(n\)</span> 次试验中有 <span class="math inline">\(Y=y\)</span> 次成功之后，<span class="math inline">\(\pi\)</span> 的后验分布可以用一个 Beta 模型来描述，该模型揭示了先验（通过 <span class="math inline">\(\alpha\)</span> 和 <span class="math inline">\(\beta\)</span>）和数据（通过 <span class="math inline">\(y\)</span> 和 <span class="math inline">\(n\)</span>）的影响：</p>
+<p><span class="math display" id="eq:beta-posterior">\[\begin{equation}
+\pi | (Y = y) \sim \text{Beta}(\alpha + y, \beta + n - y)  .
+\tag{3.10}
+\end{equation}\]</span></p>
+<p>后验集中趋势和变异性的度量来自 <a href="/bayes-rules-python-cn/chapter-3/#eq:beta-trend">(3.2)</a> 和 <a href="/bayes-rules-python-cn/chapter-3/#eq:beta-variability">(3.3)</a>：</p>
+<p><span class="math display" id="eq:beta-trend-posterior">\[\begin{equation}
+\begin{split}
+E(\pi | Y=y)           &amp; = \frac{\alpha + y}{\alpha + \beta + n} \\
+\text{Mode}(\pi | Y=y) &amp; = \frac{\alpha + y - 1}{\alpha + \beta + n - 2} \\
+\text{Var}(\pi | Y=y)  &amp; = \frac{(\alpha + y)(\beta + n - y)}{(\alpha + \beta + n)^2(\alpha + \beta + n + 1)}.\\
+\end{split}
+\tag{3.11}
+\end{equation}\]</span></p>
+<p>重要的是，注意后验与先验是同一概率模型的不同参数化——先验和后验都是调参不同的 Beta 模型。
+在本例中，我们称 Beta(<span class="math inline">\(\alpha, \beta\)</span>) 模型是相应 Bin(<span class="math inline">\(n,\pi\)</span>) 数据模型的 <strong>共轭先验</strong>。
+后续工作将强调共轭性简化了后验的构造，因此是贝叶斯建模中一个值得拥有的性质。</p>
 <div class="describe">
-<p>预设</p>
-<p>我们说, 0@@是前\(L(\pi|y)\)的前ju,如果后or,\(f(\pi|y) \propto f(\pi)L(\pi|y)\),是前 model同一个模范家庭的.</p>
+<p><strong>共轭先验</strong></p>
+<p>如果后验 <span class="math inline">\(f(\pi|y) \propto f(\pi)L(\pi|y)\)</span> 与先验来自同一模型族，我们就称 <span class="math inline">\(f(\pi)\)</span> 是 <span class="math inline">\(L(\pi|y)\)</span> 的共轭先验。</p>
 </div>
-<p>一般的Beta-Binomial模型的后期构造与选举特有的模型非常相似. 首先,Beta Previous pdf \(f(\pi)\)由(3.1)定义,概率函数 \(L(\pi|y)\)由(2.7)定义,这是Bin( 2@@)模型在观测数据 3@@时的有条件pmf. 对于QQ4@@,</p>
-<p>\[\begin{equation} f(\pi) = \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha)\Gamma(\beta)}\pi^{\alpha - 1}(1-\pi)^{\beta - 1} \;\; \text{ and } \;\; L(\pi|y) = \left(\!\!\begin{array}{c} n \\ y \end{array}\!\!\right) \pi^{y} (1-\pi)^{n-y} . \tag{3.12} \end{equation}\]</p>
-<p>将这两块拼在一起,</p>
-<p>\[\begin{split} f(\pi | y) &amp; \propto f(\pi)L(\pi|y) \\ &amp; = \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha)\Gamma(\beta)}\pi^{\alpha - 1}(1-\pi)^{\beta - 1} \cdot \left(\!\begin{array}{c} n \\ y \end{array}\!\right) \pi^{y} (1-\pi)^{n-y} \\ &amp; \propto \pi^{(\alpha + y) - 1} (1-\pi)^{(\beta + n - y) - 1} .\\ \end{split}\]</p>
-<p>我们放弃了常数正常化, 请注意,这与规范化的Beta(\(\alpha + y\),\(\beta + n - y\)) pdf,</p>
-<p>\[f(\pi|y) = \frac{\Gamma(\alpha+\beta+n)}{\Gamma(\alpha+y)\Gamma(\beta+n-y)}\pi^{(\alpha + y) - 1} (1-\pi)^{(\beta + n - y) - 1}.\]</p>
-<p>因此,我们核实了我们的说法,即XQ0@@的后期模式,在XQ2@@的试验中,XQ1@@的成功是XQ3@@.</p>
+<p>一般 Beta-二项模型的后验构造与选举特例非常相似。
+首先，Beta 先验 pdf <span class="math inline">\(f(\pi)\)</span> 由 <a href="/bayes-rules-python-cn/chapter-3/#eq:beta-pdf">(3.1)</a> 定义，而似然函数 <span class="math inline">\(L(\pi|y)\)</span> 由 <a href="/bayes-rules-python-cn/chapter-2/#eq:binomial-pmf">(2.7)</a> 定义，后者是给定观测数据 <span class="math inline">\(Y = y\)</span> 条件下 Bin(<span class="math inline">\(n,\pi\)</span>) 模型的条件 pmf。
+对于 <span class="math inline">\(\pi \in [0,1]\)</span>，</p>
+<p><span class="math display" id="eq:ch-3-prior-like">\[\begin{equation}
+f(\pi) = \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha)\Gamma(\beta)}\pi^{\alpha - 1}(1-\pi)^{\beta - 1}
+\;\; \text{ and } \;\;
+L(\pi|y) = \left(\!\!\begin{array}{c} n \\ y \end{array}\!\!\right) \pi^{y} (1-\pi)^{n-y}  .
+\tag{3.12}
+\end{equation}\]</span></p>
+<p>将这两部分结合，后验 pdf 由贝叶斯定理得出：</p>
+<p><span class="math display">\[\begin{split}
+f(\pi | y)
+&amp; \propto f(\pi)L(\pi|y) \\
+&amp; = \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha)\Gamma(\beta)}\pi^{\alpha - 1}(1-\pi)^{\beta - 1}  \cdot \left(\!\begin{array}{c} n \\ y \end{array}\!\right) \pi^{y} (1-\pi)^{n-y} \\
+&amp; \propto \pi^{(\alpha + y) - 1} (1-\pi)^{(\beta + n - y) - 1}  .\\
+\end{split}\]</span></p>
+<p>同样，我们省略了不依赖于<span class="math inline">\(\pi\)</span>的归一化常数，得到了<em>未归一化的</em>后验概率密度函数。注意，它与归一化的Beta(<span class="math inline">\(\alpha + y\)</span>, <span class="math inline">\(\beta + n - y\)</span>)的概率密度函数具有相同的结构，</p>
+<p><span class="math display">\[f(\pi|y) = \frac{\Gamma(\alpha+\beta+n)}{\Gamma(\alpha+y)\Gamma(\beta+n-y)}\pi^{(\alpha + y) - 1} (1-\pi)^{(\beta + n - y) - 1}.\]</span></p>
+<p>因此，我们已经验证了我们的断言：在观察到<span class="math inline">\(n\)</span>次试验中有<span class="math inline">\(Y = y\)</span>次成功时，<span class="math inline">\(\pi\)</span>的后验模型为<span class="math inline">\(\text{Beta}(\alpha + y, \beta + n - y)\)</span>。</p>
 </div>
 <div class="section level2" id="chapter-3-simulation" number="3.5">
-<h2>模拟Beta-Binomial</h2>
-<p>以2.3.7节为指南, 我们首先模拟了Beta(45,55)的10,000个值,</p>
-<div class="sourceCode" id="cb27">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h2> 模拟Beta-二项模型</h2>
+<p>以第<a href="/bayes-rules-python-cn/chapter-2/#chapter-2-simulation">2.3.7</a>节为指南，我们来<em>模拟</em>米歇尔支持率<span class="math inline">\(\pi\)</span>的后验模型。
+首先，使用<code>scipy.stats.beta.rvs</code>函数从先验Beta(45,55)中抽取10,000个<span class="math inline">\(\pi\)</span>值，然后对每个<span class="math inline">\(\pi\)</span>，使用<code>scipy.stats.binom.rvs</code>函数模拟一个潜在的二项分布Bin(50,<span class="math inline">\(\pi\)</span>)民调结果<span class="math inline">\(Y\)</span>：</p>
+<div class="sourceCode" id="cb27"><pre><code class="language-python">import numpy as np
 import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-rng = np.random.default_rng(84735)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>由此而来的一万对  和 QQ1 数值见图3.8。 总的来说,米歇尔的支持越大,她的民意调查结果就越好。 此外,这些突出的对联说明,50名投票人支持米歇尔,最终观察到的民意测验结果,如果她的基本支持在0.4至0.6之间,很可能会出现。</p>
-<div class="sourceCode" id="cb28">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+np.random.seed(84735)
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 从 Beta(45, 55) 生成 pi
+pi = np.random.beta(45, 55, size=10000)
+# 从二项分布生成 y，n=50，成功概率为 pi
+y = np.random.binomial(n=50, p=pi, size=10000)
+
+# 构造数据框
+michelle_sim = pd.DataFrame({"pi": pi, "y": y})
+print(michelle_sim.head())</code></pre></div>
+<p>这样得到的10,000对<span class="math inline">\(\pi\)</span>和<span class="math inline">\(y\)</span>值如 图<a href="/bayes-rules-python-cn/chapter-3/#fig:ch3-michelle-sim-1">3.8</a>所示。
+总的来说，米歇尔的支持率越高，她的民调结果通常也越好。
+此外，高亮显示的数据对表明，最终的观察结果（在50位受访选民中有<span class="math inline">\(Y = 30\)</span>人支持米歇尔）最有可能出现在她的真实支持率<span class="math inline">\(\pi\)</span>在0.4到0.6之间时。</p>
+<div class="sourceCode" id="cb28"><pre><code class="language-python">import seaborn as sns
+sns.scatterplot(data=michelle_sim, x='pi', y='y', hue=(michelle_sim['y'] == 30), s=0.1, palette={True: 'red', False: 'gray'}, legend=False)
+plt.xlabel('pi')
+plt.ylabel('y')
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch3-michelle-sim-1" style="display:block;"></span>
-<img alt="一万个数据点 在x轴上为pi,介于0.25至0.65之间. y轴上的y介于9至40之间. 10 000分显示出适度有力的积极联系。 沿水平y=30线的落点以蓝色突出." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch3-michelle-sim-1-1-d3a1e2da889e.png" width="288"/>
-<p class="caption">图3.8: Michelle支持的一万对模拟票,</p>
+<img alt="A scatterplot of 10,000 data points. On the x-axis is pi with a range from 0.25 to 0.65. On the y-axis is y with a range from 9 to 40. The 10,000 points exhibit a moderately strong positive association. The points that fall along the horizontal y = 30 line are highlighted in blue." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch3-michelle-sim-1-1-d3a1e2da889e.png" width="288"/>
+<p class="caption">
+图 3.8: 10,000个模拟的米歇尔支持率<span class="math inline">\(\pi\)</span>和民调结果<span class="math inline">\(y\)</span>的散点图。
+</p>
 </div>
-<p>当我们放大到更接近于那些匹配我们投票结果的对数时,</p>
-<div class="sourceCode" id="cb29">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>当我们放大仔细观察仅那些匹配我们 <span class="math inline">\(Y = 30\)</span> 投票结果的配对时，剩余 <span class="math inline">\(\pi\)</span> 值集合的行为很好地<em>近似</em>了 <span class="math inline">\(\pi\)</span> 的 Beta(75,75) 后验模型：</p>
+<div class="sourceCode" id="cb29"><pre><code class="language-python"># 仅保留与观测数据匹配的模拟对
+michelle_posterior = michelle_sim.query('y == 30')
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 只保留符合我们数据的模拟对
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 绘制 pi 值的密度图
+import seaborn as sns
+sns.kdeplot(data=michelle_posterior, x='pi')
+plt.xlabel('pi')
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-108" style="display:block;"></span>
-<img alt="一个 pi 的密度图,在 x 轴上有 pi 值,在 Y 轴上有密度。 密度曲线大致呈钟形,横跨在x轴上的pi值从0.4到0.6不等. 曲线最高时比值接近0.51,最大高度接近10." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-108-1-16829bf74d47.png" width="240"/>
-<p class="caption">图3.9: 由模拟的QQ0QQ值组成的密度图,</p>
+<img alt="A density plot of pi with pi values on the x-axis and density on the y-axis. The density curve is roughly bell shaped, spanning pi values on the x-axis which range from 0.4 to 0.6. The curve is highest at pi values near 0.51, with a maximum height near 10." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-108-1-16829bf74d47.png" width="240"/>
+<p class="caption">
+图 3.9：模拟 <span class="math inline">\(\pi\)</span> 值的密度图，这些 <span class="math inline">\(\pi\)</span> 值产生了 <span class="math inline">\(Y = 30\)</span> 位选民支持米歇尔的投票结果。
+</p>
 </div>
-<p>因此,我们也可以使用模拟样本来大致了解后期特征,例如米歇尔支持的平均值和标准偏差。 这些结果与上述理论数值相当相似,</p>
-<div class="sourceCode" id="cb30">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>在解释这些模拟结果时,“大致”是一个关键词。 由于我们10 000次模拟中只有211次符合我们观测到的XQ0QQ数据,通过将我们最初的模拟从10 000次提升到50 000次可以改进这一近似性:</p>
-<div class="sourceCode" id="cb31">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-nrow(michelle_posterior)
-[1] 211</code></pre>
-</div>
+<p>因此，我们也可以使用模拟样本来近似后验特征，例如米歇尔支持率的均值和标准差。结果与上面计算的理论值非常相似，<span class="math inline">\(E(\pi | Y = 30) = 0.5\)</span> 和 <span class="math inline">\(\text{SD}(\pi | Y = 30) = 0.0407\)</span>：</p>
+<div class="sourceCode" id="cb30"><pre><code class="language-python"># 汇总 pi 的均值和标准差
+mean_pi = michelle_posterior['pi'].mean()
+sd_pi = michelle_posterior['pi'].std()
+print(f"mean(pi): {mean_pi:.4f}, sd(pi): {sd_pi:.5f}")</code></pre></div>
+<p>在解释这些模拟结果时，“<em>近似</em>”是一个关键词。由于我们的 10,000 次模拟中只有 211 次匹配了我们观察到的 <span class="math inline">\(Y = 30\)</span> 数据，通过将原始模拟次数从 10,000 增加到例如 50,000，可能会<em>改善</em>这个近似：</p>
+<div class="sourceCode" id="cb31"><pre><code class="language-python"># michelle_posterior 的行数
+n_rows = michelle_posterior.shape[0]
+print(n_rows)</code></pre></div>
 </div>
 <div class="section level2" id="milgram-3" number="3.6">
-<h2>例如:米尔格拉姆对服从行为的研究</h2>
-<p>斯坦利·米尔格拉姆在1963年的一期《非正常和社会心理学杂志》中描述了一项研究,其中他调查了人们服从权威人物的命令的倾向,即使这些命令可能伤害其他人(Milgram,1963年). 在论文中,米尔格拉姆将研究描述为:</p>
+<h2> 示例：米尔格拉姆的服从行为研究</h2>
+<p>在 1963 年《异常与社会心理学杂志》的一期中，斯坦利·米尔格拉姆描述了一项研究，他调查了人们服从权威人物命令的倾向，即使这些命令可能会伤害他人 <span class="citation">(<a href="#ref-milgram" role="doc-biblioref">Milgram 1963</a>)</span>。在论文中，米尔格拉姆这样描述该研究：</p>
 <div class="quoting">
-<p>“包括命令一个天真的人对受害者进行电击。 使用模拟冲击发生器,30个明显标记的电压水平从IS到450伏不等. 该仪器带有从轻度震荡到危险:严重震荡的口头名称。 受害人是经过训练的实验者联合会,其反应是标准化的。 在表面上为研究惩罚对记忆的影响而设立的 " 学习实验 " 中,对天真主体下达了实施冲击的命令。 随着实验的进行,天真对象被命令对受害者施加越来越猛烈的冲击,甚至达到危险:严重冲击的程度。 “</p>
+<p>“<em>包括命令一名不知情的被试对一名受害者施加电击。使用了一个模拟电击发生器，有 30 个清晰标记的电压水平，范围从 IS 到 450 伏特。该仪器带有从<em>轻微电击</em>到<em>危险：严重电击</em>的文字标示。受害者的反应是标准化的，他其实是实验者的一名训练有素的同谋。在所谓旨在研究惩罚对记忆影响的‘学习实验’背景下，向不知情的被试发出施加电击的命令。随着实验的进行，不知情的被试被命令对受害者施加越来越强的电击，甚至达到标有<em>危险：严重电击</em>的水平。</em>”</p>
 </div>
-<p>换句话说,研究参与者的任务是测试另一位参与者(事实上他是训练有素的演员)是否有能力记住事实。 如果演员不记得一个事实, 参与者被命令对演员施加冲击, 参与者不知情,冲击是假的,演员只是假装从冲击中记录疼痛.</p>
+<p>换句话说，研究参与者被要求测试另一名参与者（实际上是一名训练有素的演员）记忆事实的能力。如果该演员<em>没有</em>记住一个事实，参与者就被命令对演员施加电击，并且每次后续失败都要提高电击水平。参与者不知道的是，电击是假的，演员只是<em>假装</em>因电击而感到疼痛。</p>
 <div class="section level3" id="a-bayesian-analysis" number="3.6.1">
-<h3>贝叶斯分析</h3>
-<p>我们可以将Milgram的研究翻译成Beta-Binomial框架。 这里的利益参数是 QQ0 QQ, 一个人服从权威的机会(在此情况下, 自从Milgram于1984年去世后, 我们便没有机会问他如何在研究前理解QQ1QX。 并假设另一位心理学家曾协助进行这项工作。 在收集数据之前,他们表示,一种Beta(1,10)模型准确地反映了他们对通过前作开发的QQ2@@@@的理解. 接下来,请将造成最严重冲击的40名研究参与者人数定为3。 假设每个参与者的行为独立于其他参与者,我们就可以使用二进制来模拟QQ4@@对QQ5@@的依赖. 简而言之,我们有以下贝塔-拜仁模型:</p>
-<p>\[\begin{split} Y | \pi &amp; \sim \text{Bin}(40, \pi) \\ \pi &amp; \sim \text{Beta}(1,10) . \\ \end{split}\]</p>
-<p>在开始分析之前,</p>
+<h3> 一项贝叶斯分析</h3>
+<p>我们可以将 Milgram 的研究转换到 Beta-二项框架中。这里感兴趣的参数是 <span class="math inline">\(\pi\)</span>，即一个人会服从权威（在此例中即施加最严重后果的电击）的概率，即使这意味着对他人造成伤害。因为 Milgram 已于 1984 年去世，我们没有机会询问他在进行研究之前对 <span class="math inline">\(\pi\)</span> 的理解<em>先验</em>。因此，我们将偏离实际研究，并假设另一位心理学家协助完成了这项工作。在收集数据之前，他们表示 Beta(1,10) 模型准确地反映了他们对 <span class="math inline">\(\pi\)</span> 的先验理解，这是通过之前的工作形成的。接下来，令 <span class="math inline">\(Y\)</span> 为 40 名研究参与者中会施加最严重电击的人数。假设每位参与者的行为彼此独立，我们可以用二项分布来建模 <span class="math inline">\(Y\)</span> 对 <span class="math inline">\(\pi\)</span> 的依赖。总之，我们有以下 Beta-二项贝叶斯模型：</p>
+<p><span class="math display">\[\begin{split}
+Y | \pi &amp; \sim \text{Bin}(40, \pi) \\
+\pi &amp; \sim \text{Beta}(1,10)  . \\
+\end{split}\]</span></p>
+<p>在继续分析之前，让我们检查一下这位心理学家的先验模型。</p>
 <div class="quiz">
-<p>Beta(1,10)在图3.10中先验的模型揭示了心理学家以前对QQ0@@的理解是什么? ?。。。</p>
+<p>图 <a href="/bayes-rules-python-cn/chapter-3/#fig:ch3-milgram-1">3.10</a> 中的 Beta(1,10) 先验模型揭示了心理学家对 <span class="math inline">\(\pi\)</span> 的先验理解的什么信息？</p>
 <ol style="list-style-type: lower-alpha">
-<li>他们没有知情的意见。</li>
-<li>他们相当肯定, 大部分人会听从当局的命令。</li>
-<li>他们相当肯定只有一小部分人会照当局的话去做。</li>
+<li>他们没有明确的先验观点。</li>
+<li>他们相当确信大部分人会服从权威。</li>
+<li>他们相当确信只有少部分人会服从权威。</li>
 </ol>
 </div>
-<div class="sourceCode" id="cb32">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<div class="sourceCode" id="cb32"><pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import beta
 
-# Beta(1,10) 上一个
-plot_beta(alpha = 1, beta = 10)</code></pre>
-</div>
+def plot_beta(alpha, beta_param):
+    """绘制 Beta 分布的密度曲线"""
+    x = np.linspace(beta.ppf(0.001, alpha, beta_param),
+                    beta.ppf(0.999, alpha, beta_param), 200)
+    plt.plot(x, beta.pdf(x, alpha, beta_param), 'r-', lw=2, alpha=0.6, label=f'Beta({alpha},{beta_param})')
+    plt.xlabel('θ')
+    plt.ylabel('密度')
+    plt.title('Beta 分布')
+    plt.legend()
+    plt.show()
+
+# Beta(1,10) 先验
+plot_beta(alpha=1, beta=10)</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch3-milgram-1" style="display:block;"></span>
-<img alt="之前的型号是高度右推的,pi值大多在x轴上从0到0.5. 该模型的模式为0." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch3-milgram-1-1-ed85d16bae97.png" width="240"/>
-<p class="caption">FIGURE 3.10:一个β(1,10)的前型号为\(\pi\).</p>
+<img alt="The prior model is highly right-skewed with pi values mostly ranging from 0 to 0.5 on the x-axis. The model has a mode of 0." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch3-milgram-1-1-ed85d16bae97.png" width="240"/>
+<p class="caption">
+图 3.10: π 的 Beta(1,10) 先验模型。
+</p>
 </div>
-<p>这个测验的正确答案是c. 心理学家先验指出, 因此,心理学家相当肯定,很少有人会听命于他们。 当然,心理学家的理解将在看到Milgram的研究成果后逐渐演变。</p>
+<p>这道测验的正确答案是 c。心理学家的先验信念是 π 通常取值接近 0 且变异性很低。因此，心理学家相当确信很少有人会完全听从权威的指令。当然，在看到 Milgram 研究的结果后，心理学家的认识会更新。</p>
 <div class="quiz">
-<p>最终,40名研究参与者中有26人造成了他们认为最大的冲击。 根据这些数据,心理学家的后验模型是多少? 编号 :</p>
-<p>\[\pi | (Y = 26) \sim \text{Beta}(\text{???}, \text{???})\]</p>
+<p>最终，40 名研究参与者中有 26 人对他们认为的最大电击执行了指令。基于这一数据，心理学家关于 π 的后验模型是什么：</p>
+<p><span class="math display">\[\pi | (Y = 26) \sim \text{Beta}(\text{???}, \text{???})\]</span></p>
 </div>
-<p>插入先验的超参数( ++++) ,\(\beta = 10\))和数据(\(y = 26\),\(n = 40\))输入(3.10)建立心理学家的 poster4@@的后验模型:</p>
-<p>\[\pi | (Y = 26) \sim \text{Beta}(27, 24) .\]</p>
-<p>此后缀在下面总结和绘制,与之前的pdf和缩放概率函数形成对比. 要注意的是,心理学家的理解与他们的后辈相仿。 虽然他们一开始意识到不到25%的人会造成最严重的冲击,但鉴于研究数据中强有力的反证,他们现在认为这一数字在~30%至~70%之间。</p>
-<div class="sourceCode" id="cb33">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>将先验超参数（<span class="math inline">\(\alpha = 1\)</span>，<span class="math inline">\(\beta = 10\)</span>）和数据（<span class="math inline">\(y = 26\)</span>，<span class="math inline">\(n = 40\)</span>）代入
+<a href="/bayes-rules-python-cn/chapter-3/#eq:beta-posterior">(3.10)</a> 式，得到心理学家关于 <span class="math inline">\(\pi\)</span> 的后验模型：</p>
+<p><span class="math display">\[\pi | (Y = 26) \sim \text{Beta}(27, 24)  .\]</span></p>
+<p>下面总结并绘制了这一后验分布，并与先验概率密度函数和缩放后的似然函数进行对比。注意，心理学家从先验到后验的认识发生了相当大的变化。尽管他们最初认为不到 ~25% 的人会执行最严重的电击，但鉴于研究数据强有力的反证，他们现在认为这一比例大约在 ~30% 到 ~70% 之间。</p>
+<div class="sourceCode" id="cb33"><pre><code class="language-python">import numpy as np
 import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+import matplotlib.pyplot as plt
+from scipy.stats import beta
 
-summarize_beta_binomial(alpha = 1, beta = 10, y = 26, n = 40)
-model alpha beta    mean   mode      var      sd
-1     prior     1   10 0.09091 0.0000 0.006887 0.08299
-2 posterior    27   24 0.52941 0.5306 0.004791 0.06922
-plot_beta_binomial(alpha = 1, beta = 10, y = 26, n = 40)</code></pre>
-</div>
+def summarize_beta_binomial(alpha, beta_param, y, n):
+    """
+    计算并返回先验和后验的摘要指标：
+    alpha, beta, 均值, 众数, 方差, 标准差
+    """
+    # 先验指标
+    prior_mean = alpha / (alpha + beta_param)
+    prior_mode = (alpha - 1) / (alpha + beta_param - 2) if (alpha &gt; 1 and beta_param &gt; 1) else 0.0
+    prior_var = alpha * beta_param / ((alpha + beta_param)**2 * (alpha + beta_param + 1))
+    prior_sd = np.sqrt(prior_var)
+
+    # 后验参数
+    alpha_post = alpha + y
+    beta_post = beta_param + n - y
+
+    # 后验指标
+    post_mean = alpha_post / (alpha_post + beta_post)
+    post_mode = (alpha_post - 1) / (alpha_post + beta_post - 2) if (alpha_post &gt; 1 and beta_post &gt; 1) else 0.0
+    post_var = alpha_post * beta_post / ((alpha_post + beta_post)**2 * (alpha_post + beta_post + 1))
+    post_sd = np.sqrt(post_var)
+
+    # 组装成表格
+    df = pd.DataFrame({
+        'model': ['prior', 'posterior'],
+        'alpha': [alpha, alpha_post],
+        'beta': [beta_param, beta_post],
+        'mean': [prior_mean, post_mean],
+        'mode': [prior_mode, post_mode],
+        'var': [prior_var, post_var],
+        'sd': [prior_sd, post_sd]
+    })
+    return df
+
+def plot_beta_binomial(alpha, beta_param, y, n):
+    """绘制先验与后验的密度曲线"""
+    x = np.linspace(0, 1, 200)
+    prior_pdf = beta.pdf(x, alpha, beta_param)
+    alpha_post = alpha + y
+    beta_post = beta_param + n - y
+    posterior_pdf = beta.pdf(x, alpha_post, beta_post)
+
+    plt.plot(x, prior_pdf, 'r-', lw=2, alpha=0.6, label=f'先验 Beta({alpha},{beta_param})')
+    plt.plot(x, posterior_pdf, 'b-', lw=2, alpha=0.6, label=f'后验 Beta({alpha_post},{beta_post})')
+    plt.xlabel('θ')
+    plt.ylabel('密度')
+    plt.title('先验与后验分布')
+    plt.legend()
+    plt.show()
+
+# 显示摘要
+summary = summarize_beta_binomial(alpha=1, beta=10, y=26, n=40)
+print(summary.to_string(index=False))
+
+# 绘制图形
+plot_beta_binomial(alpha=1, beta=10, y=26, n=40)</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-111" style="display:block;"></span>
-<img alt="先验的,(尺度的)似然,以及后验模型被覆盖在一个单一的情节中. 前面显示的是一个高度右侧扭曲的模型,在x轴上大多具有0到0.5的pi值,模式为0. 缩放的似然大致对称,以约0.65为中心,其数值大多在0.4至0.80之间。 后机位位于前机位与缩放概率之间,但更接近于缩放概率. 后机位模式约为0.55,其值从0.35到0.70不等." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-111-1-66dab580c0fe.png" width="384"/>
-<p class="caption">FIGURE 3.1.1: beta prefer pdf,缩放Binomial概率函数,Beta possible pdf for \(\pi\),即遵循给定指令的主体比例.</p>
+<img alt="The prior, (scaled) likelihood, and the posterior model are overlaid in a single plot. The prior shows a highly right-skewed model that mostly has pi values ranging from 0 to 0.5 on the x-axis and a mode of 0. The scaled likelihood is approximately symmetric centered around 0.65 with values mostly ranging from 0.4 to 0.80. The posterior is in between the prior and the scaled likelihood but closer to the scaled likelihood. the posterior has a mode around 0.55 and has values ranging from 0.35 to 0.70." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-111-1-66dab580c0fe.png" width="384"/>
+<p class="caption">
+图 3.11: π 的 Beta 先验概率密度函数、缩放后的二项似然函数以及 Beta 后验概率密度函数，π 表示会遵循给定指令的被试比例。
+</p>
 </div>
 </div>
 <div class="section level3" id="the-role-of-ethics-in-statistics-and-data-science" number="3.6.2">
-<h3>伦理学在统计和数据科学中的作用</h3>
-<p>在研究前一个例子时,我们希望你有点被内心的声音分心了 — — 这个实验似乎在道德上令人怀疑。 你不会独自一人在这种想法中。 史丹利·米尔格拉姆是一个有争议的历史人物. 我们选择了上述例子,不仅要实践建立Beta-Binomial模型,而且要实践对我们的工作和其他人的工作持批评态度。 每一次数据收集、可视化、分析和交流都给个人和群体带来直接和间接的伤害和好处。 作为统计人员和数据科学家,必须始终考虑这些损害和利益。 我们鼓励你每次用数据工作时都向自己提出以下问题:</p>
+<h3> 统计学与数据科学中的伦理角色</h3>
+<p>在处理前一个例子时，我们希望你的内心声音让你有些分心——这个实验在伦理上似乎值得怀疑。
+你可能不是唯一这样想的人。
+斯坦利·米尔格拉姆是一个有争议的历史人物。
+我们选择上述例子，不仅是为了练习构建 Beta-二项模型，也是为了练习以批判的眼光审视我们的工作和别人的工作。
+每一次数据收集、可视化、分析和传播都会给个人和群体带来直接或间接的伤害与益处。
+作为统计学家与数据科学家，始终考虑这些伤害与益处至关重要。
+我们鼓励你在每次处理数据时问自己以下问题：</p>
 <ul>
-<li>这项研究对社会的潜在好处是什么? 对参与者?</li>
-<li>研究对社会的潜在风险是什么? 对参与者?</li>
-<li>将关于研究参与者的意见向更多的人口概括,会产生什么道德问题?</li>
-<li>本研究报告中包括和排除了谁? 相应的风险和好处是什么? 历史上(和目前)被边缘化的群体中的个人是否面临更大的风险?</li>
-<li>可能受你研究影响的人是否参与了研究? 如果没有,您可能没有资格评估这些问题。</li>
-<li>以一行数据为代表的每个主题的个人故事或经历是什么?</li>
+<li>这项研究对社会有什么潜在<strong>益处</strong>？对参与者呢？</li>
+<li>这项研究对社会有什么潜在<strong>风险</strong>？对参与者呢？</li>
+<li>将研究参与者的观察结果推广到更广泛人群时，可能出现哪些<strong>伦理问题</strong>？</li>
+<li>这项研究<strong>包括</strong>了谁，又<strong>排除</strong>了谁？相应的风险和益处是什么？历史上（以及目前）处于边缘化的群体中的个人是否面临更大的风险？</li>
+<li>可能受到你研究影响的人是否<em>参与</em>了研究？如果没有，你可能没有资格评估这些问题。</li>
+<li>每一行数据所代表的每位受试者的个人故事或经历是什么？</li>
 </ul>
-<p>考虑你统计和数据科学工作的背景和影响的重要性怎么强调也不过分。 作为统计学家和数据科学家,我们有责任审议这些问题,以免损害个人和社区。 幸运的是,有许多资源可供学习。 仅举几个例子:Race After Technology (Benjamin 2019), Data Feminism (D'Ignazio and Klein 2020), Algorithms of Oppression (Noble 2018), Datasets (Gebru et al. 2018),"模型报告模型卡"(Mitchell et al. 2019),"自动化不平等:如何高科技工具简介,警察,惩罚穷人"(Eubanks 2018),"缩小AI问责漏洞"(Raji等人. 2020),以及"将数据科学伦理学纳入本科专业"(Baumer等人,2020年).</p>
+<p>考虑这些问题的背景和对你统计与数据科学工作的影响，其重要性无论如何强调都不过分。作为统计学家和数据科学家，我们有责任考虑这些问题，以免伤害个人和群体。幸运的是，有丰富的资源可供进一步学习。这里仅举几例：《技术之后的种族》<span class="citation">(<a href="#ref-benjamin2019race" role="doc-biblioref">Benjamin 2019</a>)</span>、《数据女性主义》<span class="citation">(<a href="#ref-d2020data" role="doc-biblioref">D’Ignazio and Klein 2020</a>)</span>、《压迫算法》<span class="citation">(<a href="#ref-noble2018algorithms" role="doc-biblioref">Noble 2018</a>)</span>、《数据集说明表》<span class="citation">(<a href="#ref-gebru2018datasheets" role="doc-biblioref">Gebru et al. 2018</a>)</span>、《模型报告卡》<span class="citation">(<a href="#ref-Zaldivar" role="doc-biblioref">Mitchell et al. 2019</a>)</span>、《自动化不平等：高科技工具如何画像、监管并惩罚穷人》<span class="citation">(<a href="#ref-eubanks2018automating" role="doc-biblioref">Eubanks 2018</a>)</span>、《弥合 AI 问责鸿沟》<span class="citation">(<a href="#ref-raji2020closing" role="doc-biblioref">Raji et al. 2020</a>)</span>，以及《将数据科学伦理融入本科专业》<span class="citation">(<a href="#ref-baumer2020integrating" role="doc-biblioref">Baumer et al. 2020</a>)</span>。</p>
 <div style="page-break-after: always;"></div>
 </div>
 </div>
 <div class="section level2" id="chapter-summary-2" number="3.7">
-<h2>章节摘要</h2>
-<p>在第三章中,你为QQ0@@建立了基础的Beta-Binomial模型,这个未知比例可以在0到1:</p>
-<p>\[\begin{split} Y | \pi &amp; \sim \text{Bin}(n, \pi) \\ \pi &amp; \sim \text{Beta}(\alpha, \beta) \\ \end{split} \;\; \Rightarrow \;\; \pi | (Y = y) \sim \text{Beta}(\alpha + y, \beta + n - y) .\]</p>
-<p>这个模型反映了每个贝叶斯分析所共有的四块:</p>
+<h2> 章节总结</h2>
+<p>在第 3 章中，你为 <span class="math inline">\(\pi\)</span> —— 一个可以取 0 到 1 之间任何值的未知<strong>比例</strong> —— 构建了基础的 Beta-二项模型：</p>
+<p><span class="math display">\[\begin{split}
+Y | \pi &amp; \sim \text{Bin}(n, \pi) \\
+\pi &amp; \sim \text{Beta}(\alpha, \beta) \\
+\end{split} \;\; \Rightarrow \;\;
+\pi | (Y = y) \sim \text{Beta}(\alpha + y, \beta + n - y)  .\]</span></p>
+<p>这个模型反映了每次贝叶斯分析共有的四个组成部分：</p>
 <ol style="list-style-type: decimal">
-<li>先验的型号 β 先验的型号, 用于 QQ0@@ , 可以调制, 以反映每个 QQ1@@ 的相对先置性。</li>
+<li><strong>先验模型</strong><br/>
+<span class="math inline">\(\pi\)</span> 的 Beta 先验模型可以进行调整，以反映每个 <span class="math inline">\(\pi \in [0,1]\)</span> 的相对先验合理性。</li>
 </ol>
-<p>\[f(\pi) = \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha)\Gamma(\beta)}\pi^{\alpha - 1}(1-\pi)^{\beta - 1}.\]</p>
+<p><span class="math display">\[f(\pi) = \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha)\Gamma(\beta)}\pi^{\alpha - 1}(1-\pi)^{\beta - 1}.\]</span></p>
 <ol start="2" style="list-style-type: decimal">
-<li><p>数据模型 我们收集数据, 独立审判的成功次数, QQ4@@对QQ5@@的依赖由Binomial模型XQ6@@总结.</p></li>
-<li><p>在观测数据时, 通过将 QQ3 插入到 binomial pmf 中, 得到 QQ1 的概率函数, 提供了一种机制来比较数据与不同的 QQ4 的兼容性 :</p>
-<p>\[L(\pi|y) = \left(\!\begin{array}{c} n \\ y \end{array}\!\right) \pi^{y} (1-\pi)^{n-y} \;\; \text{ for } \pi \in [0,1].\]</p></li>
-<li><p>Via Bayes' Rule的前身模型, 与Binomial 数据模型结合的Beta, 更新后的Beta后导参数QQ1@@反映了前导(通过XQ2@@和XQ3@@)和观测数据(通过XQ4@@和XQ5@@)的影响.</p></li>
+<li><p><strong>数据模型</strong><br/>
+为了了解 <span class="math inline">\(\pi\)</span>，我们收集 <strong>数据</strong> <span class="math inline">\(Y\)</span>，即在 <span class="math inline">\(n\)</span> 次独立试验中成功的次数，每次试验的成功概率为 <span class="math inline">\(\pi\)</span>。<span class="math inline">\(Y\)</span> 对 <span class="math inline">\(\pi\)</span> 的依赖关系由二项模型 <span class="math inline">\(\text{Bin}(n,\pi)\)</span> 概括。</p></li>
+<li><p><strong>似然函数</strong><br/>
+在观察到数据 <span class="math inline">\(Y = y\)</span> 且 <span class="math inline">\(y \in \{0,1,\ldots,n\}\)</span> 之后，将 <span class="math inline">\(y\)</span> 代入二项概率质量函数得到的 <span class="math inline">\(\pi\)</span> 的似然函数，提供了一种比较数据与不同 <span class="math inline">\(\pi\)</span> 兼容性的机制：</p>
+<p><span class="math display">\[L(\pi|y) = \left(\!\begin{array}{c} n \\ y \end{array}\!\right) \pi^{y} (1-\pi)^{n-y} \;\; \text{ 对 } \pi \in [0,1].\]</span></p></li>
+<li><p><strong>后验模型</strong><br/>
+通过贝叶斯定理，<strong>共轭</strong> Beta 先验与二项数据模型结合，产生了关于 <span class="math inline">\(\pi\)</span> 的 Beta 后验模型。更新后的 Beta 后验参数 <span class="math inline">\((\alpha + y, \beta + n - y)\)</span> 反映了先验（通过 <span class="math inline">\(\alpha\)</span> 和 <span class="math inline">\(\beta\)</span>）以及观测数据（通过 <span class="math inline">\(y\)</span> 和 <span class="math inline">\(n\)</span>）的影响。</p></li>
 </ol>
-<p>\[f(\pi | y) \propto f(\pi)L(\pi|y) \propto \pi^{(\alpha + y) - 1} (1-\pi)^{(\beta + n - y) - 1} .\]</p>
+<p><span class="math display">\[f(\pi | y) \propto f(\pi)L(\pi|y) \propto \pi^{(\alpha + y) - 1} (1-\pi)^{(\beta + n - y) - 1}  .\]</span></p>
 <div style="page-break-after: always;"></div>
 </div>
 <div class="section level2" id="exercises-2" number="3.8">
-<h2>练习</h2>
+<h2> 练习题</h2>
 <div class="section level3" id="practice-beta-prior-models" number="3.8.1">
-<h3>练习: beta 先验的模型</h3>
+<h3> 练习：Beta 先验模型</h3>
 <div class="exercise">
-<span class="exercise" id="exr:ch3-tuning"><strong>Exercise 3.1  (Tune your Beta prior: Take I)  </strong></span>In each situation below, tune a Beta(<span class="math inline">\(\alpha,\beta\)</span>) model that accurately reflects the given prior information. In many cases, there’s no single “right” answer, but rather multiple “reasonable” answers.
+<span class="exercise" id="exr:ch3-tuning"><strong>练习 3.1（调整你的 Beta 先验：第一部分）</strong></span>在下列每种情形中，调整一个 Beta(<span class="math inline">\(\alpha,\beta\)</span>) 模型以准确反映所给的先验信息。多数情况下，不存在唯一的“正确”答案，而是存在多个“合理”的答案。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>你的朋友申请了一份工作,并告诉你:“我想我有40%的机会得到这份工作,但我相当不确定。 ” 被进一步逼迫时,他们把机会在20%至60%之间。</li>
-<li>一个科学家为罕见疾病创造了新的测试. 他们预计测试时间为准确的80%,差异为0.05.</li>
-<li>你乔阿姨是个成功的蘑菇猎人 她吹嘘道 : “ 我希望能找到足够的蘑菇来喂饱我自己和我在自动修理店的同事。 90%的时间都是这样,但如果我不得不给你一个可能的范围,那将是85%至100%的时间。 ”</li>
-<li>Sal(他是一个触摸双曲)刚刚接受面试, 他们说,“我不能读我的采访者的说法! 我要么给他们留下了深刻的印象,他们绝对要雇用我,要么我留下了可怕的印象,他们正在我的发言中烧掉我的简历。”</li>
+<li>你的朋友申请了一份工作并告诉你：“我觉得我有 40% 的机会得到这份工作，但我非常不确定。”当进一步追问时，他们给出的机会在 20% 到 60% 之间。</li>
+<li>一位科学家发明了一种针对罕见疾病的新检测方法。他们预期该检测在 80% 的情况下是准确的，方差为 0.05。</li>
+<li>你的乔阿姨是个成功的采蘑菇人。她夸耀说：“我预计90%的时间都能找到足够的蘑菇来喂饱自己和汽修店的同事们，但如果让我给出一个大概范围，那会是85%到100%之间。”</li>
+<li>萨尔（他有点夸张）刚刚面试了一份工作，不知道如何描述自己获得录用的机会。他说道：“我完全读不懂面试官的表情！要么我真的给他们留下了深刻印象，他们肯定要录用我了，要么我表现极差，他们正在烧我的简历。”</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-112"><strong>Exercise 3.2  (Tune your Beta prior: Take II)  </strong></span>As in Exercise <a href="/bayes-rules-python-cn/chapter-3/#exr:ch3-tuning">3.1</a>, tune an appropriate Beta(<span class="math inline">\(\alpha,\beta\)</span>) prior model for each situation below.
+<span class="exercise" id="exr:unnamed-chunk-112"><strong>练习 3.2（调整你的 Beta 先验：第二回合）</strong></span>如同练习 <a href="/bayes-rules-python-cn/chapter-3/#exr:ch3-tuning">3.1</a>，为以下每种情况调整一个合适的 Beta(<span class="math inline">\(\alpha,\beta\)</span>) 先验模型。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>你的朋友告诉你 , “ 我认为我今晚有八成的睡觉机会, 我非常确定。 ” 在进一步施压时,他们把机会在70%到90%之间。</li>
-<li>一个科学家为罕见疾病创造了新的测试. 以0.08的差额,</li>
-<li>Max喜欢玩电子游戏 动物越野游戏 他们告诉你 , “ 我早上玩动物越野游戏的概率在75%到95%之间,但很可能在85%左右。 ”</li>
-<li>马萨诸塞州伊斯特汉普顿的面包店经常在星期天用完羊角面包. 本猜到上午10点,他们有30%的机会用完,但对这一猜想相当不确定.</li>
+<li>你的朋友告诉你：“我想我今晚有80%的把握睡个整晚好觉，而且我非常确定。” 进一步追问后，他把概率定在了70%到90%之间。</li>
+<li>一位科学家为一种罕见病发明了一种新检测方法。他预计该方法在90%的情况下是准确的，方差为0.08。</li>
+<li>马克斯喜欢玩电子游戏 <em>动物森友会</em>。他告诉你：“我早上玩 <em>动物森友会</em> 的概率在75%到95%之间，但最有可能在85%左右。”</li>
+<li>马萨诸塞州伊斯特汉普顿的面包店周日经常卖光可颂。本猜测，到上午10点，有30%的概率已经售罄，但他对这个猜测不太确定。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-113"><strong>Exercise 3.3  (It’s OK to admit you don’t know)  </strong></span>You want to specify a Beta prior for a situation in which you have no idea about some parameter <span class="math inline">\(\pi\)</span>. You think <span class="math inline">\(\pi\)</span> is equally likely to be anywhere between 0 and 1.
+<span class="exercise" id="exr:unnamed-chunk-113"><strong>练习 3.3（承认不知道也没关系）</strong></span>你想为一种你对参数 <span class="math inline">\(\pi\)</span> 一无所知的情形指定一个 Beta 先验。你认为 <span class="math inline">\(\pi\)</span> 在 0 到 1 之间的任何地方的可能性是相等的。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>指定和绘制适当的 beta 前置模型。</li>
-<li>在您指定之前的 Beta 是什么意思 ? 解释为什么这和没有线索一致</li>
-<li>在您指定之前, Beta 的标准偏差是什么 ?</li>
-<li>指定和绘制一个比您指定的标准偏差小的 beta 实例。</li>
-<li>指定和绘制一个比您指定的标准偏差更大的 beta 实例。</li>
+<li>指定并绘制合适的Beta先验模型。</li>
+<li>你指定的Beta先验的均值是多少？解释为什么这个均值符合或不符合“毫无头绪”的情况。</li>
+<li>你指定的Beta先验的标准差是多少？</li>
+<li>指定并绘制一个Beta先验的例子，其标准差比你所指定的<strong>更小</strong>。</li>
+<li>指定并绘制一个Beta先验的例子，其标准差比你所指定的<strong>更大</strong>。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:WhichBeta1"><strong>Exercise 3.4  (Which Beta? Take I)  </strong></span>Six Beta pdfs are plotted below.
-Match each to one of the following models: Beta(0.5,0.5), Beta(1,1), Beta(2,2), Beta(6,6), Beta(6,2), Beta(0.5,6).
+<span class="exercise" id="exr:WhichBeta1"><strong>练习 3.4（哪个Beta？第一轮）</strong></span>下面绘制了六个Beta概率密度函数。
+将每个图与以下模型之一匹配：Beta(0.5,0.5), Beta(1,1), Beta(2,2), Beta(6,6), Beta(6,2), Beta(0.5,6)。
 </div>
 <p><img loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-114-1-2a0af875ede5.png" style="display: block; margin: auto;" width="384"/></p>
 <div class="exercise">
-<span class="exercise" id="exr:WhichBeta2"><strong>Exercise 3.5  (Which Beta? Take II)  </strong></span>Six Beta pdfs are plotted below.
-Match each to one of the following models: Beta(1,0.3), Beta(2,1), Beta(3,3), Beta(6,3), Beta(4,2), Beta(5,6).
+<span class="exercise" id="exr:WhichBeta2"><strong>练习 3.5（哪个Beta？第二轮）</strong></span>下面绘制了六个Beta概率密度函数。
+将每个图与以下模型之一匹配：Beta(1,0.3), Beta(2,1), Beta(3,3), Beta(6,3), Beta(4,2), Beta(5,6)。
 </div>
 <p><img loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-115-1-5af48a63dcd3.png" style="display: block; margin: auto;" width="384"/></p>
 <div class="exercise">
-<span class="exercise" id="exr:BetaProp1"><strong>Exercise 3.6  (Beta properties)  </strong></span>Examine the properties of the Beta models in Exercise <a href="/bayes-rules-python-cn/chapter-3/#exr:WhichBeta1">3.4</a>.
+<span class="exercise" id="exr:BetaProp1"><strong>练习 3.6（Beta性质）</strong></span>检查练习<a href="/bayes-rules-python-cn/chapter-3/#exr:WhichBeta1">3.4</a>中Beta模型的性质。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>哪个Beta型号最小? 最大的吗? 提供视觉证据并计算相应的手段.</li>
-<li>哪个Beta模型模式最小? 最大的吗? 提供视觉证据并计算相应的模式.</li>
-<li>哪个Beta模型的标准偏差最小? 最大的吗? 提供视觉证据并计算相应的标准偏差.</li>
+<li>哪个 Beta 模型的均值最小？哪个最大？提供可视化证据并计算相应的均值。</li>
+<li>哪个 Beta 模型的众数最小？哪个最大？提供可视化证据并计算相应的众数。</li>
+<li>哪个 Beta 模型的标准差最小？哪个最大？提供可视化证据并计算相应的标准差。</li>
 </ol>
-<!-- Let's examine the properties of the Beta models in Exercise \@ref(exr:WhichBeta2). -->
-<!-- a) Which Beta model has the smallest mean? The biggest?  -->
-<!-- Provide visual evidence and calculate the corresponding means. -->
-<!-- a) Which Beta model has the smallest standard deviation? -->
-<!-- The biggest? -->
-<!-- Provide visual evidence and calculate the corresponding standard deviations.  -->
+ Let's examine the properties of the Beta models in Exercise \@ref(exr:WhichBeta2).
+ a) Which Beta model has the smallest mean? The biggest?
+ Provide visual evidence and calculate the corresponding means.
+ a) Which Beta model has the smallest standard deviation?
+ The biggest?
+ Provide visual evidence and calculate the corresponding standard deviations.
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-116"><strong>Exercise 3.7  (Using R for Beta)  </strong></span>
+<span class="exercise" id="exr:unnamed-chunk-116"><strong>练习 3.7（使用 Python 处理 Beta 分布）</strong></span>
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>使用 plot beta() 来绘制在 Property 3. 4 中的六个beta 模型。</li>
-<li>使用摘要 β( ) 确认您对3. 6 练习的回答。</li>
+<li>使用 <code>plot_beta()</code> 绘制练习 <a href="/bayes-rules-python-cn/chapter-3/#exr:WhichBeta1">3.4</a> 中的六个 Beta 模型。</li>
+<li>使用 <code>summarize_beta()</code> 验证你对练习 <a href="/bayes-rules-python-cn/chapter-3/#exr:BetaProp1">3.6</a> 的答案。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-117"><strong>Exercise 3.8  (Calculus challenge: establishing Beta features)  </strong></span>Let <span class="math inline">\(\pi\)</span> follow a Beta(<span class="math inline">\(\alpha, \beta\)</span>) model. Formulas for the mean, mode, and variance of <span class="math inline">\(\pi\)</span> are given by <a href="/bayes-rules-python-cn/chapter-3/#eq:beta-trend">(3.2)</a> and <a href="/bayes-rules-python-cn/chapter-3/#eq:beta-variability">(3.3)</a>. Confirm these properties by applying the following definitions of mean, mode, and variance directly to the Beta pdf <span class="math inline">\(f(\pi)\)</span>, <a href="/bayes-rules-python-cn/chapter-3/#eq:beta-pdf">(3.1)</a>:
+<span class="exercise" id="exr:unnamed-chunk-117"><strong>练习 3.8（微积分挑战：推导 Beta 分布的性质）</strong></span>设 <span class="math inline">\(\pi\)</span> 服从 Beta(<span class="math inline">\(\alpha, \beta\)</span>) 模型。<span class="math inline">\(\pi\)</span> 的均值、众数和方差公式由 <a href="/bayes-rules-python-cn/chapter-3/#eq:beta-trend">(3.2)</a> 和 <a href="/bayes-rules-python-cn/chapter-3/#eq:beta-variability">(3.3)</a> 给出。请直接将下列均值、众数和方差的定义应用于 Beta 概率密度函数 <span class="math inline">\(f(\pi)\)</span>（见 <a href="/bayes-rules-python-cn/chapter-3/#eq:beta-pdf">(3.1)</a>）来确认这些性质：
 </div>
-<p>\[\begin{split} E(\pi) &amp; = \int \pi f(\pi) d\pi \\ \text{Mode}(\pi) &amp; = \text{argmax}_\pi f(\pi) \\ \text{Var}(\pi) &amp; = E\left[(\pi - E(\pi))^2\right] = E(\pi^2) - \left[E(\pi)\right]^2. \\ \end{split}\]</p>
+<p><span class="math display">\[\begin{split}
+E(\pi)           &amp; = \int \pi f(\pi) d\pi \\
+\text{Mode}(\pi) &amp; = \text{argmax}_\pi f(\pi) \\
+\text{Var}(\pi)  &amp; = E\left[(\pi - E(\pi))^2\right] = E(\pi^2) - \left[E(\pi)\right]^2. \\
+\end{split}\]</span></p>
 <div class="exercise">
-<span class="exercise" id="exr:ch3-pop"><strong>Exercise 3.9  (Interpreting priors)  </strong></span>What do you call a sweet carbonated drink: pop, soda, coke, or something else?
-Let <span class="math inline">\(\pi\)</span> be the proportion of U.S. residents that prefer the term “pop.”
-Two different beverage salespeople from different regions of the country have different priors for <span class="math inline">\(\pi\)</span>.
-The first salesperson works in North Dakota and specifies a Beta(8,2) prior.
-The second works in Louisiana and specifies a Beta(1,20) prior.
+<span class="exercise" id="exr:ch3-pop"><strong>练习 3.9（解释先验）</strong></span>你管甜碳酸饮料叫什么：pop、soda、coke，还是其他？设 <span class="math inline">\(\pi\)</span> 为美国居民中偏好“pop”这一称呼的比例。来自不同地区的两位饮料销售人员对 <span class="math inline">\(\pi\)</span> 有不同的先验分布。第一位在北达科他州工作，指定了 Beta(8,2) 先验。第二位在路易斯安那州工作，指定了 Beta(1,20) 先验。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>计算两个销售人员之前的平均值,模式,标准偏差为 \\\\\\\\\\\\\\\\\\\两个销售人员。</li>
-<li>给两位推销员 标出之前的pdf</li>
-<li>相比而言,用文字来说,销售者们以前对美国居民说“流行”的比例的理解。</li>
+<li>分别计算两位销售人员的 <span class="math inline">\(\pi\)</span> 的先验均值、众数和标准差。</li>
+<li>绘制两位销售人员的先验概率密度函数图。</li>
+<li>用文字比较两位销售人员对美国居民说“pop”这一比例的预先看法。</li>
 </ol>
 </div>
 <div class="section level3" id="practice-beta-binomial-models" number="3.8.2">
-<h3>实践:β-比诺米模型</h3>
+<h3> 练习：Beta-二项模型</h3>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-118"><strong>Exercise 3.10  (Different priors, different posteriors)  </strong></span>Continuing Exercise <a href="/bayes-rules-python-cn/chapter-3/#exr:ch3-pop">3.9</a>, we poll 50 U.S. residents and 12 (24%) prefer the term “pop.”
+<span class="exercise" id="exr:unnamed-chunk-118"><strong>练习 3.10（不同的先验，不同的后验）</strong></span>继续练习 <a href="/bayes-rules-python-cn/chapter-3/#exr:ch3-pop">3.9</a>，我们调查了 50 名美国居民，其中 12 人（24%）偏好“pop”这一称呼。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>请为两位销售员指定 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 我们鼓励你们从头开始建造这些后盾。</li>
-<li>为两位销售人员绘制前pdf,概率函数和后pdf.</li>
-<li>将售货员的后台理解做比较。</li>
+<li>为两位销售人员分别指定 <span class="math inline">\(\pi\)</span> 的唯一后验模型。我们鼓励你从头构建这些后验分布。</li>
+<li>绘制两位销售人员的先验概率密度函数、似然函数和后验概率密度函数图。</li>
+<li>比较销售员们对 <span class="math inline">\(\pi\)</span> 的后验理解。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-119"><strong>Exercise 3.11  (Regular bike ridership)  </strong></span>A university wants to know what proportion of students are regular bike riders, <span class="math inline">\(\pi\)</span>, so that they can install an appropriate number of bike racks. Since the university is in sunny Southern California, staff think that <span class="math inline">\(\pi\)</span> has a mean of 1 in 4 students, and a mode of 5/22.
+<span class="exercise" id="exr:unnamed-chunk-119"><strong>练习 3.11（定期骑车者比率）  </strong></span>一所大学想知道学生中定期骑车者的比例 <span class="math inline">\(\pi\)</span>，以便安装合适数量的自行车架。由于这所大学位于阳光明媚的南加州，工作人员认为 <span class="math inline">\(\pi\)</span> 的均值是每 4 名学生中有 1 人，众数是 5/22。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>指定并绘制一个Beta模型,</li>
-<li>在50名接受调查的学生中,15名是普通自行车骑手。  poster0@@的后期模式是什么? ?。。。</li>
-<li>后验模型的刻意,模式,标准偏差是什么?.</li>
-<li>后验模型是否更密切地反映了先验的信息或数据? 解释你的推理。</li>
+<li>指定并绘制反映工作人员关于 <span class="math inline">\(\pi\)</span> 的先验想法的 Beta 模型。</li>
+<li>在 50 名受调查的学生中，15 人是定期骑车者。<span class="math inline">\(\pi\)</span> 的后验模型是什么？</li>
+<li>后验模型的均值、众数和标准差是多少？</li>
+<li>后验模型更接近地反映了先验信息还是数据？解释你的理由。</li>
 </ol>
-<!-- The Supreme Court of the United States ruled in _Obergefell v. Hodges_ in 2015 that it was illegal for states to deny the right to same-sex marriage.  -->
+ The Supreme Court of the United States ruled in _Obergefell v. Hodges_ in 2015 that it was illegal for states to deny the right to same-sex marriage.
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-120"><strong>Exercise 3.12  (Same-sex marriage)  </strong></span>A 2017 Pew Research survey found that 10.2% of LGBT adults in the U.S. were married to a same-sex spouse.<a class="footnote-ref" href="#fn29" id="fnref29"><sup>29</sup></a> Now it’s the 2020s, and Bayard guesses that <span class="math inline">\(\pi\)</span>, the percent of LGBT adults in the U.S. who are married to a same-sex spouse, has most likely increased to about 15% but could reasonably range from 10% to 25%.
+<span class="exercise" id="exr:unnamed-chunk-120"><strong>练习 3.12（同性婚姻）  </strong></span>2017 年皮尤研究中心的一项调查发现，美国 LGBT 成年人中有 10.2% 与同性配偶结婚。<a class="footnote-ref" href="#fn29" id="fnref29"><sup>29</sup></a> 现在已是 2020 年代，Bayard 猜测 <span class="math inline">\(\pi\)</span>，即美国 LGBT 成年人中与同性配偶结婚的比例，很可能已上升到约 15%，但合理范围是 10% 到 25%。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>找出并绘制一个Beta模型,</li>
-<li>Bayard想要更新他的前身,因此他随机选择90名美国LGBT成人,其中30人与同性伴侣结婚.  poster0@@的后期模式是什么? ?。。。</li>
-<li>计算%% 0 的后置平均值、模式和标准偏差。</li>
-<li>后验模型是否更密切地反映了先验的信息或数据? 解释你的推理。</li>
+<li>识别并绘制反映 Bayard 关于 <span class="math inline">\(\pi\)</span> 的先验想法的 Beta 模型。</li>
+<li>Bayard 想要更新他的先验，于是他随机选取了 90 位美国 LGBT 成年人，其中 30 人与同性伴侣结婚。\(\pi\) 的后验模型是什么？</li>
+<li>计算 \(\pi\) 的后验均值、众数和标准差。</li>
+<li>后验模型更接近先验信息还是数据？解释你的理由。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-121"><strong>Exercise 3.13  (Knowing someone who is transgender)  </strong></span>A September 2016 Pew Research survey found that 30% of U.S. adults are aware that they know someone who is transgender.<a class="footnote-ref" href="#fn30" id="fnref30"><sup>30</sup></a> It is now the 2020s, and Sylvia believes that the current percent of people who know someone who is transgender, <span class="math inline">\(\pi\)</span>, has increased to somewhere between 35% and 60%.
+<span class="exercise" id="exr:unnamed-chunk-121"><strong>习题 3.13 (认识跨性别者)  </strong></span>2016 年 9 月皮尤研究中心的一项调查发现，30% 的美国成年人意识到他们认识跨性别者。<a class="footnote-ref" href="#fn30" id="fnref30"><sup>30</sup></a> 现在是 2020 年代，Sylvia 认为目前认识跨性别者的人群比例 <span class="math inline">\(\pi\)</span> 已经上升到 35% 到 60% 之间。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>确定并规划一个反映西尔维娅先验对\(\pi\)的想法的beta模型.</li>
-<li>西尔维娅想更新她的前身,所以她随机选择了200名美国成年人,其中80人意识到他们认识某个人是变性人. 指定和绘制 {0} 的后置模型。。。</li>
-<li>后验模型的刻意,模式,标准偏差是什么?.</li>
-<li>描述先验和之后的Beta模型如何比较.</li>
+<li>确定并绘制一个反映 Sylvia 对 \(\pi\) 的先验想法的 Beta 模型。</li>
+<li>Sylvia 想要更新她的先验，于是她随机选取了 200 位美国成年人，其中 80 人意识到他们认识跨性别者。指定并绘制 \(\pi\) 的后验模型。</li>
+<li>后验模型的均值、众数和标准差是多少？</li>
+<li>描述先验和后验 Beta 模型比较如何。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-122"><strong>Exercise 3.14  (Summarizing the Beta-Binomial: Take I)  </strong></span>Write the corresponding input code for the <code>summarize_beta_binomial()</code> output below.
+<span class="exercise" id="exr:unnamed-chunk-122"><strong>练习 3.14（总结 Beta-二项：第一次）</strong></span>为下面的 <code>summarize_beta_binomial()</code> 输出写出相应的输入代码。
 </div>
 <pre class="sourceCode"><code>      model alpha beta   mean   mode      var      sd
 1     prior     2    3 0.4000 0.3333 0.040000 0.20000
 2 posterior    11   24 0.3143 0.3030 0.005986 0.07737</code></pre>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-124"><strong>Exercise 3.15  (Summarizing the Beta-Binomial: Take II)  </strong></span>Write the corresponding input code for the <code>summarize_beta_binomial()</code> output below.
+<span class="exercise" id="exr:unnamed-chunk-124"><strong>练习 3.15（总结 Beta-二项：第二次）</strong></span>为下面的 <code>summarize_beta_binomial()</code> 输出写出相应的输入代码。
 </div>
 <pre class="sourceCode"><code>      model alpha beta   mean   mode       var      sd
 1     prior     1    2 0.3333 0.0000 0.0555556 0.23570
 2 posterior   100    3 0.9709 0.9802 0.0002719 0.01649</code></pre>
 <div class="exercise">
-<span class="exercise" id="exr:ch3-bbplot"><strong>Exercise 3.16  (Plotting the Beta-Binomial: Take I)  </strong></span>Below is output from <code>plot_beta_binomial()</code> function.
+<span class="exercise" id="exr:ch3-bbplot"><strong>练习 3.16（绘制 Beta-二项：第一次）</strong></span>下面是 <code>plot_beta_binomial()</code> 函数的输出。
 </div>
 <p><img loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-126-1-1953076bd573.png" style="display: block; margin: auto;" width="384"/></p>
 <ol style="list-style-type: lower-alpha">
-<li>描述和比较前一种模型和概率的用词函数.</li>
-<li>用文字描述后期模式. 它是否更接近于数据(如概率函数所反映的)或先验的数据?</li>
-<li>提供您用来制作类似图案的具体图案  β  binomial () 代码。</li>
+<li>用文字描述并比较先验模型和似然函数。</li>
+<li>用文字描述后验模型。它更接近数据（如似然函数所反映的）还是先验？</li>
+<li>提供你将用于生成类似图表的具体 <code>plot_beta_binomial()</code> 代码。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-127"><strong>Exercise 3.17  (Plotting the Beta-Binomial: Take II)  </strong></span>Repeat Exercise <a href="/bayes-rules-python-cn/chapter-3/#exr:ch3-bbplot">3.16</a> for the <code>plot_beta_binomial()</code> output below.
+<span class="exercise" id="exr:unnamed-chunk-127"><strong>练习 3.17（绘制 Beta-二项：第二次）</strong></span>针对下面的 <code>plot_beta_binomial()</code> 输出重复练习 <a href="/bayes-rules-python-cn/chapter-3/#exr:ch3-bbplot">3.16</a>。
 </div>
 <p><img loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-128-1-d7cd5eb54be1.png" style="display: block; margin: auto;" width="384"/></p>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-129"><strong>Exercise 3.18  (More Beta-Binomial)  </strong></span>
+<span class="exercise" id="exr:unnamed-chunk-129"><strong>练习 3.18（更多 Beta-二项）</strong></span>
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>Patrick有一个Beta(3,3), 在调查40名居民时,30人参加了抗议。 简略使用 Patrick 的 简略分析。</li>
-<li>哈罗德与帕特里克有着相同的前身,但居住在另一个城镇. 在他们的调查中,20人中有15人参加了抗议。 哈罗德用总结 β binomial()和图案 β binomial()来总结分析.</li>
-<li>Patrick 和 Harold 的后台模型如何比较? 简单解释一下造成这些相似之处和差异的原因。</li>
+<li>Patrick 对于 <span class="math inline">\(\pi\)</span>（他们镇上有人在 2020 年 6 月参加过抗议的概率）的先验分布是 Beta(3,3)。在他的 40 名居民调查中，有 30 人参加过抗议。请使用 <code>summarize_beta_binomial()</code> 和 <code>plot_beta_binomial()</code> 总结 Patrick 的分析。</li>
+<li>Harold 拥有与 Patrick 相同的先验分布，但住在另一个镇上。在她的调查中，20 个人中有 15 人参加过抗议。请使用 <code>summarize_beta_binomial()</code> 和 <code>plot_beta_binomial()</code> 总结 Harold 的分析。</li>
+<li>比较 Patrick 和 Harold 的后验模型。简要解释造成这些相似和差异的原因。</li>
 </ol>
 </div>
 </div>
 </div>
-<h3>参考资料</h3>
+<h3>参考文献</h3>
 <div class="references csl-bib-body hanging-indent" id="refs">
 <div class="csl-entry" id="ref-baumer2020integrating">
 Baumer, Benjamin S., Randi L. Garcia, Albert Y. Kim, Katherine M. Kinnaird, and Miles Q. Ott. 2020. <span>“Integrating Data Science Ethics into an Undergraduate Major.”</span> <em>arXiv Preprint arXiv:2001.07649</em>.
@@ -660,6 +871,18 @@ Noble, Safiya Umoja. 2018. <em>Algorithms of Oppression: How Search Engines Rein
 <div class="csl-entry" id="ref-raji2020closing">
 Raji, Inioluwa Deborah, Andrew Smart, Rebecca N White, Margaret Mitchell, Timnit Gebru, Ben Hutchinson, Jamila Smith-Loud, Daniel Theron, and Parker Barnes. 2020. <span>“Closing the <span>AI</span> Accountability Gap: Defining an End-to-End Framework for Internal Algorithmic Auditing.”</span> In <em>Proceedings of the 2020 Conference on Fairness, Accountability, and Transparency</em>, 33–44.
 </div>
+</div>
+<div class="footnotes">
+<hr/>
+<ol start="24">
+<li id="fn24"><p>答案： 1. b; 2. c; 3. Beta(5,5)<a class="footnote-back" href="/bayes-rules-python-cn/chapter-3/#fnref24">↩︎</a></p></li>
+<li id="fn25"><p>当 <span class="math inline">\(\alpha \le 1\)</span> 或 <span class="math inline">\(\beta \le 1\)</span> 时，众数从 pdf 图中可以明显看出。<a class="footnote-back" href="/bayes-rules-python-cn/chapter-3/#fnref25">↩︎</a></p></li>
+<li id="fn26"><p>尺度化似然函数通过 <span class="math inline">\(L(\pi|y) / \int_0^1 L(\pi|y)d\pi\)</span> 计算得到。<a class="footnote-back" href="/bayes-rules-python-cn/chapter-3/#fnref26">↩︎</a></p></li>
+<li id="fn27"><p>答案： a. Beta(3,12); b. Beta(12,3); c. Beta(1,1) 或等价地，Unif(0,1)<a class="footnote-back" href="/bayes-rules-python-cn/chapter-3/#fnref27">↩︎</a></p></li>
+<li id="fn28"><p>答案：1. d；2. a；3. <span class="math inline">\(\pi^2\)</span><a class="footnote-back" href="/bayes-rules-python-cn/chapter-3/#fnref28">↩︎</a></p></li>
+<li id="fn29"><p><a class="uri" href="https://news.gallup.com/poll/212702/lgbt-adults-married-sex-spouse.aspx?utm_source=alert&amp;utm_medium=email&amp;utm_content=morelink&amp;utm_campaign=syndication">https://news.gallup.com/poll/212702/lgbt-adults-married-sex-spouse.aspx?utm_source=alert&amp;utm_medium=email&amp;utm_content=morelink&amp;utm_campaign=syndication</a><a class="footnote-back" href="/bayes-rules-python-cn/chapter-3/#fnref29">↩︎</a></p></li>
+<li id="fn30"><p><a class="uri" href="https://www.pewforum.org/2016/09/28/5-vast-majority-of-americans-know-someone-who-is-gay-fewer-know-someone-who-is-transgender/">https://www.pewforum.org/2016/09/28/5-vast-majority-of-americans-know-someone-who-is-gay-fewer-know-someone-who-is-transgender/</a><a class="footnote-back" href="/bayes-rules-python-cn/chapter-3/#fnref30">↩︎</a></p></li>
+</ol>
 </div>
 </section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-2/">上一节：第 2 章 贝叶斯公式</a><a href="/bayes-rules-python-cn/chapter-4/">下一节：第 4 章 贝叶斯分析中的平衡性与序贯性</a></nav>
 </article>

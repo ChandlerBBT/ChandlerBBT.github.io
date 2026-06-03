@@ -3,3 +3,5 @@ Thumbs.db
 .venv/
 __pycache__/
 *.pyc
+.cache/
+tools/bayes_rules_deepseek_review.json

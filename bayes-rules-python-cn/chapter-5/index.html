@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-
+html
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"/>
@@ -44,698 +43,951 @@
 <section class="normal" id="section-">
 <div class="section level1" id="chapter-5" number="5">
 <h1>第 5 章 共轭族</h1>
-<div class="tutorial-note">
-<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
-</div>
-<p>托尔斯泰在小说"安娜·卡列妮娜"(Anna Karenina)中写道 : “ 幸福的家庭都一样;每一个不幸福的家庭都以自己的方式不快乐。 ” 在本章中,我们将了解凝聚家庭的情况,这些家庭都是一样的,因为它们使作者们感到非常高兴。 念诵以知其故.</p>
+<p>在小说<em>安娜·卡列尼娜</em>中，托尔斯泰写道：“幸福的家庭都是相似的，不幸的家庭各有各的不幸。”
+在本章中，我们将学习共轭族，它们在使作者感到非常高兴的意义上都是相似的。
+继续阅读以了解为什么。</p>
 <div class="goals">
 <ul>
-<li>实践建设贝叶斯模型. 你会通过练习如何识别内核 并利用相称性来构建贝叶斯模型.</li>
-<li>熟悉自己与共性。 你会知道什么是先发制人 为什么这是有用的财产 简而言之,共构前科使得后验模型的建立更加容易. 共鸣前辈的欢乐!</li>
+<li><strong>练习构建贝叶斯模型。</strong> 你将通过练习识别核（kernel）和利用比例性来构建贝叶斯模型。</li>
+<li><strong>熟悉共轭性。</strong> 你将了解是什么使先验成为<em>共轭</em>先验以及为什么这是一个有用的性质。简而言之，共轭先验使构建后验模型更容易。共轭先验带来快乐！</li>
 </ul>
 </div>
 <div class="describe">
-<p>开始</p>
-<p>为了准备本章,请注意我们将在整个分析过程中使用一些新的希腊字母: 0@@ = lambda,\(\mu\) = mu 或 “ mew”,\(\sigma\) = sigma,\(\tau\) = tau, 4@@ = theta. 此外,在下面加载包裹。</p>
-<p>库(bayesrules) 库( tdyverse)</p>
+<p><strong>准备开始</strong></p>
+<p>为了准备本章，请注意我们将在整个分析中使用一些新的希腊字母：<span class="math inline">\(\lambda\)</span> = lambda，<span class="math inline">\(\mu\)</span> = mu 或“mew”，<span class="math inline">\(\sigma\)</span> = sigma，<span class="math inline">\(\tau\)</span> = tau，以及 <span class="math inline">\(\theta\)</span> = theta。
+此外，请加载以下 Python 库：</p>
+<p><code>import pandas as pd</code><br/>
+<code>import pymc as pm</code><br/>
+<code>import arviz as az</code></p>
 </div>
 <div class="section level2" id="revisiting-choice-of-prior" number="5.1">
-<h2>重新审议先验的选择</h2>
-<p>我们如何选择前科? 在第三章和第四章中, 在选择前一种模式时还有其他标准:</p>
+<h2>重新审视先验的选择</h2>
+<p>我们如何选择先验？在第 <a href="/bayes-rules-python-cn/chapter-3/#chapter-3">3</a> 章和第 <a href="/bayes-rules-python-cn/chapter-4/#chapter-4">4</a> 章中，我们利用 Beta 模型的灵活性来反映我们对比例参数 <span class="math inline">\(\pi \in [0,1]\)</span> 的先验理解。选择先验模型时，还有其他标准需要考虑：</p>
 <ul>
-<li>特别是如果我们无法使用计算电源,</li>
-<li>后验模型是数据与前期模型之间的妥协。 后验模型可以解释,因此更有用,因为您可以查看其表述,确定数据相对于前期的贡献。</li>
+<li><strong>计算简便性</strong><br/>
+特别是当我们无法获得计算能力时，后验模型易于构建会很有帮助。</li>
+<li><strong>可解释性</strong><br/>
+我们已经看到，后验模型是数据与先验模型之间的折衷。当你能够查看其公式并<em>识别</em>数据相对于先验的贡献时，后验模型就是可解释的，因此也更有用。</li>
 </ul>
-<p>Beta-Binomial包含这两个标准。 它的计算很简单。 一旦我们知道Beta( 0@@)的前超参数和Bin(\(n, \pi\))模型的观测数据,Beta(\(\alpha+y, \beta+n-y\))的后置模型就随之出现. 与先验的超参数XQ6+和XQ7++相比, 如果XQ8+和XQ9++与样本大小XX10++,则后缀不会从前缀减到那么大. 然而,如果样本大小QQ11@@与XQ12@@和XQ13@@相比是较大的,那么数据将会接手,并在后验模型中更具影响力. 事实上,Beta-Binomial属于一个更大的类前数据组合,称为conjugate家族,既享受计算方便,又享受可解释后数据. 回顾与第3章类似的一般性定义。</p>
+<p>Beta-二项模型满足了这两条标准。它的计算很简单。一旦我们知道了 Beta(<span class="math inline">\(\alpha, \beta\)</span>) 先验超参数，以及二项模型 Bin(<span class="math inline">\(n, \pi\)</span>) 的观测数据 <span class="math inline">\(Y = y\)</span>，后验 Beta(<span class="math inline">\(\alpha+y, \beta+n-y\)</span>) 就随之确定了。该后验通过 <span class="math inline">\(y\)</span> 和 <span class="math inline">\(n\)</span> 的值，反映了数据相对于先验<em>超参数</em> <span class="math inline">\(\alpha\)</span> 和 <span class="math inline">\(\beta\)</span> 的影响。如果 <span class="math inline">\(\alpha\)</span> 和 <span class="math inline">\(\beta\)</span> 相对于样本量 <span class="math inline">\(n\)</span> 较大，则后验不会偏离先验太远。但如果样本量 <span class="math inline">\(n\)</span> 相对于 <span class="math inline">\(\alpha\)</span> 和 <span class="math inline">\(\beta\)</span> 较大，则数据将主导后验模型，发挥更大影响。事实上，Beta-二项模型属于一个更广泛的先验-数据组合类别，称为<strong>共轭族</strong>（conjugate families），既易于计算，又具有可解释的后验。回顾第 <a href="/bayes-rules-python-cn/chapter-3/#chapter-3">3 章</a> 中类似的一般定义。</p>
 <div class="describe">
-<p>预设</p>
-<p>让参数\(\theta\)的上一个模型拥有pdf 1@@,以\(\theta\)为条件的数据 model2@@的模型具有 likelihood4@@的似然函数. 如果产生后验模型的pdf \\\\\\\\\\\\\\\是同一个模式家族,那么我们说这是前期的集合。</p>
+<p><strong>共轭先验</strong></p>
+<p>设参数 <span class="math inline">\(\theta\)</span> 的先验模型具有概率密度函数 <span class="math inline">\(f(\theta)\)</span>，且给定 <span class="math inline">\(\theta\)</span> 下数据 <span class="math inline">\(Y\)</span> 的模型具有似然函数 <span class="math inline">\(L(\theta|y)\)</span>。若得到的后验模型 <span class="math inline">\(f(\theta|y) \propto f(\theta)L(\theta|y)\)</span> 与先验属于同一模型族，则称其为<strong>共轭先验</strong>（conjugate prior）。</p>
 </div>
-<p>为了强调共犯前科的效用(和乐趣!),考虑不共犯前科是有益的。 让参数 QQ0 = 比例在 0 到 1 之间, 让我们先试一试,</p>
-<p>\[\begin{equation} f(\pi)=e-e^\pi\; \text{ for } \pi \in [0,1]. \tag{5.1} \end{equation}\]</p>
-<p>虽然不是Beta pdf, Q\(f(\pi)\)确实是一个有效的pdf, 因为Q\(f(\pi)\)对Q\(\pi\)的支持是非否定的,</p>
+<p>为了强调共轭先验的实用性（以及趣味性！），考虑一个<em>非</em>共轭先验会很有帮助。设参数 <span class="math inline">\(\pi\)</span> 是介于 0 和 1 之间的比例，并假设我们计划收集数据 <span class="math inline">\(Y\)</span>，在给定 <span class="math inline">\(\pi\)</span> 的条件下，<span class="math inline">\(Y|\pi \sim \text{Bin}(n,\pi)\)</span>。不再使用共轭的 <span class="math inline">\(\text{Beta}(\alpha,\beta)\)</span> 先验，而是尝试一个<strong>非共轭</strong>先验，其概率密度函数 <span class="math inline">\(f(\pi)\)</span> 如图 <a href="/bayes-rules-python-cn/chapter-5/#fig:non-conjugate">5.1</a> 所示：</p>
+<p><span class="math display" id="eq:unnorm-pdf-ch5">\[\begin{equation}
+f(\pi)=e-e^\pi\; \text{ for } \pi \in [0,1].
+\tag{5.1}
+\end{equation}\]</span></p>
+<p>尽管 <em>并非</em> Beta 分布的概率密度函数，<span class="math inline">\(f(\pi)\)</span> 确实是一个<em>有效</em>的概率密度函数，因为 <span class="math inline">\(f(\pi)\)</span> 在 <span class="math inline">\(\pi\)</span> 的支撑集上非负，且密度函数下的面积为 1，即 <span class="math inline">\(\int_0^1 f(\pi)=1\)</span>。</p>
 <div class="figure" style="text-align: center"><span id="fig:non-conjugate" style="display:block;"></span>
-<img alt="在y轴上标注pi的x轴和f的pi. 曲线从大约点( 0, 1. 70) 到 ( 1, 0)" loading="lazy" src="/assets/img/bayes-rules-python-cn/non-conjugate-1-b5f1fface425.png" width="240"/>
-<p class="caption">图5.1:在。。。</p>
+<img alt="Plot with pi on the x-axis and f of pi on the y-axis. There is a curve going from approximately point (0, 1.70) to (1,0)" loading="lazy" src="/assets/img/bayes-rules-python-cn/non-conjugate-1-b5f1fface425.png" width="240"/>
+<p class="caption">
+图 5.1：<span class="math inline">\(\pi\)</span> 的非共轭先验。
+</p>
 </div>
-<p>假设我们从独立审判中看到成功, 由此产生的QQ3@@的二极概率函数是:</p>
-<p>\[L(\pi | y=10) = \left(\!\begin{array}{c} 50 \\ 10 \end{array}\!\right) \pi^{10} (1-\pi)^{40} \; \; \text{ for } \pi \in [0,1] .\]</p>
-<p>从第3章中回顾,当我们把前题和似然放在一起时,我们已经走上了找到后题模式的道路。</p>
-<p>\[f(\pi | y = 10) \propto f(\pi) L(\pi | y = 10) = (e-e^\pi) \cdot \binom{50}{10} \pi^{10} (1-\pi)^{40}.\]</p>
-<p>正如我们在第三章中所做的那样,我们将放弃所有不依赖于QQ0QQ的常数,因为我们只是在指定QQ1QQ到比例常数:</p>
-<p>\[f(\pi | y ) \propto (e-e^\pi) \pi^{10} (1-\pi)^{40}.\]</p>
-<p>提醒各位, 我们的非Beta President没有给出准确的后台模型(完全指定, 我们不能把这个后卫pdf内核挤进Beta盒子或其他任何熟悉的模型中。 我们无法重写QQ0QQ, 相反,我们需要整合这个内核,以便完成常数的正常化,从而完成后面的规格:</p>
-<p>\[\begin{equation} f(\pi|y=10)= \frac{(e-e^\pi) \pi^{10} (1-\pi)^{40}}{\int_0^1(e-e^\pi) \pi^{10} (1-\pi)^{40}d\pi} \; \; \text{ for } \pi \in [0,1]. \tag{5.2} \end{equation}\]</p>
-<p>这才是我们真正开始感受到 之前没有交配的痛苦的地方! 由于这尤其令人不愉快, 且我们一直试图避免完全整合, 哎呀,真乱 这是有效的后pdf — — 它不是负面的, 但是, 考虑关于这一特定非对称性前(5.1)产生的后验模型的一些特征:</p>
+<p>接下来，假设我们观察到 <span class="math inline">\(Y = 10\)</span> 次成功，来自 <span class="math inline">\(n = 50\)</span> 次独立试验，每次试验的成功概率均为 <span class="math inline">\(\pi\)</span>。由此得到关于 <span class="math inline">\(\pi\)</span> 的二项似然函数为：</p>
+<p><span class="math display">\[L(\pi | y=10) = \left(\!\begin{array}{c} 50 \\ 10 \end{array}\!\right) \pi^{10} (1-\pi)^{40} \; \; \text{ for } \pi \in [0,1]  .\]</span></p>
+<p>回忆第<a href="/bayes-rules-python-cn/chapter-3/#chapter-3">3</a>章，当你把先验和似然结合起来时，你就已经踏上了寻找后验模型概率密度函数（pdf）的道路。</p>
+<p><span class="math display">\[f(\pi | y = 10) \propto f(\pi) L(\pi | y = 10) = (e-e^\pi) \cdot \binom{50}{10} \pi^{10} (1-\pi)^{40}.\]</span></p>
+<p>正如第3章所做的那样，我们将舍去所有不依赖于<span class="math inline">\(\pi\)</span>的常数，因为我们只指定了<span class="math inline">\(f(\pi|y)\)</span>到一个<em>比例常数</em>：</p>
+<p><span class="math display">\[f(\pi | y ) \propto (e-e^\pi)  \pi^{10} (1-\pi)^{40}.\]</span></p>
+<p>请注意，你的非Beta先验并没有为精确的后验模型（完全指定且不附带比例常数）产生一个整洁明了的答案。你无法将这个后验pdf核压缩进一个Beta框或任何其他熟悉的模型。也就是说，你<em>无法</em>重写<span class="math inline">\((e-e^\pi) \pi^{10} (1-\pi)^{40}\)</span>使其与Beta核的结构<span class="math inline">\(\pi^{\blacksquare - 1}(1-\pi)^{\blacksquare-1}\)</span>相同。你将需要对这个核进行积分，以完成归一化常数，从而完成后验的指定：</p>
+<p><span class="math display" id="eq:unnorm-ch5">\[\begin{equation}
+f(\pi|y=10)= \frac{(e-e^\pi)  \pi^{10} (1-\pi)^{40}}{\int_0^1(e-e^\pi)  \pi^{10} (1-\pi)^{40}d\pi}  \; \; \text{ for } \pi \in [0,1].
+\tag{5.2}
+\end{equation}\]</span></p>
+<p>这就是你真正开始感受到没有共轭先验的痛苦之处！由于这是一个特别难计算的积分，而且你一直在试图完全避免做任何积分，你得接受<a href="/bayes-rules-python-cn/chapter-5/#eq:unnorm-ch5">(5.2)</a>作为最终后验。哎呀，真是一团糟。这<em>的确</em>是一个有效的后验概率密度函数——它非负且在<span class="math inline">\(\pi \in [0,1]\)</span>上积分为1。但它并没有太多其他优点。请考虑一下由这个特定非共轭先验<a href="/bayes-rules-python-cn/chapter-5/#eq:unnorm-pdf-ch5">(5.1)</a>得到的后验模型的几个特征：</p>
 <ul>
-<li>这之后的计算是混乱和不愉快的.</li>
-<li>很难对先验的信息和我们从这一后验模型中观察到的数据之间的平衡得出任何直觉。</li>
-<li>很难具体说明后期的平均值、模式和标准偏差等特征,而这一过程需要更多的整合。</li>
+<li>这个后验的计算过程既混乱又不愉快。</li>
+<li>从该后验模型中，我们很难直观理解先验信息与观测数据之间的平衡。</li>
+<li>要指定后验均值、众数和标准差等特征将十分困难，这一过程还需要更多积分运算。</li>
 </ul>
-<p>这给我们留下了一个问题:我们是否可以使用“beta”之前的“counjugate ” , 并且仍然能够捕捉到“5.1”之前“collect-nconjugate ” 的更广泛信息? 如果是这样的话,那么我们就解决了混乱的计算和不可解的后验模型的问题.</p>
+<p>这让我们面临一个问题：我们能否使用共轭Beta先验，同时仍然捕获杂乱的 非共轭先验 <a href="/bayes-rules-python-cn/chapter-5/#eq:unnorm-pdf-ch5">(5.1)</a> 的更广泛信息？如果可以，那么我们就解决了计算混乱和后验模型难以理解的问题。</p>
 <div class="quiz">
-<p>哪个Beta模型最接近于 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ (图5.1)?</p>
+<p>哪个Beta模型能最接近地逼近 <span class="math inline">\(\pi\)</span> 的非共轭先验（图 <a href="/bayes-rules-python-cn/chapter-5/#fig:non-conjugate">5.1</a>）？</p>
 <ol style="list-style-type: lower-alpha">
-<li>β( 3, 1)</li>
-<li>β(1,3)</li>
-<li>β(2,1)</li>
-<li>贝塔(1,2)</li>
+<li>Beta(3,1)</li>
+<li>Beta(1,3)</li>
+<li>Beta(2,1)</li>
+<li>Beta(1,2)</li>
 </ol>
 </div>
-<p>这个测验的答案是d. 找到答案的方法之一是将图5.1中之前的非对称性与可能的beta前型的图案进行比较. 例如,Beta(1,2)(图5.2):</p>
-<div class="sourceCode" id="cb43">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>这个测验的答案是 d。找到答案的一种方法是将图 <a href="/bayes-rules-python-cn/chapter-5/#fig:non-conjugate">5.1</a> 中的非共轭先验与可能的 Beta 先验模型图进行比较。例如，非共轭先验信息被 Beta(1,2) 很好地捕捉到了（图 <a href="/bayes-rules-python-cn/chapter-5/#fig:ch5-beta12">5.2</a>）：</p>
+<div class="sourceCode" id="cb43"><pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import beta
 
-plot_beta(alpha = 1, beta = 2)</code></pre>
-</div>
+# 绘制 Beta(1, 2) 分布
+alpha = 1
+beta_param = 2
+x = np.linspace(0, 1, 200)
+y = beta.pdf(x, alpha, beta_param)
+plt.plot(x, y)
+plt.xlabel('x')
+plt.ylabel('概率密度')
+plt.title('Beta(1, 2) 分布')
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch5-beta12" style="display:block;"></span>
-<img alt="Pi的密度曲线. x轴的pi值从0到1. Y轴的密度值从0到2. 密度曲线为负斜坡线,当pi=0时为2,当pi=1时为0." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch5-beta12-1-2d7fa9f78b3a.png" width="240"/>
-<p class="caption">FIGURE 5.2: QQ0@@的前型号的集合贝塔(1,2)。。。</p>
+<img alt="A density curve of pi. The x-axis has pi values ranging from 0 to 1. The y-axis has density values ranging from 0 to 2. The density curve is a negatively sloped line, with a height of 2 when pi = 0 and a height of 0 when pi = 1." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch5-beta12-1-2d7fa9f78b3a.png" width="240"/>
+<p class="caption">
+图 5.2：\(\pi\) 的共轭 Beta(1,2) 先验模型。
+</p>
 </div>
 </div>
 <div class="section level2" id="gamma-poisson-conjugate-family" number="5.2">
-<h2>伽玛 - 普森家族 共济会</h2>
+<h2> Gamma-泊松共轭族</h2>
 <div class="describe">
-<p>停止呼唤/停止呼唤/我不想再想/我把头和心放在舞池上——以碧昂丝为主角的Gaga女士。 歌词“电话”。</p>
+<p>别再打电话了 / 别再打电话了 / 我不想再思考了 / 我的头脑和我的心都在舞池里<br/>
+——Lady Gaga featuring Beyoncé. 歌曲 “Telephone” 歌词。 </p>
 </div>
-<p>去年,这本书的一位作者受够了他们接到的欺诈风险电话的数量。 他们以模拟率为目的,每天接到的典型欺诈风险电话数量。 在收集任何数据之前,提交人的猜测是,这一比率很可能在每天5个电话左右,但也可能在每天2到7个电话之间。 为了了解更多情况,他们计划记录在QQ1@@样本日的每一天,QQ2@@的欺诈风险电话次数.</p>
-<p>承认这不会融入熟悉的Beta-Binomial框架, 首先, QQ1@@并不限于0到1之间的比例, 而是一个能承受任何正值(例如, 如此一来, 此外,每个数据点的QQ3@@是一个在技术上可以承担QQ4@@中任何非负数整数的计数,因此不受一些试验的XQ5@@的限制,对于二分仪来说也是如此. 不用担心。 我们的研究 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\</p>
+<p>去年，本书的一位作者受够了他们收到的欺诈风险电话数量。他们着手建模每天收到的欺诈风险电话的典型 <em>率</em> <span class="math inline">\(\lambda\)</span>。<strong>在收集任何数据之前</strong>，作者的猜测是这个率最可能是每天 5 通，但合理的范围在 2 到 7 通之间。为了了解更多，他们计划记录在 <span class="math inline">\(n\)</span> 个抽样天数中每天的欺诈风险电话数量，<span class="math inline">\((Y_1,Y_2,\ldots,Y_n)\)</span>。</p>
+<p>在我们继续研究 <span class="math inline">\(\lambda\)</span> 的过程中，重要的是要认识到它 <em>不</em> 适合熟悉的 Beta-二项框架。首先，<span class="math inline">\(\lambda\)</span> <em>不是</em> 一个仅限于 0 和 1 之间的比例，而是一个可以取任何 <em>正值</em> 的比率参数（例如，我们不可能一天收到 -7 通电话）。因此，<span class="math inline">\(\lambda\)</span> 的 Beta 先验并不适用。其次，每个数据点 <span class="math inline">\(Y_i\)</span> 是一个 <em>计数</em>，技术上可以取 <span class="math inline">\(\{0,1,2,\ldots\}\)</span> 中的任何非负整数，因此不像二项那样受到试验次数 <span class="math inline">\(n\)</span> 的限制。别担心。我们对 <span class="math inline">\(\lambda\)</span> 的研究将介绍一个 <em>新的</em> 共轭族，即 <strong>Gamma-泊松</strong>。</p>
 <div class="section level3" id="the-poisson-data-model" number="5.2.1">
-<h3>Poisson 数据模型</h3>
-<p>我们的分析精神是先了解... ...... 在选择之前的模型结构并调整这个结构以适应我们先验的理解之前, 在确定一个合理的数据模型时,我们可以确定一个先验的模型,这个模型可以调整,以配合我们先验的理解,同时在数学上补充数据模型的相应似然功能。 考虑到每个数据点的QQ3@@是一个随机数,从0到真正大的数字,XQ4@@,以下一般形式描述的Poisson模型,为模拟这些数据提供了合理的候选条件.</p>
+<h3> 泊松数据模型</h3>
+<p>我们分析的 <em>核心</em> 始于对 <span class="math inline">\(\lambda\)</span> 的先验理解，即每天欺诈风险电话的比率。然而，在选择先验模型结构并调整以匹配我们的先验理解之前，有益的做法是确定一个模型，来描述我们每天的电话 <em>计数</em> 数据 <span class="math inline">\(Y_i\)</span> 如何依赖于这类电话的典型日 <em>比率</em> <span class="math inline">\(\lambda\)</span>。在确定了一个合理的数据模型之后，我们可以确定一个先验模型，该模型可以进行调节以匹配我们的先验理解，同时 <em>还在数学上</em> 补充数据模型对应的似然函数。记住每个数据点 <span class="math inline">\(Y_i\)</span> 是一个 <em>随机计数</em>，可以从 0 到一个非常大的数，<span class="math inline">\(Y \in \{0,1,2,\ldots\}\)</span>，以下面一般形式描述的 <strong>泊松模型</strong> 是建模这些数据的一个合理候选。</p>
 <div class="describe">
-<p>普瓦逊模式</p>
-<p>让离散随机变量QQ0QQ成为在固定时间或空间范围内发生的独立事件的数量,其中QQ1QQ是这些事件发生的速度. 之后XQ2@@对参数QQ3@@的依赖可以由Poisson建模. 在数学符号中:</p>
-<p>\[Y | \lambda \sim \text{Pois}(\lambda).\]</p>
-<p>因此,Poisson模型由pmf指定</p>
-<p>\[\begin{equation} f(y|\lambda) = \frac{\lambda^y e^{-\lambda}}{y!}\;\; \text{ for } y \in \{0,1,2,\ldots\} \tag{5.3} \end{equation}\]</p>
-<p>以1比1的分数计算, 此外,一个Poisson随机变量 QQ3@@ 具有相等的平均值和差异,</p>
-<p>\[\begin{equation} E(Y|\lambda) = \text{Var}(Y|\lambda) = \lambda . \tag{5.4} \end{equation}\]</p>
+<p><strong>泊松模型</strong></p>
+<p>设离散随机变量 <span class="math inline">\(Y\)</span> 为在固定时间或空间内发生的<em>独立事件的数量</em>，其中 <span class="math inline">\(\lambda &gt; 0\)</span> 是事件发生的速率。那么 <span class="math inline">\(Y\)</span> 对<strong>参数</strong> <span class="math inline">\(\lambda\)</span> 的<em>依赖关系</em>可以用泊松分布建模。数学表示为：</p>
+<p><span class="math display">\[Y | \lambda \sim \text{Pois}(\lambda).\]</span></p>
+<p>相应的，泊松模型由概率质量函数（pmf）指定：</p>
+<p><span class="math display" id="eq:poisson-pmf">\[\begin{equation}
+f(y|\lambda) =  \frac{\lambda^y e^{-\lambda}}{y!}\;\; \text{ for } y \in \{0,1,2,\ldots\}
+\tag{5.3}
+\end{equation}\]</span></p>
+<p>其中 <span class="math inline">\(f(y|\lambda)\)</span> 对所有 <span class="math inline">\(y\)</span> 求和为1，<span class="math inline">\(\sum_{y=0}^\infty f(y|\lambda) = 1\)</span>。进一步地，泊松随机变量 <span class="math inline">\(Y\)</span> 的均值和方差相等，</p>
+<p><span class="math display" id="eq:poisson-e-var">\[\begin{equation}
+E(Y|\lambda) = \text{Var}(Y|\lambda) = \lambda  .
+\tag{5.4}
+\end{equation}\]</span></p>
 </div>
-<p>图5.3显示不同速率参数下波依松pmf(5.3) ============================================================================================================================================================================================================================================ 一般来说,随着事件QQ1@@的速率增加,典型的事件数量增加,变异性增加,skew减少. 例如,当事件发生速率为QQ2@@时,模型严重偏向观察少数事件,我们最有可能观察0或1事件,很少超过3事件. 对比之下,当事件以更高的速度发生时, 模型大致对称性更强,</p>
+<p>图 <a href="/bayes-rules-python-cn/chapter-5/#fig:poisson-pmf">5.3</a> 展示了在不同率参数 <span class="math inline">\(\lambda\)</span> 下的泊松概率质量函数（pmf）<a href="/bayes-rules-python-cn/chapter-5/#eq:poisson-pmf">(5.3)</a>。通常，随着事件速率 <span class="math inline">\(\lambda\)</span> 增加，典型的事件数量增加，变异性增加，且偏度减小。例如，当事件发生的速率为 <span class="math inline">\(\lambda = 1\)</span> 时，模型严重偏向于观察到少量事件——我们最可能观察到0或1个事件，很少超过3个。相反，当事件发生的速率较高，即 <span class="math inline">\(\lambda = 5\)</span> 时，模型大致对称且更易变——我们最可能观察到4或5个事件，但也有相当的机会观察到1到10之间的任何数量的事件。</p>
 <div class="figure" style="text-align: center"><span id="fig:poisson-pmf" style="display:block;"></span>
-<img alt="该图像由三块地块组成,分别题为Poisson(1)、Poisson(2)和Poisson(5)。 所有地块的x轴的y值为0,1,2,最高可达10. y轴为y的f. 第一个情节(pi = 0.2)在y = 1.时黑线最高. 第二块地块(pi = 0.5)的黑线较低. 第三块地块(pi = 0.8)的黑线最低." loading="lazy" src="/assets/img/bayes-rules-python-cn/poisson-pmf-1-846833a79e37.png" width="480"/>
-<p class="caption">FIGURE 5.3: 具有不同速率参数的Poisson pmfs.</p>
+<img alt="The image consists of the three plots, titled Poisson(1), Poisson(2), and Poisson (5). The x axis of all plots has values for y as 0, 1, 2, up to 10. The y axis is f of y. The first plot (pi = 0.2) has the highest black line when y = 1. The second plot (pi = 0.5) has lower black line. The third plot (pi = 0.8) has the lowest black line." loading="lazy" src="/assets/img/bayes-rules-python-cn/poisson-pmf-1-846833a79e37.png" width="480"/>
+<p class="caption">
+图 5.3: 不同率参数下的泊松 pmf。
+</p>
 </div>
-<p>让我们在收集数据期间, 在每一天里, 都观察到欺诈风险电话的数量。 我们假设,每天的通话次数可能因日而异,可以由普瓦森人独立模拟. 因此,在每一天,</p>
-<p>\[Y_i | \lambda \stackrel{ind}{\sim} \text{Pois}(\lambda)\]</p>
-<p>带有独特的 pmf</p>
-<p>\[f(y_i|\lambda) = \frac{\lambda^{y_i}e^{-\lambda}}{y_i!}\;\; \text{ for } y_i \in \{0,1,2,\ldots\} .\]</p>
-<p>在权衡电话数据的证据时, 需要处理我们的数据点中的集体或联合信息。 此信息由联合概率质量函数获取。</p>
+<p>设 <span class="math inline">\((Y_1, Y_2, \ldots, Y_n)\)</span> 表示我们在数据收集期间内 <span class="math inline">\(n\)</span> 天的每一天观察到的欺诈风险电话数量。我们假设每天的来电数量可能每天不同，并且可以由泊松分布<strong>独立建模</strong>。因此，在第 <span class="math inline">\(i\)</span> 天，</p>
+<p><span class="math display">\[Y_i | \lambda \stackrel{ind}{\sim} \text{Pois}(\lambda)\]</span></p>
+<p>具有唯一的概率质量函数（pmf）</p>
+<p><span class="math display">\[f(y_i|\lambda) =  \frac{\lambda^{y_i}e^{-\lambda}}{y_i!}\;\; \text{ for } y_i \in \{0,1,2,\ldots\}  .\]</span></p>
+<p>然而，在权衡电话数据的证据时，我们并不想分析<em>单个</em>每一天的数据。相反，我们需要处理 <span class="math inline">\(n\)</span> 个数据点中的<em>集体</em>或<em>联合</em>信息。这一信息由<strong>联合概率质量函数</strong>捕获。</p>
 <div class="describe">
-<p>联合概率质量函数</p>
-<p>让QQ0@@成为随机变量的独立样本,让QQ1@@成为观测值的相应矢量. 此外,让我们表示单个观测到的数据点的pmf。 在假定独立时,以下联合pmf具体说明集体样本的随机性和可信度:</p>
-<p>\[\begin{equation} f(\vec{y} | \lambda) = \prod_{i=1}^n f(y_i | \lambda) = f(y_1 | \lambda) \cdot f(y_2 | \lambda) \cdot \cdots \cdot f(y_n | \lambda) . \tag{5.5} \end{equation}\]</p>
-<p>连接概念</p>
-<p>这个产品类似于独立事件的共同概率是边际概率的产物,</p>
+<p><strong>联合概率质量函数</strong></p>
+<p>设 <span class="math inline">\((Y_1,Y_2,\ldots,Y_n)\)</span> 为独立随机变量样本，<span class="math inline">\(\vec{y} = (y_1,y_2,\ldots,y_n)\)</span> 为相应的观测值向量。令 <span class="math inline">\(f(y_i | \lambda)\)</span> 表示单个观测数据点 <span class="math inline">\(Y_i = y_i\)</span> 的概率质量函数。则在独立性的假设下，以下 <strong>联合概率质量函数</strong> 刻画了整个样本的随机性及其合理程度：</p>
+<p><span class="math display" id="eq:joint-pmf-ch5">\[\begin{equation}
+f(\vec{y} | \lambda) = \prod_{i=1}^n f(y_i | \lambda) = f(y_1 | \lambda) \cdot f(y_2 | \lambda) \cdot \cdots \cdot f(y_n | \lambda)  .
+\tag{5.5}
+\end{equation}\]</span></p>
+<p><strong>概念链接</strong></p>
+<p>这个乘积类似于 <em>独立事件</em> 的联合概率为边缘概率之积，即 <span class="math inline">\(P(A \cap B) = P(A)P(B)\)</span>。</p>
 </div>
-<p>我们的欺诈风险呼吁样本采用通用定义(5.5)来进行。 让每天的电话数 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</p>
-<p>\[\begin{equation} f(\vec{y} | \lambda) = \prod_{i=1}^{n}f(y_i | \lambda) = \prod_{i=1}^{n}\frac{\lambda^{y_i}e^{-\lambda}}{y_i!} . \tag{5.6} \end{equation}\]</p>
-<p>这看起来一团糟,但可以简化. 而非同一数据点的复制件。 因此,我们需要认真注意QQ4@@下标. 由此可见</p>
-<p>\[\begin{split} f(\vec{y} | \lambda) &amp; = \frac{\lambda^{y_1}e^{-\lambda}}{y_1!} \cdot \frac{\lambda^{y_2}e^{-\lambda}}{y_2!} \cdots \frac{\lambda^{y_n}e^{-\lambda}}{y_n!} \\ &amp; = \frac{\left[\lambda^{y_1}\lambda^{y_2} \cdots \lambda^{y_n}\right] \left[e^{-\lambda}e^{-\lambda} \cdots e^{-\lambda}\right]}{y_1! y_2! \cdots y_n!} \\ &amp; =\frac{\lambda^{\sum y_i}e^{-n\lambda}}{\prod_{i=1}^n y_i!} \\ \end{split}\]</p>
-<p>透过吸引下面的特性,</p>
+<p>将一般定义 <a href="/bayes-rules-python-cn/chapter-5/#eq:joint-pmf-ch5">(5.5)</a> 应用于我们的泊松概率质量函数，即可得出欺诈风险呼叫样本的联合概率质量函数。
+令每天的呼叫次数 <span class="math inline">\(i\)</span> 为 <span class="math inline">\(y_i \in \{0,1,2,\ldots\}\)</span>，</p>
+<p><span class="math display" id="eq:poisson-like-ch5">\[\begin{equation}
+f(\vec{y} | \lambda) = \prod_{i=1}^{n}f(y_i | \lambda) = \prod_{i=1}^{n}\frac{\lambda^{y_i}e^{-\lambda}}{y_i!}  .
+\tag{5.6}
+\end{equation}\]</span></p>
+<p>这看起来一团乱麻，但可以化简。
+化简时，关键要认识到我们有 <span class="math inline">\(n\)</span> 个 <em>不同的</em> 数据点 <span class="math inline">\(y_i\)</span>，而 <em>不是</em> 同一个数据点 <span class="math inline">\(y\)</span> 的 <span class="math inline">\(n\)</span> 次拷贝。
+因此，我们必须仔细留意下标 <span class="math inline">\(i\)</span>。
+由此可得</p>
+<p><span class="math display">\[\begin{split}
+f(\vec{y} | \lambda)
+&amp; = \frac{\lambda^{y_1}e^{-\lambda}}{y_1!} \cdot \frac{\lambda^{y_2}e^{-\lambda}}{y_2!} \cdots \frac{\lambda^{y_n}e^{-\lambda}}{y_n!} \\
+&amp; = \frac{\left[\lambda^{y_1}\lambda^{y_2} \cdots \lambda^{y_n}\right] \left[e^{-\lambda}e^{-\lambda} \cdots e^{-\lambda}\right]}{y_1! y_2! \cdots y_n!} \\
+&amp; =\frac{\lambda^{\sum y_i}e^{-n\lambda}}{\prod_{i=1}^n y_i!} \\
+\end{split}\]</span></p>
+<p>其中最后一行利用以下性质简化了乘积。</p>
 <div class="describe">
-<p>简化产品</p>
-<p>让QQ0@@成为一组常数. 然后,我们可以在简化涉及责任人的产品时利用以下事实:</p>
-<p>\[\begin{equation} x^ax^b = x^{a + b} \;\; \text{ and } \;\; x^ay^a = (xy)^a \tag{5.7} \end{equation}\]</p>
+<p><strong>乘积的化简</strong></p>
+<p>设 <span class="math inline">\((x,y,a,b)\)</span> 为一组常数。
+化简含指数的乘积时，可以利用以下事实：</p>
+<p><span class="math display" id="eq:ch5-product">\[\begin{equation}
+x^ax^b = x^{a + b} \;\; \text{ 和 } \;\; x^ay^a = (xy)^a
+\tag{5.7}
+\end{equation}\]</span></p>
 </div>
-<p>一旦我们观测到实际的样本数据, 我们可以在它的头上翻转这个联合pmf, 以定义 \\\\\\\\\的概率函数。 Poisson 概率函数在公式上相当于 joint pmf \(f(\vec{y}|\lambda)\)1\(f(\vec{y}|\lambda)\)1\(\lambda\)2\(\lambda\)2\(\lambda\)2\(\lambda\)2\(\lambda\)2\(\lambda\)2\(\lambda\)2\(\lambda\)2\(\lambda\)3\(\lambda\)3@@ \(\lambda\) \(\lambda\) \(\lambda\) \(\lambda\) \(\lambda\) \(\lambda\) @@ \(\lambda\) \(\lambda\) @@ \(\lambda\) \(\lambda\) \(\lambda\) @@ \(\lambda\) \(\lambda\) @@ \(\lambda\) @@ \(\lambda\) @@ @@ \(\lambda\) \(\lambda\) \(\lambda\) @@ @@ \(\lambda\) \(\lambda\)2@@ \(\lambda\) @@ \(\lambda\)2\(\lambda\)2@@  us2\(\lambda\)2@@  us3\(\lambda\)  us3\(\lambda\) \(\lambda\)3@@ @@  us3\(\lambda\) @@ \(\lambda\) @@ \(\lambda\)3@@ \(\lambda\) \(\lambda\) @@ @@ \(\lambda\) @@ @@ \(\lambda\) </p>
-<p>\[\begin{equation} L(\lambda | \vec{y}) = \frac{\lambda^{\sum y_i}e^{-n\lambda}}{\prod_{i=1}^n y_i!} \propto \lambda^{\sum y_i}e^{-n\lambda} \;\; \text{ for } \lambda &gt; 0. \tag{5.6} \end{equation}\]</p>
-<p>特别是因为当QQ0+@@大的时候, 而当我们表示概率达到比例常数时,请注意数据点( 3@@)和数据点数(\(n\))的总和是数据所需的全部信息. 我们不需要知道每个数据点的值。 稍后的分析中,用真实的数据点来做这个旋转会提供一些清晰度。</p>
+<p>一旦观测到实际样本数据，我们就可以将这个联合概率质量函数颠倒过来，定义 <span class="math inline">\(\lambda\)</span> 的 <strong>似然函数</strong>。
+泊松似然函数在公式上等同于联合概率质量函数 <span class="math inline">\(f(\vec{y}|\lambda)\)</span>，但它是以 <span class="math inline">\(\lambda\)</span> 为自变量的函数，这帮助我们评估不同的 <span class="math inline">\(\lambda\)</span> 可能值与观测到的 <em>样本集合</em> <span class="math inline">\(\vec{y}\)</span> 之间的兼容程度：</p>
+<p><span class="math display" id="eq:poisson-like-ch5">\[\begin{equation}
+L(\lambda | \vec{y}) = \frac{\lambda^{\sum y_i}e^{-n\lambda}}{\prod_{i=1}^n y_i!} \propto \lambda^{\sum y_i}e^{-n\lambda} \;\; \text{ for } \lambda &gt; 0.
+\tag{5.6}
+\end{equation}\]</span></p>
+<p>这里将似然函数表示为忽略比例常数的形式很方便，特别是当 <span class="math inline">\(\prod y_i!\)</span> 在 <span class="math inline">\(n\)</span> 较大时计算会变得繁琐，而我们在似然中真正关心的是 <span class="math inline">\(\lambda\)</span>。并且，当我们以忽略比例常数的形式表达似然时，请注意数据点的总和 (<span class="math inline">\(\sum y_i\)</span>) 和数据点的个数 (<span class="math inline">\(n\)</span>) 是从数据中需要的全部信息。我们不需要知道每个单独数据点 <span class="math inline">\(y_i\)</span> 的值。稍后在分析中结合真实数据点来实际运用这一点，会让问题更加清晰。</p>
 </div>
 <div class="section level3" id="potential-priors" number="5.2.2">
-<h3>潜在的前科</h3>
-<p>Poisson数据模型提供了两个关键数据之一, 用于我们贝叶斯分析 \\\\\\\\\\\\\\“欺诈风险呼叫的每日率。 另一个关键作品是QQ1@@的前期模型. 我们最初的猜测是,这一比率很可能在每天5个电话左右,但也可能在每天2到7个电话之间合理范围。 我们首先必须找出一个合理的概率模型结构。</p>
-<p>请记住, QQ0QQ是一个正和连续的速率, 这意味着QQ1QQ不需要是一个整数。 因此,一个合理的前置概率模型也将获得持续和积极的支持,即在QQ2@@上定义. 此属性有多个命名和研究的概率模型,包括QQ3@@,Weibull和Gamma. 我们不会在这本书中挖掘这些东西。 更直接、更方便的后验模型,</p>
+<h3>可能的先验分布</h3>
+<p>泊松数据模型为我们对 <span class="math inline">\(\lambda\)</span> 的贝叶斯分析提供了两个关键部分之一，其中 <span class="math inline">\(\lambda\)</span> 是每日欺诈风险电话的比率。另一个关键部分是关于 <span class="math inline">\(\lambda\)</span> 的 <em>先验模型</em>。我们最初的猜测是这个比率最可能约为每天5通电话，但也可以合理地介于每天2到7通电话之间。为了 <em>调整</em> 先验以符合这些关于 <span class="math inline">\(\lambda\)</span> 的想法，我们首先需要确定一个合理的概率模型结构。</p>
+<p>请记住，<span class="math inline">\(\lambda\)</span> 是一个 <em>正</em> 且 <em>连续</em> 的比率，这意味着 <span class="math inline">\(\lambda\)</span> 不必是一个整数。因此，一个合理的先验概率模型也将具有连续且正的支撑，即定义在 <span class="math inline">\(\lambda &gt; 0\)</span> 上。具有这种性质的已命名和研究的概率模型有好几种，包括 <span class="math inline">\(F\)</span>、Weibull 和 Gamma。在本书中我们不会深入探讨所有这些模型。相反，为了使 <span class="math inline">\(\lambda\)</span> 的后验模型构建更加直接和方便，我们将专注于识别一个 <strong>共轭先验</strong> 模型。</p>
 <div class="quiz">
-<p>假设我们有一个随机的样本 Poisson 随机的变量 \\\ 0\\ 和概率函数 \\ 1 \\ \\ \ \ \\ \\ \\\\\ \ \\\\\\。 你觉得什么能为QQ3提供方便的前期模型? 为什么?</p>
+<p>假设我们有一个泊松随机变量的随机样本 <span class="math inline">\((Y_1, Y_2, \ldots, Y_n)\)</span>，其似然函数为 <span class="math inline">\(L(\lambda | \vec{y})\propto \lambda^{\sum y_i}e^{-n\lambda}\)</span>（对于 <span class="math inline">\(\lambda &gt; 0\)</span>）。你 <em>认为</em> 什么会是 <span class="math inline">\(\lambda\)</span> 的一个便利的 <em>共轭</em> 先验模型？为什么？</p>
 <ol style="list-style-type: lower-alpha">
-<li>“Gamma”模式,</li>
-<li>“Weibul”模式,</li>
-<li>“F”模式的特例,pdf \(f(\lambda) \propto \lambda^{\frac{s}{2} - 1}\left( 1 + \lambda\right)^{-s}\)</li>
+<li>一个“Gamma”模型，其概率密度函数为 <span class="math inline">\(f(\lambda) \propto \lambda^{s - 1} e^{-r \lambda}\)</span></li>
+<li>一个“Weibull”模型，其概率密度函数为 <span class="math inline">\(f(\lambda) \propto \lambda^{s - 1} e^{(-r \lambda)^s}\)</span></li>
+<li>概率密度函数为 <span class="math inline">\(f(\lambda) \propto \lambda^{\frac{s}{2} - 1}\left( 1 + \lambda\right)^{-s}\)</span> 的“F”模型特例</li>
 </ol>
 </div>
-<p>答为一. Gamma模型将提供一个集合符 之前的XQ0@@ 当我们的数据有一个Poisson模型。 你可能从标题( cluver) 中猜到了这个。 你可能也从Poisson概率函数QQ1X(5.6)和Gamma pdf pdf @@2XX的共享功能中猜到了这一点. 两者均与</p>
-<p>\[\lambda^{\blacksquare}e^{-\blacksquare\lambda}\]</p>
-<p>与不同的 0@@. 事实上,我们将证明,结合先验和似然可以产生一个具有同样结构的后pdf。 也就是说,后世将和前世一样属于伽玛模式家族. 首先,让我们更多地了解Gamma模式。</p>
+<p>答案是 a。
+当数据服从泊松模型时，Gamma 模型将为 <span class="math inline">\(\lambda\)</span> 提供一个<em>共轭</em>先验。
+你可能已经从本节标题中猜到了（聪明）。
+你也可能从泊松似然函数 <span class="math inline">\(L(\lambda|\vec{y})\)</span> <a href="/bayes-rules-python-cn/chapter-5/#eq:poisson-like-ch5">(5.6)</a> 和 Gamma 概率密度函数 <span class="math inline">\(f(\lambda)\)</span> 的共同特征中猜到了。
+两者都与以下形式成比例：</p>
+<p><span class="math display">\[\lambda^{\blacksquare}e^{-\blacksquare\lambda}\]</span></p>
+<p>只是其中的 <span class="math inline">\(\blacksquare\)</span> 不同。
+事实上，我们将证明<em>结合</em>先验和似然产生的后验概率密度函数具有相同的结构。
+也就是说，后验将属于与先验相同的 Gamma 模型族。
+首先，让我们进一步了解 Gamma 模型。</p>
 </div>
 <div class="section level3" id="gamma-prior" number="5.2.3">
-<h3>前加玛</h3>
+<h3> Gamma 先验</h3>
 <div class="describe">
-<p>Gamma 标志模型</p>
-<p>让 QQ0 QQ 成为连续的随机变量, 它可以带任何正值, 即 QQ1。 因此,XQ2@@的变异性可能由带有形状超参数XQ3@@和速率超参数XQ4@@的Gamma模型很好地模拟:</p>
-<p>\[\lambda \sim \text{Gamma}(s, r) .\]</p>
-<p>Gamma 模型由连续 pdf 指定</p>
-<p>\[\begin{equation} f(\lambda) = \frac{r^s}{\Gamma(s)} \lambda^{s-1} e^{-r\lambda} \;\; \text{ for } \lambda &gt; 0. \tag{5.8} \end{equation}\]</p>
-<p>此外,X\(\lambda\)的中央趋势和变异性通过:</p>
-<p>\[\begin{equation} \begin{split} E(\lambda) &amp; = \frac{s}{r} \\ \text{Mode}(\lambda) &amp; = \frac{s - 1}{r} \;\; \text{ for } s \ge 1 \\ \text{Var}(\lambda) &amp; = \frac{s}{r^2}. \\ \end{split} \tag{5.9} \end{equation}\]</p>
-<p>标本模型是伽玛的特例,形状为 0@@. ,[\(\text{Gamma}(1,r)\)]:</p>
-<p>\[\lambda \sim \text{Exp}(r).\]</p>
+<p><strong>Gamma 与 Exponential 模型</strong></p>
+<p>令 <span class="math inline">\(\lambda\)</span> 为一个可以取任意正值的连续随机变量，即 <span class="math inline">\(\lambda &gt; 0\)</span>。那么 <span class="math inline">\(\lambda\)</span> 的变异性可以很好地用具有 <strong>形状超参数</strong> <span class="math inline">\(s &gt; 0\)</span> 和 <strong>比率超参数</strong> <span class="math inline">\(r &gt; 0\)</span> 的 Gamma 模型来描述：</p>
+<p><span class="math display">\[\lambda \sim \text{Gamma}(s, r)  .\]</span></p>
+<p>Gamma 模型由连续概率密度函数指定：</p>
+<p><span class="math display" id="eq:gamma-pdf">\[\begin{equation}
+f(\lambda) = \frac{r^s}{\Gamma(s)} \lambda^{s-1} e^{-r\lambda} \;\; \text{ 对 } \lambda &gt; 0.
+\tag{5.8}
+\end{equation}\]</span></p>
+<p>此外，<span class="math inline">\(\lambda\)</span> 的中心趋势和变异性由以下度量：</p>
+<p><span class="math display" id="eq:gamma-trend-var">\[\begin{equation}
+\begin{split}
+E(\lambda) &amp; = \frac{s}{r} \\
+\text{Mode}(\lambda) &amp; = \frac{s - 1}{r} \;\; \text{ 当 } s \ge 1 \\
+\text{Var}(\lambda) &amp; = \frac{s}{r^2}. \\
+\end{split}
+\tag{5.9}
+\end{equation}\]</span></p>
+<p><strong>指数模型</strong> 是 Gamma 模型当形状参数 <span class="math inline">\(s = 1\)</span> 时的特例，即 <span class="math inline">\(\text{Gamma}(1,r)\)</span>：</p>
+<p><span class="math display">\[\lambda \sim \text{Exp}(r).\]</span></p>
 </div>
-<p>注意伽玛模型取决于两个超参数, ++++和+++++++++. 评估您对这些超参数 如何影响伽玛模型特性的理解 在下面的测试。 页:1</p>
+<p>注意 Gamma 模型依赖于两个超参数 <span class="math inline">\(r\)</span> 和 <span class="math inline">\(s\)</span>。
+在下面的测验中评估你对这些超参数如何影响 Gamma 模型属性的理解。<a class="footnote-ref" href="#fn37" id="fnref37"><sup>37</sup></a></p>
 <div class="quiz">
-<p>图5.4说明了不同形状和速率超参数对Gamma pdf的影响(5.8)。 根据这些地块:</p>
+<p>图 <a href="/bayes-rules-python-cn/chapter-5/#fig:gamma-tuning">5.4</a> 展示了不同形状和比率超参数如何影响 Gamma 概率密度函数 <a href="/bayes-rules-python-cn/chapter-5/#eq:gamma-pdf">(5.8)</a>。
+基于这些图：</p>
 <ol style="list-style-type: decimal">
-<li><p>您将如何描述 Gamma 的典型行为( XQ0 ) ) 变数 QQ1@@ 当 QQ2@@( 如 Gamma(2, 1) ) 时 ?</p>
+<li><p>当 <span class="math inline">\(s &gt; r\)</span>（例如 Gamma(2,1)）时，你会如何描述 Gamma(<span class="math inline">\(s,r\)</span>) 变量 <span class="math inline">\(\lambda\)</span> 的典型行为？</p>
 <ol style="list-style-type: lower-alpha">
-<li>右切面,平均大于1.</li>
-<li>右切面,平均比1还小。</li>
-<li>和1号左右的对称</li>
+<li>右偏，且均值大于 1。</li>
+<li>右偏，且均值小于 1。</li>
+<li>对称，且均值约为 1。</li>
 </ol></li>
-<li><p>使用与上述相同的选项, 您将如何描述 Gamma( XQ0Q) 的典型行为。 ) 变量 QQ1@@ 当 QQ2@@( 如 Gamma(1, 2) ) 时 ?</p></li>
-<li><p>对于哪一种模型来说,在XQ0XX、Gamma(20,20)或Gamma(20,100)的可信值中,变化较大?</p></li>
+<li><p>使用与上述相同的选项，当 <span class="math inline">\(s &lt; r\)</span>（例如 Gamma(1,2)）时，你会如何描述 Gamma(<span class="math inline">\(s,r\)</span>) 变量 <span class="math inline">\(\lambda\)</span> 的典型行为？</p></li>
+<li><p>哪个模型中 <span class="math inline">\(\lambda\)</span> 的合理取值具有更大的变异性，是 Gamma(20,20) 还是 Gamma(20,100)？<br/>
+</p></li>
 </ol>
 </div>
 <div class="figure" style="text-align: center"><span id="fig:gamma-tuning" style="display:block;"></span>
-<img alt="图像有6块地块,分为2行和3列. 地块从左上至右下方的Gamma(1,1,1,2,1,4,1,1,1,2,2,2,2,4,2)读取. 每个图案的羊肉达值的x轴从0到8,羊肉达值的y轴从0到2,所有曲线都是右侧扭曲的. 伽玛(1,1)和伽玛(1,2)曲线在0时最高,并迅速下降." loading="lazy" src="/assets/img/bayes-rules-python-cn/gamma-tuning-1-5d54b48db65c.png" width="480"/>
-<p class="caption">FIGURE 5.4:具有不同超参数的伽玛模型. 虚线和实线垂直线分别代表模式和手段。</p>
+<img alt="The image has 6 plots in 2 rows and 3 columns. The plots read from top-left to bottom-right Gamma(1,1), Gamma(2,1), Gamma(4,1), Gamma(1,2), Gamma(2,2), Gamma(4,2). Each plot has an x-axis of lambda values ranging from 0 to 8 and a y-axis of f of lambda values ranging from 0 to 2. All of the curves are right-skewed. The Gamma(1,1) and Gamma(1,2) curves are the highest at 0 and decrease quickly." loading="lazy" src="/assets/img/bayes-rules-python-cn/gamma-tuning-1-5d54b48db65c.png" width="480"/>
+<p class="caption">图 5.4：不同超参数下的 Gamma 模型。虚线和实线竖线分别代表众数和均值。</p>
 </div>
-<p>一般说来,图5.4表明,QQ0@@变量是正的,右倾. 此外,Skew的一般形状和下降率由超参数XQ1+和XQ2+控制。 对(5.9)中中央倾向和可变性的定量衡量提供了一些见解。 例如,请注意,XQQ3的平均值,QQ4的平均值,当XQ5的平均值大于1,当XQ6的平均值小于1。 此外,随着QQ7+Q相对于QQ8+X的增量,XX9+X的skew减少,变异性XX10+X,增加.</p>
-<p>Gamma( 0@@)模式如何运作, 我们可以调谐它, 以反映我们先验关于欺诈风险电话每日比率的信息。 我们的Gamma(QQ3@@)先验应该有类似的模式。 例如,我们想选QQ4++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++</p>
-<p>\[E(\lambda) = \frac{s}{r} \approx 5 .\]</p>
-<p>这可以通过设置 QQ0 QQ 5 乘以 QQ1 , QQ2 实现. 其次,我们希望确保我们之前的Gamma(XQ3@@)的多数值在2到7之间,通过这些限制范围内的一些尝试和错误,以及用海湾规则包中的图 gamma()来规划各种Gamma模型,我们发现Gamma(10,2)的特征与我们之前的理解(图5.5)中的中心倾向和变异性密切相关。 因此,欺诈风险电话的每日比率的合理前置模式是</p>
-<p>\[\lambda \sim \text{Gamma}(10,2)\]</p>
-<p>与前 pdf + ○ + + + 后从 + + + + + 和 + + + + 插入 (5.8)。</p>
-<p>\[f(\lambda) = \frac{2^{10}}{\Gamma(10)} \lambda^{10-1} e^{-2\lambda} \;\; \text{ for } \lambda &gt; 0.\]</p>
-<div class="sourceCode" id="cb44">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p><p>通常，图 <a href="/bayes-rules-python-cn/chapter-5/#fig:gamma-tuning">5.4</a> 说明 <span class="math inline">\(\lambda \sim \text{Gamma}(s,r)\)</span> 变量是正值且右偏的。此外，偏斜的一般形状和下降速率由超参数 <span class="math inline">\(s\)</span> 和 <span class="math inline">\(r\)</span> 控制。<a href="/bayes-rules-python-cn/chapter-5/#eq:gamma-trend-var">(5.9)</a> 中的集中趋势和变异性的定量测度提供了一些洞察。例如，注意当 <span class="math inline">\(s &gt; r\)</span> 时，<span class="math inline">\(\lambda\)</span> 的均值 <span class="math inline">\(E(\lambda) = s/r\)</span> 大于 1，而当 <span class="math inline">\(s &lt; r\)</span> 时小于 1。此外，随着 <span class="math inline">\(s\)</span> 相对于 <span class="math inline">\(r\)</span> 增加，<span class="math inline">\(\lambda\)</span> 的偏斜减小，而变异性 <span class="math inline">\(\text{Var}(\lambda) = s / r^2\)</span> 增加。</p></p>
+<p><p>既然我们对 Gamma(<span class="math inline">\(s,r\)</span>) 模型的工作原理有了一些直觉，我们就可以<em>调优</em>它，以反映我们关于每日诈骗风险电话率 <span class="math inline">\(\lambda\)</span> 的先验信息。回想我们之前的假设：<span class="math inline">\(\lambda\)</span> 大约是 5，且最可能介于 2 和 7 之间。我们的 Gamma(<span class="math inline">\(s,r\)</span>) 先验应该有类似的模式。例如，我们希望选择的 <span class="math inline">\(s\)</span> 和 <span class="math inline">\(r\)</span> 使得 <span class="math inline">\(\lambda\)</span> 趋向于 5 左右，</p></p>
+<p><span class="math display">\[E(\lambda) = \frac{s}{r} \approx 5  .\]</span></p>
+<p><p>这可以通过令 <span class="math inline">\(s\)</span> 为 <span class="math inline">\(r\)</span> 的 5 倍，即 <span class="math inline">\(s = 5r\)</span> 来实现。接下来，我们希望确保 Gamma(<span class="math inline">\(s, r\)</span>) 先验的大部分取值介于 2 和 7 之间。在这些约束下经过一些试错，并绘制各种 Gamma 模型（使用 <code>plot_gamma()</code> 函数），我们发现 Gamma(10,2) 的特征与我们先前理解中的集中趋势<em>和</em>变异性非常匹配（图 <a href="/bayes-rules-python-cn/chapter-5/#fig:ch5-gamma-prior">5.5</a>）。因此，一个<em>合理</em>的每日诈骗风险电话率先验模型是 </p></p>
+<p><span class="math display">\[\lambda \sim \text{Gamma}(10,2)\]</span></p>
+<p>其<strong>先验概率密度函数</strong> <span class="math inline">\(f(\lambda)\)</span> 可通过将 <span class="math inline">\(s = 10\)</span> 和 <span class="math inline">\(r = 2\)</span> 代入 <a href="/bayes-rules-python-cn/chapter-5/#eq:gamma-pdf">(5.8)</a> 得到。</p>
+<p><span class="math display">\[f(\lambda) =  \frac{2^{10}}{\Gamma(10)} \lambda^{10-1} e^{-2\lambda} \;\; \text{ for } \lambda &gt; 0.\]</span></p>
+<div class="sourceCode" id="cb44"><pre><code class="language-python"># 绘制 Gamma(10, 2) 先验
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import gamma
 
-# 绘制 Gamma( 10, 2) 前一个
-plot_gamma(shape = 10, rate = 2)</code></pre>
-</div>
+shape = 10
+rate = 2
+scale = 1 / rate  # scipy 的 gamma 使用 scale 参数
+x = np.linspace(gamma.ppf(0.001, shape, scale=scale),
+                gamma.ppf(0.999, shape, scale=scale), 200)
+y = gamma.pdf(x, shape, scale=scale)
+plt.plot(x, y)
+plt.xlabel('x')
+plt.ylabel('概率密度')
+plt.title('Gamma(10, 2) 分布')
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch5-gamma-prior" style="display:block;"></span>
-<img alt="在X轴上贴上羊肉,以及羊肉在Y轴上与Y相等的似然. 这是一个曲线,当x轴值在0到1之间,当y大于9时,其y轴值接近0. 似然的最大点是羊肉达约4.75时." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch5-gamma-prior-1-783355086747.png" width="240"/>
-<p class="caption">FIGURE 5.5:一个Gamma(10,2)的pdf在QQ0@@之前,每天的欺诈风险呼叫率.</p>
+<img alt="Plot with lambda on the x-axis and likelihood of lambda given Y equals to y on the y-axis. This is a curve with y-axis values close to 0 when x-axis values are between 0 to 1 and when y is greater than 9. The maximum point of the likelihood is when lambda is about 4.75." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch5-gamma-prior-1-783355086747.png" width="240"/>
+<p class="caption">
+图 5.5: 日欺诈风险电话速率 <span class="math inline">\(\lambda\)</span> 的 Gamma(10,2) 先验概率密度函数。
+</p>
 </div>
 </div>
 <div class="section level3" id="gamma-poisson-conjugacy" number="5.2.4">
-<h3>伽玛 - 普森合唱团</h3>
-<p>正如我们在本章开头讨论的那样,召集家庭可以有所帮助。 幸运的是,使用Gamma前置的速率参数QQ0@@和Poisson模型对应的计数数据XQ1@@是conjugate家族的另一个例子. 这意味着,破坏者,QQ2@@的后置模型也会有一个带有更新参数的Gamma模型. 将结果运用到我们的电话状况。</p>
+<h3> Gamma-Poisson 共轭性</h3>
+<p>正如我们在本章开头所讨论的，共轭族会很有用。幸运的是，使用 Gamma 先验来处理速率参数 <span class="math inline">\(\lambda\)</span>，并使用泊松模型来处理相应的计数数据 <span class="math inline">\(Y\)</span>，是共轭族的另一个例子。这意味着，<em>剧透警告</em>，<span class="math inline">\(\lambda\)</span> 的后验模型也将是一个具有<em>更新</em>参数的 Gamma 模型。我们将在一般设定下陈述并证明这一点，然后再将结果应用到我们的电话呼叫情景中。</p>
 <div class="describe">
-<p>Gamma-Poisson 贝叶斯模型</p>
-<p>让QQ0@@成为未知的速率参数,让QQ1@@成为独立的QQ2@@样本. Gamma-Poisson Bayesian模型补充了Poisson结构的数据QQ3@@,</p>
-<p>\[\begin{split} Y_i | \lambda &amp; \stackrel{ind}{\sim} \text{Pois}(\lambda) \\ \lambda &amp; \sim \text{Gamma}(s, r) .\\ \end{split}\]</p>
-<p>在观察数据时,</p>
-<p>\[\begin{equation} \lambda|\vec{y} \; \sim \; \text{Gamma}\left(s + \sum y_i, \; r + n\right) . \tag{5.10} \end{equation}\]</p>
+<p><strong>Gamma-Poisson 贝叶斯模型</strong></p>
+<p>设 <span class="math inline">\(\lambda &gt; 0\)</span> 为未知的<em>速率</em>参数，<span class="math inline">\((Y_1,Y_2,\ldots,Y_n)\)</span> 为独立同分布的 <span class="math inline">\(\text{Pois}(\lambda)\)</span> 样本。Gamma-Poisson 贝叶斯模型为数据 <span class="math inline">\(Y\)</span> 的泊松结构补充了一个关于 <span class="math inline">\(\lambda\)</span> 的 Gamma 先验：</p>
+<p><span class="math display">\[\begin{split}
+Y_i | \lambda &amp; \stackrel{ind}{\sim} \text{Pois}(\lambda) \\
+\lambda &amp; \sim \text{Gamma}(s, r) .\\
+\end{split}\]</span></p>
+<p>在观察到数据 <span class="math inline">\(\vec{y} = (y_1,y_2,\ldots,y_n)\)</span> 后，<span class="math inline">\(\lambda\)</span> 的后验模型也是参数更新后的 Gamma 分布：</p>
+<p><span class="math display" id="eq:gam-pois-post-ch5">\[\begin{equation}
+\lambda|\vec{y} \; \sim \; \text{Gamma}\left(s + \sum y_i, \; r + n\right)  .
+\tag{5.10}
+\end{equation}\]</span></p>
 </div>
-<p>让我们证明这个结果。 大致上,请记住\(\lambda\)的后pdf与前pdf和5.8和5.6分别定义的似然函数的产物成正比:</p>
-<p>\[f(\lambda|\vec{y}) \propto f(\lambda)L(\lambda|\vec{y}) = \frac{r^s}{\Gamma(s)} \lambda^{s-1} e^{-r\lambda} \cdot \frac{\lambda^{\sum y_i}e^{-n\lambda}}{\prod y_i!} \;\;\; \text{ for } \lambda &gt; 0.\]</p>
-<p>接下来,请记住,上述方程中的任何非“++0++”的乘式常数都可以“按比例分配”。 因此,把先验的 pdf 和概率 都沸到它们的内核,我们得到</p>
-<p>\[\begin{split} f(\lambda|\vec{y}) &amp; \propto \lambda^{s-1} e^{-r\lambda} \cdot \lambda^{\sum y_i}e^{-n\lambda} \\ &amp; = \lambda^{s + \sum y_i - 1} e^{-(r+n)\lambda} \\ \end{split}\]</p>
-<p>最后一行采用类似条件。 我们留下的是后pdf的内核。 这个特定的内核对应一个伽玛模型的pdf(5.8),形状参数 0@@,率参数\(r + n\). 因此,我们已经证明</p>
-<p>\[ \lambda|\vec{y} \; \sim \; \text{Gamma}\bigg(s + \sum y_i, r + n \bigg) .\]</p>
-<p>让我们将这一结果运用到我们的欺诈风险呼吁中。 我们有一个Gamma(10,2), 此外,在8月第二个星期的四天里,我们收到了这样的电话。 共有11个欺诈风险电话, 每天平均2.75个电话:</p>
-<p>\[\sum_{i=1}^4y_i = 6 + 2 + 2 + 1 = 11 \;\;\;\; \text{ and } \;\;\;\; \overline{y} = \frac{\sum_{i=1}^4y_i}{4} = 2.75 .\]</p>
-<p>将数据插入( 5. 6) , 由此产生的 poisson 概率函数 {0}} 这是</p>
-<p>\[L(\lambda | \vec{y}) = \frac{\lambda^{11}e^{-4\lambda}}{6!\times2!\times2!\times1!} \propto \lambda^{11}e^{-4\lambda} \;\;\;\; \text{ for } \lambda &gt; 0 .\]</p>
-<p>使用 payesrules 软件包中的 plot  poisson likelihood () 函数, 在 0 和 10 之间将 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 在此, y 是数据值的矢量, lobda  upper  bound 是 xx 轴上查看的最大值。 (为什么我们不能想象出整个似然?) 因为如果我们有无限的页面,</p>
-<div class="sourceCode" id="cb45">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>我们来证明这个结果。一般来说，回忆一下，<span class="math inline">\(\lambda\)</span> 的后验概率密度函数正比于先验概率密度函数与似然函数的乘积，它们分别由 <a href="/bayes-rules-python-cn/chapter-5/#eq:gamma-pdf">(5.8)</a> 和 <a href="/bayes-rules-python-cn/chapter-5/#eq:poisson-like-ch5">(5.6)</a> 定义：</p>
+<p><span class="math display">\[f(\lambda|\vec{y}) \propto f(\lambda)L(\lambda|\vec{y}) = \frac{r^s}{\Gamma(s)} \lambda^{s-1} e^{-r\lambda} \cdot \frac{\lambda^{\sum y_i}e^{-n\lambda}}{\prod y_i!} \;\;\; \text{ for } \lambda &gt; 0.\]</span></p>
+<p>接下来，记住上式中任何不包含 <span class="math inline">\(\lambda\)</span> 的乘法常数都可以按“比例”消去。
+于是，将先验概率密度函数和似然函数浓缩为它们的核，我们得到</p>
+<p><span class="math display">\[\begin{split}
+f(\lambda|\vec{y})
+&amp; \propto \lambda^{s-1} e^{-r\lambda} \cdot \lambda^{\sum y_i}e^{-n\lambda} \\
+&amp; = \lambda^{s + \sum  y_i - 1} e^{-(r+n)\lambda} \\
+\end{split}\]</span></p>
+<p>其中最后一行是通过合并同类项得到的。
+我们在这里得到的就是后验概率密度函数的<em>核</em>。
+这个特定的核对应于 Gamma 模型 <a href="/bayes-rules-python-cn/chapter-5/#eq:gamma-pdf">(5.8)</a> 的概率密度函数，其形状参数为 <span class="math inline">\(s + \sum y_i\)</span>，速率参数为 <span class="math inline">\(r + n\)</span>。
+因此，我们已经证明</p>
+<p><span class="math display">\[ \lambda|\vec{y} \;  \sim \; \text{Gamma}\bigg(s + \sum  y_i, r + n \bigg)  .\]</span></p>
+<p>让我们将这个结果应用到欺诈风险电话的例子中。
+在那例中，我们对 <span class="math inline">\(\lambda\)</span>（每日来电率）使用了一个 Gamma(10,2) 的先验分布。
+此外，在八月份第二周的四天里，我们接到了 <span class="math inline">\(\vec{y} = (y_1,y_2,y_3,y_4) = (6,2,2,1)\)</span> 个这种电话。
+于是，我们有 <span class="math inline">\(n = 4\)</span> 个数据点，<em>总计</em> 11 个欺诈风险电话，<em>平均</em>每天 2.75 个电话：</p>
+<p><span class="math display">\[\sum_{i=1}^4y_i = 6 + 2 + 2 + 1 = 11 \;\;\;\; \text{ and } \;\;\;\; \overline{y} = \frac{\sum_{i=1}^4y_i}{4} = 2.75  .\]</span></p>
+<p>将这些数据代入 <a href="/bayes-rules-python-cn/chapter-5/#eq:poisson-like-ch5">(5.6)</a>，得到的 <span class="math inline">\(\lambda\)</span> 的泊松似然函数是</p>
+<p><span class="math display">\[L(\lambda | \vec{y}) = \frac{\lambda^{11}e^{-4\lambda}}{6!\times2!\times2!\times1!} \propto \lambda^{11}e^{-4\lambda} \;\;\;\; \text{ for } \lambda &gt; 0 .\]</span></p>
+<p>我们使用 <code>plot_poisson_likelihood()</code> 函数来可视化 <span class="math inline">\(\lambda\)</span> 在 0 到 10 之间的一部分 <span class="math inline">\(L(\lambda | \vec{y})\)</span>。这里，<code>y</code> 是数据值向量，<code>lambda_upper_bound</code> 是横轴上 <span class="math inline">\(\lambda\)</span> 的最大显示值。（为什么不能可视化整个似然函数？因为 <span class="math inline">\(\lambda \in (0, \infty)\)</span>，如果有无限页的话，这本书就会太贵了。）</p>
+<div class="sourceCode" id="cb45"><pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import poisson
 
-plot_poisson_likelihood(y = c(6, 2, 2, 1), lambda_upper_bound = 10)</code></pre>
-</div>
+# 观察到的数据
+y = np.array([6, 2, 2, 1])
+lambda_upper_bound = 10
+
+# 计算泊松联合似然
+lambdas = np.linspace(0, lambda_upper_bound, 500)
+# 对于每个 lambda，计算乘积似然（使用泊松 pmf）
+likelihood = np.prod([poisson.pmf(y_i, lambdas) for y_i in y], axis=0)
+
+plt.plot(lambdas, likelihood)
+plt.xlabel('λ')
+plt.ylabel('似然')
+plt.title('泊松似然函数 (y = [6, 2, 2, 1])')
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch5-gamma-like" style="display:block;"></span>
-<img alt="羊肉给Y的概率函数等于y. x轴的羊肉含量从0到10不等. y轴的概率值从0到0.0004. 曲线略为右倾,羊肉达值的峰值约为2.75. 该曲线的高度大约为1至6之间羊肉达值的0。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch5-gamma-like-1-deb79bd25805.png" width="240"/>
-<p class="caption">图5.6: QQ0XX的概率函数,每天的欺诈风险呼叫率,给出了4天的电话通话数据样本.</p>
+<img alt="The likelihood function of lambda given Y equals y. The x-axis has lambda values ranging from 0 to 10. The y-axis has likelihood values ranging from 0 to 0.0004. The curve is slightly right skewed with a peak for lambda values around 2.75. The curve has a height of roughly 0 for lambda values outside the range from 1 to 6." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch5-gamma-like-1-deb79bd25805.png" width="240"/>
+<p class="caption">
+图 5.6: 给定四天电话数据样本，<span class="math inline">\(\lambda\)</span>（欺诈风险电话的每日发生率）的似然函数。
+</p>
 </div>
-<p>拳头就是这个 每天1到5个欺诈风险电话的基数 符合我们的电话数据 而在这个光谱上,接近2.75的速率与这个数据最兼容. 这有道理。 Poisson数据模型假设, \(\lambda\)是基础平均日电话数, 因此,我们最有可能看到一个样本,平均日通话率为 QQ 3 + ,而基本比率为 2.75。</p>
-<p>将这些观察与我们的Gamma(10,2)前型的QQ0@@(5,10)相结合,由此可以得出XQ1@@的后型是一个Gamma,其更新的形状参数为21(XQ2@@),率参数为6(XQ3@@):</p>
-<p>\[\lambda|\vec{y} \; \sim \; \text{Gamma}(21, 6) .\]</p>
-<p>我们可以将先验的 pdf,缩放概率函数,以及后pdf 的 pdf 全部以 playesrules 软件包中的 plot gamma poisson () 函数显示在单个图中。 多么神奇的。 要使这一功能发挥作用,我们必须具体说明一些事情:先验的形状和速率超参数以及来自我们数据的信息、所观察到的电话总和 y %1+%和样本大小n:</p>
-<div class="sourceCode" id="cb46">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>结论如下：每日欺诈风险电话的基础 <em>发生率</em> <span class="math inline">\(\lambda\)</span> 在 1 到 5 之间时，与我们的电话数据一致。在这个范围内，接近 2.75 的发生率与数据 <em>最</em> 为吻合。这是合理的。泊松数据模型假设 <span class="math inline">\(\lambda\)</span> 是每日电话呼叫的基础平均数，<span class="math inline">\(E(Y_i | \lambda) = \lambda\)</span>。因此，当基础发生率 <span class="math inline">\(\lambda\)</span> 也等于 2.75 时，我们 <em>最</em> 有可能观察到每日电话呼叫的平均值为 <span class="math inline">\(\overline{y} = 2.75\)</span> 的样本。</p>
+<p>将这些观察结果与我们的 <span class="math inline">\(\lambda\)</span> 的先验模型 Gamma(10,2) 相结合，由 <a href="/bayes-rules-python-cn/chapter-5/#eq:gam-pois-post-ch5">(5.10)</a> 可知，<span class="math inline">\(\lambda\)</span> 的后验模型是一个 Gamma 分布，其更新后的形状参数为 21（<span class="math inline">\(s + \sum y_i = 10 + 11\)</span>），速率参数为 6（<span class="math inline">\(r + n = 2 + 4\)</span>）：</p>
+<p><span class="math display">\[\lambda|\vec{y} \; \sim \; \text{Gamma}(21, 6)  .\]</span></p>
+<p>我们可以使用 <code>plot_gamma_poisson()</code> 函数，将 <span class="math inline">\(\lambda\)</span> 的先验 pdf、比例化似然函数和后验 pdf 全部绘制在一张图中。太神奇了。为了让这个函数运行，我们需要指定几个参数：先验的 <code>shape</code> 和 <code>rate</code> 超参数，以及来自数据的信息——观测到的电话总数 <code>sum_y</code> <span class="math inline">\((\sum y_i)\)</span> 和样本量 <code>n</code>：</p>
+<div class="sourceCode" id="cb46"><pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import gamma
 
-plot_gamma_poisson(shape = 10, rate = 2, sum_y = 11, n = 4)</code></pre>
-</div>
+# Gamma-Poisson 共轭模型
+# 先验参数
+shape_prior = 10
+rate_prior = 2
+# 数据汇总统计量
+sum_y = 11
+n = 4
+# 后验参数
+shape_post = shape_prior + sum_y
+rate_post = rate_prior + n
+
+# 生成 λ 的一组值
+x = np.linspace(0, 15, 300)
+prior = gamma.pdf(x, shape_prior, scale=1/rate_prior)
+posterior = gamma.pdf(x, shape_post, scale=1/rate_post)
+
+plt.plot(x, prior, label='先验 Gamma(10,2)')
+plt.plot(x, posterior, label=f'后验 Gamma({shape_post},{rate_post})')
+plt.xlabel('λ')
+plt.ylabel('概率密度')
+plt.title('Gamma-Poisson 共轭模型')
+plt.legend()
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch5-gamma-pois" style="display:block;"></span>
-<img alt="剧情在x轴上有羊肉达,在y轴上有密度. 共有3个曲线. 代表前一种的y值在y大约等于2到9之间为非0y值. 前一种模式约为4.5. 缩放的似然是所有模型的左边. 中间是后验模型,其差异度和模式均低于前期和规模化的似然。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch5-gamma-pois-1-0e7a298fcd3c.png" width="384"/>
-<p class="caption">FIGURE 5.7:QQ0@@的Gamma-Poisson模型,每日诈骗风险呼叫率.</p>
+<img alt="The plot has lambda on the x-axis and density on the y-axis. There are 3 curves. The one representing the prior has non-zero y values between about y equals 2 and 9. The mode of the prior is approximately 4.5. The scaled likelihood is to the left of all the models. In the middle is posterior model which has lower variance and higher mode than the prior and the scaled likelihood." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch5-gamma-pois-1-0e7a298fcd3c.png" width="384"/>
+<p class="caption">
+图 5.7: <span class="math inline">\(\lambda\)</span>（欺诈风险电话的每日发生率）的 Gamma-泊松模型。
+</p>
 </div>
-<p>当然,我们对欺诈电话的每日比率的后台概念是在我们模糊的先验和观察到的电话数据之间达成妥协。 由于我们以前的概念与我们样本数据的强度相比是相当可变性的,所以\(\lambda\)的后置模型与数据更加同步. 具体地说,利用(5.9)定义的Gamma(10,2)前和Gamma(21,6)后的性质,注意到我们对日常电话的典型比率的了解从每天5个降至3.5个:</p>
-<p>\[E(\lambda) = \frac{10}{2} = 5 \;\; \text{ and } \;\; E(\lambda | \vec{y}) = \frac{21}{6} = 3.5 .\]</p>
-<p>虽然之前的中间值和数据之间的折衷意味着,但这个后后中间值更接近于每天的\\\\\\\\的呼叫的数据平均值.</p>
+<p>我们对每日欺诈呼叫率的后验观念，自然是模糊先验与观测电话数据之间的<em>折中</em>。
+由于我们的先验观念与样本数据所含信息相比非常不确定，<span class="math inline">\(\lambda\)</span> 的后验模型就更与数据一致。
+具体来说，利用由<a href="/bayes-rules-python-cn/chapter-5/#eq:gamma-trend-var">(5.9)</a>定义的 Gamma(10,2) 先验与 Gamma(21,6) 后验的性质，请注意我们对典型每日电话呼叫率的后验理解已从每天 5 次下降到 3.5 次：</p>
+<p><span class="math display">\[E(\lambda) = \frac{10}{2} = 5
+\;\; \text{ and } \;\;
+E(\lambda | \vec{y}) = \frac{21}{6} = 3.5  .\]</span></p>
+<p>虽然这个后验均值是先验均值与数据均值的折中，但它<em>更接近</em>数据均值 <span class="math inline">\(\overline{y} = 2.75\)</span> 次呼叫每天。</p>
 <div class="describe">
-<p>热提示</p>
-<p>后面的表示总是介于前一个表示和数据表示之间. 如果你的后台意味着掉在这个范围以外,它表明你犯了一个错误,应该重新追踪一些步骤.</p>
+<p><strong>温馨提示</strong></p>
+<p>后验均值总是介于先验均值与数据均值之间。如果你的后验均值落在该范围之外，那就表明你犯了错误，应当回溯检查步骤。</p>
 </div>
-<p>此外,从数据中获取的关于\(\lambda\)的补充资料显示,我们对于\(\lambda\)的认知变化下降了一半以上,从每天1.581次的标准差降至0.764次:</p>
-<p>\[\text{SD}(\lambda) = \sqrt{\frac{10}{2^2}} = 1.581 \;\; \text{ and } \;\; \text{SD}(\lambda | \vec{y}) = \sqrt{\frac{21}{6^2}} = 0.764 .\]</p>
-<p>方便的总结 gamma poisson()在bayesrules包中的函数,它使用和plot gamma poisson()相同的参数,帮助我们对比前模型和后模型,并确认以上结果:</p>
-<div class="sourceCode" id="cb47">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>此外，有了数据带来的关于 <span class="math inline">\(\lambda\)</span> 的额外信息，我们对 <span class="math inline">\(\lambda\)</span> 理解的变异性下降了一半以上，标准差从每天 1.581 次呼叫降至 0.764 次呼叫：</p>
+<p><span class="math display">\[\text{SD}(\lambda) = \sqrt{\frac{10}{2^2}} = 1.581
+\;\; \text{ and } \;\;
+\text{SD}(\lambda | \vec{y}) = \sqrt{\frac{21}{6^2}} = 0.764  .\]</span></p>
+<p><strong>bayesrules</strong> 工具箱中的便捷函数 <code>summarize_gamma_poisson()</code> 使用与 <code>plot_gamma_poisson()</code> 相同的参数，可帮助我们对比先验与后验模型，并确认上述结果：</p>
+<div class="sourceCode" id="cb47"><pre><code class="language-python">import pandas as pd
+import numpy as np
 
-summarize_gamma_poisson(shape = 10, rate = 2, sum_y = 11, n = 4)
-model shape rate mean  mode    var     sd
-1     prior    10    2  5.0 4.500 2.5000 1.5811
-2 posterior    21    6  3.5 3.333 0.5833 0.7638</code></pre>
-</div>
+def summarize_gamma_poisson(shape, rate, sum_y, n):
+    # 先验参数
+    prior_shape = shape
+    prior_rate = rate
+    prior_mean = prior_shape / prior_rate
+    prior_mode = (prior_shape - 1) / prior_rate if prior_shape &gt; 1 else 0
+    prior_var = prior_shape / (prior_rate ** 2)
+    prior_sd = np.sqrt(prior_var)
+    # 后验参数
+    post_shape = prior_shape + sum_y
+    post_rate = prior_rate + n
+    post_mean = post_shape / post_rate
+    post_mode = (post_shape - 1) / post_rate if post_shape &gt; 1 else 0
+    post_var = post_shape / (post_rate ** 2)
+    post_sd = np.sqrt(post_var)
+    # 构建DataFrame
+    table = pd.DataFrame({
+        'model': ['prior', 'posterior'],
+        'shape': [prior_shape, post_shape],
+        'rate': [prior_rate, post_rate],
+        'mean': [prior_mean, post_mean],
+        'mode': [prior_mode, post_mode],
+        'var': [prior_var, post_var],
+        'sd': [prior_sd, post_sd]
+    }).set_index('model')
+    return table
+
+# 调用函数并打印
+result = summarize_gamma_poisson(shape=10, rate=2, sum_y=11, n=4)
+print(result.to_string())</code></pre></div>
 </div>
 </div>
 <div class="section level2" id="normal-normal-conjugate-family" number="5.3">
-<h2>常规 - 正常交际家庭</h2>
-<p>现在,我们的工具包中有两个组合家庭:Beta-Binomial和Gamma-Poisson。 但还有许多家族存在! 但还有第三个共济会家庭, 考虑一个数据故事。 随着科学家们更多地了解大脑健康,脑震荡的危险(即参与者持续反复脑震荡的活动的危险性)正受到更多的关注(Bachynski 2019). 在有脑震荡史的所有人中, 我们感兴趣的是 + 0 + , 大脑特定部分的平均体积( 立方厘米) : 河马。 维基百科告诉我们, 在一般的成年人中, 38 因此,大脑两侧的河马体总体积在6至7 1@@之间. 以这一点为起点,我们假设脑震荡史的人的河马平均体积在6至7个左右,平均为6.5个。 我们将使用普通-自然巴伐利亚模式,用河马体体积的数据来平衡先验的理解。</p>
+<h2> 正态-正态共轭族</h2>
+<p>我们现在手上有两个共轭族：Beta-二项和Gamma-泊松。不过还有更多共轭族！不可能全部介绍，但第三个共轭族尤其值得了解：<strong>正态-正态</strong>。考虑这样一个数据场景。随着科学家对大脑健康的了解加深，脑震荡的危险（以及反复遭受脑震荡的活动的危险）正受到越来越多的关注<span class="citation">(<a href="#ref-bachynski2019no" role="doc-biblioref">Bachynski 2019</a>)</span>。在所有有脑震荡史的人群中，我们关心<span class="math inline">\(\mu\)</span>，即大脑特定区域——海马体的平均体积（单位：立方厘米）。虽然我们没有针对这一群体的先验信息，但维基百科告诉我们，在普通成年人群体中，两侧海马体各自的体积约在3.0到3.5立方厘米之间。<a class="footnote-ref" href="#fn38" id="fnref38"><sup>38</sup></a> 也就是说，大脑<em>两侧</em>海马体的<em>总</em>体积在6到7 <span class="math inline">\(\text{cm}^3\)</span> 之间。以此为基础，我们假设有脑震荡史人群的平均海马体体积 <span class="math inline">\(\mu\)</span> 也介于6到7 <span class="math inline">\(\text{cm}^3\)</span> 之间，均值为6.5。我们将利用 <span class="math inline">\(n = 25\)</span> 名受试者海马体体积数据 <span class="math inline">\((Y_1,Y_2,\ldots,Y_n)\)</span> 与这一先验认知进行平衡，借助 <strong>正态-正态贝叶斯模型</strong>。</p>
 <div class="section level3" id="the-normal-data-model" number="5.3.1">
-<h3>普通数据模型</h3>
-<p>我们的贝叶斯分析精神, 然而,对于XQ1@@(我们可以调谐)的适当的前置模型结构的具体规定,可以首先确定一个模型,用于依赖XQ2@@的数据。 由于河马卷QQ4@@的量度是连续尺度的,所以在XQ5@@的变异性上,从人到人之间有多种可能的常见模型:Beta,标本,Gamma,Normal,F等. 从这份名单来看,我们可以立即取消Beta模型 — — 它假设 6@@,而河马体卷则倾向于在6.5 7@@左右. 在其余的选项中,正态模型相当合理 — — 河马体体积等生物测量常以对称或通常分布在某个全球平均值上,</p>
+<h3>正态数据模型</h3>
+<p>同样，我们的贝叶斯分析精神始于对 <span class="math inline">\(\mu\)</span> 的先验认知。不过，恰当的 <span class="math inline">\(\mu\)</span> 先验模型结构（之后我们可以调整）可以借助首先确定数据 <span class="math inline">\(Y_i\)</span> 对 <span class="math inline">\(\mu\)</span> 的依赖性模型来引导。由于海马体体积 <span class="math inline">\(Y_i\)</span> 是连续尺度上的测量值，存在许多可能的常见模型来描述个体间 <span class="math inline">\(Y_i\)</span> 的变异：Beta、指数、Gamma、正态、F等。从这些选项中，我们可以立即排除 Beta 模型——它假定 <span class="math inline">\(Y_i \in [0,1]\)</span>，而海马体体积通常在6.5 <span class="math inline">\(\text{cm}^3\)</span> 左右。在剩下的选项中，正态模型相当<em>合理</em>——像海马体体积这样的生物测量数据往往围绕某个总体均值（这里是 <span class="math inline">\(\mu\)</span>）呈对称或<em>正态</em>分布。</p>
 <div class="describe">
-<p>普通模式</p>
-<p>让QQ0@@成为连续的随机变量,可以在QQ1@@和QQ2@@之间取任何值,即QQ3@@. 因此,QQ4@@中的变异性可能由一个普通模型很好地代表,该模型带有平均值参数QQ5@@和标准偏差参数QQ6@@:</p>
-<p>\[Y \sim N(\mu, \sigma^2).\]</p>
-<p>普通模型由连续 pdf 指定</p>
-<p>\[\begin{equation} f(y) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\bigg[{-\frac{(y-\mu)^2}{2\sigma^2}}\bigg] \;\; \text{ for } y \in (-\infty,\infty) \tag{5.11} \end{equation}\]</p>
-<p>具有以下特点:</p>
-<p>\[\begin{split} E(Y) &amp; = \text{ Mode}(Y) = \mu \\ \text{Var}(Y) &amp; = \sigma^2 \\ \text{SD}(Y) &amp; = \sigma. \\ \end{split}\]</p>
-<p>并且, 大约95%的QQ2QQ值将在2个标准差QQ3QQ内:</p>
-<p>\[\begin{equation} \mu \pm 2\sigma . \tag{5.12} \end{equation}\]</p>
+<p><strong>正态模型</strong></p>
+<p>令 <span class="math inline">\(Y\)</span> 为一连续随机变量，可取 <span class="math inline">\(-\infty\)</span> 到 <span class="math inline">\(\infty\)</span> 间的任何值，即 <span class="math inline">\(Y \in (-\infty,\infty)\)</span>。那么 <span class="math inline">\(Y\)</span> 的变异可以很好地用正态模型表示，该模型具有<strong>均值参数</strong> <span class="math inline">\(\mu \in (-\infty, \infty)\)</span> 和<strong>标准差参数</strong> <span class="math inline">\(\sigma &gt; 0\)</span>：</p>
+<p><span class="math display">\[Y \sim N(\mu, \sigma^2).\]</span></p>
+<p>正态模型由如下连续概率密度函数定义：</p>
+<p><span class="math display" id="eq:normal-pdf">\[\begin{equation}
+f(y) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\bigg[{-\frac{(y-\mu)^2}{2\sigma^2}}\bigg] \;\; \text{ for } y \in (-\infty,\infty)
+\tag{5.11}
+\end{equation}\]</span></p>
+<p>并具有以下特征：</p>
+<p><span class="math display">\[\begin{split}
+E(Y) &amp; = \text{ Mode}(Y) = \mu \\
+\text{Var}(Y) &amp; = \sigma^2 \\
+\text{SD}(Y) &amp; = \sigma. \\
+\end{split}\]</span></p>
+<p>此外，<span class="math inline">\(\sigma\)</span> 给出了 <span class="math inline">\(Y\)</span> 的一个尺度感。大约95%的 <span class="math inline">\(Y\)</span> 值会落在 <span class="math inline">\(\mu\)</span> 的2个标准差范围内：</p>
+<p><span class="math display" id="eq:normal-scale">\[\begin{equation}
+\mu \pm 2\sigma  .
+\tag{5.12}
+\end{equation}\]</span></p>
 </div>
 <div class="figure" style="text-align: center"><span id="fig:normal-tuning" style="display:block;"></span>
-<img alt="该图像有三个图案,其中y位于x轴上,f位于y轴上. 地块分别为N(2,0.25),N(2,1)和N(4,4). x轴的射程为−2至10. 第一部的剧情模式为2,并且拥有所有剧情中最高的. 第二块地块在2有模式,最大点较低. 第三块地块有一个模式在4,并有最低的最高点." loading="lazy" src="/assets/img/bayes-rules-python-cn/normal-tuning-1-8b3d11f19e19.png" width="432"/>
-<p class="caption">FIGURE 5.8:普通pdf,具有不同的平均值和标准偏差参数.</p>
+<img alt="The image has three plots with y on the x-axis and f of y on the y-axis. The plots read N(2, 0.25), N(2,1), and N(4,4) respectively. The x axis has a range of -2 to 10. The first plot has a mode at 2 and has the highest maximum of all. The second plot has a mode at 2 and has a lower maximum point. The third plot has a mode at 4 and has the lowest maximum point." loading="lazy" src="/assets/img/bayes-rules-python-cn/normal-tuning-1-8b3d11f19e19.png" width="432"/>
+<p class="caption">
+图 5.8：不同均值和标准差参数下的正态概率密度函数。
+</p>
 </div>
-<p>图5.8说明了各种平均和标准偏差参数值下的正常模式,XQ0@@和XQ1@@. 无论参数如何,普通模型都是钟形的,在QQ2@@左右对称的——因此随着QQ3@@变大,模型随它一起向右移动. 此外,QQ4QQ控制了正态模型的变异性——随着QQ5QX的变大,模型的分布变得更加分散. 最后,虽然一个普通变量QQ6@@在技术上可以从QQ7@@到QQ8@@,但普通模型将可忽略不计的可信度分配到QQ9@@值上,这些值超过3个标准偏差QQ10@@与平均QQ11@@. 要多玩一些, 您可以使用 payesrules 软件包中的 plot  normal () 函数来绘制普通模型。</p>
-<p>回到我们的大脑分析中, 我们可以合理地假设, 河马体卷, 我们的XQ0QQ学科,XQ1@@, 是独立的, 也认为标准偏差为5++++++6++。 39 如此选择QQ7@@表示,大多数人的河马体积在XX8@@XX9@@的平均值之内. 因此,QQ10@@对未知的平均值QQ11@@的依赖是:</p>
-<p>\[Y_i | \mu \; \sim \; N(\mu, \sigma^2) .\]</p>
+<p>图 <a href="/bayes-rules-python-cn/chapter-5/#fig:normal-tuning">5.8</a> 展示了在各种均值和标准差参数值 <span class="math inline">\(\mu\)</span> 和 <span class="math inline">\(\sigma\)</span> 下的正态模型。无论参数如何，正态模型总是呈钟形且关于 <span class="math inline">\(\mu\)</span> 对称——因此随着 <span class="math inline">\(\mu\)</span> 增大，模型也随之向右平移。此外，<span class="math inline">\(\sigma\)</span> 控制着正态模型的离散程度——<span class="math inline">\(\sigma\)</span> 越大，模型就越分散。最后，尽管正态变量 <span class="math inline">\(Y\)</span> 理论上可以从 <span class="math inline">\(-\infty\)</span> 取到 <span class="math inline">\(\infty\)</span>，但正态模型赋予距离均值 <span class="math inline">\(\mu\)</span> 超过3个标准差 <span class="math inline">\(\sigma\)</span> 的 <span class="math inline">\(Y\)</span> 值以<em>微乎其微</em>的合理性。如果你想多玩玩，可以使用 <strong>Python 统计库中的</strong> <code>plot_normal()</code> 函数绘制正态分布模型。</p>
+<p>回到我们的大脑分析，我们可以合理地假设 <span class="math inline">\(n = 25\)</span> 名受试者的海马体体积 <span class="math inline">\((Y_1,Y_2,\ldots,Y_{n})\)</span> 相互<em>独立</em>，且服从以 <span class="math inline">\(\mu\)</span> 为均值、<span class="math inline">\(\sigma\)</span> 为标准差的正态分布。此外，为了聚焦于 <span class="math inline">\(\mu\)</span>，我们在整个分析中假设标准差<em>已知</em>为 <span class="math inline">\(\sigma = 0.5\)</span> <span class="math inline">\(\text{cm}^3\)</span>。<a class="footnote-ref" href="#fn39" id="fnref39"><sup>39</sup></a> 这样选择 <span class="math inline">\(\sigma\)</span> 意味着大多数人的海马体体积与均值相差不超过 <span class="math inline">\(2\sigma = 1\)</span> <span class="math inline">\(\text{cm}^3\)</span>。因此，<span class="math inline">\(Y_i\)</span> 对<em>未知</em>均值 <span class="math inline">\(\mu\)</span> 的依赖关系为：</p>
+<p><span class="math display">\[Y_i | \mu \; \sim \; N(\mu, \sigma^2)  .\]</span></p>
 <div class="warning">
-<p>合理并不意味着完美。 虽然我们以后会看到我们的河马体积数据确实显示出正常行为, 但正常模式在技术上假设每个学科的河马体积从 0@@到\(\infty\)不等。 我们对此并不担心。 根据我们之前对图5.8的讨论, 正态模型将忽略不计的 河马体积的不合理值。 一般来说,不让完美成为善的敌人将在整个书中成为主题(主要因为没有完美).</p>
+<p><strong>合理并不意味着完美。</strong>
+尽管我们稍后会看到我们的海马体体积数据确实表现出了正态行为，但正态模型<em>严格来说</em>假设每个受试者的海马体体积可以从 <span class="math inline">\(-\infty\)</span> 到 <span class="math inline">\(\infty\)</span> 取值。
+不过，这里我们并不太担心这个不正确的假设。
+根据我们之前对图 <a href="/bayes-rules-python-cn/chapter-5/#fig:normal-tuning">5.8</a> 的讨论，正态模型会在不合理的海马体体积值上赋予可以忽略不计的权重。
+总的来说，不让<em>完美</em>成为<em>良好</em>的敌人将是贯穿本书的一个主题（主要是因为完美并不存在）。</p>
 </div>
-<p>因此,联合pdf描述了我们[0]科目的河马卷中的集体随机性,[1]是(5.11)定义的独特普通pdf的产物,</p>
-<p>\[f(\vec{y} | \mu) = \prod_{i=1}^{n}f(y_i|\mu) = \prod_{i=1}^{n}\frac{1}{\sqrt{2\pi\sigma^2}} \exp\bigg[{-\frac{(y_i-\mu)^2}{2\sigma^2}}\bigg] .\]</p>
-<p>一旦我们观察了我们的样本数据,我们就可以将联合pdf翻到它的头上,以获得XQ1@@,XQ2@@的正常概率函数. 记得我们假设QQ3@@是一个已知的常数, 那么,对于\(\mu \in (-\infty, \infty)\),</p>
-<p>通过一些更重排(我们鼓励你验证你是否像我们一样喜欢代数), 我们可以通过使用样本表示的QQ0++和样本大小XQ1++来总结我们的数据值,</p>
-<p>\[\begin{equation} L(\mu | \vec{y}) \propto \exp\bigg[{-\frac{(\bar{y}-\mu)^2}{2\sigma^2/n}}\bigg] \;\;\;\; \text{ for } \; \mu \in (-\infty, \infty). \tag{5.13} \end{equation}\]</p>
-<p>不要忘记这项运动的全部意义! 为数据指定一个模型及其相应的概率函数,提供了我们需要的工具来评估我们的数据的XQ0XX与XQ1XX的不同值的兼容性(一旦我们实际收集了这些数据).</p>
+<p>因此，描述我们 <span class="math inline">\(n = 25\)</span> 名受试者海马体体积 <span class="math inline">\((Y_1, Y_2, \ldots, Y_n)\)</span> 的<em>集体</em>随机性的<strong>联合概率密度函数（joint pdf）</strong>，是 <a href="/bayes-rules-python-cn/chapter-5/#eq:normal-pdf">(5.11)</a> 定义的各个正态概率密度函数 <span class="math inline">\(f(y_i | \mu)\)</span> 的乘积，</p>
+<p><span class="math display">\[f(\vec{y} | \mu) = \prod_{i=1}^{n}f(y_i|\mu) = \prod_{i=1}^{n}\frac{1}{\sqrt{2\pi\sigma^2}} \exp\bigg[{-\frac{(y_i-\mu)^2}{2\sigma^2}}\bigg]  .\]</span></p>
+<p>一旦观测到样本数据 <span class="math inline">\(\vec{y}\)</span>，我们就可以将联合概率密度函数反转，得到关于 <span class="math inline">\(\mu\)</span> 的正态似然函数，<span class="math inline">\(L(\mu|\vec{y}) = f(\vec{y}|\mu)\)</span>。
+记住我们假设 <span class="math inline">\(\sigma\)</span> 是已知常数，通过去掉不依赖于 <span class="math inline">\(\mu\)</span> 的项，我们可以将似然函数简化到一个<em>比例</em>常数。
+那么对于 <span class="math inline">\(\mu \in (-\infty, \infty)\)</span>，</p>
+<p><span class="math display">\[L(\mu |\vec{y}) \propto \prod_{i=1}^{n} \exp\bigg[{-\frac{(y_i-\mu)^2}{2\sigma^2}}\bigg] =  \exp\bigg[{-\frac{\sum_{i=1}^n(y_i-\mu)^2}{2\sigma^2}}\bigg]  .\]</span>
+通过进一步的重排（如果你像我们一样喜欢代数，我们鼓励你自己验证），我们可以利用样本均值 <span class="math inline">\(\bar{y}\)</span> 和样本量 <span class="math inline">\(n\)</span> 来概括数据，从而让这个公式更易于理解：</p>
+<p><span class="math display" id="eq:normal-joint-like">\[\begin{equation}
+L(\mu | \vec{y}) \propto \exp\bigg[{-\frac{(\bar{y}-\mu)^2}{2\sigma^2/n}}\bigg] \;\;\;\; \text{ for } \; \mu \in (-\infty, \infty).
+\tag{5.13}
+\end{equation}\]</span></p>
+<p>别忘了这整个练习的要旨！
+为数据指定一个模型及其对应的似然函数，为我们提供了所需的工具，用以评估数据 <span class="math inline">\(\vec{y}\)</span> 与 <span class="math inline">\(\mu\)</span> 不同取值的兼容性（一旦我们实际收集到这些数据）。</p>
 </div>
 <div class="section level3" id="normal-prior" number="5.3.2">
-<h3>常规前端</h3>
-<p>可能的话,让我们正式确定一个先行模式, 通过QQ1@@数据模型的属性,普通平均参数QQ2@@在技术上可以取QQ3@@和QQ4@@之间的任何值. 因此,对于QQ5的“正常”前,它也定义了QQ6,它做出了合理的选择。 通常都分布在标准偏差的@###############@######################################################################################################################################################################################################################################</p>
-<p>\[\mu \sim N(\theta, \tau^2) , \]</p>
-<p># # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #</p>
-<p>\[\begin{equation} f(\mu) = \frac{1}{\sqrt{2\pi\tau^2}} \exp\bigg[{-\frac{(\mu - \theta)^2}{2\tau^2}}\bigg] \;\; \text{ for } \mu \in (-\infty,\infty) . \tag{5.14} \end{equation}\]</p>
-<p>通常的假设不仅与一般数据模型相同, 你可能会预料到,由于概率函数 +++ (5.13) 和 ++++ (5.14) 和 +++ ++ (5.14) 和 +++ 的概率函数都与</p>
-<p>\[\exp\bigg[{-\frac{(\mu - \blacksquare)^2}{2\blacksquare^2}}\bigg]\]</p>
-<p>与不同的\(\blacksquare\).</p>
-<p>以反映我们先验对有脑震荡史的人的海马平均体积的理解和不确定性。 依据维基百科的严格研究, 河马的体积往往在6到7×××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××××年××××××××××××××××××××××××××××××××××××××××××××××××××××××××年×××年××××××××年×××××××××××年×××××××××××年××××××××××××××××××××××××××××××××××××××××××××××××× 此外,我们将把正常的先验标准偏差确定为 @@5。 换句话说,通过(5.12),我们认为有95%的几率是‘6'在5.7和7.3‘7'之间。 这个范围比维基百科所说的要宽, 我们在这里的不确定性反映出我们没有审查维基百科的来源,我们不相信典型的成年人的特征会翻译给有脑震荡史的人,我们一般也不清楚这里发生了什么(即我们不是脑专家)。 我们调用之前的XQ9的型号是:</p>
-<p>\[\mu \sim N(6.5, 0.4^2) .\]</p>
-<div class="sourceCode" id="cb48">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<h3> 正态先验 </h3>
+<p>确定了似然函数后，我们来为 <span class="math inline">\(\mu\)</span>（有脑震荡史的人群的平均海马体体积）建立先验模型。根据 <span class="math inline">\(Y_i|\mu \sim N(\mu, \sigma^2)\)</span> 数据模型的性质，正态均值参数 <span class="math inline">\(\mu\)</span> 理论上可以取 <span class="math inline">\(-\infty\)</span> 到 <span class="math inline">\(\infty\)</span> 之间的任何值。因此，为 <span class="math inline">\(\mu\)</span> 指定一个同样定义在 <span class="math inline">\(\mu \in (-\infty, \infty)\)</span> 上的正态先验分布是一个合理的选择。具体来说，我们假设 <span class="math inline">\(\mu\)</span> 本身服从以某个均值 <span class="math inline">\(\theta\)</span> 为中心、标准差为 <span class="math inline">\(\tau\)</span> 的正态分布：</p>
+<p><span class="math display">\[\mu \sim N(\theta, \tau^2)  , \]</span></p>
+<p>其中 <span class="math inline">\(\mu\)</span> 的先验概率密度函数为</p>
+<p><span class="math display" id="eq:normal-prior-pdf">\[\begin{equation}
+f(\mu) = \frac{1}{\sqrt{2\pi\tau^2}} \exp\bigg[{-\frac{(\mu - \theta)^2}{2\tau^2}}\bigg] \;\; \text{对于 } \mu \in (-\infty,\infty)  .
+\tag{5.14}
+\end{equation}\]</span></p>
+<p>正态先验关于 <span class="math inline">\(\mu \in (-\infty,\infty)\)</span> 的假设不仅与正态数据模型的假设一致，我们下面还将证明这是一个<em>共轭</em>先验。你可能已经预感到这个结果，因为似然函数 <span class="math inline">\(L(\mu | \vec{y})\)</span> <a href="/bayes-rules-python-cn/chapter-5/#eq:normal-joint-like">(5.13)</a> 和先验密度 <span class="math inline">\(f(\mu)\)</span> <a href="/bayes-rules-python-cn/chapter-5/#eq:normal-prior-pdf">(5.14)</a> 都正比于</p>
+<p><span class="math display">\[\exp\bigg[{-\frac{(\mu - \blacksquare)^2}{2\blacksquare^2}}\bigg]\]</span></p>
+<p>只是其中的 <span class="math inline">\(\blacksquare\)</span> 不同。</p>
+<p>利用我们对正态模型的理解，现在可以对先验超参数 <span class="math inline">\(\theta\)</span> 和 <span class="math inline">\(\tau\)</span> 进行<em>调节</em>，以反映我们对有脑震荡史人群的平均海马体体积 <span class="math inline">\(\mu\)</span> 的先验认识和不确定性。根据我们严格的维基百科研究（海马体体积通常在 6 到 7 <span class="math inline">\(\text{cm}^3\)</span> 之间），我们将正态先验均值 <span class="math inline">\(\theta\)</span> 设为中点 6.5。此外，我们将正态先验标准差设为 <span class="math inline">\(\tau = 0.4\)</span>。换句话说，根据 <a href="/bayes-rules-python-cn/chapter-5/#eq:normal-scale">(5.12)</a>，我们认为 <span class="math inline">\(\mu\)</span> 有 95% 的概率落在 5.7 到 7.3 <span class="math inline">\(\text{cm}^3\)</span> 之间（<span class="math inline">\(6.5 \pm 2*0.4\)</span>）。这个范围比维基百科所示更<em>宽</em>，因此也更保守。我们的不确定性反映了以下事实：我们没有核实维基百科的来源，我们不确定典型成人的特征是否能推广到有脑震荡史的人群，而且我们总体上对这方面并不确定（即我们不是大脑专家）。综上所述，我们调节后的 <span class="math inline">\(\mu\)</span> 先验模型为：</p>
+<p><span class="math display">\[\mu \sim N(6.5, 0.4^2) .\]</span></p>
+<div class="sourceCode" id="cb48"><pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import norm
 
-plot_normal(mean = 6.5, sd = 0.4)</code></pre>
-</div>
+def plot_normal(mean, sd):
+    x = np.linspace(mean - 4*sd, mean + 4*sd, 500)
+    y = norm.pdf(x, loc=mean, scale=sd)
+    plt.plot(x, y, lw=2, label=f'N({mean}, {sd}²)')
+    plt.xlabel('x')
+    plt.ylabel('概率密度')
+    plt.title(f'正态分布: 均值={mean}, 标准差={sd}')
+    plt.legend()
+    plt.show()
+
+plot_normal(mean=6.5, sd=0.4)</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:normal-prior" style="display:block;"></span>
-<img alt="该图像的y在x轴上,f在y轴上. 模型看起来对称. 曲线最大点为6.5." loading="lazy" src="/assets/img/bayes-rules-python-cn/normal-prior-1-1f76d486c474.png" width="240"/>
-<p class="caption">FIGURE 5.9:一个普通的前期型号,用于QQ0@@,中间值6.5,标准偏差0.4.</p>
+<img alt="The image has y on the x-axis and f of y on the y-axis. The model looks symmetric. The curve has a maximum point at 6.5." loading="lazy" src="/assets/img/bayes-rules-python-cn/normal-prior-1-1f76d486c474.png" width="240"/>
+<p class="caption">
+图 5.9：<span class="math inline">\(\mu\)</span> 的正态先验模型，均值为 6.5，标准差为 0.4。
+</p>
 </div>
 <div style="page-break-after: always;"></div>
 </div>
 <div class="section level3" id="ch5-n-n-section" number="5.3.3">
-<h3>常规 - 正常的调和</h3>
-<p>为了获得我们的后台模型,我们必须把来自我们以前和我们的数据的信息结合起来。 我们又巧妙地选择了一个正常的前期模式, 因此,XQ1@@的后置模型也将是正常的,并有最新的参数,这些参数从先验和观测到的数据中得知。</p>
+<h3> 正态-正态共轭性 </h3>
+<p>为了得到 <span class="math inline">\(\mu\)</span> 的后验模型，我们必须结合先验和数据中的信息。再次强调，我们很聪明地选择了正态先验模型——正态-正态是另一个方便的共轭族！因此，<span class="math inline">\(\mu\)</span> 的后验模型也将是正态分布，其参数根据先验和观测数据进行更新。</p>
 <div class="describe">
-<p>普通-普通贝叶斯模型</p>
-<p>让QQ0@@成为未知的平均值参数, 正常-自然的贝叶斯模型以正常数据结构在XQ4@@前补充:</p>
-<p>\[\begin{split} Y_i | \mu &amp; \stackrel{ind}{\sim} N(\mu, \sigma^2) \\ \mu &amp; \sim N(\theta, \tau^2) \\ \end{split}\]</p>
-<p>在观测数据时 与平均值 QQ1@@ , 后面的 QQ2@@ 的模型也是 正常的, 有更新的参数 :</p>
-<p>\[\begin{equation} \mu|\vec{y} \; \sim \; N\bigg(\theta\frac{\sigma^2}{n\tau^2+\sigma^2} + \bar{y}\frac{n\tau^2}{n\tau^2+\sigma^2}, \; \frac{\tau^2\sigma^2}{n\tau^2+\sigma^2}\bigg) . \tag{5.15} \end{equation}\]</p>
+<p><strong>正态-正态贝叶斯模型</strong></p>
+<p>令 <span class="math inline">\(\mu \in (-\infty,\infty)\)</span> 为未知的<em>均值</em>参数，<span class="math inline">\((Y_1,Y_2,\ldots,Y_n)\)</span> 为独立且服从 <span class="math inline">\(N(\mu,\sigma^2)\)</span> 的样本，其中 <span class="math inline">\(\sigma\)</span> 假定为<em>已知</em>。正态-正态贝叶斯模型为正态数据结构和关于 <span class="math inline">\(\mu\)</span> 的正态先验的结合：</p>
+<p><span class="math display">\[\begin{split}
+Y_i | \mu &amp; \stackrel{ind}{\sim} N(\mu, \sigma^2) \\
+\mu &amp; \sim N(\theta, \tau^2) \\
+\end{split}\]</span></p>
+<p>在观测到数据 <span class="math inline">\(\vec{y} = (y_1,y_2,\ldots,y_n)\)</span> 且其均值为 <span class="math inline">\(\overline{y}\)</span> 后，<span class="math inline">\(\mu\)</span> 的后验模型也服从正态分布，其更新后的参数为：</p>
+<p><span class="math display" id="eq:n-n-post-ch5">\[\begin{equation}
+\mu|\vec{y} \; \sim \;  N\bigg(\theta\frac{\sigma^2}{n\tau^2+\sigma^2} + \bar{y}\frac{n\tau^2}{n\tau^2+\sigma^2}, \; \frac{\tau^2\sigma^2}{n\tau^2+\sigma^2}\bigg)  .
+\tag{5.15}
+\end{equation}\]</span></p>
 </div>
-<p>哇,这嘴真臭! 我们在第5.3.4节中提供了这一结果的可选证据。 即使没有这种证据,我们也能观察到正常后卫(5.15)在先验和数据之间达到的平衡。 首先,后面的平均值是前一个平均值的加权平均值(\(E(\mu) = \theta\))和样本的平均值(\(\overline{y}\)). 第二,后面的差异来自先验的变异性QQ2@@和数据XQ3@@中的变异. 两者都受到样本大小QQ4@@的影响. 首先,随着QQ5+Q的增加,后期意味着对上一个平均值的权重减少,对样本的权重增加意味着QQ6+Q::</p>
-<p>\[\frac{\sigma^2}{n\tau^2+\sigma^2} \to 0 \;\; \text{ and } \;\; \frac{n\tau^2}{n\tau^2+\sigma^2} \to 1 .\]</p>
-<p>此外,随着++++的增加,后方差异减少:</p>
-<p>\[\frac{\tau^2\sigma^2}{n\tau^2+\sigma^2} \to 0 .\]</p>
-<p>也就是,我们掌握的数据越多,我们的后期确定性就越大,与数据更加同步。</p>
-<p>让我们运用并研究这个结果, 已经创造了我们之前的型号。 接下来,考虑一些数据。 Baylesrules中的足球数据,是Lock5Data包(Lock et al. 2016),包括75个学科对河马体卷的交叉研究成绩(Singh等人,2014) :25个具有脑震荡史(fb concuss)的联赛足球运动员,25个没有脑震荡史(fb no concuss)的联赛足球运动员,25个控制学科. 我们将关注脑震荡史(fb concess)的QQ3Q主题:</p>
-<div class="sourceCode" id="cb49">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>哇，这内容真不少！我们在第 <a href="/bayes-rules-python-cn/chapter-5/#ch5-optional">5.3.4</a> 节提供了这一结果的选读证明。即使没有那个证明，我们也可以观察到正态后验<a href="/bayes-rules-python-cn/chapter-5/#eq:n-n-post-ch5">(5.15)</a> 如何在先验和数据之间取得平衡。首先，后验均值是先验均值 <span class="math inline">\(E(\mu) = \theta\)</span> 和样本均值 <span class="math inline">\(\overline{y}\)</span> 的<strong>加权平均</strong>。其次，后验方差由先验变异性 <span class="math inline">\(\tau\)</span> 和数据的变异性 <span class="math inline">\(\sigma\)</span> 共同决定。两者均受样本量 <span class="math inline">\(n\)</span> 的影响。首先，随着 <span class="math inline">\(n\)</span> 增大，后验均值对先验均值的权重降低，而对样本均值 <span class="math inline">\(\overline{y}\)</span> 的权重增加：</p>
+<p><span class="math display">\[\frac{\sigma^2}{n\tau^2+\sigma^2} \to 0
+\;\; \text{ 并且 } \;\;
+\frac{n\tau^2}{n\tau^2+\sigma^2} \to 1 .\]</span></p>
+<p>此外，随着 <span class="math inline">\(n\)</span> 增大，后验方差减小：</p>
+<p><span class="math display">\[\frac{\tau^2\sigma^2}{n\tau^2+\sigma^2} \to 0  .\]</span></p>
+<p>也就是说，随着数据越来越多，我们对 <span class="math inline">\(\mu\)</span> 的后验确信度会增加，并且与数据更加吻合。</p>
+<p>我们来应用并考察这一结果，分析 <span class="math inline">\(\mu\)</span>，即有脑震荡史人群的平均海马体体积。我们已经构建了 <span class="math inline">\(\mu\)</span> 的先验模型，<span class="math inline">\(\mu \sim N(6.5, 0.4^2)\)</span>。接下来，考虑一些数据。<strong>bayesrules</strong> 中的 <code>football</code> 数据集是 <strong>Lock5Data</strong> 包中 <code>FootballBrain</code> 数据的子集 <span class="citation">(<a href="#ref-lock2016statistics" role="doc-biblioref">Lock et al. 2016</a>)</span>，包含对 75 名受试者的海马体体积横断面研究结果 <span class="citation">(<a href="#ref-singh2014relationship" role="doc-biblioref">Singh et al. 2014</a>)</span>：25 名有脑震荡史的大学橄榄球运动员 (<code>fb_concuss</code>)、25 名无脑震荡史的大学橄榄球运动员 (<code>fb_no_concuss</code>) 以及 25 名对照组受试者。在我们的分析中，我们将关注 <span class="math inline">\(n = 25\)</span> 名有脑震荡史的受试者 (<code>fb_concuss</code>)：</p>
+<div class="sourceCode" id="cb49"><pre><code class="language-python">import pandas as pd
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# 装入数据
-data(football)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>这些学科的河马平均体积为0. = 5.735 \(\text{cm}^3\):</p>
-<div class="sourceCode" id="cb50">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+# 加载数据
+football = pd.read_csv("football.csv")
+# 筛选出组别为 "fb_concuss" 的受试者
+concussion_subjects = football[football['group'] == 'fb_concuss']</code></pre></div>
+<p>这些受试者的平均海马体体积为 <span class="math inline">\(\overline{y}\)</span> = 5.735 <span class="math inline">\(\text{cm}^3\)</span>：</p>
+<div class="sourceCode" id="cb50"><pre><code class="language-python"># 计算 volume 变量的均值
+mean_volume = concussion_subjects['volume'].mean()
+print(f"mean(volume) = {mean_volume}")</code></pre></div>
+<p>此外，海马体体积在受试者之间似乎呈<em>正态</em>分布，范围大约从 4.5 到 7 <span class="math inline">\(\text{cm}^3\)</span>。也就是说，我们假设的关于个体海马体体积的正态数据模型，<span class="math inline">\(Y_i |\mu \sim N(\mu, \sigma^2)\)</span>，其中假设标准差 <span class="math inline">\(\sigma = 0.5\)</span>，似乎是<em>合理的</em>：</p>
+<div class="sourceCode" id="cb51"><pre><code class="language-python">import seaborn as sns
+import matplotlib.pyplot as plt
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>此外,河马的体积通常因学科而异,从4.5到7 \(\text{cm}^3\)不等。 我们关于河马体积的正常数据模型,</p>
-<div class="sourceCode" id="cb51">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
-
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 绘制 volume 的密度曲线
+sns.kdeplot(data=concussion_subjects, x='volume')
+plt.xlabel('volume')
+plt.ylabel('密度')
+plt.title('concussion_subjects 中 volume 的密度图')
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-160" style="display:block;"></span>
-<img alt="体积的密度曲线。 x轴的体积值从4.5到7.25不等. Y轴的密度值从0到1不等. 密度曲线呈摇摆状,大致呈钟形. 其最高的卷数接近5.7,超过5至7的卷数接近0。" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-160-1-70f560106c6e.png" width="240"/>
-<p class="caption">图5.10: 河马体积的密度图(立方厘米)在25个曾经历脑震荡的科中.</p>
+<img alt="A density curve of volume. The x-axis has volume values ranging from 4.5 to 7.25. The y-axis has density values ranging from 0 to 1. The density curve is wobbly and roughly bell shaped. It is highest at volumes near 5.7 and is nearly 0 for volumes outside the range from 5 to 7." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-160-1-70f560106c6e.png" width="240"/>
+<p class="caption">
+图 5.10：25 名经历过脑震荡的受试者的海马体体积（单位：立方厘米）的密度图。
+</p>
 </div>
-<p>将这一信息从数据( 0@@,\(\overline{y}\)=5.735, and2@@)插入(5.13),定义了\(\mu\)的正常概率函数:</p>
-<p>\[L(\mu | \vec{y}) \propto \exp\bigg[{-\frac{(5.735-\mu)^2}{2(0.5^2/25)}}\bigg] \;\;\;\; \text{ for } \; \mu \in (-\infty, \infty).\]</p>
-<p>我们使用 plot  normal likelihood () 绘制此似然函数, 提供观测到的体积数据和数据标准偏差 {} (图5.11). 这种似然说明了我们观测到的河马数据与不同的QQ1@@值的兼容性. 如果脑震荡史上所有人士的河马平均体积在5.3至6.1 + 3 + 之间, 我们最有可能观察到25个样本中的平均数量为5,735,</p>
-<div class="sourceCode" id="cb52">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>将数据的这些信息（<span class="math inline">\(n = 25\)</span>，<span class="math inline">\(\overline{y}\)</span> = 5.735，<span class="math inline">\(\sigma = 0.5\)</span>）代入 <a href="/bayes-rules-python-cn/chapter-5/#eq:normal-joint-like">(5.13)</a> 式，定义 <span class="math inline">\(\mu\)</span> 的正态似然函数：</p>
+<p><span class="math display">\[L(\mu | \vec{y}) \propto \exp\bigg[{-\frac{(5.735-\mu)^2}{2(0.5^2/25)}}\bigg] \;\;\;\; \text{ for } \; \mu \in (-\infty, \infty).\]</span></p>
+<p>我们利用 <code>plot_normal_likelihood()</code> 函数绘制这个似然函数，输入观测到的 <code>volume</code> 数据和数据标准差 <span class="math inline">\(\sigma = 0.5\)</span>（图 <a href="/bayes-rules-python-cn/chapter-5/#fig:ch5-n-like">5.11</a>）。
+这个似然函数展示了我们观测到的海马体数据与不同 <span class="math inline">\(\mu\)</span> 值之间的相容性。
+因此，如果<em>所有</em>有脑震荡史的人的平均海马体体积 <span class="math inline">\(\mu\)</span> 在 5.3 到 6.1 <span class="math inline">\(\text{cm}^3\)</span> 之间，我们的数据中观测到的海马体模式最有可能出现。
+此外，如果总体的真实均值 <span class="math inline">\(\mu\)</span> 也是 5.735，那么我们在 25 名样本受试者中最有可能观测到样本均值 <span class="math inline">\(\overline{y} =\)</span> 5.735。</p>
+<div class="sourceCode" id="cb52"><pre><code class="language-python">import numpy as np
+import scipy.stats as stats
+import matplotlib.pyplot as plt
 
-plot_normal_likelihood(y = concussion_subjects$volume, sigma = 0.5)</code></pre>
-</div>
+# 提取 volume 数据
+y = concussion_subjects['volume']
+y_bar = y.mean()
+n = len(y)
+sigma = 0.5
+
+# 似然函数（mu 的似然）实际上是一个正态分布 N(y_bar, sigma/sqrt(n))
+mu_range = np.linspace(y_bar - 3*sigma/np.sqrt(n), y_bar + 3*sigma/np.sqrt(n), 200)
+likelihood = stats.norm.pdf(mu_range, y_bar, sigma/np.sqrt(n))
+
+plt.plot(mu_range, likelihood, 'b-', label='似然')
+plt.xlabel('$\mu$')
+plt.ylabel('密度')
+plt.title('正态似然函数（$\sigma = 0.5$）')
+plt.legend()
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch5-n-like" style="display:block;"></span>
-<img alt="穆的概率曲线. x轴的mu值从5.25到6.25不等. Y轴具有概率值. 概率曲线呈钟形,峰值为mu等于5.735. 曲线在5.5到6." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch5-n-like-1-9505311404c0.png" width="240"/>
-<p class="caption">图5.11: 平均河马体积的正常概率函数。</p>
+<img alt="The likelihood curve of mu. The x-axis has mu values ranging from 5.25 to 6.25. The y-axis has likelihood values. The likelihood curve is bell-shaped, with a peak at mu equals 5.735. The curve is roughly 0 for mu values outside the range from 5.5 to 6." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch5-n-like-1-9505311404c0.png" width="240"/>
+<p class="caption">
+图 5.11：平均海马体体积 <span class="math inline">\(\mu\)</span> 的正态似然函数。
+</p>
 </div>
-<p>我们现在有所有必需的部件可以插进(5.15),因此可以指定 0@@的后置模型. 编号 :</p>
+<p>我们现在已拥有代入 <a href="/bayes-rules-python-cn/chapter-5/#eq:n-n-post-ch5">(5.15)</a> 所需的所有要素，进而可以指定 <span class="math inline">\(\mu\)</span> 的后验模型：</p>
 <ul>
-<li>我们的正常的上一个型号 {0}} 是指 QQ1 和标准偏差 QQ2 ;</li>
-<li>我们的样本标本有样本 平均体积的% 1 ;</li>
-<li>我们假设 已知的标准偏差 在单个河马体体积 ============</li>
+<li>我们对 <span class="math inline">\(\mu\)</span> 设定的正态先验模型的均值为 <span class="math inline">\(\theta = 6.5\)</span>，标准差为 <span class="math inline">\(\tau = 0.4\)</span>；</li>
+<li>我们的 <span class="math inline">\(n = 25\)</span> 名样本受试者的样本均值体积 <span class="math inline">\(\bar{y}=5.735\)</span>；</li>
+<li>我们假定的个体海马体体积的已知标准差为 <span class="math inline">\(\sigma = 0.5\)</span>。</li>
 </ul>
-<p>因此,\(\mu\)的后期模式 为:</p>
-<p>\[\mu | \vec{y} \; \sim \; N\bigg(6.5\cdot\frac{0.5^2}{25\cdot0.4^2+0.5^2} + 5.735\cdot\frac{25\cdot 0.4^2}{25 \cdot 0.4^2+0.5^2}, \; \frac{0.4^2\cdot0.5^2}{25\cdot0.4^2+0.5^2}\bigg).\]</p>
-<p>进一步简化,</p>
-<p>\[\mu | \vec{y} \; \sim \; N\bigg(5.78, 0.009^2 \bigg)\]</p>
-<p>其中后缀表示将大约94%的权重放在数据权重( 0@@)上,仅将6%的权重放在前缀(\(E(\mu) = 6.5\)):</p>
-<p>\[E(\mu|\vec{y}) = 6.5 \cdot 0.0588 + 5.735\cdot 0.9412 = 5.78 .\]</p>
-<p>将所有这些片段拼凑在一起,我们用图 正态 正态() 来绘制和总结我们的正常-正态分析,并在海湾规则包中总结 正态 正态()。 尽管我们以前的数据和数据是妥协的,但我们后人对QQ1@@的理解受到后者的影响更大. 根据我们的数据,我们更确定有脑震荡史的人的河马平均体积,并认为这个数字在5.586至5.974 \(\text{cm}^3\)( 3@@)之间。</p>
-<div class="sourceCode" id="cb53">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
-import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
+<p>因此，<span class="math inline">\(\mu\)</span> 的后验模型为：</p>
+<p><span class="math display">\[\mu | \vec{y} \; \sim \; N\bigg(6.5\cdot\frac{0.5^2}{25\cdot0.4^2+0.5^2} + 5.735\cdot\frac{25\cdot 0.4^2}{25 \cdot 0.4^2+0.5^2}, \; \frac{0.4^2\cdot0.5^2}{25\cdot0.4^2+0.5^2}\bigg).\]</span></p>
+<p>进一步简化后，</p>
+<p><span class="math display">\[\mu | \vec{y} \; \sim \; N\bigg(5.78, 0.009^2 \bigg)\]</span></p>
+<p>其中后验均值约 94% 的权重来自数据均值（<span class="math inline">\(\overline{y} = 5.375\)</span>），仅 6% 来自先验均值（<span class="math inline">\(E(\mu) = 6.5\)</span>）：</p>
+<p><span class="math display">\[E(\mu|\vec{y}) = 6.5 \cdot 0.0588 + 5.735\cdot 0.9412 = 5.78 .\]</span></p>
+<p>综合以上所有部分，我们使用 <strong>bayesrules</strong> 包中的 <code>plot_normal_normal()</code> 和 <code>summarize_normal_normal()</code> 函数绘制并总结了对 <span class="math inline">\(\mu\)</span> 的正态-正态分析结果。虽然后验是先验与数据的折中，但我们对 <span class="math inline">\(\mu\)</span> 的后验认识更受数据的影响。结合数据，我们现在对有过脑震荡史的人群的平均海马体积更加 <em>确定</em>，并认为这个数值约在 5.586 到 5.974 <span class="math inline">\(\text{cm}^3\)</span>（<span class="math inline">\(5.78 \pm 2*0.097\)</span>）之间。</p>
+<div class="sourceCode" id="cb53"><pre><code class="language-python">import numpy as np
+import scipy.stats as stats
+import matplotlib.pyplot as plt
 
-plot_normal_normal(mean = 6.5, sd = 0.4, sigma = 0.5,
-y_bar = 5.735, n = 25)</code></pre>
-</div>
+# 参数
+prior_mean = 6.5
+prior_sd = 0.4
+sigma = 0.5
+y_bar = 5.735
+n = 25
+
+# 定义 mu 的取值范围
+mu_vals = np.linspace(4, 7, 200)
+
+# 先验：N(6.5, 0.4^2)
+prior = stats.norm.pdf(mu_vals, prior_mean, prior_sd)
+
+# 似然：N(y_bar, sigma^2/n)
+lik_sd = sigma / np.sqrt(n)
+lik = stats.norm.pdf(mu_vals, y_bar, lik_sd)
+
+# 后验参数计算
+post_var = 1 / (1/prior_sd**2 + n/sigma**2)
+post_mean = (prior_mean/prior_sd**2 + n*y_bar/sigma**2) * post_var
+post_sd = np.sqrt(post_var)
+post = stats.norm.pdf(mu_vals, post_mean, post_sd)
+
+# 绘图
+plt.plot(mu_vals, prior, 'k--', label='先验')
+plt.plot(mu_vals, lik, 'b-', label='似然')
+plt.plot(mu_vals, post, 'r-', label='后验')
+plt.xlabel('$\mu$')
+plt.ylabel('密度')
+plt.title('正态-正态模型')
+plt.legend()
+plt.show()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch5-n-n" style="display:block;"></span>
-<img alt="之前的 pdf,缩放概率函数, 之后的 pdf for mu. x轴的值为mu从5到8,y轴的密度值为0到4. 之前的pdf是一个以6.5为中心,范围大约为5.3到7.7之间的正常曲线. 概率曲线看起来像一个更窄的正常曲线,以5.375为中心,范围大约为5.5至6. 后曲面与概率曲面非常相似,但略微转向右侧." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch5-n-n-1-b1529de69f55.png" width="384"/>
-<p class="caption">FIGURE 5.12: \(\mu\)的正常-自然模型 平均河马体积</p>
+<img alt="The prior pdf, scaled likelihood function, and posterior pdf for mu. The x-axis has values of mu from 5 to 8 and the y-axis has density values from 0 to 4. The prior pdf is a Normal curve centered at 6.5 and ranging from roughly 5.3 to 7.7. The likelihood curve appears like a much narrower Normal curve centered at 5.375 and ranging from roughly 5.5 to 6. The posterior curve is very similar to the likelihood curve, yet slightly shifted to the right." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch5-n-n-1-b1529de69f55.png" width="384"/>
+<p class="caption">
+图 5.12：平均海马体积 <span class="math inline">\(\mu\)</span> 的正态-正态模型。
+</p>
 </div>
-<div class="sourceCode" id="cb54">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<div class="sourceCode" id="cb54"><pre><code class="language-python">import numpy as np
 import pandas as pd
-from scipy import stats
-import pymc as pm
-import arviz as az
 
-summarize_normal_normal(mean = 6.5, sd = 0.4, sigma = 0.5,
-y_bar = 5.735, n = 25)
-model mean mode      var      sd
-1     prior 6.50 6.50 0.160000 0.40000
-2 posterior 5.78 5.78 0.009412 0.09701</code></pre>
-</div>
+# 参数
+prior_mean = 6.5
+prior_sd = 0.4
+sigma = 0.5
+y_bar = 5.735
+n = 25
+
+# 先验统计量
+prior_var = prior_sd**2
+
+# 后验参数
+post_var = 1 / (1/prior_var + n/sigma**2)
+post_mean = (prior_mean/prior_var + n*y_bar/sigma**2) * post_var
+post_sd = np.sqrt(post_var)
+
+# 构造摘要表
+df = pd.DataFrame({
+    'model': ['prior', 'posterior'],
+    'mean': [prior_mean, post_mean],
+    'mode': [prior_mean, post_mean],  # 正态分布的众数等于均值
+    'var': [prior_var, post_var],
+    'sd': [prior_sd, post_sd]
+})
+
+# 打印结果
+print(df)</code></pre></div>
 </div>
 <div class="section level3" id="ch5-optional" number="5.3.4">
-<h3>可选:证明正常-正常交配</h3>
-<p>为了完整起见,我们在此证明正常-自然模型产生后验模型(5.15). 如果衍生物不是你们的东西,那完全可以。 随意跳到下一节,并知道可以使用这个普通-自然模型,用轻心. 让我们开始吧。 \(\mu\)的后pdf与普通前pdf(5.14)和概率函数(5.13)的产物成正比. 表示:</p>
-<p>\[f(\mu|\vec{y}) \propto f(\mu)L(\mu|\vec{y}) \propto \exp\bigg[{\frac{-(\mu - \theta)^2}{2\tau^2}}\bigg] \cdot \exp\bigg[{-\frac{(\bar{y}-\mu)^2}{2\sigma^2/n}}\bigg] .\]</p>
-<p>接下来,我们可以在缩写中扩展方块,在比例的地毯下扫荡,既可以在第一个缩写中的QQ0++,也可以在第二个缩写中的QQ1+++:</p>
-<p>\[\begin{split} f(\mu|\vec{y}) &amp; \propto \exp\Bigg[{\frac{-\mu^2+2\mu\theta-\theta^2}{2\tau^2}}\Bigg]\exp\Bigg[{\frac{-\mu^2+2\mu\bar{y}-\bar{y}^2}{2\sigma^2/n}}\Bigg] \\ &amp; \propto \exp\Bigg[{\frac{-\mu^2+2\mu\theta}{2\tau^2}}\Bigg]\exp\Bigg[{\frac{-\mu^2+2\mu\bar{y}}{2\sigma^2/n}}\Bigg]. \\ \end{split}\]</p>
-<p>接下来,我们给责任人共同的分母,将它们合并为一个责任人:</p>
-<p>\[\begin{split} f(\mu|\vec{y}) &amp; \propto \exp\Bigg[{\frac{(-\mu^2+2\mu\theta)\sigma^2/n}{2\tau^2\sigma^2/n}}\Bigg]\exp\Bigg[{\frac{(-\mu^2+2\mu\bar{y})\tau^2}{2\tau^2\sigma^2/n}}\Bigg] \\ &amp; \propto \exp\Bigg[{\frac{(-\mu^2+2\mu\theta)\sigma^2 +(-\mu^2+2\mu\bar{y})n\tau^2}{2\tau^2\sigma^2}}\Bigg]. \\ \end{split}\]</p>
-<p>现在,让我们把QQ0+Q的术语和重排结合起来,这样,QQ1+X就本身了:</p>
-<p>\[\begin{split} f(\mu|\vec{y}) &amp; \propto \exp\Bigg[{\frac{-\mu^2(n\tau^2+\sigma^2)+2\mu(\theta\sigma^2+ \bar{y}n\tau^2) }{2\tau^2\sigma^2}}\Bigg] \\ &amp; \propto \exp\Bigg[{\frac{-\mu^2+2\mu\left(\frac{\theta\sigma^2 + \bar{y}n\tau^2}{n\tau^2+\sigma^2}\right) }{2(\tau^2\sigma^2) /(n\tau^2+\sigma^2)}}\Bigg]. \\ \end{split}\]</p>
-<p>这似乎太过分了,但如果你仔细看,你可以看到,我们可以带回一些常数,这些常数并不依赖于QQ0QQ来完成数字中的方格:</p>
-<p>\[\begin{split} f(\mu|\vec{y}) &amp; \propto \exp\Bigg[{\frac{-\bigg(\mu - \frac{\theta\sigma^2 + \bar{y}n\tau^2}{n\tau^2+\sigma^2}\bigg)^2 }{2(\tau^2\sigma^2) /(n\tau^2+\sigma^2)}}\Bigg]. \\ \end{split}\]</p>
-<p>这也许看起来还是很乱,但一旦我们完成了方块, 我们实际上有一个普通pdf的内核 ======== , \(\exp\bigg[{-\frac{(\mu - \blacksquare)^2}{2\blacksquare^2}}\bigg]\). 通过辨认缺失的棋子,我们可以得出这样的结论:</p>
-<p>\[ \mu|\vec{y} \; \sim \; N\left(\frac{\theta\sigma^2+ \bar{y}n\tau^2}{n\tau^2+\sigma^2}, \;{\frac{\tau^2\sigma^2}{n\tau^2+\sigma^2}} \right)\]</p>
-<p>数据表示:</p>
-<p>\[\frac{\theta\sigma^2+ \bar{y}n\tau^2}{n\tau^2+\sigma^2} = \theta\frac{\sigma^2}{n\tau^2+\sigma^2} + \bar{y}\frac{n\tau^2}{n\tau^2+\sigma^2} .\]</p>
+<h3> 可选内容：证明正态-正态共轭性</h3>
+<p>为完整起见，我们在此证明正态-正态模型能产生后验模型 <a href="/bayes-rules-python-cn/chapter-5/#eq:n-n-post-ch5">(5.15)</a>。如果你不习惯推导，也没关系。可以放心跳到下一节，知道这个正态-正态模型可以安心使用就好。我们直接开始吧。<span class="math inline">\(\mu\)</span> 的后验概率密度函数正比于正态先验概率密度函数 <a href="/bayes-rules-python-cn/chapter-5/#eq:normal-prior-pdf">(5.14)</a> 与似然函数 <a href="/bayes-rules-python-cn/chapter-5/#eq:normal-joint-like">(5.13)</a> 的乘积。对于 <span class="math inline">\(\mu \in (-\infty, \infty)\)</span>：</p>
+<p><span class="math display">\[f(\mu|\vec{y}) \propto f(\mu)L(\mu|\vec{y}) \propto \exp\bigg[{\frac{-(\mu - \theta)^2}{2\tau^2}}\bigg] \cdot \exp\bigg[{\frac{-(\bar{y}-\mu)^2}{2\sigma^2/n}}\bigg]  .\]</span></p>
+<p>接下来，我们可以展开指数中的平方项，并利用比例性质忽略第一个指数分子中的 <span class="math inline">\(\theta^2\)</span> 和第二个指数分子中的 <span class="math inline">\(\bar{y}^2\)</span>：</p>
+<p><span class="math display">\[\begin{split}
+f(\mu|\vec{y})
+&amp; \propto  \exp\Bigg[{\frac{-\mu^2+2\mu\theta-\theta^2}{2\tau^2}}\Bigg]\exp\Bigg[{\frac{-\mu^2+2\mu\bar{y}-\bar{y}^2}{2\sigma^2/n}}\Bigg] \\
+&amp; \propto  \exp\Bigg[{\frac{-\mu^2+2\mu\theta}{2\tau^2}}\Bigg]\exp\Bigg[{\frac{-\mu^2+2\mu\bar{y}}{2\sigma^2/n}}\Bigg]. \\
+\end{split}\]</span></p>
+<p>接下来，我们将指数通分并合并为一个指数：</p>
+<p><span class="math display">\[\begin{split}
+f(\mu|\vec{y})
+&amp; \propto  \exp\Bigg[{\frac{(-\mu^2+2\mu\theta)\sigma^2/n}{2\tau^2\sigma^2/n}}\Bigg]\exp\Bigg[{\frac{(-\mu^2+2\mu\bar{y})\tau^2}{2\tau^2\sigma^2/n}}\Bigg] \\
+&amp; \propto  \exp\Bigg[{\frac{(-\mu^2+2\mu\theta)\sigma^2 +(-\mu^2+2\mu\bar{y})n\tau^2}{2\tau^2\sigma^2}}\Bigg]. \\
+\end{split}\]</span></p>
+<p>现在，我们把含 <span class="math inline">\(\mu\)</span> 的项合并，并整理使得 <span class="math inline">\(\mu^2\)</span> 单独出现：</p>
+<p><span class="math display">\[\begin{split}
+f(\mu|\vec{y})
+&amp; \propto  \exp\Bigg[{\frac{-\mu^2(n\tau^2+\sigma^2)+2\mu(\theta\sigma^2+ \bar{y}n\tau^2) }{2\tau^2\sigma^2}}\Bigg] \\
+&amp; \propto  \exp\Bigg[{\frac{-\mu^2+2\mu\left(\frac{\theta\sigma^2 + \bar{y}n\tau^2}{n\tau^2+\sigma^2}\right) }{2(\tau^2\sigma^2) /(n\tau^2+\sigma^2)}}\Bigg]. \\
+\end{split}\]</span></p>
+<p>这看起来可能很繁琐，但仔细看，你会发现我们可以重新引入一些与 <span class="math inline">\(\mu\)</span> 无关的常数，从而在分子中完成配方：</p>
+<p><span class="math display">\[\begin{split}
+f(\mu|\vec{y})
+&amp; \propto  \exp\Bigg[{\frac{-\bigg(\mu - \frac{\theta\sigma^2 + \bar{y}n\tau^2}{n\tau^2+\sigma^2}\bigg)^2 }{2(\tau^2\sigma^2) /(n\tau^2+\sigma^2)}}\Bigg]. \\
+\end{split}\]</span></p>
+<p>这<em>看起来</em>可能仍然有些凌乱，但一旦我们完成平方，我们实际上就得到了关于 <span class="math inline">\(\mu\)</span> 的正态 pdf 核，<span class="math inline">\(\exp\bigg[{-\frac{(\mu - \blacksquare)^2}{2\blacksquare^2}}\bigg]\)</span>。
+通过确定缺失的部分 <span class="math inline">\(\blacksquare\)</span>，我们可以得出以下结论：</p>
+<p><span class="math display">\[ \mu|\vec{y} \;  \sim  \; N\left(\frac{\theta\sigma^2+ \bar{y}n\tau^2}{n\tau^2+\sigma^2}, \;{\frac{\tau^2\sigma^2}{n\tau^2+\sigma^2}} \right)\]</span></p>
+<p>其中我们可以将后验均值重新组织为先验均值 <span class="math inline">\(\mu\)</span> 与数据均值 <span class="math inline">\(\overline{y}\)</span> 的加权平均：</p>
+<p><span class="math display">\[\frac{\theta\sigma^2+ \bar{y}n\tau^2}{n\tau^2+\sigma^2} = \theta\frac{\sigma^2}{n\tau^2+\sigma^2} + \bar{y}\frac{n\tau^2}{n\tau^2+\sigma^2} .\]</span></p>
 </div>
 </div>
 <div class="section level2" id="why-no-simulation-in-this-chapter" number="5.4">
-<h2>为什么本章没有模拟?</h2>
-<p>正如你们所收集的 我们喜欢模拟 对于模拟可以提供的现实检查,有一点令人放心。 然而,我们正处于一个十字路口。 我们在这里研究的伽玛-波森模型和正常-自然模型,很难用我们迄今学到的技术模拟。 记得我们在过去模拟中所用的步骤:</p>
+<h2>为什么本章没有模拟？</h2>
+<p>你可能已经注意到，我们很喜欢模拟。模拟提供的现实检验能给人一些安心感。然而，我们现在处于一个十字路口。我们在这里学习的 Gamma-泊松模型和正态-正态模型，用我们迄今为止学到的技术很难进行模拟。让 <span class="math inline">\(\theta\)</span> 代表某个感兴趣的参数，回想一下我们过去模拟所用的步骤：</p>
 <ol style="list-style-type: decimal">
-<li>模拟,比如,从上一个模型中,10000个值的XQ0@@.</li>
-<li>从每个模拟的QQ1@@值中模拟一组样本数据.</li>
-<li>仅过滤10000套模拟XQ0@@的数据,</li>
-<li>使用剩余的 QQ0 QQ 值来大致表示 QQ1 的后缀。</li>
+<li>从前先验模型中模拟出，比如，10000 个 <span class="math inline">\(\theta\)</span> 的值。</li>
+<li>从每个模拟的 <span class="math inline">\(\theta\)</span> 值中模拟一组样本数据 <span class="math inline">\(Y\)</span>。</li>
+<li>筛选出那 10000 个模拟的 <span class="math inline">\((\theta,Y)\)</span> 集合中，模拟的 <span class="math inline">\(Y\)</span> 数据与实际观测数据匹配的那些。</li>
+<li>用剩下的 <span class="math inline">\(\theta\)</span> 值近似 <span class="math inline">\(\theta\)</span> 的后验分布。</li>
 </ol>
-<p>将这一模拟技术推广到本章中的Gamma-Poisson和Normal-Normal等例子的问题随之而来。 我们的样本大小超过一个, 此外,在正常-自然的例子中,我们的数据值为 QQ1。 在这两种情景中,任何模拟的XQ2XX都不太可能完全匹配我们观察到的样本数据。 即便我们在第三步进行数百万次模拟也是如此 破坏者警报! 还有其它方法可以大致了解第二单元的后期模式。</p>
+<p>将这种模拟方法扩展到本章的 Gamma-泊松和正态-正态例子时，问题出在第 3 步。在两个例子中，我们的样本量都大于 1，<span class="math inline">\((Y_1,Y_2,\ldots, Y_n)\)</span>。此外，在正态-正态例子中，数据值 <span class="math inline">\(Y_i\)</span> 是<em>连续的</em>。在这两种情形下，很可能<em>没有</em>一个模拟的 <span class="math inline">\((\theta,Y)\)</span> 集合能完美匹配我们观测到的样本数据。即使我们在第 3 步进行数百万次模拟，这一点依然成立。剧透一下！在第二单元中，我们将学习其他近似后验模型的方法。</p>
 </div>
 <div class="section level2" id="critiques-of-conjugate-family-models" number="5.5">
-<h2>家庭模式的标准</h2>
-<p>在结束这一章之前,我们要承认,家庭模式也有缺点。 特别是:</p>
+<h2> 对共轭族模型的批评 </h2>
+<p>在结束本章之前，我们想指出共轭族模型也存在一些缺点。具体来说：</p>
 <ul>
-<li>前一种模式并不总是足够灵活, 例如,一个普通模型总是单式的,对称地围绕平均值的\(\mu\). 所以,如果你先验的理解不是对称的,也不是单式的,那么"正常前传"可能不是工作的最佳工具.</li>
-<li>同居家庭模式并不总是允许你有一个完全平坦的前身。 虽然我们可以通过设置 \\\\\\\\\\ 来调制一个平坦的 Beta , 但正常和 Gamma 的前身( 或任何有无限支持的适当模型) 都不能调制为完全平坦。 我们所能做的就是调谐前科,</li>
+<li>共轭先验模型并不总是足够灵活，无法契合你先前的认知。例如，正态模型总是单峰的，且关于均值 <span class="math inline">\(\mu\)</span> 对称。因此，如果你先前的认知不是对称或单峰的，那么正态先验可能不是最佳选择。</li>
+<li>共轭族模型并非总是允许你使用完全平坦的先验。虽然我们可以通过设置 <span class="math inline">\(\alpha=\beta=1\)</span> 来调整得到平坦的 Beta 先验，但无论是正态分布还是 Gamma 分布（或任何具有无限支撑的恰当模型），都无法调整为<em>完全</em>平坦。我们最多只能调整先验使其具有非常高的方差，这样它们就<em>几乎</em>是平坦的。</li>
 </ul>
 </div>
 <div class="section level2" id="chapter-summary-4" number="5.6">
-<h2>章节摘要</h2>
-<p>在第五章中,你学到了合议论,并将其应用于几个不同的情况. 本章的主要外卖是:</p>
+<h2> 本章小结</h2>
+<p>在第5章，你学习了共轭性的概念，并将其应用于几种不同的情境。本章的主要收获如下：</p>
 <ul>
-<li>使用共性前科可以让我们拥有容易贬低和易于解释的后验模型.</li>
-<li>Beta-Binomial,Gamma-Poisson, 和正常-自然交融的家庭, 允许我们在不同的情景中分析数据。 当我们的数据QQ1@@是一组XQ2@@试验中的成功数时,Beta-Binomial是方便的;Gamma-Poisson是XQ3@@试验中的成功数时,Gamma-Poisson是没有上限的计数,而正常-自然是XQ4@@连续的.</li>
-<li>我们可以使用从bayesrules软件包中的几个功能来探索这些交错家族: plot poisson likelihood(), plot gamma(), plot gamma poisson(), 总结 gamma poisson(), plot  normal(), plot  normal(), 总结  normal  normal().</li>
+<li>使用共轭先验分布  使我们能够轻松推导出后验模型，并且这些模型很容易解释。</li>
+<li>Beta-二项、Gamma-泊松和正态-正态共轭族  使我们能够分析不同场景下的数据 <span class="math inline">\(Y\)</span>。当数据 <span class="math inline">\(Y\)</span> 是 <span class="math inline">\(n\)</span> 次试验中的成功次数时，Beta-二项族非常方便；当 <span class="math inline">\(Y\)</span> 是没有上限的计数时，Gamma-泊松族很适用；而当 <span class="math inline">\(Y\)</span> 是连续变量时，正态-正态族则很合适。</li>
+<li>在 Python 中，我们可以使用 <code>plot_poisson_likelihood()</code>、<code>plot_gamma()</code>、<code>plot_gamma_poisson()</code>、<code>summarize_gamma_poisson()</code>、<code>plot_normal()</code>、<code>plot_normal_normal()</code> 和 <code>summarize_normal_normal()</code> 等函数来探索这些共轭族。</li>
 </ul>
-<p>我们希望你们现在能体会到前科的用处!</p>
+<p>我们希望你现在体会到了共轭先验分布的用处！</p>
 <div style="page-break-after: always;"></div>
 </div>
 <div class="section level2" id="exercises-4" number="5.7">
-<h2>练习</h2>
+<h2> 练习</h2>
 <div class="section level3" id="practice-gamma-poisson" number="5.7.1">
-<h3>实践: Gamma-Poisson</h3>
+<h3> 练习：Gamma-泊松</h3>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-161"><strong>Exercise 5.1  (Tuning a Gamma prior)  </strong></span>For each situation below, tune an appropriate Gamma(<span class="math inline">\(s, r\)</span>) prior model for <span class="math inline">\(\lambda\)</span>.
+<span class="exercise" id="exr:unnamed-chunk-161"><strong>练习 5.1（调整 Gamma 先验）</strong></span>针对以下每种情况，为 <span class="math inline">\(\lambda\)</span> 调整一个合适的 Gamma(<span class="math inline">\(s, r\)</span>) 先验模型。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>\(\lambda\)的最常见值 4, 平均值为7。</li>
-<li>most0@@的最常见值为10,平均值为12.</li>
-<li>\(\lambda\)的最常见值 是5,差额是3。</li>
-<li>\(\lambda\)的最常见值 差额为6。</li>
-<li>\(\lambda\)的平均值为4,差额为12.</li>
-<li>\(\lambda\)的平均值为22,差异为3.</li>
+<li><span class="math inline">\(\lambda\)</span> 的最常见值为 4，均值为 7。</li>
+<li><span class="math inline">\(\lambda\)</span> 的最常见值为 10，均值为 12。</li>
+<li><span class="math inline">\(\lambda\)</span> 的最常见值为 5，方差为 3。</li>
+<li><span class="math inline">\(\lambda\)</span> 的最常见值为 14，方差为 6。</li>
+<li><span class="math inline">\(\lambda\)</span> 的均值为 4，方差为 12。</li>
+<li><span class="math inline">\(\lambda\)</span> 的均值为 22，方差为 3。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:ex53"><strong>Exercise 5.2  (Poisson likelihood functions)  </strong></span>
-For each situation below, we observe the outcomes for a random sample of Poisson variables, <span class="math inline">\(Y_i | \lambda \stackrel{ind}{\sim} \text{Pois}(\lambda)\)</span>. Specify and plot the likelihood function of <span class="math inline">\(\lambda\)</span>.
+<span class="exercise" id="exr:ex53"><strong>练习 5.2（泊松似然函数）</strong></span>
+在以下每种情况下，我们观察到泊松变量的一个随机样本，<span class="math inline">\(Y_i | \lambda \stackrel{ind}{\sim} \text{Pois}(\lambda)\)</span>。请写出并画出 <span class="math inline">\(\lambda\)</span> 的似然函数。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>\((y_1,y_2,y_3) = (3,7,19)\)</li>
-<li>\((y_1,y_2,y_3,y_4) = (12,12,12,0)\)</li>
-<li>\(y_1 = 12\)</li>
-<li>\((y_1,y_2,y_3,y_4,y_5) = (16,10,17,11,11)\)</li>
+<li><span class="math inline">\((y_1,y_2,y_3) = (3,7,19)\)</span></li>
+<li><span class="math inline">\((y_1,y_2,y_3,y_4) = (12,12,12,0)\)</span></li>
+<li><span class="math inline">\(y_1 = 12\)</span></li>
+<li><span class="math inline">\((y_1,y_2,y_3,y_4,y_5) = (16,10,17,11,11)\)</span></li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-162"><strong>Exercise 5.3  (Finding the Gamma-Poisson posterior)  </strong></span>Assume a prior model of <span class="math inline">\(\lambda \sim \text{Gamma}(24, 2)\)</span>. Specify the posterior models of <span class="math inline">\(\lambda\)</span> corresponding to the data in each scenario of Exercise <a href="/bayes-rules-python-cn/chapter-5/#exr:ex53">5.2</a>.
+<span class="exercise" id="exr:unnamed-chunk-162"><strong>练习 5.3（求 Gamma-泊松后验分布）</strong></span>假设先验模型为 <span class="math inline">\(\lambda \sim \text{Gamma}(24, 2)\)</span>。根据练习 <a href="/bayes-rules-python-cn/chapter-5/#exr:ex53">5.2</a> 中每种情况的数据，写出 <span class="math inline">\(\lambda\)</span> 的后验模型。
 </div>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-163"><strong>Exercise 5.4  (Finding the Gamma-Poisson posterior with a different prior)  </strong></span>Assume a prior model of <span class="math inline">\(\lambda \sim \text{Gamma}(2, 2)\)</span>. Specify the posterior models of <span class="math inline">\(\lambda\)</span> corresponding to the data in each scenario of Exercise <a href="/bayes-rules-python-cn/chapter-5/#exr:ex53">5.2</a>.
+<span class="exercise" id="exr:unnamed-chunk-163"><strong>练习 5.4（用不同先验求 Gamma-泊松后验分布）</strong></span>假设先验模型为 <span class="math inline">\(\lambda \sim \text{Gamma}(2, 2)\)</span>。根据练习 <a href="/bayes-rules-python-cn/chapter-5/#exr:ex53">5.2</a> 中每种情况的数据，写出 <span class="math inline">\(\lambda\)</span> 的后验模型。
 </div>
 <div class="exercise">
-<span class="exercise" id="exr:ch5-texts"><strong>Exercise 5.5  (Text messages)  </strong></span>Let random variable <span class="math inline">\(\lambda\)</span> represent the rate of text messages people receive in an hour. At first, you believe that the typical number of messages per hour is 5 with a standard deviation of 0.25 messages.
+<span class="exercise" id="exr:ch5-texts"><strong>练习 5.5（短信）</strong></span>设随机变量 <span class="math inline">\(\lambda\)</span> 表示人们每小时接收的短信速率。起初，你认为每小时典型的消息数量为 5，标准差为 0.25 条。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>Tune 并绘制一个合适的 Gamma (\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\</li>
-<li>每小时短信率大于10的先验概率是多少? 提示:学习pgamma().</li>
+<li>为 <span class="math inline">\(\lambda\)</span> 调整并绘制一个适当的 Gamma(<span class="math inline">\(s,r\)</span>) 先验模型。</li>
+<li>每小时短信速率大于10的先验概率是多少？提示：了解<code>pgamma()</code>。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-164"><strong>Exercise 5.6  (Text messages with data)  </strong></span>Continuing with Exercise <a href="/bayes-rules-python-cn/chapter-5/#exr:ch5-texts">5.5</a>, you collect data from six friends. They received 7, 3, 8, 9, 10, 12 text messages in the previous hour.
+<span class="exercise" id="exr:unnamed-chunk-164"><strong>练习5.6（含数据的短信）</strong></span>接着练习<a href="/bayes-rules-python-cn/chapter-5/#exr:ch5-texts">5.5</a>，你从六个朋友那里收集了数据。他们在前一小时收到的短信数量分别为7、3、8、9、10、12条。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>绘制所生成的% 0 的概率函数。</li>
-<li>绘制上一个 pdf, 概率函数, 和后一个 pdf 的 pdf。</li>
-<li>使用摘要 gamma poisson() 来计算%% 0% 的上一个模型和后一个模型的描述性统计。</li>
-<li>评论您对QQ0QQ的理解如何从先验的(在前一次练习中)转变为基于从朋友那里收集的数据的后期.</li>
+<li>绘制所得的关于<span class="math inline">\(\lambda\)</span>的似然函数图。</li>
+<li>绘制<span class="math inline">\(\lambda\)</span>的先验概率密度函数、似然函数和后验概率密度函数的图形。</li>
+<li>使用<code>summarize_gamma_poisson()</code>计算<span class="math inline">\(\lambda\)</span>的先验模型和后验模型的描述性统计量。</li>
+<li>评论一下，基于从朋友那里收集的数据，你对<span class="math inline">\(\lambda\)</span>的认识如何从先验（上一练习）转变为后验。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-165"><strong>Exercise 5.7  (World Cup)  </strong></span>Let <span class="math inline">\(\lambda\)</span> be the average number of goals scored in a Women’s World Cup game. We’ll analyze <span class="math inline">\(\lambda\)</span> by the following Gamma-Poisson model where data <span class="math inline">\(Y_i\)</span> is the observed number of goals scored in a sample of World Cup games:
+<span class="exercise" id="exr:unnamed-chunk-165"><strong>练习5.7（世界杯）</strong></span>令<span class="math inline">\(\lambda\)</span>为女足世界杯比赛中平均进球数。我们将通过以下Gamma-泊松模型分析<span class="math inline">\(\lambda\)</span>，其中数据<span class="math inline">\(Y_i\)</span>是世界杯比赛样本中观测到的进球数：
 </div>
-<p>\[\begin{split} Y_i | \lambda &amp; \stackrel{ind}{\sim} \text{Pois}(\lambda) \\ \lambda &amp; \sim \text{Gamma}(1, 0.25) \\ \end{split}\]</p>
+<p><span class="math display">\[\begin{split}
+Y_i | \lambda &amp; \stackrel{ind}{\sim} \text{Pois}(\lambda) \\
+\lambda &amp; \sim \text{Gamma}(1, 0.25) \\
+\end{split}\]</span></p>
 <ol style="list-style-type: lower-alpha">
-<li><p>整理并总结我们先验对\(\lambda\)的理解.</p></li>
-<li><p>为什么Poisson模型对我们的数据来说是一个合理的选择?</p></li>
-<li><p>五十八套中的wwc 2019 matches数据包括了两队在每场2019年女子世界杯比赛中打进的进球数. 定义,绘图,讨论每场比赛得分的球总数:</p>
-<div class="sourceCode" id="cb55">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python"># TODO: 为 R 包 fivethirtyeight 选择 Python 等价库
+<li><p>绘制并总结我们对 <span class="math inline">\(\lambda\)</span> 的先验理解。</p></li>
+<li><p>为什么泊松模型对于我们的数据 <span class="math inline">\(Y_i\)</span> 是一个合理的选择？</p></li>
+<li><p><code>wwc_2019_matches</code> 数据集（来自 <strong>fivethirtyeight</strong>）包含 2019 年女子世界杯每场比赛中两支球队的进球数。定义、绘制并讨论每场比赛的总进球数：</p>
+<div class="sourceCode" id="cb55"><pre><code class="language-python">import pandas as pd
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-data("wwc_2019_matches")
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div></li>
-<li><p>确定 QQ0QQ 的后置模型, 并使用 umma  gamma  poisson () 来验证您的答案。</p></li>
-<li><p>绘制前 pdf、 概率函数、 后 pdf 的 pdf。 描述您对 QQ1@@ 的理解中, 从前到后的演变。</p></li>
+# 加载女子世界杯2019比赛数据
+url = 'https://raw.githubusercontent.com/fivethirtyeight/data/master/wwc-2019/wwc-2019-matches.csv'
+wwc_2019_matches = pd.read_csv(url)
+
+# 计算总进球数
+wwc_2019_matches['total_goals'] = wwc_2019_matches['score1'] + wwc_2019_matches['score2']</code></pre></div></li>
+<li><p>找出 <span class="math inline">\(\lambda\)</span> 的后验模型，并用 <code>summarize_gamma_poisson()</code> 验证你的答案。</p></li>
+<li><p>绘制 <span class="math inline">\(\lambda\)</span> 的先验概率密度函数、似然函数和后验概率密度函数。描述从先验到后验你对 <span class="math inline">\(\lambda\)</span> 理解的演变。</p></li>
 </ol>
-<!-- AJ: I don't think we can use the simple simulation technique here. -->
-<!-- __Simulating the Gamma-Poisson posterior__     -->
-<!-- In each of the situations below, we observe the outcomes for a random sample of Poisson variables $(Y_1,Y_2,\ldots,Y_n)$, $Y_i | \lambda \stackrel{ind}{\sim} \text{Pois}(\lambda)$. Given a prior model of $\lambda \sim \text{Gamma}(24, 2)$, approximate the posterior model of $\lambda$ through simulation. -->
-<!-- a) $(y_1,y_2,y_3) = (3,7,19)$ -->
-<!-- a) $(y_1,y_2,y_3,y_4) = (12,12,12,0)$ -->
-<!-- a) $y_1 = 12$ -->
-<!-- a) $(y_1,y_2,y_3,y_4,y_5) = (16,10,17,11,11)$ -->
-<!-- __Simulating the Gamma-Poisson posterior with a different prior__     -->
-<!-- In each of the situations below, we observe the outcomes for a random sample of Poisson variables $(Y_1,Y_2,\ldots,Y_n)$, $Y_i | \lambda \stackrel{ind}{\sim} \text{Pois}(\lambda)$. Given a prior model of $\lambda \sim \text{Gamma}(2, 2)$, approximate the posterior model of $\lambda$ through simulation. -->
-<!-- a) $(y_1,y_2,y_3) = (3,7,19)$ -->
-<!-- a) $(y_1,y_2,y_3,y_4) = (12,12,12,0)$ -->
-<!-- a) $y_1 = 12$ -->
-<!-- a) $(y_1,y_2,y_3,y_4,y_5) = (16,10,17,11,11)$ -->
+ AJ: I don't think we can use the simple simulation technique here.
+ __Simulating the Gamma-Poisson posterior__
+ In each of the situations below, we observe the outcomes for a random sample of Poisson variables $(Y_1,Y_2,\ldots,Y_n)$, $Y_i | \lambda \stackrel{ind}{\sim} \text{Pois}(\lambda)$. Given a prior model of $\lambda \sim \text{Gamma}(24, 2)$, approximate the posterior model of $\lambda$ through simulation.
+ a) $(y_1,y_2,y_3) = (3,7,19)$
+ a) $(y_1,y_2,y_3,y_4) = (12,12,12,0)$
+ a) $y_1 = 12$
+ a) $(y_1,y_2,y_3,y_4,y_5) = (16,10,17,11,11)$
+ __Simulating the Gamma-Poisson posterior with a different prior__
+ In each of the situations below, we observe the outcomes for a random sample of Poisson variables $(Y_1,Y_2,\ldots,Y_n)$, $Y_i | \lambda \stackrel{ind}{\sim} \text{Pois}(\lambda)$. Given a prior model of $\lambda \sim \text{Gamma}(2, 2)$, approximate the posterior model of $\lambda$ through simulation.
+ a) $(y_1,y_2,y_3) = (3,7,19)$
+ a) $(y_1,y_2,y_3,y_4) = (12,12,12,0)$
+ a) $y_1 = 12$
+ a) $(y_1,y_2,y_3,y_4,y_5) = (16,10,17,11,11)$
 </div>
 <div class="section level3" id="practice-normal-normal" number="5.7.2">
-<h3>实践:正常-正常</h3>
+<h3> 练习：正态-正态</h3>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-167"><strong>Exercise 5.8  (Normal likelihood functions)  </strong></span>In each situation below, we observe the outcomes for a Normal random sample, <span class="math inline">\(Y_i | \mu \stackrel{ind}{\sim} N(\mu,\sigma^2)\)</span> with known <span class="math inline">\(\sigma\)</span>. Specify and plot the corresponding likelihood function of <span class="math inline">\(\mu\)</span>.
+<span class="exercise" id="exr:unnamed-chunk-167"><strong>练习 5.8（正态似然函数）</strong></span>在以下每种情况下，我们观察到一个正态随机样本的结果，<span class="math inline">\(Y_i | \mu \stackrel{ind}{\sim} N(\mu,\sigma^2)\)</span>，且已知 <span class="math inline">\(\sigma\)</span>。指定并绘制相应的 <span class="math inline">\(\mu\)</span> 的似然函数。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>\((y_1,y_2,y_3) = (-4.3,0.7,-19.4)\)和\(\sigma = 10\)</li>
-<li>\((y_1,y_2,y_3,y_4) = (-12,1.2,-4.5,0.6)\)和\(\sigma = 6\)</li>
-<li>\((y_1,y_2) = (12.4,6.1)\)和\(\sigma = 5\)</li>
-<li>\((y_1,y_2,y_3,y_4,y_5) = (1.6,0.09,1.7,1.1,1.1)\)和\(\sigma = 0.6\)</li>
+<li><span class="math inline">\((y_1,y_2,y_3) = (-4.3,0.7,-19.4)\)</span> 和 <span class="math inline">\(\sigma = 10\)</span></li>
+<li><span class="math inline">\((y_1,y_2,y_3,y_4) = (-12,1.2,-4.5,0.6)\)</span> 和 <span class="math inline">\(\sigma = 6\)</span></li>
+<li><span class="math inline">\((y_1,y_2) = (12.4,6.1)\)</span> 和 <span class="math inline">\(\sigma = 5\)</span></li>
+<li><span class="math inline">\((y_1,y_2,y_3,y_4,y_5) = (1.6,0.09,1.7,1.1,1.1)\)</span> 和 <span class="math inline">\(\sigma = 0.6\)</span></li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:ch5-stock"><strong>Exercise 5.9  (Investing in stock)  </strong></span>You just bought stock in <em>FancyTech</em>. Let random variable <span class="math inline">\(\mu\)</span> be the average dollar amount that your <em>FancyTech</em> stock goes up or down in a one-day period. At first, you believe that <span class="math inline">\(\mu\)</span> is 7.2 dollars with a standard deviation of 2.6 dollars.
+<span class="exercise" id="exr:ch5-stock"><strong>习题 5.9（投资股票）</strong></span>你刚买入了 <em>FancyTech</em> 的股票。令随机变量 <span class="math inline">\(\mu\)</span> 表示你的 <em>FancyTech</em> 股票在一天内上涨或下跌的平均美元金额。起初，你认为 <span class="math inline">\(\mu\)</span> 为 7.2 美元，标准差为 2.6 美元。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>Tune 并绘制适合的 {0} 的正常前置模型。。。</li>
-<li>根据你的情节,FancyTech股票一天平均会增加7.6美元,这似乎是合理的吗?</li>
-<li>FancyTech股票一天平均增加4美元,这似乎是合理的吗?</li>
-<li>股价平均下跌的概率是多少? 提示:指针().</li>
-<li>你股票价格平均每天上涨8美元以上的概率是多少?</li>
+<li>调整并绘制一个适当的 <span class="math inline">\(\mu\)</span> 的正态先验模型。</li>
+<li>根据你的图形，<em>FancyTech</em> 股票平均每天上涨 7.6 美元似乎合理吗？</li>
+<li><em>FancyTech</em> 股票平均每天上涨 4 美元似乎合理吗？</li>
+<li>平均而言，股价下跌的先验概率是多少？提示：<code>pnorm()</code>。</li>
+<li>股票价格平均每天上涨超过8美元的先验概率是多少？</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-168"><strong>Exercise 5.10  (Investing in stock with data)  </strong></span>Continuing with Exercise <a href="/bayes-rules-python-cn/chapter-5/#exr:ch5-stock">5.9</a>, it’s reasonable to assume that the daily changes in <em>FancyTech</em> stock value are Normally distributed around an <em>unknown</em> mean of <span class="math inline">\(\mu\)</span> with a <em>known</em> standard deviation of <span class="math inline">\(\sigma = 2\)</span> dollars. On a random sample of 4 days, you observe changes in stock value of -0.7, 1.2, 4.5, and -4 dollars.
+<span class="exercise" id="exr:unnamed-chunk-168"><strong>练习5.10（利用数据投资股票）</strong></span>继续练习<a href="/bayes-rules-python-cn/chapter-5/#exr:ch5-stock">5.9</a>，假设<em>FancyTech</em>股票每日价格变动服从正态分布，均值为未知的<span class="math inline">\(\mu\)</span>，已知标准差为<span class="math inline">\(\sigma = 2\)</span>美元。在一个由4天构成的随机样本中，你观察到股票价格的变动分别为-0.7、1.2、4.5和-4美元。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>绘制 QQ0@@ 的相应概率函数。</li>
-<li>绘制上一个 pdf, 概率函数, 和后一个 pdf 的 &amp; # # # # 0 # # #。。。</li>
-<li>使用总结  normal  normal () 来计算前模型和后模型的描述性统计.</li>
-<li>评论您对QQ0@@的理解是如何从先验(在前一次练习中)演变成基于观测到的数据的后缀的.</li>
-<li>股价平均下跌的概率是多少? 提示:指针().</li>
-<li>你股票价格平均每天上涨8美元以上,后期的概率是多少?</li>
+<li>绘制<span class="math inline">\(\mu\)</span>的对应似然函数图。</li>
+<li>绘制<span class="math inline">\(\mu\)</span>的先验概率密度函数、似然函数和后验概率密度函数图。</li>
+<li>使用<code>summarize_normal_normal()</code>函数计算先验模型和后验模型的描述性统计量。</li>
+<li>请根据观测数据，阐述你对<span class="math inline">\(\mu\)</span>的理解是如何从先验（上一练习）演变到后验的。</li>
+<li>股票价格平均下跌的后验概率是多少？提示：<code>norm.cdf()</code>。</li>
+<li>股票价格平均每天上涨超过8美元的后验概率是多少？</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-169"><strong>Exercise 5.11  (Normal-Normal calculation)  </strong></span>Prof. Abebe and Prof. Morales both recently finished their PhDs and are teaching their first statistics classes at Bayesian University. Their colleagues told them that the <em>average</em> final exam score across all students, <span class="math inline">\(\mu\)</span>, varies Normally from year to year with a mean of 80 points and a standard deviation of 4. Further, individual students’ scores <span class="math inline">\(Y\)</span> vary Normally around <span class="math inline">\(\mu\)</span> with a known standard deviation of 3 points.
+<span class="exercise" id="exr:unnamed-chunk-169"><strong>练习 5.11（正态-正态计算）</strong></span>Abebe 教授和 Morales 教授最近都完成了博士学业，并在贝叶斯大学教他们的第一门统计课。同事告诉他们，所有学生的<em>平均</em>期末考试成绩 <span class="math inline">\(\mu\)</span> 逐年服从正态分布，均值为 80 分，标准差为 4。此外，单个学生的分数 <span class="math inline">\(Y\)</span> 围绕 <span class="math inline">\(\mu\)</span> 呈正态变化，已知标准差为 3 分。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>教授 阿贝贝主持期末考试,注意到他的32名学生平均得分86分. 使用Abebe教授的班级数据来计算后方的平均值和差异。</li>
-<li>教授 Morales主持期末考试,观察到她的32名学生平均得分82分. 使用Morales教授的课上数据来计算后方的平均值和差异。</li>
-<li>接下来,使用Abebe教授和Morales教授的综合考试来计算后方的平均值和差异。</li>
+<li>Abebe 教授进行了期末考试，并观察到他的 32 名学生平均得分为 86 分。使用 Abebe 教授班级的数据计算 <span class="math inline">\(\mu\)</span> 的后验均值和方差。</li>
+<li>Morales 教授进行了期末考试，并观察到她的 32 名学生平均得分为 82 分。使用 Morales 教授班级的数据计算 <span class="math inline">\(\mu\)</span> 的后验均值和方差。</li>
+<li>接下来，合并 Abebe 教授和 Morales 教授的考试数据，计算 <span class="math inline">\(\mu\)</span> 的后验均值和方差。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:ch5-football"><strong>Exercise 5.12  (Control brains)  </strong></span>In this chapter we used the Normal-Normal model to analyze the mean hippocampal volume among people who have sustained concussions. In this exercise we will explore the mean volume, <span class="math inline">\(\mu\)</span>, for people who <em>have not</em> been diagnosed with a concussion. As before, we’ll assume that the hippocampal volumes of individuals in this group, <span class="math inline">\(Y\)</span>, vary Normally around <span class="math inline">\(\mu\)</span> with a standard deviation of <span class="math inline">\(\sigma = 0.5\)</span> cubic centimeters. We’ll also start with the same prior as before: <span class="math inline">\(\mu\)</span> has a Normal prior with mean <span class="math inline">\(\theta = 6.5\)</span> and standard deviation <span class="math inline">\(\tau = 0.4\)</span>.
+<span class="exercise" id="exr:ch5-football"><strong>练习 5.12（对照脑部）</strong></span>在本章中，我们使用正态-正态模型分析了遭受脑震荡人群的平均海马体体积。在本练习中，我们将探索<em>未</em>被诊断患有脑震荡的人群的平均体积 <span class="math inline">\(\mu\)</span>。和之前一样，我们假设该组个体的海马体体积 <span class="math inline">\(Y\)</span> 围绕 <span class="math inline">\(\mu\)</span> 呈正态变化，标准差为 <span class="math inline">\(\sigma = 0.5\)</span> 立方厘米。我们也将采用与之前相同的先验：<span class="math inline">\(\mu\)</span> 服从均值为 <span class="math inline">\(\theta = 6.5\)</span>、标准差为 <span class="math inline">\(\tau = 0.4\)</span> 的正态先验分布。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>使用足球数据计算样本是指未确诊为脑震荡的控制对象的河马体积和样本大小.</li>
-<li>识别 QQ0QQ 的后置模式, 并使用 umma  normal  normal () 验证您的答案。</li>
-<li>绘制前 pdf、 概率函数、 后 pdf 的 pdf。 描述您对 QQ1@@ 的理解中, 从前到后的演变。</li>
+<li>使用 <code>football</code> 数据集计算<em>未</em>被诊断患有脑震荡的<em>对照</em>受试者的样本平均海马体体积和样本量。</li>
+<li>确定 <span class="math inline">\(\mu\)</span> 的后验模型，并使用 <code>summarize_normal_normal()</code> 验证你的答案。</li>
+<li>绘制 <span class="math inline">\(\mu\)</span> 的先验概率密度函数、似然函数和后验概率密度函数。描述你对 <span class="math inline">\(\mu\)</span> 的认识从先验到后验的演变。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:ch5-weather"><strong>Exercise 5.13  (Australia)  </strong></span>Let <span class="math inline">\(\mu\)</span> be the average 3 p.m. temperature in Perth, Australia. Not knowing much about Australian weather, your friend’s prior understanding is that the average temperature is likely around 30 degrees Celsius, though might be anywhere between 10 and 50 degrees Celsius. To learn about <span class="math inline">\(\mu\)</span>, they plan to analyze 1000 days of temperature data. Letting <span class="math inline">\(Y_i\)</span> denote the 3 p.m. temperature on day <span class="math inline">\(i\)</span>, they’ll assume that daily temperatures vary Normally around <span class="math inline">\(\mu\)</span> with a standard deviation of 5 degrees: <span class="math inline">\(Y_i|\mu \sim N(\mu, 5^2)\)</span>.
+<span class="exercise" id="exr:ch5-weather"><strong>练习 5.13  (澳大利亚)  </strong></span>设 <span class="math inline">\(\mu\)</span> 为澳大利亚珀斯下午 3 点的平均气温。由于对澳大利亚天气了解不多，你朋友的先验认知是平均气温很可能在 30 摄氏度左右，但也可能在 10 到 50 摄氏度之间。为了了解 <span class="math inline">\(\mu\)</span>，他们计划分析 1000 天的温度数据。令 <span class="math inline">\(Y_i\)</span> 表示第 <span class="math inline">\(i\)</span> 天下午 3 点的气温，他们将假设日气温围绕 <span class="math inline">\(\mu\)</span> 呈正态变化，标准差为 5 度：<span class="math inline">\(Y_i|\mu \sim N(\mu, 5^2)\)</span>.
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>说明朋友的理解。</li>
-<li>海湾规则包中的天气 perth数据包括珀斯每天3时温度的1000次观测(tim3pm). 绘制数据并讨论假设温度数据正态模型是否合理。</li>
-<li>识别 QQ0QQ 的后置模式, 并使用 umma  normal  normal () 验证您的答案。</li>
-<li>绘制前 pdf、 概率函数、 后 pdf 的 pdf。 描述您对 QQ1@@ 的理解中, 从前到后的演变。</li>
+<li>调整并绘制反映你朋友认知的 <span class="math inline">\(\mu\)</span> 的正态先验分布图。</li>
+<li><strong>bayesrules</strong> 配套数据中的 <code>weather_perth</code> 数据包含珀斯下午 3 点气温 (<code>temp3pm</code>) 的 1000 个日观测值。绘制这些数据并讨论假定温度数据服从正态模型是否合理。</li>
+<li>确定 <span class="math inline">\(\mu\)</span> 的后验模型，并使用 <code>summarize_normal_normal()</code> 验证你的答案。</li>
+<li>绘制 <span class="math inline">\(\mu\)</span> 的先验概率密度函数、似然函数和后验概率密度函数。描述你对 <span class="math inline">\(\mu\)</span> 的认知从先验到后验的演变。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-170"><strong>Exercise 5.14  (Normal-Normal Simulation)  </strong></span>
+<span class="exercise" id="exr:unnamed-chunk-170"><strong>练习 5.14  (正态-正态模拟)  </strong></span>
 </div>
 <ol style="list-style-type: lower-alpha">
-<li><p>你的朋友亚历克斯已经读过这本书第四章,但没有读过第五章。 向亚历克斯解释为什么很难使用我们迄今学到的模拟方法来模拟一个正常的自然后期。</p></li>
-<li><p>为了证明你的观点,尝试(和失败)在观测一个数据点时为以下模型模拟XQ0@@的后缀:</p>
-<p>\[\begin{split} Y | \mu &amp; \sim N(\mu, 1^2) \\ \mu &amp; \sim N(0, 1^2) \\ \end{split}\]</p></li>
+<li><p>你的朋友 Alex 读了本书第 4 章，但没有读第 5 章。向 Alex 解释为什么用我们迄今为止学到的模拟方法难以模拟正态-正态后验。</p></li>
+<li><p>为了证明你的观点，在观测到单个数据点 <span class="math inline">\(Y = 1.1\)</span> 后，尝试（并失败）模拟以下模型中 <span class="math inline">\(\mu\)</span> 的后验：</p>
+<p><span class="math display">\[\begin{split}
+ Y | \mu &amp; \sim N(\mu, 1^2) \\
+ \mu &amp; \sim N(0, 1^2) \\
+ \end{split}\]</span></p></li>
 </ol>
 </div>
 <div class="section level3" id="general-practice-exercises" number="5.7.3">
-<h3>一般实践练习</h3>
+<h3>一般练习题</h3>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-171"><strong>Exercise 5.15  (Which model?)  </strong></span>Below are kernels for Normal, Poisson, Gamma, Beta, and Binomial models. Identify the appropriate model with specific parameter values.
+<span class="exercise" id="exr:unnamed-chunk-171"><strong>练习 5.15（哪个模型？）</strong></span>下面是正态、泊松、Gamma、Beta 和二项模型的核。请识别出带有具体参数值的恰当模型。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>\(f(\theta) \propto 0.3^\theta 0.7^{16-\theta}\) \(\theta\in \{0,1,2,\ldots,16\}\)</li>
-<li>\(f(\theta) \propto 1 /\theta!\) \(\theta\in \{0,1,2,\ldots,\infty\}\)</li>
-<li>\(f(\theta) \propto \theta^4 (1-\theta)^7\) \(\theta \in [0, 1]\)</li>
-<li>\(f(\theta) \propto e^{-\theta^2}\) \(\theta \in (-\infty, \infty)\)</li>
+<li><span class="math inline">\(f(\theta) \propto 0.3^\theta 0.7^{16-\theta}\)</span> 其中 <span class="math inline">\(\theta\in \{0,1,2,\ldots,16\}\)</span></li>
+<li><span class="math inline">\(f(\theta) \propto 1 /\theta!\)</span> 其中 <span class="math inline">\(\theta\in \{0,1,2,\ldots,\infty\}\)</span></li>
+<li><span class="math inline">\(f(\theta) \propto \theta^4 (1-\theta)^7\)</span> 其中 <span class="math inline">\(\theta \in [0, 1]\)</span></li>
+<li><span class="math inline">\(f(\theta) \propto e^{-\theta^2}\)</span> 其中 <span class="math inline">\(\theta \in (-\infty, \infty)\)</span></li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-172"><strong>Exercise 5.16  (Which model: Back for more!)  </strong></span>Below are kernels for Normal, Poisson, Gamma, Beta, and Binomial models. Identify the appropriate model with specific parameter values.
+<span class="exercise" id="exr:unnamed-chunk-172"><strong>练习 5.16（哪个模型：再来一次！）</strong></span>下面是正态、泊松、Gamma、Beta 和二项模型的核。请识别出带有具体参数值的恰当模型。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>\(f(\theta) \propto e^{-2\theta}\theta^{15}\) \(\theta &gt; 0\)</li>
-<li>\(f(\theta) \propto e^{\frac{-(\theta-12)^2}{18}}\) \(\theta \in (-\infty, \infty)\)</li>
-<li>\(f(\theta) \propto 0.3^\theta /\theta!\) \(\theta \in \{0,1,2,\ldots,\infty\}\)</li>
+<li><span class="math inline">\(f(\theta) \propto e^{-2\theta}\theta^{15}\)</span> 其中 <span class="math inline">\(\theta &gt; 0\)</span></li>
+<li><span class="math inline">\(f(\theta) \propto e^{\frac{-(\theta-12)^2}{18}}\)</span>，其中 <span class="math inline">\(\theta \in (-\infty, \infty)\)</span></li>
+<li><span class="math inline">\(f(\theta) \propto 0.3^\theta / \theta!\)</span>，其中 <span class="math inline">\(\theta \in \{0,1,2,\ldots,\infty\}\)</span></li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-173"><strong>Exercise 5.17  (Weighted average)  </strong></span>In Section <a href="/bayes-rules-python-cn/chapter-4/#ch4-concepts">4.3.2</a>, we expressed the Beta-Binomial posterior mean of proportion <span class="math inline">\(\pi\)</span> as a weighted average of the prior mean and the observed sample proportion. In Section <a href="/bayes-rules-python-cn/chapter-5/#ch5-n-n-section">5.3.3</a>, we expressed the Normal-Normal posterior mean of <span class="math inline">\(\mu\)</span> as a weighted average of the prior mean <span class="math inline">\(\theta\)</span> and the observed sample mean <span class="math inline">\(\overline{y}\)</span>. Similarly, express the Gamma-Poisson posterior mean of rate <span class="math inline">\(\lambda\)</span>, <span class="math inline">\(E(\lambda | \vec{y})\)</span>, as a weighted average of the prior mean <span class="math inline">\(E(\lambda)\)</span> and sample mean <span class="math inline">\(\overline{y}\)</span>.
+<span class="exercise" id="exr:unnamed-chunk-173"><strong>练习 5.17  （加权平均）  </strong></span>在 <a href="/bayes-rules-python-cn/chapter-4/#ch4-concepts">第 4.3.2 节</a> 中，我们将比例 <span class="math inline">\(\pi\)</span> 的 Beta-二项后验均值表示为先验均值与观测样本比例的加权平均。在 <a href="/bayes-rules-python-cn/chapter-5/#ch5-n-n-section">第 5.3.3 节</a> 中，我们将 <span class="math inline">\(\mu\)</span> 的正态-正态后验均值表示为先验均值 <span class="math inline">\(\theta\)</span> 与观测样本均值 <span class="math inline">\(\overline{y}\)</span> 的加权平均。类似地，将速率 <span class="math inline">\(\lambda\)</span> 的 Gamma-泊松后验均值 <span class="math inline">\(E(\lambda | \vec{y})\)</span> 表示为先验均值 <span class="math inline">\(E(\lambda)\)</span> 和样本均值 <span class="math inline">\(\overline{y}\)</span> 的加权平均。
 </div>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-174"><strong>Exercise 5.18  (Counting insects)  </strong></span>A biologist hires you to study the density of a certain insect in the local region. Their prior idea about <span class="math inline">\(\theta\)</span>, the number of insects per <span class="math inline">\(m^2\)</span> area, is well captured by a Gamma model with an expected value of 0.5 insects per <span class="math inline">\(m^2\)</span> and a standard deviation of 0.25 insects per <span class="math inline">\(m^2\)</span>. You then go out to inspect 20 separate <span class="math inline">\(m^2\)</span> areas of a nearby field. You count 3, 2, 5, 1, 2 insects in the first five square meters, and then do not encounter the insect in the next <span class="math inline">\(15m^2\)</span>.
+<span class="exercise" id="exr:unnamed-chunk-174"><strong>练习 5.18  （数昆虫）  </strong></span>一位生物学家聘用你研究当地某种昆虫的密度。他对每平方米面积内昆虫数 <span class="math inline">\(\theta\)</span> 的先验认识被一个 Gamma 模型很好地描述，其期望值为每平方米 0.5 只昆虫，标准差为每平方米 0.25 只昆虫。随后你外出检查了附近田野的 20 个独立的 <span class="math inline">\(m^2\)</span> 区域。你在前五平方米中数到 3, 2, 5, 1, 2 只昆虫，然后在接下来的 <span class="math inline">\(15m^2\)</span> 中未再遇到该昆虫。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>你该用什么模型,普通的或普森的 来模拟你昆虫计数数据对昆虫密度的依赖? 解释为什么</li>
-<li>绘制昆虫密度%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 评论后台模型是否与数据或前台更同步. 解释为什么这样才有意义</li>
-<li>昆虫密度的后期含义和标准偏差是什么?.</li>
-<li>以生物学家认为有帮助的方式 描述你后期的结论</li>
+<li>你应该用正态模型还是泊松模型来建模昆虫计数数据对底层昆虫密度 <span class="math inline">\(\theta\)</span> 的依赖关系？解释原因。</li>
+<li>绘制昆虫密度 <span class="math inline">\(\theta\)</span> 的先验概率密度函数、似然函数和后验概率密度函数。评论后验模型是更偏向数据还是先验。解释为什么这合乎情理。</li>
+<li>昆虫密度的后验均值和标准差是多少？</li>
+<li>请以对生物学家有帮助的方式，描述你在上下文中的后验结论。</li>
 </ol>
 <div class="exercise">
-<p>演练5.19(β-几何模型) 考虑以下新的贝叶斯模式:</p>
-<p>\[\begin{split} Y|\theta &amp; \sim \text{Geometric}(\theta) \\ \theta &amp; \sim \text{Beta}(\alpha, \beta) \\ \end{split}\]</p>
-where the Geometric model has pmf <span class="math inline">\(f(y|\theta) = \theta (1 - \theta)^{y - 1}\)</span> for <span class="math inline">\(y \in \{1,2,\ldots\}\)</span>.
+<p><span class="exercise" id="exr:unnamed-chunk-175"><strong>练习 5.19 （Beta-几何模型）</strong></span>考虑以下<em>新的</em>贝叶斯模型：</p>
+<p><span class="math display">\[\begin{split}
+Y|\theta &amp; \sim \text{Geometric}(\theta) \\
+\theta &amp; \sim \text{Beta}(\alpha, \beta) \\
+\end{split}\]</span></p>
+其中几何模型对于 <span class="math inline">\(y \in \{1,2,\ldots\}\)</span> 的概率质量函数为 <span class="math inline">\(f(y|\theta) = \theta (1 - \theta)^{y - 1}\)</span>。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>给%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 如果可能,请指明后验模型的名称及其参数.</li>
-<li>贝塔模型是几何数据模型的前身吗?</li>
+<li>基于观测数据 <span class="math inline">\(Y = y\)</span> 推导 <span class="math inline">\(\theta\)</span> 的后验模型。如果可能，指出后验模型的<em>名称</em>及其参数。</li>
+<li>Beta 模型是否是几何数据模型的共轭先验？</li>
 </ol>
 </div>
 </div>
 </div>
-<h3>参考资料</h3>
+<h3>参考文献</h3>
 <div class="references csl-bib-body hanging-indent" id="refs">
 <div class="csl-entry" id="ref-bachynski2019no">
 Bachynski, Kathleen. 2019. <em>No Game for Boys to Play: The History of Youth Football and the Origins of a Public Health Crisis</em>. UNC Press Books.
@@ -746,6 +998,14 @@ Lock, Robin H, Patti Frazer Lock, Kari Lock Morgan, Eric F Lock, and Dennis F Lo
 <div class="csl-entry" id="ref-singh2014relationship">
 Singh, Rashmi, Timothy B Meier, Rayus Kuplicki, Jonathan Savitz, Ikuko Mukai, LaMont Cavanagh, Thomas Allen, et al. 2014. <span>“Relationship of Collegiate Football Experience and Concussion with Hippocampal Volume and Cognitive Outcomes.”</span> <em>Journal of the American Medical Association</em> 311 (18): 1883–88.
 </div>
+</div>
+<div class="footnotes">
+<hr/>
+<ol start="37">
+<li id="fn37"><p>1:a, 2:b, 3: Gamma(20,20)<a class="footnote-back" href="/bayes-rules-python-cn/chapter-5/#fnref37">↩︎</a></p></li>
+<li id="fn38"><p><a class="uri" href="https://en.wikipedia.org/wiki/Hippocampus">https://en.wikipedia.org/wiki/Hippocampus</a><a class="footnote-back" href="/bayes-rules-python-cn/chapter-5/#fnref38">↩︎</a></p></li>
+<li id="fn39"><p>在后面的章节中，你将有机会放松这个有点傻气的假设——我们知道 <span class="math inline">\(\sigma\)</span> 但不知道 <span class="math inline">\(\mu\)</span>。<a class="footnote-back" href="/bayes-rules-python-cn/chapter-5/#fnref39">↩︎</a></p></li>
+</ol>
 </div>
 </section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-4/">上一节：第 4 章 贝叶斯分析中的平衡性与序贯性</a><a href="/bayes-rules-python-cn/chapter-6/">下一节：第 6 章 近似后验分布</a></nav>
 </article>

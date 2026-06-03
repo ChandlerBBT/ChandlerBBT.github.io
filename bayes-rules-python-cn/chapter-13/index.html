@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-
+html
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8"/>
@@ -44,25 +43,40 @@
 <section class="normal" id="section-">
 <div class="section level1" id="chapter-13" number="13">
 <h1>第 13 章 Logistic 回归</h1>
-<div class="tutorial-note">
-<p>译注：本页为原教程的中文 Python 改写初稿。统计术语已按“先验分布、似然函数、后验分布、后验预测、后验可信区间、共轭族、分层模型”等常用译法校正；代码块已替换为 Python 生态的转写或骨架。</p>
-</div>
-<p>我们在第12章中了解到,并非每一个回归都是正常的。 在第十三章中, 我们将面对另一个事实:并非每个响应变量都是定量的。 不论歌手是否赢得格莱美奖, 不论是否有人投票, 透过这些例子, 在第十三章和第十四章中,我们将探索两种分类方法:巴耶斯逻辑回归和天真的巴耶斯分类。</p>
-<p>考虑以下数据故事. 假设我们再次发现自己 在澳大利亚,珀斯市具体。 位于西南海岸,珀斯经历夏季干燥和冬季湿润. 我们的目标是预测明天是否会下雨。 为了方便, 我们想要模拟一个二进制绝对响应变量,</p>
-<p>\[Y = \begin{cases} 1 &amp; \text{ if rain tomorrow} \\ 0 &amp; \text{ otherwise} \\ \end{cases} .\]</p>
-<p>我们只考虑三个:</p>
-<p>\[\begin{split} X_1 &amp; = \text{ today's humidity at 9 a.m. (percent)} \\ X_2 &amp; = \text{ today's humidity at 3 p.m. (percent)} \\ X_3 &amp; = \text{ whether or not it rained today. } \\ \end{split}\]</p>
-<p>我们之前的模糊理解是, 平均每天有大约20%的降雨机会。 我们同样模糊地意识到, 雨的机会增加, 在此之前, 我们的最终目标是将先验的理解与数据结合起来,由上面的一个或多个预测者模拟XQ0XX。 当然,由于QQ1是绝对的,拿我们的正常和波森回归锤子来完成这项任务是错的。 在第13章中,您将选择一个新的工具:Bayesian二进制响应变量的逻辑回归模型 QQ2@@。</p>
+<p>在第 <a href="/bayes-rules-python-cn/chapter-12/#chapter-12">12</a> 章我们了解到并非所有回归都是 <em>正态</em> 的。
+在第 <a href="/bayes-rules-python-cn/chapter-13/#chapter-13">13</a> 章，我们将面对另一个事实：并非每个响应变量 <span class="math inline">\(Y\)</span> 都是 <em>定量</em> 的。
+相反，我们可能希望通过专辑评论来建模 <span class="math inline">\(Y\)</span>，即一位歌手是否赢得格莱美奖。
+或者我们可能希望通过年龄和政治倾向来建模 <span class="math inline">\(Y\)</span>，即一个人是否投票。
+在这些例子以及一般的 <strong>分类</strong> 场景中，<span class="math inline">\(Y\)</span> 是 <em>类别型</em> 的。
+在第 <a href="/bayes-rules-python-cn/chapter-13/#chapter-13">13</a> 和 <a href="/bayes-rules-python-cn/chapter-14/#chapter-14">14</a> 章，我们将深入探讨两种分类技术：贝叶斯 Logistic 回归和朴素贝叶斯分类。</p>
+<p>考虑下面的数据故事。
+假设我们再次来到澳大利亚，特别是珀斯市。
+珀斯位于西南海岸，夏季干燥，冬季湿润。
+我们的目标是预测明天是否会下雨。
+也就是说，我们想对 <span class="math inline">\(Y\)</span> 建模，<span class="math inline">\(Y\)</span> 是一个 <strong>二值的类别型响应变量</strong>，为方便起见，转换为 0-1 指示变量：</p>
+<p><span class="math display">\[Y = \begin{cases}
+1 &amp; \text{ 如果明天下雨} \\
+0 &amp; \text{ 否则} \\
+\end{cases}  .\]</span></p>
+<p>尽管有许多潜在的预测变量可以预测降雨，但我们只考虑三个：</p>
+<p><span class="math display">\[\begin{split}
+X_1 &amp; = \text{ 今天上午9点的湿度（百分比）} \\
+X_2 &amp; = \text{ 今天下午3点的湿度（百分比）} \\
+X_3 &amp; = \text{ 今天是否下过雨。 } \\
+\end{split}\]</span></p>
+<p>我们模糊的先验认知是，在普通的一天里，降雨概率大约为 20%。
+我们还有一种模糊的感觉，即如果前一天湿度高或下过雨，降雨概率会增加，但我们对这种增加的速率不清楚。
+我们最终的目标是将这种先验认识与数据结合起来，通过上述一个或多个预测变量对 <span class="math inline">\(Y\)</span> 建模。
+当然，由于 <span class="math inline">\(Y\)</span> 是 <strong>类别型</strong> 的，用正态回归或泊松回归的锤子来处理这项任务是不合适的。
+在第 <a href="/bayes-rules-python-cn/chapter-13/#chapter-13">13</a> 章，你将学到一种新工具：针对二值响应变量 <span class="math inline">\(Y\)</span> 的 <strong>贝叶斯 Logistic 回归模型</strong>。</p>
 <div class="goals">
 <ul>
-<li>由预测器建立二进制绝对变量的巴耶斯逻辑回归模型。</li>
-<li>使用这个模型来对 QQ0 =====================================================================================================================================================================================================================================================</li>
-<li>评价这种分类技术的质量。</li>
+<li>通过预测变量 <span class="math inline">\(X = (X_1,X_2,...,X_p)\)</span> 构建二值类别型变量 <span class="math inline">\(Y\)</span> 的贝叶斯 Logistic 回归模型。</li>
+<li>利用该模型对给定预测变量值 <span class="math inline">\(X\)</span> 下的 <span class="math inline">\(Y\)</span> 结果进行 <em>分类</em> 或 <em>预测</em>。</li>
+<li>评估这种分类技术的质量。</li>
 </ul>
 </div>
-<div class="sourceCode" id="cb256">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python"># 原书 bayesrules 数据包中的数据需改用 CSV/本地数据文件读取
+<div class="sourceCode" id="cb256"><pre><code class="language-python"># 教程数据可改用 CSV 或本地数据文件读取
 import pymc as pm
 import arviz as az
 import numpy as np
@@ -78,113 +92,151 @@ with pm.Model() as model:
     # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
     idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
 az.summary(idata)
-# 装入软件包</code></pre>
-</div>
+# 装入软件包</code></pre></div>
 <div class="section level2" id="pause-odds-probability" number="13.1">
-<h2>暂停: 奇数概率( P)</h2>
-<p>在进入物流回归之前, 我们用概率(\(\pi\))来表达特定事件(如明天下雨)的不确定性。 或者,我们可以引用事件的相应概率, 定义是事件发生的概率与不发生的概率:</p>
-<p>\[\begin{equation} \text{odds} = \frac{\pi}{1-\pi} . \tag{13.1} \end{equation}\]</p>
-<p>在数学上, 概率%%%%% 仅限于0到1之间的数值, 概率从0到无限不等。 并考虑三种不同的情景。 如果明天下雨的概率是                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </p>
-<p>\[\text{odds of rain } = \frac{2/3}{1-2/3} = 2 .\]</p>
-<p>雨比不下雨的似然要高一倍。 如果明天下雨的概率是                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  </p>
-<p>\[\text{odds of rain } = \frac{1/3}{1-1/3} = \frac{1}{2} .\]</p>
-<p>也就是说,它比明天不下雨还可能下雨的一半。 最后,如果明天下雨或没有下雨的几率是50-50,那么下雨的几率是1:</p>
-<p>\[\text{odds of rain } = \frac{1/2}{1-1/2} = 1 .\]</p>
-<p>也就是说,它同样有可能在明天下雨或者不下雨。 这些情景阐明了解释事件概率的一般原则。</p>
+<h2>暂停一下：优势 &amp; 概率</h2>
+<p>在深入 Logistic 回归之前，我们先暂停一下，回顾一下<strong>优势</strong>的概念及其与<strong>概率</strong>的关系。
+在本书中，我们一直使用概率 <span class="math inline">\(\pi\)</span> 来表达某个感兴趣事件（例如明天下雨）的不确定性。
+另一种方式是引用该事件的相应优势，定义是事件发生的概率与事件不发生的概率之比：</p>
+<p><span class="math display" id="eq:ch13-odds">\[\begin{equation}
+\text{优势} = \frac{\pi}{1-\pi}  .
+\tag{13.1}
+\end{equation}\]</span></p>
+<p>从数学上讲，概率 <span class="math inline">\(\pi\)</span> 被限制在 0 到 1 之间，而优势的取值范围可以从 0 到无穷大。
+为了<em>解释</em>不同优势值的含义，我们以明天下雨的概率 <span class="math inline">\(\pi\)</span> 为例，考虑三种不同的情况。
+如果明天下雨的概率是 <span class="math inline">\(\pi = 2/3\)</span>，那么不<em>下雨</em>的概率是 <span class="math inline">\(1 - \pi = 1/3\)</span>，下雨的<em>优势</em>为 2：</p>
+<p><span class="math display">\[\text{下雨的优势 } = \frac{2/3}{1-2/3} = 2  .\]</span></p>
+<p>也就是说，下雨的可能性是不下雨的两倍。</p>
+<p><span class="math display">\[\text{下雨的优势 } = \frac{1/3}{1-1/3} = \frac{1}{2}  .\]</span></p>
+<p>也就是说，明天下雨的可能性是不下雨的一半。
+最后，如果明天下雨和不下雨的机会各为 50%，那么下雨的<em>优势</em>为 1：</p>
+<p><span class="math display">\[\text{下雨的优势} = \frac{1/2}{1-1/2} = 1  .\]</span></p>
+<p>也就是说，明天<em>下雨和不下雨的可能性相同</em>。这些情景阐明了解释事件优势的一般原则。</p>
 <div class="describe">
-<p>解释概率</p>
-<p>让一个感兴趣的事件有概率 ++++ 和相应的概率 +++1++。 从这个角度看,</p>
+<p><strong>解释优势</strong></p>
+<p>设感兴趣事件的概率为 <span class="math inline">\(\pi \in [0,1]\)</span>，相应的优势为 <span class="math inline">\(\pi / (1-\pi) \in [0, \infty)\)</span>。在这个范围内，将优势与 1 进行比较，可以了解事件的不确定性：</p>
 <ul>
-<li>如果且只有在事件概率低于50-50, 也就是~~0++)的情况下,</li>
-<li>如果且只有在事件的机会为50-50, 也就是~~0+)时, 事件的概率就等于1。</li>
-<li>如果并且只有在事件的机会大于50-50, 即~++++ 时,</li>
+<li>事件的<strong>优势小于 1</strong> 当且仅当事件的机会小于 50-50，即 <span class="math inline">\(\pi &lt; 0.5\)</span>。</li>
+<li>事件的<strong>优势等于 1</strong> 当且仅当事件的机会是 50-50，即 <span class="math inline">\(\pi = 0.5\)</span>。</li>
+<li>事件的<strong>优势大于 1</strong> 当且仅当事件的机会大于 50-50，即 <span class="math inline">\(\pi &gt; 0.5\)</span>。</li>
 </ul>
 </div>
-<p>最后,正如我们能够把概率转换成概率一样,我们可以通过重新安排(13.1)将概率转换成概率:</p>
-<p>\[\begin{equation} \pi = \frac{\text{odds}}{1 + \text{odds}} . \tag{13.2} \end{equation}\]</p>
-<p>因此,如果我们知道明天的降雨机率是4比1,那么就有80%的降雨机率:</p>
-<p>\[\pi = \frac{4}{1 + 4} = 0.8.\]</p>
+<p>最后，就像我们可以将概率转换为优势一样，我们可以通过重新排列 <a href="/bayes-rules-python-cn/chapter-13/#eq:ch13-odds">(13.1)</a> 来将优势转换为概率：</p>
+<p><span class="math display" id="eq:ch13-prob">\[\begin{equation}
+\pi = \frac{\text{优势}}{1 + \text{优势}}  .
+\tag{13.2}
+\end{equation}\]</span></p>
+<p>因此，如果我们得知明天下雨的优势是 4 比 1，那么下雨的可能性是 80%：</p>
+<p><span class="math display">\[\pi = \frac{4}{1 + 4} = 0.8.\]</span></p>
 </div>
 <div class="section level2" id="building-the-logistic-regression-model" number="13.2">
-<h2>建立后勤回归模型</h2>
+<h2> 构建 Logistic 回归模型</h2>
 <div class="section level3" id="specifying-the-data-model-2" number="13.2.1">
 <h3>指定数据模型</h3>
-<p>回到我们的雨量分析, 由单一预测器模拟, 今天上午九点的湿度水平。 如上所述,Normal和Poisson回归模型都不适合这项任务。 那又怎样?</p>
+<p>回到我们的降雨分析，设 <span class="math inline">\(Y_i\)</span> 为第 <span class="math inline">\(i\)</span> 天明天是否下雨的 0/1 指示变量。首先，我们将用单个预测变量——当天上午 9 点的湿度水平 <span class="math inline">\(X_{i1}\)</span>——来为 <span class="math inline">\(Y_i\)</span> 建模。如前所述，正态回归和泊松回归模型都不适用于此任务。那么，什么模型合适？</p>
 <div class="quiz">
-<p>对数据来说,</p>
+<p>对于数据 <span class="math inline">\(Y_i\)</span>，合适的模型结构是什么？</p>
 <ol style="list-style-type: lower-alpha">
-<li>Bernoulli(或相当于1次审判的Binomial)</li>
-<li>伽玛</li>
-<li>贝塔</li>
+<li>伯努利（或等价地，试验次数为 1 的二项分布）</li>
+<li>Gamma 分布</li>
+<li>Beta 分布</li>
 </ol>
 </div>
-<p>一个简单的问题可以帮助我们在合适的模型结构上缩小任何响应变量的QQ0++:QQ1++可以接受什么数值,以及哪些概率模型假设这组数值? 这里,QQ2@@是一个离散变量,它只能取两个值,0或1. 因此,Bernoulli概率模型是数据的最佳候选. {\fn黑体\fs22\bord1\shad0\3aHBE\4aH00\fscx67\fscy66\2cHFFFFFF\3cH808080}让\fn黑体\fs22\bord1\shad0\3aHBE\4aH00\fscx67\fscy66\2cHFFFFFF\3cH808080}表示白天下雨的概率 {\fn黑体\fs22\bord1\shad0\3aHBE\4aH00\fscx67\fscy66\2cHFFFFFF\3cH808080}</p>
-<p>\[Y_i | \pi_i \sim \text{Bern}(\pi_i)\]</p>
-<p>包含预期值</p>
-<p>\[E(Y_i|\pi_i) = \pi_i.\]</p>
-<p>要完成Bernoulli数据模型的结构, 我们必须明确雨量的预期值如何取决于预测值。 为此,后勤回归模型是第12.7节中强调的更广泛类泛线性模型的一部分。 因此,我们可以确定XQ2@@,QQ3@@的适当链接功能,这与QQ4@@的线性关系:</p>
-<p>\[g(\pi_i) = \beta_0 + \beta_1 X_{i1} .\]</p>
-<p>考虑到建立Poisson回归模型的原则, 页:1</p>
+<p>一个简单的问题可以帮助我们缩小任何响应变量 <span class="math inline">\(Y_i\)</span> 的适当模型结构范围：<span class="math inline">\(Y_i\)</span> 能取哪些值，哪些概率模型假设相同的取值集合？这里，<span class="math inline">\(Y_i\)</span> 是一个只能取 0 或 1 两个值的<em>离散</em>变量。因此，<strong>伯努利概率模型</strong> 是数据的最佳候选。令 <span class="math inline">\(\pi_i\)</span> 表示第 <span class="math inline">\(i\)</span> 天下雨的概率，</p>
+<p><span class="math display">\[Y_i | \pi_i \sim \text{Bern}(\pi_i)\]</span></p>
+<p>其期望值为</p>
+<p><span class="math display">\[E(Y_i|\pi_i) = \pi_i.\]</span></p>
+<p>为了完善这个伯努利数据模型的结构，我们必须指定降水的期望值 <span class="math inline">\(\pi_i\)</span> 如何依赖于预测变量 <span class="math inline">\(X_{i1}\)</span>。
+为此，<strong>Logistic 回归</strong>模型属于更广泛的广义线性模型类别，第 <a href="/bayes-rules-python-cn/chapter-12/#ch12-glm">12.7</a> 节对此进行了重点介绍。
+因此，我们可以为 <span class="math inline">\(\pi_i\)</span> 确定一个合适的连接函数 <span class="math inline">\(g(\cdot)\)</span>，使其与 <span class="math inline">\(X_{i1}\)</span> 呈线性关系：</p>
+<p><span class="math display">\[g(\pi_i) = \beta_0 + \beta_1 X_{i1}  .\]</span></p>
+<p>回想一下构建泊松回归模型时所依据的原则，做个快速测验来思考什么样的 <span class="math inline">\(g(\pi_i)\)</span> 是合适的。<a class="footnote-ref" href="#fn60" id="fnref60"><sup>60</sup></a></p>
 <div class="quiz">
-<p>表示明天下雨的概率和相应的概率。 对明天雨量的依赖性有什么合理的假设? 今天上午9点的湿度?</p>
+<p>设 <span class="math inline">\(\pi_i\)</span> 和 <span class="math inline">\(\text{odds}_i = \pi_i / (1-\pi_i)\)</span> 分别表示明天下雨的概率和相应的优势（odds）。对于明天下雨概率 <span class="math inline">\(\pi_i\)</span> 如何依赖于今天上午 9 点的湿度 <span class="math inline">\(X_{i1}\)</span>，以下哪个假设是合理的？</p>
 <ol style="list-style-type: lower-alpha">
-<li>\(\pi_i = \beta_0 + \beta_1 X_{i1}\)</li>
-<li>\(\text{odds}_i = \beta_0 + \beta_1 X_{i1}\)</li>
-<li>\(\log(\pi_i) = \beta_0 + \beta_1 X_{i1}\)</li>
-<li>\(\log(\text{odds}_i) = \beta_0 + \beta_1 X_{i1}\)</li>
+<li><span class="math inline">\(\pi_i = \beta_0 + \beta_1 X_{i1}\)</span></li>
+<li><span class="math inline">\(\text{odds}_i = \beta_0 + \beta_1 X_{i1}\)</span></li>
+<li><span class="math inline">\(\log(\pi_i) = \beta_0 + \beta_1 X_{i1}\)</span></li>
+<li><span class="math inline">\(\log(\text{odds}_i) = \beta_0 + \beta_1 X_{i1}\)</span></li>
 </ol>
 </div>
-<p>我们的目标是写Bernoulli(Bernoulli)意为"\(\pi_i\)",或这个意为"\(g(\pi_i)\)"的函数,作为预测者"\(X_{i1}\)"的线性函数, 3@@. 在上文的测验中提出的备选办法中,前三种是错误。 QQ4@@定义的行可以横跨整个真线,而QQ5@@(选项a)仅限于0到1的值和QQ6@@(选项b)仅限于正值. 此外,如果评价为 QQ 7 QQ 值在 0 到 1 之间, QQ 8 QQ (选项 c) 仅限于负值。 在这些选项中,QQ9@@(选项d)是唯一像QQ10@@一样横跨整个真线的选项. 因此,最合理的选择是假设XQ11+Q依赖于通过登录链接函数XQ13+X的预测器:XX12+X:</p>
-<p>\[\begin{equation} Y_i|\beta_0,\beta_1 \stackrel{ind}{\sim} \text{Bern}(\pi_i) \;\; \text{ with } \;\; \log\left(\frac{\pi_i}{1 - \pi_i}\right) = \beta_0 + \beta_1 X_{i1} . \tag{13.3} \end{equation}\]</p>
-<p>也就是说,我们假设日志(雨的奇数)与上午9时的湿度有线性关系。 为了对(非常)容易解释的尺度开展工作,我们可以从概率和概率的角度重写这种关系,前者从日志函数的属性中重写,后者从(13.2)重写:</p>
-<p>\[\begin{equation} \frac{\pi_i}{1-\pi_i} = e^{\beta_0 + \beta_1 X_{i1}} \;\;\;\; \text{ and } \;\;\;\; \pi_i = \frac{e^{\beta_0 + \beta_1 X_{i1}}}{1 + e^{\beta_0 + \beta_1 X_{i1}}} . \tag{13.4} \end{equation}\]</p>
-<p>如图13.1所示,这些转变有两个关键特征。 首先,概率和概率尺度上的关系现在以非线性函数为代表. 此外,幸运的是,这些转变保留了概率(必须是非负性的)和概率(必须是0到1之间的)的属性.</p>
+<p>我们的目标是将伯努利均值 <span class="math inline">\(\pi_i\)</span> 或其 <em>函数</em> <span class="math inline">\(g(\pi_i)\)</span> 写成预测变量 <span class="math inline">\(X_{i1}\)</span> 的线性函数 <span class="math inline">\(\beta_0 + \beta_1 X_{i1}\)</span>。
+在上面测验给出的选项中，前三个是错误的。
+因为 <span class="math inline">\(\beta_0 + \beta_1 X_{i1}\)</span> 定义的线可以覆盖整个实数线，而 <span class="math inline">\(\pi_i\)</span>（选项a）被限制在0到1之间，<span class="math inline">\(\text{odds}_i\)</span>（选项b）被限制为正值。
+此外，当在0到1之间的 <span class="math inline">\(\pi_i\)</span> 值上计算时，<span class="math inline">\(\log(\pi_i)\)</span>（选项c）被限制为负值。
+在这些选项中，<span class="math inline">\(\log(\pi_i / (1-\pi_i))\)</span>（选项d）是唯一一个像 <span class="math inline">\(\beta_0 + \beta_1 X_{i1}\)</span> 一样覆盖整个实数线的选项。
+因此，最合理的选项是假设 <span class="math inline">\(\pi_i\)</span> 通过 <strong>logit 连接函数</strong> <span class="math inline">\(g(\pi_i) = \log(\pi_i / (1-\pi_i))\)</span> 依赖于预测变量 <span class="math inline">\(X_{i1}\)</span>：</p>
+<p><span class="math display" id="eq:ch13-log-trend-1">\[\begin{equation}
+Y_i|\beta_0,\beta_1 \stackrel{ind}{\sim} \text{Bern}(\pi_i) \;\; \text{ with } \;\; \log\left(\frac{\pi_i}{1 - \pi_i}\right) = \beta_0 + \beta_1 X_{i1}  .
+\tag{13.3}
+\end{equation}\]</span></p>
+<p>也就是说，我们假设降雨的<strong>对数优势（log(odds)）</strong>与上午9点湿度呈线性关系。
+为了在更容易解释的尺度上工作，我们可以用优势和概率重写这一关系，前者根据对数函数的性质得出，后者根据 <a href="/bayes-rules-python-cn/chapter-13/#eq:ch13-prob">(13.2)</a> 得出：</p>
+<p><span class="math display" id="eq:ch13-op-trend-1">\[\begin{equation}
+\frac{\pi_i}{1-\pi_i} = e^{\beta_0 + \beta_1 X_{i1}}
+\;\;\;\; \text{ and } \;\;\;\;
+\pi_i = \frac{e^{\beta_0 + \beta_1 X_{i1}}}{1 + e^{\beta_0 + \beta_1 X_{i1}}} .
+\tag{13.4}
+\end{equation}\]</span></p>
+<p>如图 <a href="/bayes-rules-python-cn/chapter-13/#fig:ch13-log-trend">13.1</a> 所示，这些变换有两个关键特征。
+首先，优势和概率尺度上的关系现在由 <em>非线性</em> 函数表示。
+此外，幸运的是，这些变换保留了优势（必须为非负）和概率（必须在0到1之间）的性质。</p>
 <div style="page-break-after: always;"></div>
 <div class="figure" style="text-align: center"><span id="fig:ch13-log-trend" style="display:block;"></span>
-<img alt="共有3块地块,每块地块的X轴湿度9am值从0到100不等. 左图的y轴对数(降雨奇数)范围为−4至6. 在湿度9am等于100时,有一条单向上斜拉线,拦截量为-4,值为6。 中间的地块有Y轴的降雨概率从0到350. 在湿度9am等于100时,有一个单一的,向上倾斜的非线性曲线,截流接近0,值接近350. 右图的雨概率Y轴从0到1. 在湿度9am等于100时,有一个单一的S形曲线,截流接近0,值接近1。 对于湿度9am值在10到70之间,曲线最陡. 在那个范围以外,S形相当平坦。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch13-log-trend-1-d659f9f127a4.png" width="480"/>
-<p class="caption">FIGURE 13.1: 雨与湿度在日志(odds),概率,和概率尺度上的一个实例关系.</p>
+<img alt="There are 3 plots, each with an x-axis of humidity9am values ranging from 0 to 100. The left plot has a y-axis of log(odds of rain) ranging from -4 to 6. There is a single, upward sloping line with an intercept of -4 and a value of 6 when humidity9am equals 100. The middle plot has a y-axis of odds of rain ranging from 0 to 350. There is a single, upward sloping, non-linear curve with an intercept near 0 and a value near 350 when humidity9am equals 100. The right plot has a y-axis of probability of rain ranging from 0 to 1. There is a single, s-shaped curve with an intercept near 0 and a value near 1 when humidity9am equals 100. The curve is steepest for humidity9am values between 10 and 70. Outside that range, the s-shape is fairly flat." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch13-log-trend-1-d659f9f127a4.png" width="480"/>
+<p class="caption">
+图13.1：降雨与湿度在对数优势、优势和概率尺度上的关系示例。
+</p>
 </div>
-<p>在检查(13.3)和图13.1时,注意参数\(\beta_0\)和 1@@在描述上午9时的湿度( 2@@)和日志(雨量的奇数)的线性关系时,具有通常的拦截和坡度含义. 然而,当描述上午9时的湿度和雨量之间的非线性关系时(13.4),参数的含义会发生变化。 我们在此提出解释物流回归系数的一般框架,并在下文加以应用。</p>
+<p>在考察 <a href="/bayes-rules-python-cn/chapter-13/#eq:ch13-log-trend-1">(13.3)</a> 和图 <a href="/bayes-rules-python-cn/chapter-13/#fig:ch13-log-trend">13.1</a> 时，注意到参数 <span class="math inline">\(\beta_0\)</span> 和 <span class="math inline">\(\beta_1\)</span> 在描述上午 9 点湿度（<span class="math inline">\(X_{i1}\)</span>）与下雨的<em>对数</em>优势之间的<em>线性</em>关系时，具有通常的截距和斜率含义。 然而，当描述上午 9 点湿度与下雨的<em>优势</em>之间的<em>非线性</em>关系时，参数含义发生了变化 <a href="/bayes-rules-python-cn/chapter-13/#eq:ch13-op-trend-1">(13.4)</a>。 我们在此提出一个解释 Logistic 回归系数的一般框架，并在下面应用它。</p>
 <div class="describe">
-<p>解释物流回归系数</p>
-<p>让 QQ0 QQ 成为一个二进制指标, 以概率 QQ1 QQ 发生一些感兴趣的事件。 考虑XQ2的逻辑回归模型,</p>
-<p>\[\log(\text{odds}) = \log\left(\frac{\pi}{1-\pi}\right) = \beta_0 + \beta_1 X_1 + \cdots + \beta_p X_p . \]</p>
-<p>解释 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #</p>
-<p>当QQ0QQ全部为0时,QQ1QQ为利息事件的日志概率,而QQ2QQ为概率.</p>
-<p>解释 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #</p>
-<p>在控制其他预测器时, 让QQ1@@代表利息事件的概率, 当QQ5+Q增加1时, 从QQ6+Q到QQ7+X,</p>
-<p>\[\beta_1 = \log(\text{odds}_{x+1}) - \log(\text{odds}_x) \;\;\; \text{ and } \;\;\; e^{\beta_1} = \frac{\text{odds}_{x+1}}{\text{odds}_x}.\]</p>
+<p><strong>解释 Logistic 回归系数</strong></p>
+<p>设 <span class="math inline">\(Y\)</span> 为某个关注事件的二元指示变量，其发生概率为 <span class="math inline">\(\pi\)</span>。考虑用预测变量 <span class="math inline">\((X_1,X_2,\ldots,X_p)\)</span> 对 <span class="math inline">\(Y\)</span> 进行 Logistic 回归建模：</p>
+<p><span class="math display">\[\log(\text{优势}) = \log\left(\frac{\pi}{1-\pi}\right) = \beta_0 + \beta_1 X_1 + \cdots + \beta_p X_p  . \]</span></p>
+<p><strong>解释 <span class="math inline">\(\beta_0\)</span></strong></p>
+<p>当 <span class="math inline">\((X_1,X_2,\ldots,X_p)\)</span> 均为 0 时，<span class="math inline">\(\beta_0\)</span> 就是关注事件的对数优势，而 <span class="math inline">\(e^{\beta_0}\)</span> 则是优势。</p>
+<p><strong>解释 <span class="math inline">\(\beta_1\)</span></strong></p>
+<p>在控制其他预测变量 <span class="math inline">\((X_2,\ldots,X_p)\)</span> 的情况下，令 <span class="math inline">\(\text{odds}_x\)</span> 表示当 <span class="math inline">\(X_1 = x\)</span> 时关注事件的优势，<span class="math inline">\(\text{odds}_{x+1}\)</span> 表示当 <span class="math inline">\(X_1 = x + 1\)</span> 时的优势。那么，当 <span class="math inline">\(X_1\)</span> 增加 1，从 <span class="math inline">\(x\)</span> 变成 <span class="math inline">\(x + 1\)</span> 时，<span class="math inline">\(\beta_1\)</span> 就是对数优势的典型变化量，而 <span class="math inline">\(e^{\beta_1}\)</span> 是优势的典型倍率变化：</p>
+<p><span class="math display">\[\beta_1 = \log(\text{odds}_{x+1}) - \log(\text{odds}_x)
+\;\;\; \text{ 且 } \;\;\; e^{\beta_1} = \frac{\text{odds}_{x+1}}{\text{odds}_x}.\]</span></p>
 </div>
-<p>例如,在对数(偶数)、概率和概率尺度图13.1中绘制的先验可能存在的关系假设</p>
-<p>\[\log\left(\frac{\pi}{1 - \pi}\right) = -4 + 0.1 X_{i1}.\]</p>
-<p>虽然如此接近0的湿度水平仅仅是世界这个地区的假设, 截取表明,在湿度为0%的假定日子里,日志(降雨杂数)将是 -4. 或者,在更有意义的尺度上,如果在一天之前出现0湿度,那么降雨就不太可能:</p>
-<p>\[\begin{split} \text{odds of rain } &amp; = e^{-4} = 0.0183 \\ \text{probability of rain } &amp; = \frac{e^{-4}}{1 + e^{-4}} = 0.0180. \\ \end{split}\]</p>
-<p>接下来,考虑湿度系数++0++. 在线性对数(odds)尺度上,这只是坡度:湿度每增加一个百分点,所记录的降雨概率就会增加0.1。 是吗? 在非线性概率尺度上, 湿度每增加一个百分点,降雨机率就增加11%:\(e^{0.1} = 1.11\). 由于概率关系是一个比较复杂的S形曲线,因此我们无法轻易在这个尺度上解释QQ2@@. 然而,我们仍然可以从图13.1中的概率图中收集一些见解。 当湿度水平徘徊在20%以下时,降雨的似然很小,随着湿度水平从20%上升至60%,雨量迅速增加。 超过60%的湿度,概率模型在接近1时会平缓,表明雨量的接近确定性.</p>
+<p>例如，图 <a href="/bayes-rules-python-cn/chapter-13/#fig:ch13-log-trend">13.1</a> 在对数优势、优势和概率尺度上绘制的先验合理关系假设：</p>
+<p><span class="math display">\[\log\left(\frac{\pi}{1 - \pi}\right) = -4 + 0.1 X_{i1}.\]</span></p>
+<p>尽管在这个地区湿度接近 0 仅属假设，但为了理解截距值 <span class="math inline">\(\beta_0 = -4\)</span>，我们将图形延伸至 y 轴。 该截距表明，在假设的 0% 湿度日子里，下雨的对数优势为 -4。 或者，在更有意义的尺度上，如果前一天湿度为 0%，则下雨的可能性极低：</p>
+<p><span class="math display">\[\begin{split}
+\text{下雨的优势 } &amp; = e^{-4} = 0.0183 \\
+\text{下雨的概率 } &amp; = \frac{e^{-4}}{1 + e^{-4}} = 0.0180. \\
+\end{split}\]</span></p>
+<p>接下来，考虑湿度系数 <span class="math inline">\(\beta_1 = 0.1\)</span>。 在<em>线性</em>对数优势尺度上，它就是<em>斜率</em>：湿度水平每增加一个百分点，下雨的<em>对数优势</em>增加 0.1。 嗯？ 这在<em>非线性</em>的优势尺度上更容易理解，此时的增加是<em>倍率</em>性的。 湿度水平每增加一个百分点，下雨的<em>优势</em>增加 11%：<span class="math inline">\(e^{0.1} = 1.11\)</span>。 由于概率关系是更复杂的 S 形曲线，我们无法轻易在概率尺度上解释 <span class="math inline">\(\beta_1\)</span>。 不过，我们仍可从图 <a href="/bayes-rules-python-cn/chapter-13/#fig:ch13-log-trend">13.1</a> 的概率图中获得一些认识。 当湿度水平徘徊在 20% 以下时，下雨的概率很小；当湿度从 20% 升至 60% 时，概率迅速增加；湿度超过 60% 后，概率模型趋于平坦并接近 1，表明几乎肯定下雨。</p>
 </div>
 <div class="section level3" id="specifying-the-priors-1" number="13.2.2">
-<h3>指定前科</h3>
-<p>为了完成巴耶斯逻辑回归模型,我们必须在我们的两个回归参数上加上先验的模型,即XQ1+和XQ2+。 同往常一样,由于这些参数可以在真实行中取任何值,正常前缀对两者都是合适的. 透过中心截击:</p>
-<p>\[\begin{equation} \begin{array}{lcrl} \text{data:} &amp; \hspace{.01in} &amp; Y_i|\beta_0,\beta_1 &amp; \stackrel{ind}{\sim} \text{Bern}(\pi_i) \;\; \text{ with } \;\; \log\left(\frac{\pi_i}{1 - \pi_i}\right) = \beta_0 + \beta_1 X_{i1} \\ \text{priors:} &amp; &amp; \beta_{0c} &amp; \sim N\left(-1.4, 0.7^2 \right) \\ &amp; &amp; \beta_1 &amp; \sim N\left(0.07, 0.035^2 \right). \\ \end{array} \tag{13.5} \end{equation}\]</p>
-<p>想想我们以前的调音 从中心截击量开始, 记得我们先验的谅解, 因此,我们在对数(偶数)尺度上将 QQ2@@的前一个平均值设定为 -1.4:</p>
-<p>\[\log\left(\frac{\pi}{1-\pi}\right) = \log\left(\frac{0.2}{1-0.2}\right) \approx -1.4 .\]</p>
-<p>这个“正常”的前置范围表明我们模糊的理解,即日志(雨的奇数)也可能从大约-2.8到0( 0@@)不等。 更有意义的是,我们认为平均一天降雨的几率可能在0.06到1:</p>
-<p>\[\left(e^{-2.8}, e^{0}\right) \approx (0.06, 1)\]</p>
-<p>因此,平均一天的降雨概率可能在0.057至0.50之间(在降雨的情况下范围相当广泛):</p>
-<p>\[\left(\frac{0.06}{1 + 0.06}, \frac{1}{1 + 1}\right) \approx (0.057, 0.50).\]</p>
-<p>接下来,我们先验的湿度系数模型 — — — — — — 反映了我们模糊的感知,即雨量在高湿度的一天之前会增加,但是我们对这一增量的速度感到迷雾,并有可能不存在。 具体地说,在log(odds)尺度上,我们假设 的坡度在0到0.14之间,而且很可能在0.7左右. 或者,在概率尺度上,雨的概率可能会从0%增加到15%,而湿度每增加一个百分点:</p>
-<p>\[(e^{0}, e^{0.14}) = (1, 1.15) .\]</p>
-<p>在最初说明这些前科(在书中写下之前)时,我们把许多试验和错误与对逻辑回归系数如何起作用的理解结合起来. 在整个调整过程中,我们用各种以前的模型模拟数据,每次都问自己,结果是否充分反映了我们对雨水的理解。 为此,我们遵循了第12.1.2节中所用的同样框架,以调整Poisson回归前题。</p>
-<p>首先,我们使用越来越熟悉的stan glm()功能,使用prefore PD=TRUE来模拟前期模型的20,000套参数XQ0@@. 在此过程中,我们指定家庭=二元表示我们的逻辑回归模型,其数据结构由Bernoulli / Binomial模型(不是goussian 或 poisson )指定. 尽管我们的模型( 13.5) 不使用默认的微弱信息前科, 因此在先验的模拟中没有使用任何数据, stan  glm () 仍然要求我们指定一个数据集。 因此,我们还从含有1000天珀斯天气数据的Baylesrules包中装入天气 perth数据。 页:1</p>
-<div class="sourceCode" id="cb257">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h3> 指定先验</h3>
+<p>为了构建 <span class="math inline">\(Y\)</span> 的完整 <strong>贝叶斯 Logistic 回归模型</strong>，我们需要为两个回归参数 <span class="math inline">\(\beta_0\)</span> 和 <span class="math inline">\(\beta_1\)</span> 指定先验模型。通常，由于这些参数可以取实数轴上的任意值，正态先验分布对两者都适用。我们还将假设先验之间相互独立，并通过中心化截距 <span class="math inline">\(\beta_{0c}\)</span> 来表达我们对模型基线 <span class="math inline">\(\beta_0\)</span> 的先验理解：</p>
+<p><span class="math display" id="eq:log-model-ch13">\[\begin{equation}
+\begin{array}{lcrl}
+\text{数据：} &amp; \hspace{.01in} &amp; Y_i|\beta_0,\beta_1 &amp; \stackrel{ind}{\sim} \text{Bern}(\pi_i) \;\; \text{ 其中 } \;\; \log\left(\frac{\pi_i}{1 - \pi_i}\right) = \beta_0 + \beta_1 X_{i1} \\
+\text{先验分布：} &amp; &amp; \beta_{0c}  &amp;  \sim N\left(-1.4, 0.7^2 \right)  \\
+               &amp; &amp; \beta_1  &amp; \sim N\left(0.07, 0.035^2 \right). \\
+\end{array}
+\tag{13.5}
+\end{equation}\]</span></p>
+<p>考虑一下我们的先验调优。从中心化截距 <span class="math inline">\(\beta_{0c}\)</span> 开始，回想我们之前的理解：平均而言，每天约有 20% 的降雨概率，即 <span class="math inline">\(\pi \approx 0.2\)</span>。因此，我们将 <span class="math inline">\(\beta_{0c}\)</span> 的 <em>log(优势)</em> 尺度上的先验均值设定为 -1.4：</p>
+<p><span class="math display">\[\log\left(\frac{\pi}{1-\pi}\right) = \log\left(\frac{0.2}{1-0.2}\right) \approx -1.4  .\]</span></p>
+<p>该正态先验的范围表明，我们对降雨的 <em>log(优势)</em> 可能大致在 -2.8 到 0 之间（<span class="math inline">\(-1.4 \pm 2*0.7\)</span>）。更有意义的是，我们认为平均一天降雨的 <em>优势</em> 可能在 0.06 到 1 之间：</p>
+<p><span class="math display">\[\left(e^{-2.8}, e^{0}\right) \approx (0.06, 1)\]</span></p>
+<p>因此，平均一天降雨的 <em>概率</em> 可能在 0.057 到 0.50 之间（在降雨的背景下，这是一个相当宽的范围）：</p>
+<p><span class="math display">\[\left(\frac{0.06}{1 + 0.06}, \frac{1}{1 + 1}\right) \approx (0.057, 0.50).\]</span></p>
+<p>接下来，我们对湿度系数 <span class="math inline">\(\beta_1\)</span> 的先验模型反映了我们模糊的认知：当前一天湿度较高时，下雨的概率会增加，但我们并不清楚这种增加的速度，也接受它可能不存在。具体来说，在 log(优势) 尺度上，我们假设斜率 <span class="math inline">\(\beta_1\)</span> 大致在 0 到 0.14 之间，最可能取值在 0.7 附近。或者，在优势尺度上，湿度每增加一个百分点，下雨的优势可能从 0% 增加到 15%：</p>
+<p><span class="math display">\[(e^{0}, e^{0.14}) = (1, 1.15)  .\]</span></p>
+<p>在最初设定这些先验（写进本书之前）时，我们结合了大量试错以及对逻辑回归系数工作原理的理解。在整个调参过程中，我们在多种先验模型下模拟数据，每次都自问结果是否充分反映了我们对下雨的理解。为此，我们遵循了与第 <a href="/bayes-rules-python-cn/chapter-12/#ch12-prior-spec">12.1.2</a> 节相同的框架来调整泊松回归先验。</p>
+<p>首先，我们使用日益熟悉的 PyMC 先验预测模拟方法，设置 <code>family = binomial</code> 以表明这是一个逻辑回归模型，其数据结构由伯努利 / 二项模型指定（而不是 <code>gaussian</code> 或 <code>poisson</code>）。尽管我们的模型 <a href="/bayes-rules-python-cn/chapter-13/#eq:log-model-ch13">(13.5)</a> 没有使用默认的弱信息先验，因此在先验模拟中没有用到数据，但 PyMC 仍然要求我们指定一个数据集。因此，我们还从配套的 <code>bayesrules</code> 数据集中加载了 <code>weather_perth</code> 数据，该数据包含 1000 天的珀斯天气数据。<a class="footnote-ref" href="#fn61" id="fnref61"><sup>61</sup></a></p>
+<div class="sourceCode" id="cb257"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 with pm.Model() as model:
     # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
     # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
@@ -195,108 +247,130 @@ with pm.Model() as model:
 az.summary(idata)
 # 装入并处理数据
 data(weather_perth)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>由此而来的两万对前所未有 说明明天下雨的概率与今天上午9点的湿度之间,</p>
-<p>\[\pi = \frac{e^{\beta_0 + \beta_1 X_1}}{1 + e^{\beta_0 + \beta_1 X_1}} .\]</p>
-<p>下面我们只规划了100个先验的可信关系(图13.2左方)。 这充分反映了我们先验的理解,即降雨的概率会随着湿度的增加而增加,以及我们以前关于这种增加速度的不确定性。 除了雨和湿度之间的关系之外,我们还要确认,我们的前科反映了我们对珀斯雨的总体似然的理解。 为此,我们模拟了先验模型的100个数据集. 从每个数据集(标签为.draw)中,我们利用组 by()和摘要()来记录预测结果的%\0%(.预测)的比例,即降雨天数的比例。 图13.2(右)显示了我们先验100个模拟数据集中这100个模拟降雨速率的直方图。 降雨天数的百分比从一个数据集的约5%到另一个数据集的约50%不等。 这完全符合我们以前对珀斯雨量的理解和不确定性。 对比之下,如果我们之前的预测倾向于以高数值为中心,我们就会质疑我们之前的调值,因为我们不相信珀斯是一个雨点.</p>
-<div class="sourceCode" id="cb258">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+# 可用 pandas / PyMC 按同一数据流程表达。
+select(day_of_year, raintomorrow, humidity9am, humidity3pm, raintoday)
+# 运行先验的模拟
+# 可用 pandas / PyMC 按同一数据流程表达。
+data = weather, family = binomial,
+prior_intercept = normal(-1.4, 0.7),
+prior = normal(0.07, 0.035),
+chains = 4, iter = 5000*2, seed = 84735,
+prior_PD = TRUE)</code></pre></div>
+<p>由此得到的 20,000 组先验可行的 <span class="math inline">\(\beta_0\)</span> 和 <span class="math inline">\(\beta_1\)</span> 组合，每一组都描述了明天降雨概率与今天上午 9 点湿度之间的一种先验可行关系：</p>
+<p><span class="math display">\[\pi = \frac{e^{\beta_0 + \beta_1 X_1}}{1 + e^{\beta_0 + \beta_1 X_1}}  .\]</span></p>
+<p>我们在下方仅绘制了其中 100 种先验可行关系（图 <a href="/bayes-rules-python-cn/chapter-13/#fig:ch13-prior-sim-1">13.2</a> 左）。这些关系充分反映了我们先验的认知：降雨概率随湿度增加而上升，以及我们对上升速度的先验不确定性。除了降雨与湿度的关系之外，我们还想确认先验是否反映了我们对珀斯总体降雨概率的认识。为此，我们从先验模型中模拟了 100 个数据集。对于每个数据集（由 <code>.draw</code> 标记），我们使用分组（<code>groupby</code>）和汇总（<code>summarize</code>）操作来记录预测结果 <span class="math inline">\(Y\)</span>（<code>.prediction</code>）为 1 的比例，即降雨的天数比例。图 <a href="/bayes-rules-python-cn/chapter-13/#fig:ch13-prior-sim-1">13.2</a>（右）展示了来自 100 个先验模拟数据集的 100 个模拟降雨率直方图。降雨天数百分比低至大约 5%（某个数据集），高至大约 50%（另一个数据集）。这确实充分匹配了我们对珀斯降雨的先验认识和不确定性。相反，如果我们的先验预测倾向于集中在高值附近，我们会质疑先验的设定，因为我们不认为珀斯是一个多雨的地方。</p>
+<div class="sourceCode" id="cb258"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 rng = np.random.default_rng(84735)
 # 绘制100个具有湿度的前型号
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 绘制在100个先验数据集中观测到的雨量比例
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch13-prior-sim-1" style="display:block;"></span>
-<img alt="有两块地 左边的地块在y轴上有明日雨,雨量范围从0到1,x轴上湿度9am,雨量范围从10到100. 有100个S形曲线. 虽然几乎所有的截取量都低于0.1,但S-形状却大不相同,有些有陡增,有些有轻增. 右图是比例 rain(x轴)的直方图. Y轴的计数范围从0到10. 直方图呈凸起状,大致呈钟形,峰值约为0.25。 它的数值范围很广,比例值从0到0.7不等。" loading="lazy" src="/assets/img/bayes-rules-python-cn/ch13-prior-sim-1-1-bb32e2a9205b.png" width="480"/>
-<p class="caption">FIGURE 13.2: 从以前的模型模拟了100个数据集. 雨量与前一天湿度水平(左)和所观测到的降雨天数比例(右)之间的关系。</p>
+<img alt="There are two plots. The left plot has raintomorrow on the y-axis with a range from 0 to 1 and humidity9am on the x-axis with a range from 10 to 100. There are 100 s-shaped curves. Though nearly all have intercepts below 0.1, the s-shapes are quite different, some with steep increases and some with mild increases. The right plot is a histogram of proportion_rain (x-axis). The y-axis has count with a range from 0 to 10. The histogram is bumpy and roughly bell-shaped, with a peak around proportion_rain values near 0.25. It has a wide range, with proportion_rain values spanning from 0 to 0.7." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch13-prior-sim-1-1-bb32e2a9205b.png" width="480"/>
+<p class="caption">
+图 13.2：从先验模型中模拟了 100 个数据集。对于每个数据集，我们分别绘出了降雨概率与前一日湿度水平的关系（左图）以及观察到的降雨天数比例（右图）。
+</p>
 </div>
 </div>
 </div>
 <div class="section level2" id="ch13-post-sim-sec" number="13.3">
-<h2>模拟后台</h2>
-<p>经过前调图的辛勤工作 考虑一下我们的数据 视觉检查揭示了雨与湿的关系的一些规律. 首先,一个快速焦躁的地块表明,雨天比非雨天少得多。 在湿度较低的地区尤其如此。 第二,尽管我们没有足够的数据来了解每个可能的湿度水平的降雨概率,但我们可以检查湿度水平类似的天数的降雨概率。 为此,我们将湿度水平切成括号,然后计算每个括号内看到雨的天数比例。 一般来说,注意当湿度低于60%时,雨量似乎徘徊在10%左右,然后从那里增加。 这一观察与我们先验的理解相一致,即雨和湿度是正相关联的。 然而,尽管我们先验的理解留下了降雨概率可能接近100%的湿度水平(图13.2),但我们从数据中看到,最高湿度水平的降雨几率勉强打破50%。</p>
-<div class="sourceCode" id="cb259">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h2>模拟后验分布</h2>
+<p>在完成了先验调整的辛苦工作后，我们来考虑数据。
+通过可视化可以发现雨天与湿度之间关系的一些模式。
+首先，一个简单的抖动图显示雨天的出现频率远低于非雨天。
+在较低湿度水平下尤其如此。
+其次，尽管我们没有足够的数据来稳定地估计每个可能湿度值下的降雨概率，但我们<em>可以</em>考察在<em>相似</em>湿度水平下的降雨概率。
+为此，我们将湿度用 <code>cut()</code> 分成多个区间，然后计算每个区间内出现雨天的比例。
+总体来看，请注意当湿度低于 60% 时，降雨概率似乎在 10% 左右徘徊，之后开始升高。
+这一观察与我们先前认为雨量与湿度正相关的理解是一致的。
+然而，尽管先验知识保留了一种可能性，即当湿度达到最大值时降雨概率可能接近 100%（图 <a href="/bayes-rules-python-cn/chapter-13/#fig:ch13-prior-sim-1">13.2</a>），我们在数据中看到的是，即使在最高湿度水平下，降雨概率也勉强超过 50%。</p>
+<div class="sourceCode" id="cb259"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 下面给出与本节模型一致的 Python 写法。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 按湿度括号计算雨率( P)
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+theme(axis.text.x = element_text(angle = 45, vjust = 0.5))</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-551" style="display:block;"></span>
-<img alt="有两块地 左边的地块是一幅明日雨(是或否)在y轴上对x轴上的湿度9am的焦急地块. 湿度9am值从10到100不等. 明天的雨量=是类别中只有一小部分的分数. 其中大多数的湿度在50度以上。 大部分积分在明日雨量=无分类. 其中大多数的湿度在45-70之间。 右图是雨量(y-轴)对湿度(x-轴)的散射图. 降雨率在0.1到0.5之间. 湿度 裂缝有9类,从10%至20%的湿度水平开始,到90%至100%的湿度水平结束. 60%以下的湿度括号有0.1左右的降雨率. 然后,湿度括号中湿度高于60%的降雨率增加,最后,湿度在90%至100%之间的降雨率略高于0.5%。" loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-551-1-c17dbe1b1309.png" width="528"/>
-<p class="caption">图13.3: 降雨结果相对于湿度水平的焦急图案(左)。 以湿度括号(右)显示雨日比例的分布图。</p>
+<img alt="There are two plots. The left plot is a jitter plot of raintomorrow (yes or no) on the y-axis vs humidity9am on the x-axis. The humidity9am values range from 10 to 100. There's only a small proportion of points in the raintomorrow = yes category. Most of these have humidity9am levels above 50. There majority of points are in the raintomorrow = no category. Most of these have humidity9am levels between 45 and 70. The right plot is a scatterplot of rain_rate (y-axis) vs humidity_bracket (x-axis). The rain_rate ranges from 0.1 to 0.5. The humidity_bracket has 9 categories, starting with humidity levels between 10 and 20 percent and ending with humidity levels between 90 and 100 percent. The humidity brackets below 60 percent have a rain rate around 0.1. The rain rate then increases for humidity brackets above 60 percent, ending with a rain rate slightly above 0.5 for humidity levels between 90 and 100 percent." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-551-1-c17dbe1b1309.png" width="528"/>
+<p class="caption">
+图 13.3：降雨结果与湿度的抖动图（左）。按湿度区间划分的雨天比例的散点图（右）。
+</p>
 </div>
-<p>为了模拟我们后勤回归模型参数的后验模型 {0}和}{1}}(13.5),我们可以根据新的天气数据更新() rain model  preoror 模拟:\indexfun{update ()}</p>
-<div class="sourceCode" id="cb260">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>为了模拟逻辑回归模型参数 <span class="math inline">\(\beta_0\)</span> 和 <span class="math inline">\(\beta_1\)</span> 的后验分布 <a href="/bayes-rules-python-cn/chapter-13/#eq:log-model-ch13">(13.5)</a>，我们可以用新的 <code>weather</code> <a class="uri" href="data:\indexfun%7Bupdate">data:\indexfun{update</a>()} 数据来 <code>update()</code> <code>rain_model_prior</code> 的模拟。</p>
+<div class="sourceCode" id="cb260"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 模拟模型
-rain_model_1 = update(rain_model_prior, prior_PD = FALSE)</code></pre>
-</div>
-<p>而不是你忘记(!),但我们应该检查一下我们的模拟结果的稳定性,然后进行:</p>
-<div class="sourceCode" id="cb261">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+rain_model_1 = update(rain_model_prior, prior_PD = FALSE)</code></pre></div>
+<p>当然你不会忘记（！），但在继续之前，我们应该检查诊断图以确保模拟结果的稳定性：</p>
+<div class="sourceCode" id="cb261"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # MCMC 跟踪、 密度、 自动连接图
 mcmc_trace(rain_model_1)
 mcmc_dens_overlay(rain_model_1)
-mcmc_acf(rain_model_1)</code></pre>
-</div>
-<p>我们在图13.4中绘制了100个后期可信模型。 自然,在纳入天气数据后,这些模型的可变性远不如图13.2中的前一个模型 — — 也就是说,我们对雨量和湿度之间的关系更为确定。 我们现在明白, 降雨的概率会随着湿度而稳步增加, 然而直到湿度约95%时, 相比之下,当今天的上午9点湿度低于25 % 时,它不太可能在明天下雨。</p>
-<div class="sourceCode" id="cb262">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+mcmc_acf(rain_model_1)</code></pre></div>
+<p>我们在图 <a href="/bayes-rules-python-cn/chapter-13/#fig:ch13-posterior-sim-1">13.4</a> 中绘制了 100 个后验合理模型。自然地，在纳入 <code>weather</code> 数据后，这些模型比图 <a href="/bayes-rules-python-cn/chapter-13/#fig:ch13-prior-sim-1">13.2</a> 中的先验对应模型变化小得多——也就是说，我们对雨量与湿度之间的关系更加确定了。我们现在认识到，降雨概率随湿度稳步上升，但直到湿度大约达到 95% 时，我们才到达一个转折点，此时降雨的可能性变得比不降雨更大。相反，如果当天上午 9 点的湿度低于 25%，明天降雨的可能性就<em>非常</em>小。</p>
+<div class="sourceCode" id="cb262"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 下面给出与本节模型一致的 Python 写法。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+labs(y = "probability of rain")</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch13-posterior-sim-1" style="display:block;"></span>
-<img alt="这是雨(y-轴)对湿度9am(x-轴)的概率图. 概率介于0至0.6之间,湿度水平介于10%至100%之间. 有100个向上倾斜的非线性曲线. 这些都是相似的,每个都从0左右的雨概率开始,湿度9am等于10,湿度9am等于100时以0.5左右的雨概率结束." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch13-posterior-sim-1-1-d80bce051b3e.png" width="259.2"/>
-<p class="caption">图13.4:雨量相对于前一天湿度的概率的100个后期可信模型。</p>
+<img alt="This is a plot of probability of rain (y-axis) vs humidity9am (x-axsis). The probabilities range from 0 to 0.6 and the humidity levels range from 10 to 100 percent. There are 100 upward-sloping, non-linear curves. These are all similar, each starting with probabilities of rain near 0 when humidity9am equals 10 and ending with probabilities of rain near 0.5 when humidity9am equals 100." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch13-posterior-sim-1-1-d80bce051b3e.png" width="259.2"/>
+<p class="caption">
+图 13.4：100 个后验合理模型，展示降雨概率与前一日湿度水平的关系。
+</p>
 </div>
-<p>有关上午9点湿度与雨度之间的关系的更精确信息载于QQ0@@参数中,其大致的后验模型概括如下:</p>
-<div class="sourceCode" id="cb263">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>关于上午 9 点湿度和降雨之间更精确的关系包含在参数 <span class="math inline">\(\beta_1\)</span> 中，其近似后验模型总结如下：</p>
+<div class="sourceCode" id="cb263"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 对数(偶数)比额表的前述摘要
 posterior_interval(rain_model_1, prob = 0.80)
 10%      90%
@@ -306,74 +380,96 @@ humidity9am  0.04147  0.05487
 exp(posterior_interval(rain_model_1, prob = 0.80))
 10%     90%
 (Intercept) 0.006171 0.01601
-humidity9am 1.042339 1.05641</code></pre>
-</div>
-<p>在今天的上午9点湿度中,每增加一个百分点,就有80 % 的后期机会,即日志(降雨)在0.0415至0.0549之间增加。 这一增长率低于我国0.07的先验平均值。 ——雨的机会随着湿度的提高而显著增加,只是没有达到我们预期的程度. 更有意义的是,今天上午9点的湿度每增加一个百分点,降雨的几率就会增加4.2%至5.6%。 雨量的几率大约翻了一番:</p>
+humidity9am 1.042339 1.05641</code></pre></div>
+<p>今天上午 9 点湿度每增加一个百分点，<em>降雨优势的对数</em>增加 0.0415 至 0.0549 之间的某个值的后验概率为 80%。
+这个增长率<em>低于</em>我们对 <span class="math inline">\(\beta_1\)</span> 的 0.07 先验均值——降雨概率<em>确实</em>随湿度显著增加，只是没有我们预想的那么大。
+更有实际意义的解读是：今天上午 9 点湿度每增加一个百分点，降雨的<em>优势</em>增加大约 4.2% 至 5.6%：<span class="math inline">\((e^{0.0415}, e^{0.0549}) = (1.042, 1.056)\)</span>。
+等价地说，今天上午 9 点湿度每增加<em>十五个</em>百分点，降雨的优势约变为原来的<em>两倍</em>：<span class="math inline">\((e^{15*0.0415}, e^{15*0.0549}) = (1.86, 2.28)\)</span>。</p>
 </div>
 <div class="section level2" id="chapter-13-prediction" number="13.4">
-<h2>预测和分类</h2>
-<p>除了使用我们的巴耶斯逻辑回归模型来更好地了解今天的上午9点的湿度和明天的降雨之间的关系外,我们还想预测明天是否会下雨。 假设你今天在珀斯, 为了预测明天是否会下雨, 我们可以大致预测二进制结果的后期预测模型。</p>
-<p>\[\begin{equation} Y | \beta_0, \beta_1 \sim \text{Bern}(\pi) \;\; \text{ with } \;\; \log\left( \frac{\pi}{1-\pi}\right) = \beta_0 + \beta_1 * 99 . \tag{13.6} \end{equation}\]</p>
-<p>之后的预测( ) 函数会模拟两万个雨结果,</p>
-<div class="sourceCode" id="cb264">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h2> 预测与分类</h2>
+<p>除了利用贝叶斯 Logistic 回归模型深入理解今天上午 9 点湿度和明天下雨之间的关系，我们还想<em>预测</em>明天是否会下雨。
+例如，假设你<em>今天</em>在珀斯，上午 9 点经历了 99% 的湿度。
+真难受。
+为了预测明天是否下雨，我们可以近似 <span class="math inline">\(Y\)</span> 的后验预测模型，其中 <span class="math inline">\(Y\)</span> 是二值结果，表示是否下雨：</p>
+<p><span class="math display" id="eq:ch13-pred">\[\begin{equation}
+Y | \beta_0, \beta_1 \sim \text{Bern}(\pi) \;\; \text{ 其中 } \;\; \log\left( \frac{\pi}{1-\pi}\right) = \beta_0 + \beta_1 * 99  .
+\tag{13.6}
+\end{equation}\]</span></p>
+<p>为此，我们通过 <code>sample_posterior_predictive</code> 函数基于马尔可夫链中的 20000 组参数集模拟 20000 个降雨结果 <span class="math inline">\(Y\)</span>：</p>
+<div class="sourceCode" id="cb264"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 二进制结果的预测
 rng = np.random.default_rng(84735)
 binary_prediction = posterior_predict(
-rain_model_1, newdata = data.frame(humidity9am = 99))</code></pre>
-</div>
-<p>要真正与预测概念联系起来,我们也可以从零开始模拟后期预测模型. 从两万对后半部分中 每两万对后半部分 在我们的Markov 链模拟中,我们计算日志(雨的奇数)(13.6)。 然后我们转换日志,以获得降雨的概率和概率。 最后,我们用20 000个概率值中的每个值来模拟Bernoulli的降雨结果。</p>
-<div class="sourceCode" id="cb265">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+rain_model_1, newdata = data.frame(humidity9am = 99))</code></pre></div>
+<p>为了更真切地体会预测的概念，我们也可以从头模拟后验预测模型。
+从马尔可夫链模拟给出的 20000 对后验可行的 <span class="math inline">\(\beta_0\)</span>（截距项）和 <span class="math inline">\(\beta_1\)</span>（<code>humidity9am</code>）值出发，我们先按 <a href="/bayes-rules-python-cn/chapter-13/#eq:ch13-pred">(13.6)</a> 计算降雨优势的对数。
+接着将优势的对数转换为降雨的优势和概率。
+最后，对于这 20000 个概率值 <span class="math inline">\(\pi\)</span> 中的每一个，我们使用 <code>np.random.binomial</code> 并以 <code>size = 1</code> 模拟一个伯努利降雨结果，即 <span class="math inline">\(Y \sim \text{Bern}(\pi)\)</span>：</p>
+<div class="sourceCode" id="cb265"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 二进制结果的预测 - 从零开始
 rng = np.random.default_rng(84735)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>例如,我们的第一个对数(偶数)和概率值是通过插入 {0} 和{1} 到 {1} 到 {1} 到 {1} 到 {1} } 并转换到 {1} 到 &gt; 概率 尺度 :</p>
-<p>\[\begin{split} \log\left( \frac{\pi}{1-\pi}\right) &amp; = -4.244 + 0.0446 * 99 = 0.166 \\ \pi &amp; = \frac{e^{-4.244 + 0.0446 * 99}}{1 + e^{-4.244 + 0.0446 * 99}} = 0.54. \\ \end{split}\]</p>
-<p>随后,我们随机从伯尔尼(0.54)模型中绘制一个二进制QQ0QQ结果. 我们最终没有观测到雨量, 把所有2万个预测合并起来, 检查我们从下面两种方法中获得的雨后预测模型。 在湿度达99%的日子里,我们的巴耶斯逻辑回归模型表明,降雨( 2@@)的似然略高于非(\(Y = 0\)).</p>
-<div class="sourceCode" id="cb266">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+odds = exp(log_odds),
+prob = odds / (1 + odds),
+Y = rng.binomial(size = 1, prob = prob, size=20000))
+# 看看这个
+head(rain_model_1_df, 2)
+(Intercept) humidity9am log_odds   odds   prob Y
+1      -4.244     0.04455  0.16577 1.1803 0.5413 0
+2      -4.207     0.04210 -0.03934 0.9614 0.4902 1</code></pre></div>
+<p>例如，我们将 <span class="math inline">\(\beta_0 = -4.244\)</span> 和 <span class="math inline">\(\beta_1 = 0.0446\)</span> 代入 <a href="/bayes-rules-python-cn/chapter-13/#eq:ch13-pred">(13.6)</a> 并转换到概率尺度，得到第一组优势对数和概率值为：</p>
+<p><span class="math display">\[\begin{split}
+\log\left( \frac{\pi}{1-\pi}\right) &amp; = -4.244 + 0.0446 * 99 = 0.166 \\
+\pi &amp; = \frac{e^{-4.244 + 0.0446 * 99}}{1 + e^{-4.244 + 0.0446 * 99}} = 0.54 . \\
+\end{split}\]</span></p>
+<p>随后，我们从 Bern(0.54) 模型中随机抽取一个二分类的 <span class="math inline">\(Y\)</span> 结果。
+尽管此场景中降雨概率为 0.54，超过了 0.5，我们最终观测到的是没有下雨，<span class="math inline">\(Y = 0\)</span>。
+将全部 20,000 次预测综合起来，下面考察两种方法得到的降雨后验预测模型。
+在湿度为 99% 的日子里，我们的贝叶斯 Logistic 回归模型表明，下雨（<span class="math inline">\(Y = 1\)</span>）比不下雨（<span class="math inline">\(Y = 0\)</span>）的可能性略高。</p>
+<div class="sourceCode" id="cb266"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 mcmc_hist(binary_prediction) +
 labs(x = "Y")
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
+# 可用 pandas / PyMC 按同一数据流程表达。
+stat_count()</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:unnamed-chunk-561" style="display:block;"></span>
-<img alt="Y有两个条图 包含同样的信息。 在两者中,Y等于0的栏杆高度约为9000,Y等于1的栏杆高度约为11000." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-561-1-ec355d4fdb30.png" width="384"/>
-<p class="caption">FIGURE 13.5: 使用快捷函数(左)和从头(右)来预测雨量的预测模型。</p>
+<img alt="There are two bar plots of Y that contain the same information. In both, the bar for Y equals 0 has a height of roughly 9000 and the bar for Y equals 1 has a height of roughly 11000." loading="lazy" src="/assets/img/bayes-rules-python-cn/unnamed-chunk-561-1-ec355d4fdb30.png" width="384"/>
+<p class="caption">
+图 13.5：使用快捷函数（左）和从头构建（右）得到的降雨发生率后验预测模型。
+</p>
 </div>
-<p>如名称所示,分类分析的一个共同目标是,将我们对雨的预测概率( 0@@)或雨的预测结果(\(Y\))的观测结果转化为二进制,是或否的分类. 取以下试题,自行作此分类.</p>
+<p>顾名思义，<strong>分类</strong>分析的一个常见目标是将我们对降雨的预测概率（<span class="math inline">\(\pi\)</span>）或预测结果（<span class="math inline">\(Y\)</span>）转化为对 <span class="math inline">\(Y\)</span> 的是/否二分类。
+尝试回答下面的问题，亲自做出分类。</p>
 <div class="quiz">
-<p>如果今天早上9点是99%的湿度。 根据上面的后期预测模型,你会做出什么样的二进制分类? 会不会下雨? 我们明天是否应该带个伞?</p>
+<p>假设今天上午 9 点湿度为 99%。
+根据上面的后验预测模型，你会做出怎样的二分类判断？
+会下雨还是不下雨？
+明天我们该不该带伞？</p>
 </div>
-<p>分类问题有些主观性,因此对于这个问答有不止一个合理的答案. 一个合理的答案是: 是的,你应该带着伞。 10804(54.02%)呼吁降雨。 因此,由于在XQ1@@的后期预测模型中,降雨比不降雨的似然更大,所以将XQ2@@归类为"1"(雨)是合理的.</p>
-<div class="sourceCode" id="cb267">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>分类问题有些主观，因此这个问题可以有多个合理答案。
+<em>一个</em>合理的答案是：是的，你应该带伞。
+在我们对 <span class="math inline">\(Y\)</span> 的 20,000 次后验预测中，有 10804 次（占 54.02%）预测会下雨。
+因此，既然在后验预测模型中，下雨比不下雨更可能出现，将 <span class="math inline">\(Y\)</span> 归类为“1”（下雨）是合理的。</p>
+<div class="sourceCode" id="cb267"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -386,87 +482,87 @@ binary_prediction
 9196 10804
 colMeans(binary_prediction)
 1
-0.5402</code></pre>
-</div>
-<p>在进行这种分类时,我们使用了下列分类规则:</p>
+0.5402</code></pre></div>
+<p>在做出这个分类时，我们使用了以下<strong>分类规则</strong>：</p>
 <ul>
-<li>若超过一半的预测预测数,</li>
-<li>否则,将QQ0@@归类为0(无雨).</li>
+<li>如果超过半数的预测结果预测 <span class="math inline">\(Y=1\)</span>，则将 <span class="math inline">\(Y\)</span> 归类为 1（下雨）。</li>
+<li>否则，将 <span class="math inline">\(Y\)</span> 归类为 0（不下雨）。</li>
 </ul>
-<p>虽然这是自然的选择, 我们可以利用任何在0%到100%之间的截断。</p>
+<p>虽然50%的截断是一个自然的选择，但我们不必使用它。我们可以使用0%到100%之间的任何截断值。</p>
 <div class="describe">
-<p>分类规则</p>
-<p>让QQ0@@成为二进制响应变量, 1 或 0. 另外,让XQ1++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 然后,对于一些用户选择的分类截断QQ7@@,我们可以使用以下规则,将我们的后期预测变成XQ8@@的二进制分类:</p>
+<p><strong>分类规则</strong></p>
+<p>设 <span class="math inline">\(Y\)</span> 为二值响应变量，取值为1或0。
+进一步，令 <span class="math inline">\(\left(Y_{new}^{(1)}, Y_{new}^{(2)}, \ldots, Y_{new}^{(N)}\right)\)</span> 为 <span class="math inline">\(N\)</span> 个来自 <span class="math inline">\(N\)</span> 步马尔可夫链模拟的后验预测，并令 <span class="math inline">\(p\)</span> 表示这些预测中 <span class="math inline">\(Y_{new}^{(i)} = 1\)</span> 的比例。
+那么，对于用户选择的某个<strong>分类截断</strong> <span class="math inline">\(c \in [0,1]\)</span>，我们可以使用如下规则将后验预测转化为 <span class="math inline">\(Y\)</span> 的二分类：</p>
 <ul>
-<li>如果QQ0@@,那么将QQ1@@分类为1.</li>
-<li>如果QQ0@@,那么将QQ1@@分类为0.</li>
+<li>如果 <span class="math inline">\(p \ge c\)</span>，则将 <span class="math inline">\(Y\)</span> 分类为1。</li>
+<li>如果 <span class="math inline">\(p &lt; c\)</span>，则将 <span class="math inline">\(Y\)</span> 分类为0。</li>
 </ul>
 </div>
-<p>适当的分类截断 QQ0@@应反映我们的分析背景和错误分类的后果:低估QQ1@@或QQ2@@的发生是否更糟糕? 我们宁愿不必要地带着雨伞, 为了安全起见 我们可以把分类截断率降低到25% 如果25%的后期预测要求下雨, 反之,假设我们宁愿冒着被淋湿的风险, 在这种情况下,我们可以把分类截断率提高到75%。 如果至少75%的后期预测需要降雨, 虽然上下文可以指导选择分类截断 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ 我们将在下一节探讨这一进程。</p>
+<p>合适的分类截断 <span class="math inline">\(c\)</span> 应该反映分析的<em>背景</em>及误分类的后果：低估 <span class="math inline">\(Y=1\)</span> 的发生和低估 <span class="math inline">\(Y=0\)</span> 的发生，哪个更糟糕？
+例如，假设我们讨厌被淋湿——我们宁愿不必要地携带雨伞，也不愿错误地将它留在家里。
+为了稳妥起见，我们可以<em>降低</em>分类截断，比如设为25%。
+即，如果即使只有25%的后验预测预报有雨，我们也会把 <span class="math inline">\(Y\)</span> 分类为1，从而携带雨伞。
+相反，假设我们宁愿冒被淋湿的风险，也不愿白带雨伞。
+在这种情况下，我们可以<em>提高</em>分类截断，比如设为75%。
+因此，只有当至少75%的后验预测预报有雨时，我们才敢将 <span class="math inline">\(Y\)</span> 分类为1。
+虽然背景可以指导选择分类截断 <span class="math inline">\(c\)</span> 的过程，但检查相应的误分类率也能提供一些指导。
+我们将在下一节探索这个过程。</p>
 </div>
 <div class="section level2" id="model-evaluation-1" number="13.5">
-<h2>示范评价</h2>
-<p>与回归模型一样,评估分类模型的质量至关重要:</p>
+<h2>模型评估</h2>
+<p>就像回归模型一样，评估分类模型的质量至关重要：</p>
 <ol style="list-style-type: decimal">
-<li>模特儿有多公平?</li>
-<li>模特儿怎么错了?</li>
-<li>模型的后期分类有多准确?</li>
+<li>模型有多<em>公平</em>？</li>
+<li>模型有多<em>错误</em>？</li>
+<li>模型的后验<strong>分类</strong>有多<em>准确</em>？</li>
 </ol>
-<p>前二问有速答. 我们认为,这种天气分析对社会和个人的潜在影响是公平和无害的。 为了回答问题(2),我们可以进行后期预测检查,确认从我们的后期物流回归模型中模拟的数据具有与原始数据相似的特征,因此,我们贝叶斯物流回归模型(13.5)背后的假设是合理的. 由于我们模拟的数据结果是二进制的,我们必须对这个pp check()采取与正常和波森回归略为不同的方法。 从100个后模拟数据集中,我们记录的是结果%%%%================================================================================================================================================================================================================================================ 这些模拟降雨率的直方图证实它们确实与原始数据一致(图13.6)。 我们大部分的后期模拟数据集在大约18%的天上看到雨水,接近天气数据中观测到的降雨量,然而有些人却在不到12%的天上看到雨水,或者高达24%的天上看到雨水。</p>
-<div class="sourceCode" id="cb268">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>前两个问题有快捷的答案。我们认为这项天气分析是公平的，对社会和个人的潜在影响是无害的。要回答问题 (2)，我们可以执行后验预测检查，以确认由后验 Logistic 回归模型模拟的数据与 <em>原始</em> 数据具有相似的特征，从而验证贝叶斯 Logistic 回归模型 <a href="/bayes-rules-python-cn/chapter-13/#eq:log-model-ch13">(13.5)</a> 背后的假设是合理的。由于我们模拟的数据结果是二元的，我们需要采用与正态回归和泊松回归中使用的 <code>pp_check()</code> 稍有不同的方法。从 100 个后验模拟数据集中，我们使用 <code>proportion_rain()</code> 函数记录结果为 <span class="math inline">\(Y\)</span> = 1 的比例，即下雨的天数比例。这些模拟的下雨率直方图确认它们确实与原始数据一致（图 <a href="/bayes-rules-python-cn/chapter-13/#fig:ch13-log-pp">13.6</a>）。大多数后验模拟数据集大约有 18% 的天数下雨，与 <code>weather</code> 数据中观察到的下雨频率接近，但也有一些模拟数据集的下雨天数低至 12% 或高达 24%。</p>
+<div class="sourceCode" id="cb268"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 proportion_rain = function(x){np.mean(x == 1)}
 pp_check(rain_model_1, nreps = 100,
 plotfun = "stat", stat = "proportion_rain") +
-xlab("probability of rain")</code></pre>
-</div>
+xlab("probability of rain")</code></pre></div>
 <div class="figure" style="text-align: center"><span id="fig:ch13-log-pp" style="display:block;"></span>
-<img alt="降雨概率直方图. 直方图呈钟形,以18%的概率为中心,概率值从0.14到0.22左右。 有一条垂直线标出观测到的降雨比例约为0.18." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch13-log-pp-1-70c5a1d0001a.png" width="336"/>
-<p class="caption">图13.6:雨的后勤回归模型的后期预测检查. 直方图显示每100个后期模拟数据集中降雨天数的比例。 垂直线代表天气数据中观察到有雨天数的比例。</p>
+<img alt="A histogram of the probability of rain. The histogram is bell-shaped, centered around an 18 percent probability, and spans probability values from roughly 0.14 to 0.22. There is a vertical line marking the observed proportion of rain at roughly 0.18." loading="lazy" src="/assets/img/bayes-rules-python-cn/ch13-log-pp-1-70c5a1d0001a.png" width="336"/>
+<p class="caption">
+图 13.6: Logistic 回归模型对下雨的后验预测检查。直方图展示了 100 个后验模拟数据集中每个数据集的下雨天数比例。垂直线表示 weather 数据中观察到的实际下雨天数比例。
+</p>
 </div>
-<p>这让我们提出问题(3):我们的后分类有多准确? 在量化的回归设定中,我们通过检查XQ1+与其后期预测的典型差异来回答这个问题. 我们的二进制后分类是正确还是错误。 我们感兴趣的是, 我们将以两种方式处理这一问题:无论有无交叉确认。</p>
-<p>让我们从评估雨 模型 1的分类开始, 尽管在刺刀规则包中有一个快捷键功能,但必须先拉下窗帘,再亲手尝试。 开始, 构建气象数据集1000天的后预测模型:</p>
-<div class="sourceCode" id="cb269">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>这引出了问题 (3)，我们的后验分类有多准确？在定量响应变量 <span class="math inline">\(Y\)</span> 的回归设定中，我们通过检查 <span class="math inline">\(Y\)</span> 与其后验预测之间的典型差异来回答这个问题。然而，在分类问题中，响应变量 <span class="math inline">\(Y\)</span> 是分类变量，我们对 <span class="math inline">\(Y\)</span> 的二值后验分类要么 <em>正确</em>，要么 <em>错误</em>。我们关心的是分类 <em>正确</em> 的频率。我们将通过两种方式回答这个问题：使用交叉验证和不使用交叉验证。</p>
+<p>首先，我们来评估 <code>rain_model_1</code> 对构建该模型所使用的同一 <code>weather</code> 数据集的分类效果。虽然配套数据资源中提供了快捷函数，但先自己动手实践也很有意义。首先，为 <code>weather</code> 数据集中的 1000 天分别构建 <span class="math inline">\(Y\)</span> 的后验预测模型：</p>
+<div class="sourceCode" id="cb269"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 数据集中每天的预测模型
 rng = np.random.default_rng(84735)
 rain_pred_1 = posterior_predict(rain_model_1, newdata = weather)
 dim(rain_pred_1)
-[1] 20000  1000</code></pre>
-</div>
-<p>1000列雨 pred 1中的每列都包含20,000个1-0的预测,预测天气数据中是否将在相应日降雨. 正如我们在第13.4节中所看到的那样,每列表示这些预测中1的比重,因此1000列意味着在我们的数据中估计相应的1000天的降雨概率。 然后,我们将这些比例转化为雨的二进制分类,将其与选定的分类截断相比较。 如果雨量超过0.</p>
-<div class="sourceCode" id="cb270">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+[1] 20000  1000</code></pre></div>
+<p><code>rain_pred_1</code> 中的 1000 <em>列</em> 每一列包含 20,000 个 0 或 1 的预测值，表示对应 <code>weather</code> 数据集中的那一天是否会下雨。正如我们在第 <a href="/bayes-rules-python-cn/chapter-13/#chapter-13-prediction">13.4</a> 节看到的，每列的 <em>均值</em> 表示这些预测中为 1 的比例，因此这 1000 列的均值对应了数据中 1000 天的下雨概率估计。然后，我们可以将这些概率通过与选定的分类阈值比较，转换为二分类结果。我们首先使用阈值 0.5：如果下雨概率超过 0.5，就预测下雨。</p>
+<div class="sourceCode" id="cb270"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>我们样本头三天的结果如下。 根据其上午9点的湿度水平,在2万份预测中,只有12%在第一天呼吁降雨(雨 prob \(=\)0.122). 同样,第二和第三天的模拟降雨概率也远远低于我们50%的截断量。 因此,我们预测头三个采样日“无雨”(如雨 级 1所示)。 前两天,这些分类是正确的 — — 明天不会下雨。 第三天,这种分类是不正确的,它确实在明天下雨。</p>
-<div class="sourceCode" id="cb271">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+# 下面给出与本节模型一致的 Python 写法。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+select(humidity9am, rain_prob, rain_class_1, raintomorrow)</code></pre></div>
+<p>前三个样本天的结果如下所示。基于其上午 9 点的湿度水平，在 20,000 次预测中，第一天只有 12% 预测会下雨（<code>rain_prob</code> <span class="math inline">\(=\)</span> 0.122）。类似地，第二天和第三天的模拟下雨概率也远低于 50% 的阈值。因此，我们预测前三个样本天“不下雨”（如 <code>rain_class_1</code> 所示）。对于前两天的天气，这些分类是正确的——它们没有出现 <code>raintomorrow</code>。对于第三天，该分类是 <em>错误</em> 的——它确实出现了 <code>raintomorrow</code>。</p>
+<div class="sourceCode" id="cb271"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -478,26 +574,25 @@ humidity9am rain_prob rain_class_1 raintomorrow
 &lt;int&gt;     &lt;dbl&gt;        &lt;dbl&gt; &lt;fct&gt;
 1          55    0.122             0 No
 2          43    0.0739            0 No
-3          62    0.163             0 Yes</code></pre>
-</div>
-<p>最后,为了估计我们模型的总体后期准确性,我们可以将模型分类(rain class 1)与我们1000个样本日中每个样本日的观测结果(明天雨)进行比较. 下表或“集合矩阵”概括了这一信息:</p>
-<div class="sourceCode" id="cb272">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+3          62    0.163             0 Yes</code></pre></div>
+<p>最后，为了估计模型的整体后验准确率，我们将模型分类（<code>rain_class_1</code>）与观察到的结果（<code>raintomorrow</code>）在 1000 个样本天中进行比较。以下表格或<strong>“混淆矩阵”</strong>总结了这一信息：</p>
+<div class="sourceCode" id="cb272"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 # 迷惑矩阵
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>通知:我国分类规则与我国贝叶斯模型一并正确分类了1000个总试验病例中的817个(803 \(+\)14). 因此,总体分类精度为81.7%(817/1000). 从面值来看,这看起来不错! 但仔细看 我们的模型更能预测何时不会下雨, 在没有下雨的814天中,我们正确划分了803天,即98.65%。 这一数字被称为我们贝叶斯模型的真正负率或特异性. 与此形成鲜明对比的是,在下雨的186天中,我们正确的分类只有14天,即7.53%. 这个数字被称为我们贝叶斯模型的真正正率或灵敏度. 我们可以使用快捷分类 摘要()功能在海湾规则中确认这些数字:</p>
-<div class="sourceCode" id="cb273">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+# 可用 pandas / PyMC 按同一数据流程表达。
+# 可用 pandas / PyMC 按同一数据流程表达。
+adorn_totals(c("row", "col"))
+raintomorrow   0  1 Total
+No 803 11   814
+Yes 172 14   186
+Total 975 25  1000</code></pre></div>
+<p>请注意，我们的分类规则结合贝叶斯模型，正确分类了 1000 个测试案例中的 817 个（803 <span class="math inline">\(+\)</span> 14）。因此，<strong>总体分类准确率</strong>是 81.7%（817 / 1000）。表面上看，这似乎相当好！但仔细看，我们的模型预测<em>不会</em>下雨的能力远优于预测会下雨的能力。在 814 天没有下雨的日子中，我们正确分类了 803 天，正确率为 98.65%。这个指标被称为贝叶斯模型的<strong>真阴性率</strong>或<strong>特异度</strong>。相反，在 186 天<em>确实</em>下雨的日子中，我们只正确分类了 14 天，正确率仅为 7.53%。这个指标被称为贝叶斯模型的<strong>真阳性率</strong>或<strong>灵敏度</strong>。我们可以使用快捷函数 <code>classification_summary()</code> 确认这些指标：</p>
+<div class="sourceCode" id="cb273"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -512,41 +607,42 @@ Yes 172 14
 $accuracy_rates
 sensitivity      0.07527
 specificity      0.98649
-overall_accuracy 0.81700</code></pre>
-</div>
+overall_accuracy 0.81700</code></pre></div>
 <div class="describe">
-<p>敏感性、具体性和总体准确性</p>
-<p>让 0@@成为\(n\)数据点上的一组二进制响应值,\(\hat{Y}\)代表对应的\(Y\)的后分类. 与实际观察相比,</p>
+<p><strong>灵敏度、特异度和总体准确率</strong></p>
+<p>设 <span class="math inline">\(Y\)</span> 为 <span class="math inline">\(n\)</span> 个数据点上的二值响应值集合，<span class="math inline">\(\hat{Y}\)</span> 表示对应的后验分类。混淆矩阵总结了这些分类相对于实际观测的结果，其中 <span class="math inline">\(a + b + c + d = n\)</span>：</p>
 <table>
 <thead>
 <tr class="header">
 <th></th>
-<th align="center">\(\hat{Y} = 0\)</th>
-<th align="center">\(\hat{Y} = 1\)</th>
+<th align="center"><span class="math inline">\(\hat{Y} = 0\)</span></th>
+<th align="center"><span class="math inline">\(\hat{Y} = 1\)</span></th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td>\(Y = 0\)</td>
-<td align="center">\(a\)</td>
-<td align="center">\(b\)</td>
+<td><span class="math inline">\(Y = 0\)</span></td>
+<td align="center"><span class="math inline">\(a\)</span></td>
+<td align="center"><span class="math inline">\(b\)</span></td>
 </tr>
 <tr class="even">
-<td>\(Y = 1\)</td>
-<td align="center">\(c\)</td>
-<td align="center">\(d\)</td>
+<td><span class="math inline">\(Y = 1\)</span></td>
+<td align="center"><span class="math inline">\(c\)</span></td>
+<td align="center"><span class="math inline">\(d\)</span></td>
 </tr>
 </tbody>
 </table>
-<p>该模型的总体准确性捕捉到所有QQ0QQ观察中准确分类的比例:</p>
-<p>\[\text{overall accuracy} = \frac{a + d}{a + b + c + d}.\]</p>
-<p>此外,模型的灵敏度(真实正率)能捕捉到QQ0@@的比例. 准确分类和具体化的观测(真实负率) 准确分类的QQ1QQ观测比例:</p>
-<p>\[\text{sensitivity} = \frac{d}{c + d} \;\;\;\; \text{ and } \;\;\;\; \text{specificity} = \frac{a}{a + b}.\]</p>
+<p>模型的 <strong>整体准确率</strong> 衡量了所有 <span class="math inline">\(Y\)</span> 观测中被正确分类的比例：</p>
+<p><span class="math display">\[\text{整体准确率} = \frac{a + d}{a + b + c + d}.\]</span></p>
+<p>此外，模型的 <strong>灵敏度</strong>（真阳性率）衡量了 <span class="math inline">\(Y = 1\)</span> 观测中被正确分类的比例，而 <strong>特异度</strong>（真阴性率）衡量了 <span class="math inline">\(Y = 0\)</span> 观测中被正确分类的比例：</p>
+<p><span class="math display">\[\text{灵敏度} = \frac{d}{c + d} \;\;\;\; \text{ 且 } \;\;\;\; \text{特异度} = \frac{a}{a + b}.\]</span></p>
 </div>
-<p>现在,如果你掉进一群不爱穿湿衣服整天走动的 合理人群里, 我们的模型对预测雨量的坏处是可怕的消息。 但我们可以做得更好。 从第13.4节回顾,我们可以调整分类截断,以更好地适应我们的分析目标。 就我们而言,我们可以通过把截断从0.5减少到0.2来提高我们的模型的敏感性。 如果有20%的下雨机会,</p>
-<div class="sourceCode" id="cb274">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>现在，如果你属于那种不喜欢整天穿着湿衣服四处走动的理性人群，那么我们的模型在预测降雨方面如此糟糕的事实就是可怕的坏消息。
+但是，我们可以做得更好。
+回想一下第 <a href="/bayes-rules-python-cn/chapter-13/#chapter-13-prediction">13.4</a> 节，我们可以调整分类阈值以更好地满足分析目标。
+在我们的例子中，可以通过 <em>降低</em> 阈值（比如从 0.5 降到 0.2）来提高模型的灵敏度。
+也就是说，即使降雨的可能性只有 20%，我们也将其归类为降雨：</p>
+<div class="sourceCode" id="cb274"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -561,13 +657,15 @@ Yes  67 119
 $accuracy_rates
 sensitivity      0.6398
 specificity      0.7125
-overall_accuracy 0.6990</code></pre>
-</div>
-<p>成功! 成功吗? 通过方便分类雨水,灵敏度从7.53%跃升至63.98%(186年的119人). 我们用湿衣服走来走去的似然要小得多。 然而,这种改善并非没有后果。 在降低停产量时, 因此,真实的负率从98.65%下降到71.25%(814年的580人),我们将更经常地带着伞。</p>
-<p>最后,为了对抗上述模型评估因使用相同数据进行训练和测试rain model 1而存在偏颇的似然,我们可以用交叉验证的分类准确性估计来补充这些措施. 这些都与我们上面的衡量方法非常相似,这表明模型并不与我们的样本数据过于吻合,这在预测新天的降雨时也是一样:62</p>
-<div class="sourceCode" id="cb275">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+overall_accuracy 0.6990</code></pre></div>
+<p>成功了！
+由于降低了降雨分类的门槛，灵敏度从 7.53% 跃升至 63.98%（186 例中有 119 例）。
+我们穿着湿衣服走来走去的可能性大大降低了。
+但这一改进并非没有代价。
+在降低阈值的同时，我们更难预测 <em>不会</em> 下雨的情况。
+因此，真阴性率从 98.65% 下降至 71.25%（814 例中有 580 例），我们会比实际需要更频繁地随身携带雨伞。</p>
+<p>最后，为了防范上述模型评估因使用相同数据训练和测试 <code>rain_model_1</code> 而产生偏差，我们可以用分类准确率的交叉验证估计来补充这些度量。 这些结果与上面的度量如此相似，表明模型<em>没有</em>过拟合于样本数据——它在预测<em>新</em>一天的降雨方面同样出色：<a class="footnote-ref" href="#fn62" id="fnref62"><sup>62</sup></a></p>
+<div class="sourceCode" id="cb275"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -578,35 +676,37 @@ cv_accuracy_1 = classification_summary_cv(
 model = rain_model_1, data = weather, cutoff = 0.2, k = 10)
 cv_accuracy_1$cv
 sensitivity specificity overall_accuracy
-1      0.6534      0.7185            0.705</code></pre>
-</div>
+1      0.6534      0.7185            0.705</code></pre></div>
 <div class="describe">
-<p>敏感性和特殊性方面的权衡</p>
-<p>作为分析家,我们必须利用上下文来确定适当的分类规则,并设定相应的截止日期。 在这样做时,需要考虑一些取舍:</p>
+<p><strong>灵敏度和特异度的权衡</strong></p>
+<p>作为分析师，我们必须利用具体情境来确定一个合适的分类规则以及相应的阈值 <span class="math inline">\(c\)</span>。 在此过程中，需要考虑一些权衡：</p>
 <ul>
-<li>随着我们的降低, 灵敏度增加, 但特异性降低。</li>
-<li>特异性增加,但灵敏度降低。</li>
+<li>降低 <span class="math inline">\(c\)</span> 时，灵敏度增加，但特异度降低。</li>
+<li>提高 <span class="math inline">\(c\)</span> 时，特异度增加，但灵敏度降低。</li>
 </ul>
 </div>
-<p>结束这一节,值得吗? 也就是说,更好地将雨水分类的好处是否超过错误地将无雨归类为雨水的后果? 我们不知道。 这是一个主观的问题。 作为一个分析师,你可以继续调整分类规则,直到相应的正确分类率最符合你的目标.</p>
+<p>在本节结束时，这样做值得吗？ 也就是说，更好地分类降雨的好处是否超过了将无雨错误分类为有雨的后果？ 我们不知道。 这是一个主观问题。 作为分析师，你可以不断调整分类规则，直到相应的正确分类率最符合你的目标。</p>
 </div>
 <div class="section level2" id="extending-the-model" number="13.6">
-<h2>扩展模型</h2>
-<p>与Normal和Poisson回归模型一样,物流回归模型可以增长到容纳一个以上的预测器. 从本章的导言中回顾, 上午9时的湿度水平, 以及今天是否降雨( 2@@), 我们可以把这些预测器 输入我们的后勤回归模型:</p>
-<p>\[\log\left(\frac{\pi_i}{1-\pi_i}\right) = \beta_0 + \beta_1 X_{i1} + \beta_2 X_{i2} + \beta_3 X_{i3} .\]</p>
-<p>我们原先的理解是,雨的机会随着这个模型中的每个预测者而增加。 但我们对一个预测器在控制另一个预测器时如何与雨有关,没有多少事先确定性 — — 我们不是气象学家。 例如,如果我们知道今天的3pm湿度水平,那么今天的9m湿度很可能不会增加明天是否会下雨的任何额外信息(即~~~~). 我们将会保留原有的QQ1,</p>
-<p>\[\begin{split} Y_i | \beta_0, \beta_1, \beta_2, \beta_3 &amp; \sim Bern(\pi_i) \;\; \text{ with } \;\; \log\left(\frac{\pi_i}{1-\pi_i}\right) = \beta_0 + \beta_1 X_{i1} + \beta_2 X_{i2} + \beta_3 X_{i3} \\ \beta_{0c} &amp; \sim N(-1.4, 0.7^2) \\ \beta_1 &amp; \sim N(0, 0.14^2) \\ \beta_2 &amp; \sim N(0, 0.15^2) \\ \beta_3 &amp; \sim N(0, 6.45^2). \\ \end{split}\]</p>
-<p>我们鼓励你们在此暂停进行先验的模拟(例如,先验的模拟降雨率是否与我们先验对珀斯雨量的理解相符?)。 湿度9am系数(\(\beta_1\)),湿度3pm系数(\(\beta_2\)),</p>
-<div class="sourceCode" id="cb276">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<h2> 扩展模型</h2>
+<p>与正态回归和泊松回归模型一样，Logistic 回归模型也能扩展以容纳多个预测变量。 回想本章引言部分，上午9点的湿度水平 <span class="math inline">\(X_{1}\)</span> 并不是我们今天可以进行的、有助于预测明天是否会下雨的唯一相关气象观测。 我们还可以考虑今天下午3点的湿度 (<span class="math inline">\(X_2\)</span>) 以及今天是否下雨 (<span class="math inline">\(X_3\)</span>)，这是一个具有“否”和“是”两个水平的类别预测变量。 我们可以将这些预测变量直接放入我们的 Logistic 回归模型中：</p>
+<p><span class="math display">\[\log\left(\frac{\pi_i}{1-\pi_i}\right) = \beta_0 + \beta_1 X_{i1} + \beta_2 X_{i2} +  \beta_3  X_{i3} .\]</span></p>
+<p>我们最初的先验理解是，在这个模型中，下雨的概率随着每个单独的预测变量而增加。 然而，对于在控制其他预测变量后某个预测变量与降雨的关系，我们的先验确定性较弱——我们毕竟不是气象学家。 例如，如果我们知道了今天下午3点的湿度水平，那么今天上午9点的湿度很有可能不会为预测明天是否下雨提供任何额外信息（即 <span class="math inline">\(\beta_1 = 0\)</span>）。 因此，我们将为中心化截距 <span class="math inline">\(\beta_{0c}\)</span> 保留原来的 <span class="math inline">\(N(-1.4, 0.7^2)\)</span> 先验，但对 (<span class="math inline">\(\beta_1,\beta_2,\beta_3)\)</span> 使用弱信息先验：</p>
+<p><span class="math display">\[\begin{split}
+Y_i | \beta_0, \beta_1, \beta_2, \beta_3 &amp; \sim Bern(\pi_i) \;\; \text{ with } \;\; \log\left(\frac{\pi_i}{1-\pi_i}\right) = \beta_0 + \beta_1 X_{i1} + \beta_2 X_{i2} +  \beta_3  X_{i3} \\
+\beta_{0c} &amp; \sim N(-1.4, 0.7^2) \\
+\beta_1 &amp; \sim N(0, 0.14^2) \\
+\beta_2 &amp; \sim N(0, 0.15^2) \\
+\beta_3 &amp; \sim N(0, 6.45^2). \\
+\end{split}\]</span></p>
+<p>我们鼓励你在这里暂停，进行先验模拟（例如，降雨率的先验模拟是否符合我们对珀斯降雨的先验理解？）。接下来，我们将模拟相应的后验分布，包括<code>humidity9am</code>系数（<span class="math inline">\(\beta_1\)</span>）、<code>humidity3pm</code>系数（<span class="math inline">\(\beta_2\)</span>）和<code>raintodayYes</code>系数（<span class="math inline">\(\beta_3\)</span>），并确认我们的先验设定：</p>
+<div class="sourceCode" id="cb276"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
 import arviz as az
 
-# 该段原 R 代码依赖 tidyverse / rstanarm 的管道或建模语法。
-# 下面给出 Python 转写骨架；请按原文中的数据列名补齐。
+# 下面给出与本节模型一致的 Python 写法。
 with pm.Model() as model:
     # beta_0 = pm.Normal('beta_0', mu=0, sigma=10)
     # beta_1 = pm.Normal('beta_1', mu=0, sigma=10)
@@ -615,12 +715,16 @@ with pm.Model() as model:
     # y_obs = pm.Normal('y_obs', mu=mu, sigma=sigma, observed=y)
     idata = pm.sample(draws=4000, tune=1000, chains=4, target_accept=0.9)
 az.summary(idata)
-# TODO: 按原教程的数据处理意图补写对应的 pandas / PyMC 语句。</code></pre>
-</div>
-<p>后序摘要如下。 首先,请注意,湿度和雨量的可信间隔值为80%。 这表明,当控制模型中的其他预测器时,明天雨的机会随着今天下午3时的湿度水平和如果今天下雨而增加。 近距离观察,雨天系数的后中位数是1. 15,相当于 QQ2。 因此,当控制今天的上下午湿度时,我们预计,如果今天下雨,明天的降雨几率将超过三倍。</p>
-<div class="sourceCode" id="cb277">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+# 可用 pandas / PyMC 按同一数据流程表达。
+raintomorrow ~ humidity9am + humidity3pm + raintoday,
+data = weather, family = binomial,
+prior_intercept = normal(-1.4, 0.7),
+prior = normal(0, 2.5, autoscale = TRUE),
+chains = 4, iter = 5000*2, seed = 84735)
+# 获得先验的型号规格
+prior_summary(rain_model_2)</code></pre></div>
+<p>下方的<code>tidy()</code>摘要展示了后验分布。首先，注意<code>humidity</code>和<code>raintodayYes</code>系数（<span class="math inline">\(\beta_2\)</span>和<span class="math inline">\(\beta_3\)</span>）的80%可信区间都舒适地<em>高于</em>0。这表明，在控制模型中其他预测变量后，明日降雨的概率随着今日下午3点湿度水平的增加而增加，且若今日下雨，明日降雨的概率也增加。进一步观察，<code>raintodayYes</code>系数的后验中位数为1.15，等价于<span class="math inline">\(e^{1.15} = 3.17\)</span>。因此，在控制今日早晨和下午湿度水平后，我们预期，若今日下雨，明日降雨的优势将超过<em>三倍</em>。</p>
+<div class="sourceCode" id="cb277"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -634,13 +738,10 @@ term         estimate std.error conf.low conf.high
 1 (Intercept)  -5.46      0.483    -6.08    -4.85
 2 humidity9am  -0.00693   0.00737  -0.0163   0.00251
 3 humidity3pm   0.0796    0.00846   0.0689   0.0906
-4 raintodayYes  1.15      0.220     0.874    1.44</code></pre>
-</div>
-<p>与此相对照的是,注意到 0@@(湿度9am)的后掠0,后掠80%的可信间隔从−0.0163到0.0025. 首先, 这并不意味着湿度9am不是预测明天雨量的重要因素。 我们在雨中看到它。 湿度9am在控制下午湿度时, 换句话说, 如果我们已经知道今天的湿度3pm和雨量状况, 这种对湿度9am的理解从雨 模型 1到雨 模型 2的转变可能不是什么惊喜 — 湿度9am与湿度3pm和雨天密切相关,因此它所拥有的关于雨明天的信息在雨 模型 2中有些多余.</p>
-<p>最后,哪一个是明天雨,雨 模 1还是雨 模 2的更好模型? 使用0.2的分类截断法,将雨 模型 2的分类精度的交叉验证估计与雨 模型 1的分类精度比较:</p>
-<div class="sourceCode" id="cb278">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+4 raintodayYes  1.15      0.220     0.874    1.44</code></pre></div>
+<p>相比之下，注意<span class="math inline">\(\beta_1\)</span>（<code>humidity9am</code>）的后验分布在0附近跨越，其80%后验可信区间从-0.0163到0.0025。我们先从这一观察<em>不</em>意味着什么说起。它并<em>不</em>意味着<code>humidity9am</code>不是明日降雨的一个显著预测变量。我们在<code>rain_model_1</code>中已经看到它<em>是</em>显著的。更确切地说，<code>humidity9am</code>在<em>控制下午湿度和今日是否下雨的情况下</em>，不是明日降雨的一个显著预测变量。换句话说，如果我们已经知道今日的<code>humidity3pm</code>和降雨状态，那么知道<code>humidity9am</code>并不会显著改善我们对明日是否下雨的理解。这一从<code>rain_model_1</code>到<code>rain_model_2</code>对<code>humidity9am</code>理解的转变可能并不令人惊讶——<code>humidity9am</code>与<code>humidity3pm</code>和<code>raintoday</code>强烈相关，因此它所包含的关于<code>raintomorrow</code>的信息在<code>rain_model_2</code>中有些冗余。</p>
+<p>最后，<code>rain_model_1</code>和<code>rain_model_2</code>哪个是关于明日降雨的更好模型？使用0.2的分类截断，我们来比较<code>rain_model_2</code>和<code>rain_model_1</code>的交叉验证分类准确率估计：</p>
+<div class="sourceCode" id="cb278"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -655,15 +756,12 @@ sensitivity specificity overall_accuracy
 1      0.6534      0.7185            0.705
 cv_accuracy_2$cv
 sensitivity specificity overall_accuracy
-1      0.7522      0.8139            0.802</code></pre>
-</div>
+1      0.7522      0.8139            0.802</code></pre></div>
 <div class="quiz">
-<p>哪个雨 1和雨 2能产生最准确的明日雨后分类? 你喜欢哪种型号?</p>
+<p><code>rain_model_1</code>和<code>rain_model_2</code>哪个产生了关于明日降雨的最准确后验分类？你更偏好哪个模型？</p>
 </div>
-<p>本次测验的答案是雨 型号 2. 对灵敏度,特异性,整体精度的交叉验证估计从雨 模型 1到雨 模型 2,跳跃了大约10个百分点. 因此,雨 型号 2优于雨 型号 1,既可以预测明天何时下雨,也可以预测明天何时不下雨。 如果你想要更多的证据,请从第十章中回顾一下,预期的日志预测密度(ELPD)通过对日志后预测pdfs的检查来测量新数据点与后预测模型的总体兼容性 — — ELPD越高越好.</p>
-<div class="sourceCode" id="cb279">
-<div class="python-note"><strong>Python 转写</strong><p>(原始内容存档于2018-09-25). R 代码已改写为 Python ***, 优先使用 NumPy-pandas, SciPy, PyMC, ArviZ 与 sikit-learn.</p></div>
-<pre><code class="language-python">import numpy as np
+<p>这个问题的答案是<code>rain_model_2</code>。交叉验证估计的灵敏度、特异度和总体准确率从<code>rain_model_1</code>到<code>rain_model_2</code>跃升了大约10个百分点。因此，<code>rain_model_2</code>在预测明日将降雨或不降雨方面<em>均</em>优于<code>rain_model_1</code>。如果你需要更多证据，回想第<a href="/bayes-rules-python-cn/chapter-10/#chapter-10">10</a>章中的<strong>期望对数预测密度（ELPD）</strong>，它通过检查对数后验预测概率密度函数来衡量新数据点与其后验预测模型的整体兼容性——ELPD越高越好。</p>
+<div class="sourceCode" id="cb279"><pre><code class="language-python">import numpy as np
 import pandas as pd
 from scipy import stats
 import pymc as pm
@@ -676,256 +774,267 @@ loo_2 = loo(rain_model_2)
 loo_compare(loo_1, loo_2)
 elpd_diff se_diff
 rain_model_2   0.0       0.0
-rain_model_1 -80.2      13.5</code></pre>
-</div>
-<p>这里,雨 型号 1的估计ELPD在下面有两个以上的标准错误,因此比雨 型号 2更糟糕:( 0@@). 因此,ELPD提供了更多有利于rain model 2的证据.</p>
+rain_model_1 -80.2      13.5</code></pre></div>
+<p>此处，<code>rain_model_1</code>的估计ELPD比<code>rain_model_2</code>的ELPD低两个标准误以上，因此<em>更差</em>：（<span class="math inline">\(-80.2 \pm 2*13.5\)</span>）。因此，ELPD提供了更多支持<code>rain_model_2</code>的证据。</p>
 </div>
 <div class="section level2" id="chapter-summary-12" number="13.7">
-<h2>章节摘要</h2>
-<p>让响应变量QQ0QQ成为二进制绝对变量。 因此,模拟QQ1@@与一组预测器QQ2@@之间的关系需要分类模型方法. 为此,我们认为后勤回归模式:</p>
-<p>\[\begin{equation} \begin{array}{lcrl} \text{data:} &amp; \hspace{.01in} &amp; Y_i|\beta_0,\beta_1,\ldots,\beta_p &amp; \stackrel{ind}{\sim} \text{Bern}(\pi_i) \;\; \text{ with } \;\; \log\left(\frac{\pi_i}{1 - \pi_i}\right) = \beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip} \\ \text{priors:} &amp; &amp; \beta_{0c} &amp; \sim N(m_0, s_0^2) \\ &amp; &amp; \beta_{1} &amp; \sim N(m_1, s_1^2) \\ &amp;&amp; \vdots &amp; \\ &amp; &amp; \beta_{p} &amp; \sim N(m_p, s_p^2) \\ \end{array} \tag{13.7} \end{equation}\]</p>
-<p>我们可以将模型从对数(奇数)尺度转换成更有意义的概率和概率尺度:</p>
-<p>\[\frac{\pi_i}{1-\pi_i} = e^{\beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip}} \;\;\;\; \text{ and } \;\;\;\; \pi_i = \frac{e^{\beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip}}}{1 + e^{\beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip}}} .\]</p>
-<p>提供对QQ0QQ结果之间关系的见解 我们也可以利用这个逻辑回归模型, 在评估分类质量时,我们必须考虑整体准确性以及敏感性和特异性,即我们的模型在XQ3@@和XQ4@@分别预测何时的能力。</p>
+<h2> 本章摘要</h2>
+<p>令响应变量 <span class="math inline">\(Y \in \{0,1\}\)</span> 为一个<strong>二分类型变量</strong>。
+因此，对 <span class="math inline">\(Y\)</span> 与一组预测变量 <span class="math inline">\((X_1,X_2,\ldots,X_p)\)</span> 之间的关系建模需要一种<em>分类建模方法</em>。
+为此，我们考虑了<strong>logistic 回归模型</strong>:</p>
+<p><span class="math display" id="eq:gen-log-model-ch13">\[\begin{equation}
+\begin{array}{lcrl}
+\text{数据：} &amp; \hspace{.01in} &amp; Y_i|\beta_0,\beta_1,\ldots,\beta_p &amp; \stackrel{ind}{\sim} \text{伯努利}(\pi_i) \;\; \text{ 其中 } \;\; \log\left(\frac{\pi_i}{1 - \pi_i}\right) = \beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip} \\
+\text{先验：} &amp; &amp; \beta_{0c} &amp; \sim N(m_0, s_0^2) \\
+&amp; &amp; \beta_{1} &amp; \sim N(m_1, s_1^2) \\
+&amp;&amp; \vdots &amp; \\
+&amp; &amp; \beta_{p} &amp; \sim N(m_p, s_p^2) \\
+\end{array}
+\tag{13.7}
+\end{equation}\]</span></p>
+<p>然后我们可以将模型从对数优势（log(odds)）尺度转换到更有意义的优势尺度和概率尺度:</p>
+<p><span class="math display">\[\frac{\pi_i}{1-\pi_i} = e^{\beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip}}
+\;\;\;\; \text{ and } \;\;\;\;
+\pi_i = \frac{e^{\beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip}}}{1 + e^{\beta_0 + \beta_1 X_{i1} + \cdots + \beta_p X_{ip}}} .\]</span></p>
+<p>除了揭示 <span class="math inline">\(Y\)</span> 的结果与预测变量 <span class="math inline">\(X\)</span> 之间的关系，我们也可以利用此 logistic 回归模型生成 <span class="math inline">\(Y\)</span> 的后验分类。
+在评估分类<em>质量</em>时，我们必须同时考虑整体准确率以及<strong>灵敏度</strong>和<strong>特异度</strong>，即模型分别预测 <span class="math inline">\(Y = 1\)</span> 和 <span class="math inline">\(Y = 0\)</span> 的能力。</p>
 </div>
 <div class="section level2" id="exercises-12" number="13.8">
 <h2>练习</h2>
 <div class="section level3" id="conceptual-exercises-7" number="13.8.1">
 <h3>概念练习</h3>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-580"><strong>Exercise 13.1  (Normal vs logistic)  </strong></span>For each scenario, identify whether <em>Normal</em> or <em>logistic</em> regression is the appropriate tool for modeling <span class="math inline">\(Y\)</span> by <span class="math inline">\(X\)</span>.
+<span class="exercise" id="exr:unnamed-chunk-580"><strong>练习 13.1 （正态 vs logistic）</strong></span> 对于每个场景，判断应该使用<em>正态</em>回归还是<em>logistic</em>回归来对 <span class="math inline">\(Y\)</span> 关于 <span class="math inline">\(X\)</span> 建模。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>\(Y\) = 一个人的自行车是否工作, # # # # # # # = 从一个人的家到工作的距离</li>
-<li>\(Y\) = 一个人通勤工作所需时间, # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #</li>
-<li>\(Y\) = 一个人通勤上班的分钟数, = 该人是否公转上班</li>
+<li><span class="math inline">\(Y\)</span> = 一个人是否骑自行车上班，<span class="math inline">\(X\)</span> = 从家到工作地点的距离</li>
+<li><span class="math inline">\(Y\)</span> = 一个人通勤上班所需的分钟数，<span class="math inline">\(X\)</span> = 从家到工作地点的距离</li>
+<li><span class="math inline">\(Y\)</span> = 一个人通勤上班所需的分钟数，<span class="math inline">\(X\)</span> = 这个人是否乘坐公共交通上班</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-581"><strong>Exercise 13.2  (What are the odds?)  </strong></span>Calculate and interpret the odds for each event of interest below.
+<span class="exercise" id="exr:unnamed-chunk-581"><strong>练习 13.2（优势是多少？）</strong></span>计算并解释下面每个感兴趣事件的优势。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>明天下雨的概率为0.8.</li>
-<li>连续翻转2个头的概率为0.25.</li>
-<li>您的公交车将准时运行的日志( odds) 是 0。</li>
-<li>一个人是左撇子的日志是 -1.386.</li>
+<li>明天下雨的概率是 0.8。</li>
+<li>连续掷出 2 次正面的概率是 0.25。</li>
+<li>你的公交车准时的对数优势为 0。</li>
+<li>一个人是左撇子的对数优势为 -1.386。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-582"><strong>Exercise 13.3  (What’s the probability?)  </strong></span>Calculate and interpret the probability for each event of interest below.
+<span class="exercise" id="exr:unnamed-chunk-582"><strong>练习 13.3 （概率是多少？）</strong></span>计算并解释下面每个感兴趣事件的概率。
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>你队赢得篮球比赛的几率是20比1</li>
-<li>明天下雨的几率为0.5。</li>
-<li>某候选人赢得选举的日志(奇数)为1.</li>
-<li>一个人喜欢的菠萝披萨的日志是 -2.</li>
+<li>你的篮球队获胜的优势是20比1。</li>
+<li>明天下雨的优势是0.5。</li>
+<li>某候选人赢得选举的对数优势是1。</li>
+<li>一个人喜欢菠萝披萨的对数优势是-2。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-583"><strong>Exercise 13.4  (Logistic models)  </strong></span>Let <span class="math inline">\(Y\)</span> indicate whether or not somebody believes that climate change is real and caused by people (TRUE or FALSE), and <span class="math inline">\(X\)</span> be their age. The simplified posterior median logistic regression model of <span class="math inline">\(Y\)</span> by <span class="math inline">\(X\)</span> provides insight into the relationship between the two. NOTE: This formula is loosely based on the <code>pulse_of_the_nation</code> survey results in the <strong>bayesrules</strong> package.
+<span class="exercise" id="exr:unnamed-chunk-583"><strong>练习 13.4 （Logistic 模型）</strong></span>令 <span class="math inline">\(Y\)</span> 表示某人是否相信气候变化真实存在且由人类造成（TRUE 或 FALSE），<span class="math inline">\(X\)</span> 为其年龄。通过 <span class="math inline">\(Y\)</span> 对 <span class="math inline">\(X\)</span> 的简化后验中位数 Logistic 回归模型可以洞察两者之间的关系。注意：这一公式大致基于 <code>pulse_of_the_nation</code> 调查结果的数据。
 </div>
-<p>\[\text{log(odds of belief in climate change)} = 1.43 - 0.02 \text{age}\]</p>
+<p><span class="math display">\[\text{气候变化的信念的对数优势} = 1.43 - 0.02 \times \text{年龄}\]</span></p>
 <ol style="list-style-type: lower-alpha">
-<li>在概率和概率尺度上表示后中位数模型.</li>
-<li>在概率尺度上解释年龄系数。</li>
-<li>计算60岁老人相信气候变化的后期中位概率.</li>
-<li>为20岁的孩子重复c部分.</li>
+<li>用优势尺度和概率尺度表达后验中位数模型。</li>
+<li>解释年龄系数在<em>优势</em>尺度上的含义。</li>
+<li>计算60岁的人相信气候变化的后验中位数概率。</li>
+<li>对20岁的人重复(c)部分。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-584"><strong>Exercise 13.5  (Sensitivity vs specificity)  </strong></span>Continuing our climate change belief analysis, the confusion matrix below summarizes the performance of our logistic model in classifying the beliefs of 1000 survey respondents, using a probability cut-off of 0.5.
+<span class="exercise" id="exr:unnamed-chunk-584"><strong>练习13.5 (灵敏度 vs 特异度)  </strong></span>继续我们的气候变化信念分析，下面的混淆矩阵总结了我们的logistic模型在分类1000名调查受访者的信念时的表现，使用0.5的概率阈值。
 </div>
 <table>
 <thead>
 <tr class="header">
-<th align="left">尔</th>
+<th align="left">y</th>
 <th align="right">0</th>
 <th align="right">1</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">法尔塞( 0)</td>
+<td align="left">FALSE (0)</td>
 <td align="right">50</td>
 <td align="right">300</td>
 </tr>
 <tr class="even">
-<td align="left">实际(1)</td>
+<td align="left">TRUE (1)</td>
 <td align="right">30</td>
 <td align="right">620</td>
 </tr>
 </tbody>
 </table>
 <ol style="list-style-type: lower-alpha">
-<li>计算和解释模型的总体准确性。</li>
-<li>计算和解释模型的敏感性。</li>
-<li>计算和解释模型的特殊性。</li>
-<li>假设研究者想要提高识别不相信气候变化的人的能力. 如何调整概率截断:增减? 为什么?</li>
+<li>计算并解释模型的整体准确率。</li>
+<li>计算并解释模型的灵敏度。</li>
+<li>计算并解释模型的特异度。</li>
+<li>假设研究人员想提高识别<em>不</em>相信气候变化的人的能力。他们应该如何调整概率阈值：提高还是降低？为什么？</li>
 </ol>
 </div>
 <div class="section level3" id="applied-exercises-5" number="13.8.2">
 <h3>应用练习</h3>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-585"><strong>Exercise 13.6  (Hotel bookings: getting started)  </strong></span>Plans change. Hotel room bookings get canceled. In the next exercises, you’ll explore whether hotel cancellations might be predicted based upon the circumstances of a reservation. Throughout, utilize weakly informative priors and the <code>hotel_bookings</code> data in the <strong>bayesrules</strong> package.<a class="footnote-ref" href="#fn63" id="fnref63"><sup>63</sup></a> Your analysis will incorporate the following variables on hotel bookings:
+<span class="exercise" id="exr:unnamed-chunk-585"><strong>练习 13.6  (酒店预订：入门)  </strong></span>计划会变。酒店房间预订会被取消。在接下来的练习中，你将探讨酒店取消是否可以基于预订环境来预测。在整个过程中，使用弱信息先验和本教程配套数据资源中的 <code>hotel_bookings</code> 数据集。<a class="footnote-ref" href="#fn63" id="fnref63"><sup>63</sup></a> 你的分析将包括酒店预订的以下变量：
 </div>
 <table>
 <thead>
 <tr class="header">
 <th align="left">变量</th>
-<th align="left">标记</th>
+<th align="left">符号</th>
 <th align="left">含义</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">已终止( C)</td>
-<td align="left">\(Y\)</td>
-<td align="left">是否取消预订</td>
+<td align="left"><code>is_canceled</code></td>
+<td align="left"><span class="math inline">\(Y\)</span></td>
+<td align="left">预订是否被取消</td>
 </tr>
 <tr class="even">
-<td align="left">时间( T)</td>
-<td align="left">\(X_1\)</td>
-<td align="left">预订之间的天数</td>
+<td align="left"><code>lead_time</code></td>
+<td align="left"><span class="math inline">\(X_1\)</span></td>
+<td align="left">预订日期与</td>
 </tr>
 <tr class="odd">
 <td align="left"></td>
 <td align="left"></td>
-<td align="left">和预定抵达</td>
+<td align="left">计划到达日期之间的天数</td>
 </tr>
 <tr class="even">
-<td align="left">前一个取消( C)</td>
-<td align="left">\(X_2\)</td>
-<td align="left">宾客以前的次数</td>
+<td align="left"><code>previous_cancellations</code></td>
+<td align="left"><span class="math inline">\(X_2\)</span></td>
+<td align="left">之前客人已经...的次数</td>
 </tr>
 <tr class="odd">
 <td align="left"></td>
 <td align="left"></td>
-<td align="left">取消了预订</td>
+<td align="left">取消预订</td>
 </tr>
 <tr class="even">
-<td align="left">重复( G)</td>
-<td align="left">\(X_3\)</td>
-<td align="left">预订的客人是不是</td>
+<td align="left"><code>is_repeated_guest</code></td>
+<td align="left"><span class="math inline">\(X_3\)</span></td>
+<td align="left">预订客人是否为</td>
 </tr>
 <tr class="odd">
 <td align="left"></td>
 <td align="left"></td>
-<td align="left">酒店的重复客户</td>
+<td align="left">酒店的回头客</td>
 </tr>
 <tr class="even">
-<td align="left">日均率( R):</td>
-<td align="left">\(X_4\)</td>
-<td align="left">旅馆每日平均费用</td>
+<td align="left"><code>average_daily_rate</code></td>
+<td align="left"><span class="math inline">\(X_4\)</span></td>
+<td align="left">酒店的平均每日费用</td>
 </tr>
 </tbody>
 </table>
 <ol style="list-style-type: lower-alpha">
-<li>取消了多少比例的抽样预订?</li>
-<li>构造和讨论图的is canceled vs 上面四个潜在预测器中的每一个.</li>
-<li>使用正式的数学符号,指定一个适当的Bayesian回归模型 QQ0XX 由预测器 QQ1XX.</li>
-<li>解释您对数据模型结构的选择。</li>
+<li>样本预订中有多大比例被取消了？</li>
+<li>构建并讨论 <code>is_canceled</code> 与上述四个潜在预测变量中每一个之间的图。</li>
+<li>用正式的数学符号，指定一个合适的贝叶斯回归模型，以 <span class="math inline">\((X_1,X_2,X_3,X_4)\)</span> 作为预测变量对 <span class="math inline">\(Y\)</span> 建模。</li>
+<li>解释你对数据模型结构的选择。</li>
+</ol>
+<div class="exercise"><span class="exercise" id="exr:unnamed-chunk-586"><strong>练习 13.7（酒店预订：模拟）</strong></span></div>
+<ol style="list-style-type: lower-alpha">
+<li>模拟回归参数 <span class="math inline">\((\beta_0,\beta_1,\ldots,\beta_4)\)</span> 的后验模型。构建轨迹图、密度图，并对链输出进行后验预测检查。</li>
+<li>分别在 log(优势)、优势和概率尺度上报告酒店取消的后验中位数模型。</li>
+<li>为你的模型系数构建 80% 后验可信区间。在优势尺度上解释 <span class="math inline">\(\beta_2\)</span> 和 <span class="math inline">\(\beta_3\)</span> 的区间。</li>
+<li>在四个预测变量中，哪些与酒店取消在统计上和实际上显著相关？请解释。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-586"><strong>Exercise 13.7  (Hotel bookings: simulation)  </strong></span>
+<span class="exercise" id="exr:unnamed-chunk-587"><strong>习题13.8（酒店预订：分类规则）  </strong></span>
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>模拟您回归参数的后置模型。 构造链输出的痕量图、 密度图和 pp  check ()。</li>
-<li>在每个日志(奇数)、概率和概率尺度上报告酒店取消的后中位数模式。</li>
-<li>构造您模型系数的80%后可信间隔。 翻译为 # # # # # # 和% 1 的概率。</li>
-<li>在四个预测者中,哪些在统计和有意义的方面都与取消旅馆有关? 解释一下</li>
+<li>你的模型在预测酒店预订是否会被取消方面有多好？使用样本内和交叉验证方法，并结合 0.5 概率截断值来评估分类准确度。</li>
+<li>交叉验证和样本内评估的分类准确度相似吗？解释为什么在此分析背景下这是合理的。</li>
+<li>在此分析背景下，解释交叉验证的总准确度、灵敏度和特异度度量。</li>
+<li>想象自己是酒店预订代理，你希望将分类的灵敏度提高到 0.75。确定一个可以用来达到该水平同时保持尽可能高特异度的概率截断值。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-587"><strong>Exercise 13.8  (Hotel bookings: classification rules)  </strong></span>
+<span class="exercise" id="exr:unnamed-chunk-588"><strong>练习 13.9 (酒店预订：他们会取消吗？!)  </strong></span>
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>你的模特儿在预料酒店预订是否会取消方面有多好? 既采用实证法,又采用交叉验证法评价分类精度,同时采用0.5概率截断法.</li>
-<li>对分类准确性的交叉验证和抽样评估是否相似? 解释为什么在分析中这样做是合理的。</li>
-<li>结合本分析解释交叉验证的整体准确性,敏感性和特异性度量.</li>
-<li>以酒店订房代理的方式思考, 确定一个概率截断点,用于达到这一水平,同时保持尽可能高的特异性。</li>
+<li>一位首次入住该酒店的客人，此前只取消过一次预订，提前30天预订了一间每天100美元的酒店房间。模拟、绘制并讨论 <span class="math inline">\(Y\)</span> 的后验预测模型，即这位客人是否会取消此次预订。</li>
+<li>构想另一个虚构预订的特征，使其比第(a)部分的预订<em>更</em>可能被取消。通过模拟、绘制该预订的 <span class="math inline">\(Y\)</span> 的后验预测模型，并与(a)部分比较，来支持你的说法。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-588"><strong>Exercise 13.9  (Hotel bookings: will they cancel?!)  </strong></span>
-</div>
-<ol style="list-style-type: lower-alpha">
-<li>一位刚到酒店的客人 之前只取消了一次订房 提前30天订了一天100美元 模拟,绘图,并讨论XQ0@@的后期预测模型,嘉宾是否会取消这次预订.</li>
-<li>提出另一个假订的功能, 支持你的说法,</li>
-</ol>
-<div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-589"><strong>Exercise 13.10  (Robots taking over: getting started)  </strong></span>As engineers develop more and more sophisticated robots, there are opportunities for improved efficiency. But at what cost? Some people fear that their occupations will be replaced by robots. In the next exercises, you’ll explore whether someone’s view on robots might be associated with other survey factors. Throughout, utilize weakly informative priors and the <code>pulse_of_the_nation</code> survey data in the <strong>bayesrules</strong> package. Your analysis will incorporate the following variables:
+<span class="exercise" id="exr:unnamed-chunk-589"><strong>练习 13.10 (机器人接管：入门)  </strong></span>随着工程师开发越来越先进的机器人，提升效率的机会也随之而来。但代价是什么？有些人担心他们的工作会被机器人取代。在接下来的练习中，你将探索人们对机器人的看法是否与其他调查因素相关。全程使用弱信息先验以及 <strong>bayesrules</strong> 数据集中的 <code>pulse_of_the_nation</code> 调查数据。你的分析将包含以下变量：
 </div>
 <table>
 <thead>
 <tr class="header">
 <th align="left">变量</th>
-<th align="left">标记</th>
+<th align="left">符号</th>
 <th align="left">含义</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td align="left">机器人</td>
-<td align="left">\(Y\)</td>
-<td align="left">0 = 可能,1 = 他们的工作不太可能</td>
+<td align="left"><code>robots</code></td>
+<td align="left"><span class="math inline">\(Y\)</span></td>
+<td align="left">0 = 可能，1 = 不可能，指他们的工作会</td>
 </tr>
 <tr class="even">
 <td align="left"></td>
 <td align="left"></td>
-<td align="left">10年内由机器人取代</td>
+<td align="left">在未来10年内被机器人取代</td>
 </tr>
 <tr class="odd">
-<td align="left">变压器</td>
-<td align="left">\(X_1\)</td>
-<td align="left">被调查者看过的变形金刚片数</td>
+<td align="left"><code>transformers</code></td>
+<td align="left"><span class="math inline">\(X_1\)</span></td>
+<td align="left">受访者看过的<em>《变形金刚》</em>电影数量</td>
 </tr>
 <tr class="even">
-<td align="left">书籍</td>
-<td align="left">\(X_2\)</td>
-<td align="left">去年阅读的书籍数量</td>
+<td align="left"><code>books</code></td>
+<td align="left"><span class="math inline">\(X_2\)</span></td>
+<td align="left">过去一年阅读的书籍数量</td>
 </tr>
 <tr class="odd">
-<td align="left">年龄</td>
-<td align="left">\(X_3\)</td>
-<td align="left">年龄(年数)</td>
+<td align="left"><code>age</code></td>
+<td align="left"><span class="math inline">\(X_3\)</span></td>
+<td align="left">以年为单位的年龄</td>
 </tr>
 <tr class="even">
-<td align="left">收入</td>
-<td align="left">\(X_4\)</td>
-<td align="left">以千美元计的收入</td>
+<td align="left"><code>income</code></td>
+<td align="left"><span class="math inline">\(X_4\)</span></td>
+<td align="left">以千美元为单位的收入</td>
 </tr>
 </tbody>
 </table>
 <ol style="list-style-type: lower-alpha">
-<li>样本中有多少人认为他们的工作不太可能在未来十年被机器人接管?</li>
-<li>构造和讨论机器人图图 相对于上面四个潜在预测器中的每一个</li>
-<li>使用正式的数学符号,指定一个适当的Bayesian回归模型 QQ0XX 由预测器 QQ1XX.</li>
-<li>解释您对数据模型结构的选择。</li>
+<li>样本中有多大比例的人认为自己的工作在未来十年内不太可能被机器人取代？</li>
+<li>构建并讨论 <code>robots</code> 与上面四个潜在预测变量各自的图。</li>
+<li>用正式的数学符号，指定一个合适的贝叶斯回归模型，用预测变量 <span class="math inline">\((X_1,X_2,X_3,X_4)\)</span> 对 <span class="math inline">\(Y\)</span> 建模。</li>
+<li>解释你对数据模型结构的选择。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-590"><strong>Exercise 13.11  (Robots taking over: simulation)  </strong></span>
+<span class="exercise" id="exr:unnamed-chunk-590"><strong>练习 13.11（机器人接管：模拟）</strong></span>
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>模拟您回归参数的后置模型。 构造链输出的痕量图、 密度图和 pp  check ()。</li>
-<li>报告每个日志(缩略语)、概率和概率尺度上的人的机器人信念的后中位数模型。</li>
-<li>构造您模型系数的80%后可信间隔。 翻译为 # # # # # # 和% 1 的概率。</li>
-<li>在四个预测者中,那些与思维机器人有重大关联的机器人在未来十年中不太可能在统计学和意义上接过工作? 解释一下</li>
+<li>模拟回归参数 <span class="math inline">\((\beta_0,\beta_1,\ldots,\beta_4)\)</span> 的后验模型。构建链输出的迹图、密度图和 <code>az.plot_ppc()</code>。</li>
+<li>报告一个人在 log(优势)、优势和概率尺度上对机器人信念的后验中位数模型。</li>
+<li>为你的模型系数构建80%后验可信区间。在优势尺度上解释 <span class="math inline">\(\beta_3\)</span> 和 <span class="math inline">\(\beta_4\)</span> 的区间。</li>
+<li>在四个预测变量中，哪些与“认为机器人在未来10年内不太可能接管人类工作”这一想法有显著关联（无论是从统计意义还是实际意义上）？请解释。</li>
 </ol>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-591"><strong>Exercise 13.12  (Robots taking over: classification rules)  </strong></span>
+<span class="exercise" id="exr:unnamed-chunk-591"><strong>练习 13.12（机器人接管：分类规则）</strong></span>
 </div>
 <ol style="list-style-type: lower-alpha">
-<li>你的模型在预测一个人 不太可能认为他们的工作 将会在未来十年被机器人接管方面有多好? 采用抽样和交叉验证方法评估分类准确性,同时采用0.6概率截断法。</li>
-<li>对分类准确性的交叉验证和抽样评估是否相似? 解释为什么在分析中这样做是合理的。</li>
-<li>结合本分析解释交叉验证的整体准确性,敏感性和特异性度量.</li>
+<li>你的模型在预测一个人是否不太可能认为自己的工作在未来 10 年内会被机器人接管方面表现如何？使用样本内方法和交叉验证方法，以 0.6 的概率作为分界阈值，评估分类准确率。</li>
+<li>交叉验证与样本内的分类准确率评估结果相似吗？结合本分析的背景，解释为什么这是合乎情理的。</li>
+<li>结合本分析的背景，解释交叉验证得到的整体准确率、灵敏度和特异度指标的含义。</li>
 </ol>
 </div>
 <div class="section level3" id="open-ended-exercises-2" number="13.8.3">
-<h3>不限成员名额的工作</h3>
+<h3>开放式练习</h3>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-593"><strong>Exercise 13.13  (Open exercise: fake news)  </strong></span>The <code>fake_news</code> data in the <strong>bayesrules</strong> package contains information about 150 news articles, some real news and some fake news. In this open-ended exercise, complete a logistic regression analysis of article <code>type</code>, real or fake, using the following three predictors: whether or not the article’s title includes an exclamation point (<code>title_has_excl</code>), the number of words in the title (<code>title_words</code>), and the <code>negative</code> sentiment rating.
+<span class="exercise" id="exr:unnamed-chunk-593"><strong>练习 13.13（开放式练习：假新闻）</strong></span><code>fake_news</code> 数据来自 <code>bayesrules</code> 数据集，包含了 150 篇新闻文章，其中既有真实新闻也有假新闻。在这个开放式练习中，请使用以下三个预测变量，完成对文章 <code>type</code>（真实或虚假）的 logistic 回归分析：文章标题是否包含感叹号（<code>title_has_excl</code>）、标题中的单词数（<code>title_words</code>），以及负面情感评分（<code>negative</code>）。
 </div>
 <div class="exercise">
-<span class="exercise" id="exr:unnamed-chunk-594"><strong>Exercise 13.14  (Open exercise: ghosts are real?)  </strong></span>We return to the <code>pulse_of_the_nation</code> survey data in the <strong>bayesrules</strong> package which includes a variable on whether or not a person believes in <code>ghosts</code>. In this open-ended exercise, complete a logistic regression analysis of whether or not someone believes in ghosts using at least three other variables from the dataset.
+<span class="exercise" id="exr:unnamed-chunk-594"><strong>练习 13.14（开放式练习：幽灵是真的吗？）</strong></span>我们再次使用 <code>bayesrules</code> 数据集中的 <code>pulse_of_the_nation</code> 调查数据，其中包含了一个关于受访者是否相信 <code>ghosts</code>（幽灵）的变量。在这个开放式练习中，请至少使用数据集中的另外三个变量，完成关于某人是否相信幽灵的 logistic 回归分析。
 </div>
 </div>
 </div>
 </div>
-<h3>参考资料</h3>
+<h3>参考文献</h3>
 <div class="references csl-bib-body hanging-indent" id="refs">
 <div class="csl-entry" id="ref-hotelraw">
 Antonio, Nuno, Ana de Almeida, and Luis Nunes. 2019. <span>“Hotel Booking Demand Datasets.”</span> <em>Data in Brief</em> 22: 41–49. <a href="https://www.sciencedirect.com/science/article/pii/S2352340918315191">https://www.sciencedirect.com/science/article/pii/S2352340918315191</a>.
@@ -933,6 +1042,15 @@ Antonio, Nuno, Ana de Almeida, and Luis Nunes. 2019. <span>“Hotel Booking Dema
 <div class="csl-entry" id="ref-hoteltidy">
 ———. 2020c. <span>“Hotels.”</span> <em>TidyTuesday Github Repostitory</em>. <a href="https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-02-11">https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-02-11</a>.
 </div>
+</div>
+<div class="footnotes">
+<hr/>
+<ol start="60">
+<li id="fn60"><p>答案：d<a class="footnote-back" href="/bayes-rules-python-cn/chapter-13/#fnref60">↩︎</a></p></li>
+<li id="fn61"><p><code>weather_perth</code> 是 <code>weatherAUS</code> 数据集整理后的子集，该数据集由本书配套数据资源提供。<a class="footnote-back" href="/bayes-rules-python-cn/chapter-13/#fnref61">↩︎</a></p></li>
+<li id="fn62"><p>温馨提醒：这一步会比较慢。我们在这里要训练、测试并合并10个模型的结果！<a class="footnote-back" href="/bayes-rules-python-cn/chapter-13/#fnref62">↩︎</a></p></li>
+<li id="fn63"><p>这是一份由 <span class="citation"><a href="#ref-hotelraw" role="doc-biblioref">Antonio, de Almeida 和 Nunes</a> (<a href="#ref-hotelraw" role="doc-biblioref">2019</a>)</span> 收集，并由 <em>Hotels</em> TidyTuesday 项目 <span class="citation">(<a href="#ref-hoteltidy" role="doc-biblioref">数据科学实践 2020c</a>)</span> 发布的随机数据样本。<a class="footnote-back" href="/bayes-rules-python-cn/chapter-13/#fnref63">↩︎</a></p></li>
+</ol>
 </div>
 </section><nav class="chapter-nav"><a href="/bayes-rules-python-cn/chapter-12/">上一节：第 12 章 泊松回归与负二项回归</a><a href="/bayes-rules-python-cn/chapter-14/">下一节：第 14 章 朴素贝叶斯分类</a></nav>
 </article>
