@@ -813,7 +813,8 @@ img {
 .tutorial-content h1,
 .tutorial-content h2,
 .tutorial-content h3,
-.tutorial-content h4 {
+.tutorial-content h4,
+.tutorial-content .section[id] {
   scroll-margin-top: 96px;
 }
 

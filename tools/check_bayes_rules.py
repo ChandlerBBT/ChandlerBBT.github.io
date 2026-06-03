@@ -219,6 +219,7 @@ def main() -> None:
     bad_preamble_pages: list[Path] = []
     missing_section_numbers: list[tuple[Path, str]] = []
     missing_sidebar_controls: list[Path] = []
+    unversioned_assets: list[tuple[Path, str]] = []
     todo_count = 0
     residual_r_blocks: list[tuple[Path, int]] = []
 
@@ -228,6 +229,12 @@ def main() -> None:
         if first_line == "html" or first_line.startswith("<html"):
             bad_preamble_pages.append(audit.path)
         soup = BeautifulSoup(raw, "html.parser")
+        css_link = soup.find("link", href=re.compile(r"^/assets/css/styles\.css(?:\?|$)"))
+        js_script = soup.find("script", src=re.compile(r"^/assets/js/site\.js(?:\?|$)"))
+        if css_link and not re.match(r"^/assets/css/styles\.css\?v=[A-Za-z0-9._-]+$", str(css_link.get("href", ""))):
+            unversioned_assets.append((audit.path, str(css_link.get("href", ""))))
+        if js_script and not re.match(r"^/assets/js/site\.js\?v=[A-Za-z0-9._-]+$", str(js_script.get("src", ""))):
+            unversioned_assets.append((audit.path, str(js_script.get("src", ""))))
         sidebar = soup.select_one(".tutorial-sidebar")
         if sidebar and not (
             sidebar.select_one('[data-sidebar-action="expand"]')
@@ -300,6 +307,7 @@ def main() -> None:
     print(f"- Bad HTML preambles: {len(bad_preamble_pages)}")
     print(f"- Missing section heading numbers: {len(missing_section_numbers)}")
     print(f"- Missing sidebar global controls: {len(missing_sidebar_controls)}")
+    print(f"- Unversioned CSS/JS asset refs: {len(unversioned_assets)}")
     print(f"- Missing local links: {len(missing_links)}")
     print(f"- Missing local anchors: {len(missing_anchors)}")
     print(f"- Missing local images: {len(missing_images)}")
@@ -314,6 +322,7 @@ def main() -> None:
         ("Bad HTML preamble", [(path, "first line must be <!doctype html>") for path in bad_preamble_pages[:10]]),
         ("Missing section heading number", missing_section_numbers[:10]),
         ("Missing sidebar global controls", [(path, "expand/collapse all controls missing") for path in missing_sidebar_controls[:10]]),
+        ("Unversioned CSS/JS asset ref", unversioned_assets[:10]),
     ]:
         for path, value in items:
             rel = path.relative_to(ROOT).as_posix()
@@ -328,6 +337,7 @@ def main() -> None:
         or bad_preamble_pages
         or missing_section_numbers
         or missing_sidebar_controls
+        or unversioned_assets
         or residual_r_blocks
         or todo_count
     ):

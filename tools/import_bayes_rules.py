@@ -42,6 +42,12 @@ SESSION.headers.update(
 )
 
 
+def asset_url(path: str) -> str:
+    asset_path = ROOT / path.lstrip("/")
+    version = hashlib.sha256(asset_path.read_bytes()).hexdigest()[:12] if asset_path.exists() else "missing"
+    return f"{path}?v={version}"
+
+
 PAGE_TITLE_OVERRIDES = {
     "/": "首页",
     "/foreword": "前言",
@@ -822,7 +828,7 @@ def render_shell(title: str, description: str, body: str, sidebar: str = "") -> 
   <meta name="description" content="{html.escape(description, quote=True)}">
   <title>{html.escape(title)} | {html.escape(SITE_TITLE)}</title>
   <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="{asset_url('/assets/css/styles.css')}">
   <script>
     window.MathJax = {{
       tex: {{
@@ -867,7 +873,7 @@ def render_shell(title: str, description: str, body: str, sidebar: str = "") -> 
       <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
     </div>
   </footer>
-  <script src="/assets/js/site.js"></script>
+  <script src="{asset_url('/assets/js/site.js')}"></script>
 </body>
 </html>
 """

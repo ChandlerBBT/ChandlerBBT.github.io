@@ -133,6 +133,35 @@ function setupTutorialSidebar() {
     );
   }
 
+  function samePageHashTarget(link) {
+    const url = new URL(link.href, window.location.href);
+    if (url.pathname !== window.location.pathname || !url.hash) return null;
+    const rawId = url.hash.slice(1);
+    let id = rawId;
+    try {
+      id = decodeURIComponent(rawId);
+    } catch {
+      id = rawId;
+    }
+    return document.getElementById(id);
+  }
+
+  function scrollToSection(target) {
+    const headerBottom = document.querySelector(".site-header")?.getBoundingClientRect().bottom || 0;
+    const top = target.getBoundingClientRect().top + window.scrollY - headerBottom - 16;
+    const root = document.documentElement;
+    const previousScrollBehavior = root.style.scrollBehavior;
+    root.style.scrollBehavior = "auto";
+    window.scrollTo({ top: Math.max(0, top), behavior: "auto" });
+    root.style.scrollBehavior = previousScrollBehavior;
+  }
+
+  function settleOnSection(target) {
+    scrollToSection(target);
+    window.requestAnimationFrame(() => scrollToSection(target));
+    window.setTimeout(() => scrollToSection(target), 80);
+  }
+
   const toggles = Array.from(sidebar.querySelectorAll(".sidebar-toggle"));
   for (const toggle of toggles) {
     setToggleOpen(toggle, toggle.getAttribute("aria-expanded") !== "false");
@@ -140,6 +169,17 @@ function setupTutorialSidebar() {
 
   sidebar.addEventListener("click", (event) => {
     if (!(event.target instanceof Element)) return;
+
+    const link = event.target.closest("a.section-link");
+    if (link && sidebar.contains(link)) {
+      const target = samePageHashTarget(link);
+      if (target) {
+        event.preventDefault();
+        window.history.pushState(null, "", link.hash);
+        settleOnSection(target);
+      }
+      return;
+    }
 
     const button = event.target.closest("button");
     if (!button || !sidebar.contains(button)) return;
@@ -154,7 +194,7 @@ function setupTutorialSidebar() {
     if (button.classList.contains("sidebar-toggle")) {
       setToggleOpen(button, button.getAttribute("aria-expanded") !== "true");
     }
-  });
+  }, { capture: true });
 }
 
 buildArticleToc();

@@ -6,6 +6,7 @@ from import_bayes_rules import (
     PAGE_TITLE_OVERRIDES,
     Page,
     TUTORIAL_DIR,
+    asset_url,
     collect_section_links,
     local_page_url,
     render_sidebar,
@@ -27,6 +28,17 @@ def tutorial_pages() -> list[Page]:
 def path_to_page_path(path) -> str:
     relative_parent = path.parent.relative_to(TUTORIAL_DIR).as_posix()
     return "/" if relative_parent == "." else f"/{relative_parent}"
+
+
+def refresh_asset_urls(soup: BeautifulSoup) -> None:
+    for link in soup.find_all("link", href=True):
+        href = str(link.get("href", ""))
+        if href.split("?", 1)[0] == "/assets/css/styles.css":
+            link["href"] = asset_url("/assets/css/styles.css")
+    for script in soup.find_all("script", src=True):
+        src = str(script.get("src", ""))
+        if src.split("?", 1)[0] == "/assets/js/site.js":
+            script["src"] = asset_url("/assets/js/site.js")
 
 
 def main() -> None:
@@ -59,6 +71,7 @@ def main() -> None:
         sanitize_html_attributes(soup)
         sanitize_math_text(soup)
         sanitize_generated_text(soup)
+        refresh_asset_urls(soup)
         write(path, str(soup))
         count += 1
     print(f"Postprocessed {count} tutorial pages.")

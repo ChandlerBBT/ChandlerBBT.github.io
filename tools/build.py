@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import datetime as dt
+import hashlib
 import html
 import re
 import shutil
@@ -19,6 +20,12 @@ SITE_URL = "https://chandlerbbt.github.io"
 SITE_TITLE = "Chandler's AI Productivity Notes"
 SITE_SUBTITLE = "AI 提效研究笔记"
 SITE_DESCRIPTION = "记录我在工作与学习中，围绕 AI 提升效率的探索、实践与复盘。"
+
+
+def asset_url(path: str) -> str:
+    asset_path = ROOT / path.lstrip("/")
+    version = hashlib.sha256(asset_path.read_bytes()).hexdigest()[:12] if asset_path.exists() else "missing"
+    return f"{path}?v={version}"
 
 
 def slugify(value: str) -> str:
@@ -259,7 +266,7 @@ def base(title: str, description: str, active: str, content: str, body_class: st
   <meta property="og:image" content="/assets/img/hero-workspace.png">
   <title>{html.escape(full_title)}</title>
   <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="{asset_url('/assets/css/styles.css')}">
   <link rel="alternate" type="application/rss+xml" title="{html.escape(SITE_TITLE)}" href="/feed.xml">
   {mathjax_script()}
 </head>
@@ -287,7 +294,7 @@ def base(title: str, description: str, active: str, content: str, body_class: st
       <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
     </div>
   </footer>
-  <script src="/assets/js/site.js"></script>
+  <script src="{asset_url('/assets/js/site.js')}"></script>
 </body>
 </html>
 """
