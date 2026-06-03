@@ -115,4 +115,30 @@ function buildArticleToc() {
   window.addEventListener("scroll", updateActiveLink, { passive: true });
 }
 
+function setupTutorialSidebar() {
+  const toggles = document.querySelectorAll(".tutorial-sidebar .sidebar-toggle");
+  for (const toggle of toggles) {
+    const panelId = toggle.getAttribute("aria-controls");
+    const panel = panelId ? document.getElementById(panelId) : null;
+    const item = toggle.closest(".sidebar-item");
+    if (!panel || !item) continue;
+
+    function setOpen(isOpen) {
+      item.classList.toggle("is-open", isOpen);
+      panel.hidden = !isOpen;
+      toggle.setAttribute("aria-expanded", String(isOpen));
+      toggle.setAttribute(
+        "aria-label",
+        `${isOpen ? "收起" : "展开"}${item.querySelector(".sidebar-page-link")?.textContent?.trim() || "当前章节"}二级目录`,
+      );
+    }
+
+    setOpen(toggle.getAttribute("aria-expanded") !== "false");
+    toggle.addEventListener("click", () => {
+      setOpen(toggle.getAttribute("aria-expanded") !== "true");
+    });
+  }
+}
+
 buildArticleToc();
+setupTutorialSidebar();

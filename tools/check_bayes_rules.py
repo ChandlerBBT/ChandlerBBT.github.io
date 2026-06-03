@@ -216,11 +216,15 @@ def main() -> None:
     symbol_artifacts: list[tuple[Path, str]] = []
     machine_translation_hits: list[tuple[Path, str]] = []
     english_leaks: list[tuple[Path, str]] = []
+    bad_preamble_pages: list[Path] = []
     todo_count = 0
     residual_r_blocks: list[tuple[Path, int]] = []
 
     for audit in audits:
         raw = audit.path.read_text(encoding="utf-8")
+        first_line = raw.splitlines()[0].strip().lower() if raw.splitlines() else ""
+        if first_line == "html" or first_line.startswith("<html"):
+            bad_preamble_pages.append(audit.path)
         text = visible_text(raw)
         todo_count += raw.count("TODO:")
         code_text = "\n".join(block.text for block in audit.code_blocks)
@@ -270,6 +274,7 @@ def main() -> None:
     print(f"- Symbol artifact pages: {len(symbol_artifacts)}")
     print(f"- Machine-translation phrase hits: {len(machine_translation_hits)}")
     print(f"- English leak blocks: {len(english_leaks)}")
+    print(f"- Bad HTML preambles: {len(bad_preamble_pages)}")
     print(f"- Missing local links: {len(missing_links)}")
     print(f"- Missing local anchors: {len(missing_anchors)}")
     print(f"- Missing local images: {len(missing_images)}")
@@ -281,6 +286,7 @@ def main() -> None:
         ("Symbol artifact", symbol_artifacts[:10]),
         ("Machine translation phrase", machine_translation_hits[:10]),
         ("English leak", english_leaks[:10]),
+        ("Bad HTML preamble", [(path, "first line must be <!doctype html>") for path in bad_preamble_pages[:10]]),
     ]:
         for path, value in items:
             rel = path.relative_to(ROOT).as_posix()
@@ -292,6 +298,7 @@ def main() -> None:
         or missing_anchors
         or missing_images
         or symbol_artifacts
+        or bad_preamble_pages
         or residual_r_blocks
         or todo_count
     ):

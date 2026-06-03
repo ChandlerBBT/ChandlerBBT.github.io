@@ -679,7 +679,8 @@ img {
   font-size: 18px;
 }
 
-.tutorial-sidebar nav {
+.tutorial-sidebar nav,
+.sidebar-list {
   display: grid;
   gap: 6px;
 }
@@ -700,19 +701,75 @@ img {
   background: var(--green-soft);
 }
 
-.sidebar-sections {
+.sidebar-item {
+  display: grid;
+  gap: 3px;
+}
+
+.sidebar-page-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 4px;
+}
+
+.tutorial-sidebar a.sidebar-page-link {
+  min-width: 0;
+}
+
+.sidebar-toggle,
+.sidebar-toggle-placeholder {
+  width: 30px;
+  height: 30px;
+}
+
+.sidebar-toggle {
+  display: inline-grid;
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.sidebar-toggle:hover,
+.sidebar-toggle:focus-visible {
+  color: var(--green);
+  background: var(--green-soft);
+  outline: none;
+}
+
+.sidebar-toggle span {
+  display: inline-block;
+  font-size: 18px;
+  line-height: 1;
+  transform: rotate(90deg);
+  transition: transform 0.16s ease;
+}
+
+.sidebar-item:not(.is-open) .sidebar-toggle span {
+  transform: rotate(0deg);
+}
+
+.sidebar-subsections {
   display: grid;
   gap: 2px;
-  margin: -2px 0 6px 12px;
+  margin: -1px 0 8px 12px;
   padding-left: 10px;
   border-left: 1px solid var(--line);
 }
 
 .tutorial-sidebar a.section-link {
-  padding: 4px 6px;
+  padding: 5px 6px;
   color: var(--muted);
   font-size: 13px;
   font-weight: 600;
+}
+
+.tutorial-sidebar a.section-link:hover {
+  color: var(--green);
+  background: rgba(229, 239, 232, 0.6);
 }
 
 .tutorial-content {
