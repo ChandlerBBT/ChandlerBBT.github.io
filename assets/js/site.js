@@ -230,6 +230,21 @@ function setupTutorialSidebar() {
   const toggles = Array.from(sidebar.querySelectorAll(".sidebar-toggle"));
   for (const toggle of toggles) {
     setToggleOpen(toggle, toggle.getAttribute("aria-expanded") !== "false");
+    toggle.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setToggleOpen(toggle, toggle.getAttribute("aria-expanded") !== "true");
+    });
+  }
+
+  const actionButtons = Array.from(sidebar.querySelectorAll("[data-sidebar-action]"));
+  for (const button of actionButtons) {
+    button.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const isOpen = button.dataset.sidebarAction === "expand";
+      for (const toggle of toggles) setToggleOpen(toggle, isOpen);
+    });
   }
 
   sidebar.addEventListener("click", (event) => {
@@ -244,20 +259,6 @@ function setupTutorialSidebar() {
         settleOnSection(target);
       }
       return;
-    }
-
-    const button = event.target.closest("button");
-    if (!button || !sidebar.contains(button)) return;
-
-    const action = button.dataset.sidebarAction;
-    if (action === "expand" || action === "collapse") {
-      const isOpen = action === "expand";
-      for (const toggle of toggles) setToggleOpen(toggle, isOpen);
-      return;
-    }
-
-    if (button.classList.contains("sidebar-toggle")) {
-      setToggleOpen(button, button.getAttribute("aria-expanded") !== "true");
     }
   }, { capture: true });
 }
