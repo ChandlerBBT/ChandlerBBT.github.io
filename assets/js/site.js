@@ -64,6 +64,71 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closeLightbox();
 });
 
+async function copyText(text) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const field = document.createElement("textarea");
+  field.value = text;
+  field.setAttribute("readonly", "");
+  field.style.position = "fixed";
+  field.style.top = "-9999px";
+  field.style.opacity = "0";
+  document.body.append(field);
+  field.select();
+  const copied = document.execCommand("copy");
+  field.remove();
+  if (!copied) throw new Error("Copy command failed");
+}
+
+function showCodeCopyToast(wrapper, message) {
+  const toast = wrapper.querySelector(".code-copy-toast");
+  if (!toast) return;
+  window.clearTimeout(Number(toast.dataset.timer || 0));
+  toast.textContent = message;
+  toast.classList.add("is-visible");
+  toast.dataset.timer = String(window.setTimeout(() => {
+    toast.classList.remove("is-visible");
+  }, 1400));
+}
+
+function setupCodeCopyButtons() {
+  const codeBlocks = document.querySelectorAll(".article-body pre, .tutorial-content pre");
+  for (const pre of codeBlocks) {
+    if (pre.closest(".code-block-wrap")) continue;
+    const code = pre.querySelector("code") || pre;
+    const wrapper = document.createElement("div");
+    wrapper.className = "code-block-wrap";
+    pre.before(wrapper);
+    wrapper.append(pre);
+
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "code-copy-button";
+    button.setAttribute("aria-label", "复制代码");
+    button.setAttribute("title", "复制代码");
+    button.innerHTML = '<span aria-hidden="true"></span>';
+
+    const toast = document.createElement("span");
+    toast.className = "code-copy-toast";
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+
+    button.addEventListener("click", async () => {
+      try {
+        await copyText(code.innerText.replace(/\n+$/g, ""));
+        showCodeCopyToast(wrapper, "已复制代码");
+      } catch {
+        showCodeCopyToast(wrapper, "复制失败");
+      }
+    });
+
+    wrapper.append(button, toast);
+  }
+}
+
 function buildArticleToc() {
   const articleShell = document.querySelector(".article-shell");
   const articleBody = document.querySelector(".article-body");
@@ -199,3 +264,4 @@ function setupTutorialSidebar() {
 
 buildArticleToc();
 setupTutorialSidebar();
+setupCodeCopyButtons();

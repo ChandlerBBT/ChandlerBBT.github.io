@@ -16,6 +16,8 @@ if hasattr(sys.stdout, "reconfigure"):
 ROOT = Path(__file__).resolve().parents[1]
 TUTORIAL_DIR = ROOT / "bayes-rules-python-cn"
 ASSET_DIR = ROOT / "assets" / "img" / "bayes-rules-python-cn"
+SITE_JS = ROOT / "assets" / "js" / "site.js"
+SITE_CSS = ROOT / "assets" / "css" / "styles.css"
 
 BAD_NOTE_PATTERNS = [
     "Python ***",
@@ -220,8 +222,16 @@ def main() -> None:
     missing_section_numbers: list[tuple[Path, str]] = []
     missing_sidebar_controls: list[Path] = []
     unversioned_assets: list[tuple[Path, str]] = []
+    missing_code_copy_assets: list[str] = []
     todo_count = 0
     residual_r_blocks: list[tuple[Path, int]] = []
+
+    site_js = SITE_JS.read_text(encoding="utf-8") if SITE_JS.exists() else ""
+    site_css = SITE_CSS.read_text(encoding="utf-8") if SITE_CSS.exists() else ""
+    if "setupCodeCopyButtons" not in site_js or "clipboard.writeText" not in site_js:
+        missing_code_copy_assets.append("assets/js/site.js")
+    if "code-copy-button" not in site_css or "code-copy-toast" not in site_css:
+        missing_code_copy_assets.append("assets/css/styles.css")
 
     for audit in audits:
         raw = audit.path.read_text(encoding="utf-8")
@@ -308,6 +318,7 @@ def main() -> None:
     print(f"- Missing section heading numbers: {len(missing_section_numbers)}")
     print(f"- Missing sidebar global controls: {len(missing_sidebar_controls)}")
     print(f"- Unversioned CSS/JS asset refs: {len(unversioned_assets)}")
+    print(f"- Missing code copy frontend assets: {len(missing_code_copy_assets)}")
     print(f"- Missing local links: {len(missing_links)}")
     print(f"- Missing local anchors: {len(missing_anchors)}")
     print(f"- Missing local images: {len(missing_images)}")
@@ -323,6 +334,7 @@ def main() -> None:
         ("Missing section heading number", missing_section_numbers[:10]),
         ("Missing sidebar global controls", [(path, "expand/collapse all controls missing") for path in missing_sidebar_controls[:10]]),
         ("Unversioned CSS/JS asset ref", unversioned_assets[:10]),
+        ("Missing code copy frontend asset", [(ROOT / path, "copy controls missing") for path in missing_code_copy_assets[:10]]),
     ]:
         for path, value in items:
             rel = path.relative_to(ROOT).as_posix()
@@ -338,6 +350,7 @@ def main() -> None:
         or missing_section_numbers
         or missing_sidebar_controls
         or unversioned_assets
+        or missing_code_copy_assets
         or residual_r_blocks
         or todo_count
     ):
