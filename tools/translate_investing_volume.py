@@ -523,6 +523,39 @@ def copy_images(image_map: dict) -> None:
             shutil.copy2(cache_file, target_dir / filename)
 
 
+def normalize_title_for_compare(value: str) -> str:
+    text = re.sub(r"<[^>]+>", "", value, flags=re.S)
+    text = html.unescape(text)
+    text = re.sub(r"[\s:：,，.。;；!！?？\-—_《》「」“”\"'()（）]+", "", text)
+    return text.lower()
+
+
+def strip_duplicate_initial_heading(fragment: str, title_zh: str) -> str:
+    target = normalize_title_for_compare(title_zh)
+    if not target:
+        return fragment
+
+    def should_remove(inner_html: str) -> bool:
+        heading = normalize_title_for_compare(inner_html)
+        return bool(heading and (heading == target or heading in target or target in heading))
+
+    for _ in range(3):
+        section_match = re.match(
+            r"(?is)^(\s*<section\b[^>]*>\s*)<(h1|h2)\b[^>]*>(.*?)</\2>\s*",
+            fragment,
+        )
+        if section_match and should_remove(section_match.group(3)):
+            fragment = section_match.group(1) + fragment[section_match.end() :]
+            continue
+
+        leading_match = re.match(r"(?is)^(\s*)<(h1|h2)\b[^>]*>(.*?)</\2>\s*", fragment)
+        if leading_match and should_remove(leading_match.group(3)):
+            fragment = leading_match.group(1) + fragment[leading_match.end() :]
+            continue
+        break
+    return fragment
+
+
 def render_book(manifest: dict, image_map: dict, book_guide: str) -> None:
     copy_images(image_map)
     title_map = extract_title_map(book_guide)
@@ -554,6 +587,8 @@ def render_book(manifest: dict, image_map: dict, book_guide: str) -> None:
             if not page_path.exists():
                 continue
             fragment = read_json(page_path).get("html", "")
+            if page == int(unit["pdf_page_start"]):
+                fragment = strip_duplicate_initial_heading(str(fragment), title_zh)
             parts.append(str(fragment))
         prev_unit = units[index - 1] if index > 0 else None
         next_unit = units[index + 1] if index + 1 < len(units) else None
