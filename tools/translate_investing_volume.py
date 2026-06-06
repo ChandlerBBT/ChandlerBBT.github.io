@@ -556,6 +556,16 @@ def strip_duplicate_initial_heading(fragment: str, title_zh: str) -> str:
     return fragment
 
 
+def fragment_has_initial_heading(fragment: str) -> bool:
+    if re.match(r"(?is)^\s*<(h1|h2)\b[^>]*>.*?</\1>\s*", fragment):
+        return True
+    if re.match(r"(?is)^\s*<section\b[^>]*>\s*<(h1|h2)\b[^>]*>.*?</\1>\s*", fragment):
+        return True
+    if re.match(r"(?is)^\s*<section\b[^>]*>\s*<div\b[^>]*>\s*<(h1|h2)\b[^>]*>.*?</\1>\s*", fragment):
+        return True
+    return False
+
+
 def render_book(manifest: dict, image_map: dict, book_guide: str) -> None:
     copy_images(image_map)
     title_map = extract_title_map(book_guide)
@@ -581,15 +591,18 @@ def render_book(manifest: dict, image_map: dict, book_guide: str) -> None:
     page_dir = CACHE_DIR / "page_translations"
     for index, unit in enumerate(units):
         title_zh = title_map.get(unit["title_en"]) or fallback_title_zh(unit["title_en"])
-        parts = [f"<h1>{html.escape(title_zh)}</h1>"]
+        parts: list[str] = []
+        has_initial_heading = False
         for page in range(int(unit["pdf_page_start"]), int(unit["pdf_page_end"]) + 1):
             page_path = page_dir / f"page-{page:03d}.json"
             if not page_path.exists():
                 continue
             fragment = read_json(page_path).get("html", "")
             if page == int(unit["pdf_page_start"]):
-                fragment = strip_duplicate_initial_heading(str(fragment), title_zh)
+                has_initial_heading = fragment_has_initial_heading(str(fragment))
             parts.append(str(fragment))
+        if not has_initial_heading:
+            parts.insert(0, f"<h1>{html.escape(title_zh)}</h1>")
         prev_unit = units[index - 1] if index > 0 else None
         next_unit = units[index + 1] if index + 1 < len(units) else None
         nav = ['<nav class="chapter-nav">']
