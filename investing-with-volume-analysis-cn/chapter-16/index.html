@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="第16章：成交量加权价格指标 | 《成交量分析投资法》中文译稿">
+  <title>第16章：成交量加权价格指标 | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=62159d02abf1">
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <div class="sidebar-heading">
+    <h2>书稿目录</h2>
+  </div>
+  <nav class="sidebar-list"><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/">首页</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/introduction/">引言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-1/">第1章：市场分析的两种视角</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-2/">第2章：技术分析的历史</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-3/">第3章：价格分析</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-4/">第4章：成交量分析</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-5/">第5章：成交量：市场的力量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-6/">第6章：如何像读书一样解读市场</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-7/">第7章：趋势中的成交量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-8/">第8章：形态中的成交量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-9/">第9章：衡量成交量信息</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-10/">第10章：纯成交量指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-11/">第11章：日间成交量累积指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-12/">第12章：日内成交量累积振荡器</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-13/">第13章：价格区间成交量指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-14/">第14章：基于成交量指标的价格累积</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-15/">第15章：基于逐笔成交的成交量指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item is-current"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-16/" aria-current="page">第16章：成交量加权价格指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-17/">第17章：成交量价格确认指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/volume-indicators-table/">成交量指标表</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-18/">第18章：广度指标概览</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-19/">第19章：升级你的成交量：引入资本加权成交量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-20/">第20章：风险事业</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-21/">第21章：综合运用：成交量主导的策略</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-22/">第22章：现代成交量问题</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/bibliography/">参考文献</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/index/">索引</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <h1>第16章：成交量加权价格指标</h1>
+<section class="book-page" data-pdf-page="176">
+<article>
+<h1 id="chapter-16-volume-weighted-price-indicators">第16章：成交量加权价格指标</h1>
+<blockquote>“作为经济学的一个基本原则，假定如果大量股票被抛售，价格会下跌；反之，如果对股票有大量需求，价格会上涨。然而，对该主题的研究表明，这一理论在短期内并不总是成立，尽管在长期大趋势中，其有效性毋庸置疑。”<br/>——哈罗德·M·加特利</blockquote>
+<p>在技术分析方面，我认为成交量加权价格指标可能是最具探索前景的领域。我将大部分工作集中在这一领域，致力于发现新的应用。通过将相应的成交量应用于价格，成交量加权价格指标对价格进行阐述，以反映成交量的影响。目前，这些指标主要修正现有指标，为其注入成交量信息。由于成交量领先价格，将成交量引入动量指标以使其更快是有意义的。由于成交量确认趋势，你可以通过成交量信息增强趋势指标，使指标更可靠。同样，你可以将动量和趋势原理与成交量结合，创建能够提供更快、更可靠信号的指标。在本章及本书本部分的其他章节中，我将讨论一些最新的革命性思想和概念。</p>
+</article>
+</section>
+<section class="book-page" data-pdf-page="177">
+<h2 id="money-flow-index">资金流指数（Money Flow Index）</h2>
+<p>不要与蔡金资金流（Chaikin’s Money Flow）或比里尼资金流（Birinyi’s Money Flow）混淆，资金流指数（Money Flow Index）（我警告过你事情会变得混乱）用成交量信息修饰了相对强弱指数（Relative Strength Index，RSI）。</p>
+<p>RSI 是由威尔斯·威尔德（Welles Wilder）开发的常用动量指标。它用于衡量证券相对于其自身过去表现的优势。当股票涨跌起伏时，通过比较其向下动量与向上动量，可以衡量其内部动量。这是通过比较证券的上涨日和下跌日来计算的。这些数据以振荡器的方式组合，产生在 0 到 100 之间振荡的读数。高读数表明股票具有看涨动量，而低读数表明其具有看跌动量。根据分析师的不同，极端高读数可能被视为强劲态势或过度强劲态势，这意味着证券“超买”。同样，极端低读数可能被视为疲弱势头或过度疲弱势头，这意味着证券“超卖”。</p>
+<p>资金流指数是 RSI 的成交量加权形式，但有一个小变化。它由吉恩·奎恩（Gene Quong）和阿夫拉姆·苏达克（Avrum Soudack）联合开发，他们在 1989 年 3 月号的《股票与商品技术分析》（<span lang="en">Technical Analysis of Stocks and Commodities</span>）杂志中介绍了这一广受欢迎的指标。奎恩和苏达克试图通过使用成交量为指数赋权来改进 RSI。这在技术分析领域是一个突破，因为当时所有的动量指标要么使用价格，要么使用成交量，而没有将两者融合在一起。奎恩和苏达克用成交量为价格赋权，形成了一个成交量加权动量振荡器。通过用成交量为价格变动赋权，高成交量的价格变动被突出显示，而低成交量的价格变动则被弱化。用成交量为价格赋权实现了成交量理论的目标——增强高成交量走势的重要性，同时降低低成交量走势的重要性。</p>
+<p>与 RSI 不同，资金流指数（MFI）使用典型价格而非收盘价进行计算（这就是那一点变化）。典型价格的计算方法是将柱的最高价、最低价和收盘价相加，然后除以三。如果计算结果为上涨，则将该数值累计为正资金流（Positive Money Flow）。如果计算结果为下跌，则将其累计为负资金流（Negative Money Flow）。正资金流和负资金流是</p>
+</section>
+<section class="book-page" data-pdf-page="178">
+<p>通常是在14个周期内累积的。然后将相同时间段内的正资金流累积除以负资金流累积，得到资金比率。资金比率随后被转换为一个振荡器。</p>
+<p>资金流指数(MFI)的计算公式为：<br/>
+典型价格 = (最高价 + 最低价 + 收盘价) / 3<br/>
+正资金流 = 14周期内，仅当典型价格当前周期 – 前一周期典型价格为正时，对这些正值求和<br/>
+负资金流 = 同样的14周期内，仅当典型价格当前周期 – 前一周期典型价格为负时，对这些负值求和<br/>
+资金比率 = (正资金流 / 负资金流)<br/>
+资金流指数 = 100 – (100 / 1 – (1 + 资金比率))</p>
+<p>MFI的解释方式与相对强弱指数(RSI)非常相似(见图16.1)。当MFI上升时，表明该股票正在积聚上涨的价格和成交量动能。当MFI下降时，表明股票价格在下跌，且下跌的成交量动能在增强。然而，与RSI在极端位置的传统解释不同，MFI的极端高位和低位读数在显示超买和超卖水平时，应给予较少的重视。因为成交量在MFI极端水平上为价格提供动能，极端水平应被视为维持当前趋势延续所需动能的增加。</p>
+<h2 id="sec-volume-weighted-moving-averages">成交量加权移动平均线</h2>
+<p>“如果投资者拥有私有信息，他们可能知道证券的价格（反映了所有公开可用的信息）是不正确的。因此，这些投资者会在该证券上进行大量交易，直到价格反映出如果私有信息公开后的证券估值。”</p>
+<p>—沃尔特·孙(Walter Sun)，麻省理工学院信息与决策系统实验室，“交易量与证券价格的关系”，2003年</p>
+</section>
+<section class="book-page" data-pdf-page="179">
+<figure class="page-image"><img src="/assets/img/investing-with-volume-analysis-cn/image-098ebacab5cc.png" alt="资金流指数"><figcaption>图16.1 资金流指数（来源：Worden的StockFinder）。（图表[或数据]由 TeleChart 2007® 或 StockFinder® 制作，它们是 Worden Brothers, Inc. 的注册商标，地址：Five Oaks Office Park, 4905 Pine Cone Drive, Durham, NC 27707。电话：(800) 776-4940 或 (919) 408-0542。www.Worden.com）</figcaption></figure>
+<p>当人们听到一个断言时，可能会有几种不同的反应。一是接受这个断言，认为它是事实。二是调查这个断言并得出自己的结论。（大多数人打算采取第二种方式，但很少有人能真正去做。）三是无视或尊重这个断言，而不对其有效性做任何判断。最后，他们可能干脆拒绝这个断言。</p>
+<p>根据技术分析理论，成交量应该领先价格并确认趋势。然而，技术分析师在构造价格均线时，仍然主要只考虑价格和时间。如果成交量理论正确，为什么不把成交量包括进来呢？成交量代表了愿意在价格和时间的各个节点上下注的参与者的数量。考虑到这一点，我在20世纪90年代末创建了成交量加权价格均线，用当日的成交量相对于均线期内总成交量的权重来衡量通过价格表现出来的承诺程度。用成交量来加权价格均线，会根据投资者的参与程度，对价格给予成比例的重视。成交量较大的交易日的重要性将会被放大，而成交量较小的交易日则会被相应地缩减。</p>
+</section>
+<section class="book-page" data-pdf-page="180">
+<p>我曾经将这些新的移动平均线称为“<span lang="en">Buff Averages</span>”，并在2001年2月刊的《<span lang="en">Technical Analysis of Stocks & Commodities</span>》上发表了研究成果。<span lang="en">Buff Averages</span>，现在被称为成交量加权移动平均线（<span lang="en">VWMA</span>），是将每个周期的收盘价乘以当天的成交量，再除以该平均线周期内的总成交量（参见图16.2）。</p>
+<figure style="text-align:center;">
+  <img src="/assets/img/investing-with-volume-analysis-cn/image-a90f2d03ccc0.jpg" alt="图16.2 简单移动平均线（SMA）与成交量加权移动平均线（VWMA）对比">
+  <figcaption>图16.2 简单移动平均线（SMA）与成交量加权移动平均线（VWMA）对比。注意当成交量增加时，VWMA（较暗的线条）的响应性有多大提升。</figcaption>
+</figure>
+<p>例如，要计算一个两天的移动平均线，同时使用简单移动平均线（<span lang="en">SMA</span>）和<span lang="en">VWMA</span>方法，假设某证券第一天以10.00美元的价格成交了10万股，第二天以12.00美元的价格成交了30万股。<span lang="en">SMA</span>的计算方法是第一天的价格加第二天的价格除以天数，即（10+12）/2，等于11。<span lang="en">VWMA</span>的计算方法是第一天的价格（10）乘以第一天成交量占总成交量的比例（100,000/400,000 = 1/4），加上第二天的价格（12）乘以第二天成交量占总成交量的比例（300,000/400,000 = 3/4），等于11.5。根据这些计算结果，投资者实际参与的价格不是11，而是<span lang="en">VWMA</span>的11.5。</p>
+</section>
+<section class="book-page" data-pdf-page="181">
+<p>成交量加权移动平均线（VWMA）的计算方法是：将每个时间周期的收盘价以该周期成交量在总区间成交量中所占比重进行加权：</p>
+<p>成交量加权平均价格 = ∑{收盘价(I) × [成交量(I) / (总区间成交量)]}，其中 I = 指定交易日的行情。</p>
+<p>对于前面提到的各种主张，我选择了第二种可能的回应方式，即亲自进行调查。如果我一直在讨论的关于成交量重要性的主张确实正确，那么成交量加权移动平均线就应该比不考虑成交量的传统移动平均线反应更灵敏、更可靠。我选择了四个标准来测试VWMA：响应性、可靠性、风险和收益（即四个R）。响应性是评估加入了成交量的移动平均线是否领先于仅基于价格的传统移动平均线。可靠性则是评估成交量加权的移动平均线是否与仅基于价格的移动平均线同样可靠。如果这两个R成立，那么我就可以期待在剩下的两个R中至少有一个得到改善，即风险和收益，它们衡量加入成交量信息是否能降低交易策略承担的风险和/或提高收益。</p>
+<p>为了验证成交量信息是否能提升表现，我测试并比较了两个交易系统。一个系统使用5日和20日简单（不加权）移动平均线的交叉，另一个系统则使用5日和20日成交量加权移动平均线。两个系统都利用5日和20日移动平均线的交叉来产生买入和卖出信号。5日移动平均线代表交易周期为一周的交易者的成本基础，20日移动平均线则代表交易周期为一个月的交易者的成本基础。较短期移动平均线对当前价格行为和趋势变化更为敏感，因为它更强调近期价格变动。较长期移动平均线包含更多信息，更能指示长期趋势。由于其涵盖范围更广，较长期移动平均线通常滞后于较短期移动平均线的变动。当移动平均线向上弯曲（方向转为上升）时，处于该时间周期内的投资者会经历正向动能。当移动平均线向下弯曲时，情况则相反。当短期移动平均线的</p>
+</section>
+<section class="book-page" data-pdf-page="182">
+<p>若短期移动平均线的动量足以向上穿越长期移动平均线，则表明上升趋势，通常被视为“买入信号”。同样，当短期移动平均线的动量向下穿越长期移动平均线时，则产生“卖出信号”。</p>
+<p>在测试中，每次信号交叉时买入或卖空1,000股标的证券。测试未包含佣金。测试期为1991年9月25日至1999年5月14日，共2,000个交易日。我从小盘股（标准普尔小盘股指数）、中盘股（标准普尔400指数）和大盘股（标准普尔100指数）中选取了证券。然后根据它们的成交量与波动率风格特征将各组进一步细分，形成12个类别：小盘股高成交量、小盘股低成交量、小盘股高波动率、小盘股低波动率、中盘股高成交量、中盘股低成交量等等。每个类别研究五只证券，合计60只证券。作为选股标准，我根据Bloomberg在1999年6月30日的筛选，从每个市值组中选出成交量最高和最低的五只证券，以及贝塔值（衡量波动率的指标）最高和最低的五只证券。任何重复出现的证券（因为高成交量和高贝塔值股票偶有重叠）只使用一次。历史数据不足的证券被剔除。同样，这里的目的并非创建一个盈利系统，而是为了确定融入成交量的价格均线是否展现出更好的响应性和可靠性，从而通过新增的成交量信息来降低风险或提高回报。</p>
+<h3 id="responsiveness">响应性</h3>
+<p>如果成交量领先价格，那么我会预期成交量增加会先于显著的价格变动，从而更快地发出下跌和上涨信号，因此包含了成交量的移动平均线将更快地识别趋势，帮助我们尽早进场或离场。</p>
+<p>在测试的60只证券中，成交量加权平均线在56个案例中产生了更多信号，有一只证券的信号数量相同（见图16.3）。简单移动平均线仅在少数大盘股中反应更快、更频繁。总体而言，简单移动平均线产生了6,858笔交易</p>
+</section>
+<section class="book-page" data-pdf-page="183">
+<p>相较于成交量增强移动平均线的7,905次，总体提升了13%。</p>
+<h3 id="reliability">可靠性</h3>
+<p>生成更快的信号固然好，但并非难事。要获得更快的移动平均线，只需缩短其周期。然而，在生成更快信号时，人们面临的悖论始终是信号可靠性的权衡，而可靠性与响应速度同等重要，甚至更重要。</p>
+<p>然而，根据我们的运行前提，成交量增强应该同时提高响应速度和可靠性。大成交量应该确认价格运动。此外，当成交量与价格背离时，基于成交量的指标应该给出更慢的信号，甚至完全没有信号。我通过盈利交易百分比来测试和衡量可靠性，再次将简单移动平均法与成交量增强法进行比较。</p>
+<p>使用成交量增强的加权移动平均线在12个类别中有10个显示出更高的可靠性。在大盘股低成交量类别中出现了一次平局，使用VWMA具有10-1-1的优势。简单移动平均线仅在小盘股低成交量类别中具有更高的可靠性。在60只证券中，简单移动平均线...</p>
+<p>60只股票的响应速度<br>93%<br>2<br>5%<br>1<br>2<br>3<br>1<br>2%<br>3</p>
+<p>图16.3 响应速度。</p>
+</section>
+<section class="book-page" data-pdf-page="184">
+<p>在60只股票的可靠性测试中，简单移动平均线（SMA）表现更优的情况占28%，成交量加权移动平均线（VWMA）占60%，无差异情况占12%。</p>
+<figure id="caption-0088">
+  <figcaption>图16.4 可靠性</figcaption>
+</figure>
+<p>成交量加权平均线在36次（60%）中表现更好，简单移动平均线在17次（28%）中表现更好，另有7次（12%）几乎持平。因此，在60%的时间里，成交量加权平均线提供了帮助。只有28%的时间里简单移动平均线更有益，12%的时间里两者没有差异（见图16.4）。</p>
+<p>因此，通过将成交量融入价格均线，我同时加快了移动平均线信号，并获得了更可靠的信号，从而打破了“欲速则不达”这一由来已久的悖论。</p>
+<h2>风险</h2>
+<p>对于任何交易系统，管理交易的下行风险至关重要。应用成交量加权平均线能否降低下行风险？为了评估这个问题，我通过平均回撤来衡量风险，即所有亏损交易的平均亏损额。该统计数据用于计算系统的典型亏损潜力。</p>
+<p>在我们的交易系统模拟中，对于大盘股，采用成交量加权平均线产生的回撤低于简单移动平均线系统，在测试的20只股票中有12只结果更好。中盘股中，简单移动平均线系统在20次中的11次表现更佳。在小盘股部分，成交量增强在测试的20只股票中的14只产生了更好的结果。</p>
+</section>
+<section class="book-page" data-pdf-page="185">
+<p>在低贝塔或低成交量股票中没有显著差异。高成交量股票在使用成交量加权移动平均线时表现更好，优势为9比6。同样，高贝塔股票通过成交量增强取得了更大成功；在测试的15只证券中，有11只这类高波动性股票被证明更有利可图。</p>
+<p>总体而言，在测试的73%的证券中，成交量移动平均线被证明更可靠（见图16.5）。成交量加权移动平均线在小型股以及高成交量和高贝塔证券中可靠性提升最大。基于这些结果，我坚信在组合中加入成交量有助于降低我们假设交易系统的风险。</p>
+<h3 id="return">回报</h3>
+<p>到目前为止，成交量已经达到了它的声誉，只留给我们所有统计数据中最相关的一项——回报。那么，哪种方法——简单移动平均线还是成交量加权移动平均线——以总回报衡量能赚最多的钱？在很大程度上，无论按规模还是按风格划分，成交量都再次能够增加底线——回报。然而，某些领域的改善幅度大于其他领域。</p>
+<p>无论是小型股、中型股还是大型股，这三个规模组都表现出改善。从可靠性统计数据来看，我原本怀疑中盘股打败简单移动平均线的机会最小。</p>
+<figure>
+  <figcaption>图16.5 经历较低回撤的股票数量</figcaption>
+</figure>
+</section>
+<section class="book-page" data-pdf-page="186">
+  <p><strong>相对于简单移动平均线（SMA）的改进</strong></p>
+  <pre>
+    $150,000
+    Small Mid Large
+    $54,538
+    $138,746   $135,559
+    $100,000
+    $50,000
+    $0
+  </pre>
+  <figure>
+    <figcaption>图16.6 按市值划分的成交量加权移动平均线（VWMA）相对于简单移动平均线（SMA）的改进</figcaption>
+  </figure>
+  <p><strong>四种风格下相对于简单移动平均线（SMA）的改进</strong></p>
+  <pre>
+    $150,000
+    Low beta   Low volume   High beta   High volume
+    $67,877    $23,571      $90,957     $146,438
+    $100,000
+    $50,000
+    $0
+  </pre>
+  <figure>
+    <figcaption>图16.7 按风格划分的成交量加权移动平均线（VWMA）相对于简单移动平均线（SMA）的改进。移动平均线。然而，中型股在三个规模组中利润改善最大——</figcaption>
+  </figure>
+  <p>移动平均线。然而，在三个规模组中，中型股的利润改善最大（见图16.6）。</p>
+  <p>类似地，无论是高成交量还是低成交量，高波动性还是低波动性，所有四个风格组都显示出改善。最大的差异出现在低成交量和高成交量之间。确切地说，采用成交量加权方法时，高成交量个股的表现远优于低成交量个股。成交量加权移动平均线在高波动性环境下也相对于低波动性表现更好。这一数据印证了其他学术研究，表明成交量与波动性之间存在高度相关性（见图16.7）。</p>
+  <p>在这12个分组中，11个（占比91.6%）支持成交量加权平均线，但在60只个股中，仅有35只（占比58.3%）在使用成交量加权平均线时产生了更高的回报。这表明需要额外的分析技术来补充</p>
+</section>
+<section class="book-page" data-pdf-page="187">
+  <figure>
+    <figcaption>图16.8 在12个分组中成交量加权移动平均线（VWMA）与简单移动平均线（SMA）的对比。成交量加权方法在个股分析中的应用。总体而言，成交量加权平均线比简单移动平均线多产生了328,843美元的收益（见图16.8）。</figcaption>
+  </figure>
+  <table>
+    <thead><tr><th>分组</th><th>收益差异</th></tr></thead>
+    <tbody>
+      <tr><td>高贝塔大盘股</td><td>$21,601</td></tr>
+      <tr><td>低贝塔大盘股</td><td>$5,861</td></tr>
+      <tr><td>高成交量大盘股</td><td>$22,738</td></tr>
+      <tr><td>低成交量大盘股</td><td>$72,284</td></tr>
+      <tr><td>高贝塔中盘股</td><td>$82,300</td></tr>
+      <tr><td>低贝塔中盘股</td><td>$50,533</td></tr>
+      <tr><td>高成交量中盘股</td><td>$50,108</td></tr>
+      <tr><td>低成交量中盘股</td><td>$3,549</td></tr>
+      <tr><td>高贝塔小盘股</td><td>$34,988</td></tr>
+      <tr><td>低贝塔小盘股</td><td>$801</td></tr>
+      <tr><td>高成交量小盘股</td><td>$32</td></tr>
+      <tr><td>低成交量小盘股</td><td>-$17,792</td></tr>
+    </tbody>
+  </table>
+  <p>摘要：本研究表明，使用成交量加权平均线的投资者通常能更早地进场交易，同时提高了做出正确投资决策的概率。然而，当投资者判断失误时，加入成交量信息可以使损失更小。在交易高波动性和高流动性的证券以及中小盘股时，这一优势更为显著。</p>
+  <h3 id="vw-macd">成交量加权MACD（VW-MACD）</h3>
+  <blockquote>
+    <p>“一般人不希望被告知现在是牛市还是熊市。他想要的是有人告诉他具体该买或卖哪只股票。他想要不劳而获。他不愿意工作。他甚至不愿意思考。”</p>
+    <footer>——杰西·L·利弗莫尔</footer>
+  </blockquote>
+</section>
+<section class="book-page" data-pdf-page="188"><p>VWMA的简单性使其易于修改。可用最高价代替收盘价来构建最高价的VWMA，或用最低价代替来构建最低价的VWMA。还可以采用其他价格平均方法，例如指数平滑法。日内交易者可能想将数据设置从时间改为逐笔成交，从而将VWMA转变为一种经过修改且可定制的VWAP。同样，可以应用各种过滤器，通过类似于逐笔成交量/资金流的排序块大小对日内逐笔成交进行排序。寻找新思路的分析师可以组合这些VWMA方法的各种变体，以形成一些具有启发性的分析。</p><p>此外，成交量加权移动平均线可以与现有指标结合使用，形成新的成交量加权指标。其中一个指标是成交量加权异同移动平均线（VW-MACD）。我在2000年初担任T.P. Donovan Investments的投资组合经理和市场技术分析师时开发了VW-MACD。该指标由受人尊敬的市场分析师约翰·布林格在其2002年的著作《布林格论布林带》中推广开来。</p><p>VW-MACD是对杰拉尔德·阿佩尔于1979年开发的原始异同移动平均线（MACD）指标的简单修正（参见图16.9）。阿佩尔的MACD绘制的是短期指数移动平均线与长期指数移动平均线之间的差值。当该差值（称为MACD线）为正（零轴以上）且上升时，表明价格趋势向上且走高。当MACD线为负（零轴以下）且下降时，情况则相反。计算该差值的平滑指数移动平均值，形成MACD信号线。当MACD线位于MACD信号线之上时，说明MACD的动量在上升。同样，当MACD线低于MACD信号线时，MACD的动量在下降。MACD线与MACD信号线之间的差值通常以柱状图形式绘制，以突出两条线之间的价差。阿佩尔的MACD被广泛用于提供标的工具的趋势和动量指示。</p></section>
+<section class="book-page" data-pdf-page="189">
+  <p>为这种组合添加成交量加权的一种方法是，用两个相应的成交量加权平均线替换计算MACD差值所用的两条指数移动平均线。因此，成交量加权MACD（VW-MACD）将成交量加权的短期趋势与成交量加权的长期趋势进行对比。信号线通常保留为指数移动平均线，不额外进行成交量加权。这是因为VW-MACD线的计算中已经包含了成交量，使MACD差值公式本身就具有成交量加权特性。如果也将信号线改为指数成交量加权移动平均线，会进一步突显成交量，导致当近期成交量较大时，信号线移动速度加快并远离MACD差值，而当成交量较小时，信号线移动速度减慢并向MACD差值靠拢。这种行为很可能对技术分析师来说适得其反。</p>
+  <p>阿佩尔发明的MACD代表价格趋势的趋同与背离，而VW-MACD代表成交量加权价格趋势的趋同与背离。通过成交量加权修正，在阿佩尔的MACD中可以看到由注入成交量到……</p>
+  <figure>
+    <img src="/assets/img/investing-with-volume-analysis-cn/image-60040c75aa50.png" alt="图16.9: VW-MACD">
+    <figcaption>图16.9 成交量加权MACD（VW-MACD），来源：Worden的StockFinder。<br>（图表[或数据]由TeleChart 2007®或StockFinder®生成，后者是Worden Brothers, Inc.的注册商标，地址：Five Oaks Office Park, 4905 Pine Cone Drive, Durham, NC 27707。电话：(800) 776-4940 或 (919) 408-0542。www.Worden.com。）</figcaption>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="190">
+<p>简单移动平均线。成交量的加入使得成交量加权MACD（VW-MACD）通常比传统MACD更灵敏、更可靠。</p>
+<h2 id="trend-thrust-indicator">趋势推力指标（Trend Thrust Indicator）</h2>
+<blockquote>“自适应方法将为投资过程增加巨大价值；毕竟，这才是最终目的——赚钱。”<br>——约翰·布林格（John Bollinger），CFA，CMT，布林格资本管理公司</blockquote>
+<p>趋势推力指标（TTI）是成交量加权MACD（VW-MACD）的增强版。TTI的设计源自VW-MACD指标，但以独特的方式使用成交量乘数来放大成交量对成交量加权移动平均线的影响。与VW-MACD指标一样，TTI使用成交量加权移动平均线（VWMA），而非指数移动平均线。成交量加权平均线依据每个周期内的成交量按比例给收盘价赋权，因此TTI更强调成交量较大的价格趋势，而对成交量较小的周期则赋予较少权重。在本章前面，我展示了成交量加权移动平均线（Buff平均数，<span lang="en">Buff Averages</span>或VWMA）在提高简单移动平均线灵敏度的同时，也提升了其可靠性。</p>
+<p>与MACD和VW-MACD指标类似，TTI通过从长期（慢速）平均线中减去短期（快速）平均线来计算差值。该差值再与成交量乘数结合，形成Buff差值（<span lang="en">Buff Spread</span>，见图16.10）。</p>
+<p>加入成交量乘数进一步增强了成交量变化对Buff差值的影响。成交量乘数的计算方法是，将短期成交量均值（短期定义为与较短成交量加权价格均线相同的时间周期）除以长期成交量均值（长期定义为与较长成交量加权价格均线相同的时间周期）。将此成交量乘数升至二次幂，再乘以快速成交量加权移动平均线，生成成交量增强的快速均线。同样，对成交量乘数取倒数并升至二次幂，再乘以慢速成交量加权</p>
+</section>
+<section class="book-page" data-pdf-page="191">
+  <figure>
+    <img src="/assets/img/investing-with-volume-analysis-cn/image-c73e12c9d076.png" alt="TTI趋势推力指标图" style="display:block; margin:0 auto;" />
+    <figcaption>图16.10 TTI趋势推力指标。TTI使用成交量增强的移动平均线产生成交量增强的慢速平均线。这导致快速平均线在成交量增加时成比例地变大，在成交量减少时成比例地变小。类似地，慢速平均线在成交量确认价格时成比例地变小，在成交量与价格背离时成比例地变大。然后通过从增强的长期平均线中减去增强的短期平均线来计算Buff价差。净效果是当价格和成交量相互确认时，产生更大、更快的“增强型”Buff价差，当价格和成交量背离时，产生更小、更慢的Buff价差。(使用TradeStation创建。©TradeStation Technologies, Inc. 版权所有。)</figcaption>
+  </figure>
+  <p>TTI中平均Buff价差或信号线的计算也通过成交量信息进行了增强，但使用了一种独特的自适应移动平均方法。这种自适应平均可能会改变平均TTI信号线的九周期长度（计算中使用的标准周期数）。当成交量增加时，平均价差/信号线的长度变长，产生平滑效果。然而，当成交量减少时，TTI信号线变短，强调更近期的动量。通过</p>
+</section>
+<section class="book-page" data-pdf-page="192">
+  <figure style="text-align:center;">
+    <img src="/assets/img/investing-with-volume-analysis-cn/image-2ddf5015496a.png" alt="图16.11 MACD与趋势推力指标（TTI）（缓冲价差）">
+    <figcaption>图16.11 MACD与趋势推力指标（TTI）（缓冲价差）</figcaption>
+  </figure>
+  <p>通过这种方式构建自适应信号线，当成交量不确认价格时，信号线会更紧密地跟踪缓冲价差（Buff Spread）。这应能产生更快的逆趋势信号。</p>
+  <p>然而，当成交量确认价格时，平均价差/信号线会变得更长且更松散。平均价差/TTI信号线与缓冲价差之间距离的扩大，会延迟或否决逆趋势操作。当缓冲价差向上穿越TTI信号线或平均价差时，代表投资者正在吸筹，是买入信号。类似地，当缓冲价差向下穿越TTI信号线（TTI平均值）时，则是派发的信号，因此是卖出信号（见图16.11）。</p>
+  <p>要证明任何假设的正确性，都必须完成一个准确且可衡量的测试。该假设通过一个比较两个指标的交易系统进行了验证。第一个用于比较的指标是杰拉尔德·阿佩尔（Gerald Appel）开发的传统异同移动平均线（MACD）指标。第二个指标是趋势推力指标（TTI）指标。这两个指标都使用相同的12日和26日移动平均线价格数据来生成买卖信号。周期较短的12日移动平均线对……的反应更为灵敏</p>
+</section>
+<section class="book-page" data-pdf-page="193"><p>它更强调近期的价格变化，因此对当前的价格行为和趋势变化更为敏感。较长期的26日移动平均线包含更多信息，更能反映长期趋势。由于其范围更广，长期移动平均线通常滞后于短期移动平均线发出的信号。当移动平均线向上弯曲时，投资者感受到积极的动能。当移动平均线向下弯曲时，情况则相反。</p><p>长短移动平均线之间的差值是离散度（spread）。该离散度代表某个投资工具的当前动能。与移动平均线一样，当离散度向上弯曲时，它标志着标的证券的上升动能；当离散度向下弯曲时，它表示标的证券的下降动能。当对离散度进行平均时，该平均值就代表了动能的趋势。当离散度跌破其平均值时，就会出现派发迹象，产生卖出信号。同样，当离散度上穿其平均值时，这代表投资者的吸筹行为，是一个买入信号。</p><p>那么，哪个指标——MACD还是TTI——在四个R标准的衡量下产生了最佳信号？如果我们的技术分析成交量理论正确，那么你预期成交量增强的系统会显示出改善的交易结果。由于TTI与MACD的区别仅仅在于注入和操纵了成交量信息，如果TTI显著优于MACD，那么可以逻辑地得出结论：成交量在预测未来价格走势方面增加了重要的信息。</p><p>这项研究不仅需要建立一种客观统计结果的方法，而且我还关注所研究样本的显著性。一个可靠的测试必须既无偏又全面，并且必须使用可观察的经验和可衡量证据的科学方法。为了实现这些目标，测试被分解为几个全面的部分。证券按三种市值规模选取：以标普小盘股指数（S&P Small Cap Index）衡量的小盘股，以标普400指数（S&P 400 Index）衡量的中盘股，以及</p></section>
+<section class="book-page" data-pdf-page="194">
+  <p>以标准普尔100指数衡量的市值规模。同样重要的是每只证券的交易特征。因此，证券进一步按照成交量和波动率的特征进行细分。当这七个特征组合起来时，总共形成了12个组别：小市值高成交量、小市值低成交量、小市值高波动率、小市值低波动率、中等市值高成交量、中等市值低成交量、中等市值高波动率、中等市值低波动率、大市值高成交量、大市值低成交量、大市值高波动率和大市值低波动率（见表16.1）。</p>
+  <p>为确保结果无偏，对这12个子组中的每一组各选取5只证券进行回测，总计60只证券，以确保</p>
+
+  <figure class="table">
+    <figcaption>表16.1 研究测试的60只股票<br/>根据三个市值规模和四种风格（按最突出的特征）选取的60只证券</figcaption>
+
+    <table>
+      <caption>大市值 (Large Cap)</caption>
+      <thead>
+        <tr>
+          <th>低波动</th>
+          <th>高波动</th>
+          <th>高成交量</th>
+          <th>低成交量</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>PG<br>HNZ<br>CL<br>MMM<br>ETR</td>
+          <td>EP<br>AES<br>DAL<br>ATI<br>NSM</td>
+          <td>CSCO<br>MSFT<br>INTC<br>ORCL<br>GE</td>
+          <td>ATI<br>BCC<br>BDK<br>ROK<br>CPB</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table>
+      <caption>中等市值 (Mid Cap)</caption>
+      <thead>
+        <tr>
+          <th>低波动</th>
+          <th>高波动</th>
+          <th>高成交量</th>
+          <th>低成交量</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>EQT<br>BOH<br>CLI<br>HE<br>NFG</td>
+          <td>ACF<br>BRW<br>RSAS<br>WIND<br>TQNT</td>
+          <td>ATML<br>MCHP<br>IDPH<br>GILD<br>ACF</td>
+          <td>WPO<br>BDG<br>TECUA<br>KELYA<br>CRS</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <table>
+      <caption>小市值 (Small Cap)</caption>
+      <thead>
+        <tr>
+          <th>低波动</th>
+          <th>高波动</th>
+          <th>高成交量</th>
+          <th>低成交量</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>CLP<br>CHG<br>ESS<br>GBP<br>SHU</td>
+          <td>REGN<br>FLOW<br>NOR<br>OCA<br>CRY</td>
+          <td>PSUN<br>ADPT<br>KLIC<br>PCLE<br>CERN</td>
+          <td>NPK<br>HGGR<br>OXM<br>SKY<br>LAWS</td>
+        </tr>
+      </tbody>
+    </table>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="195">
+<p>对于显著样本量，为了增加可信度，代表各组的五只证券并非随机选取，而是通过识别出具有所测特征的领先者来确定。因此，根据彭博（Bloomberg）于2003年4月8日的数据（见表16.1），在三个市值组中分别选取了成交量最高和最低的五只证券，以及波动性最高和最低的五只证券，用于本研究。重复出现的证券（高成交量和高贝塔值的股票偶尔会重复）仅使用一次。历史数据不足的证券被剔除，并以次优的标的替代。我使用这60只证券、12个组、4种类型和3个类别来检验我们的假设。</p>
+<p>为保持系统客观性，在测试中既考虑了系统生成的多头交易，也考虑了空头交易。当价差向上穿越平均价差时建立多头头寸；当价差向下穿越平均价差时建立空头头寸。每次穿越均持有10,000美元的头寸。未包含佣金。</p>
+<p>对于大盘股，测试期间为1991年10月3日至2003年6月11日，共计3,000个交易日。由于小盘股和中盘股的历史数据较短，若采用3,000个交易日，符合研究特征的合格证券数量将大幅减少。作为解决方案，这些股票采用2,000个交易日，即测试期间为1995年8月3日至2003年6月11日，针对小盘股和中盘股。</p>
+<h3 id="responsiveness">响应性</h3>
+<p>成交量是否领先价格？理论上，成交量增加应出现在显著价格变动之前，从而更快地发出下行和上行信号。这一技术分析的基本信条，自查尔斯·道（Charles Dow）时代以来便被奉为圭臬。通过用成交量这类价格领先指标对移动平均线进行加权，不仅能够更迅速地识别趋势，还能在趋势结束时更早离场。一个系统产生的信号越多，其响应性就越强。在衡量响应性时，TTI（趋势推力指标）信号线的自适应特性是一个缺陷。TTI的自适应特性旨在当成交量确认价格下跌时增加卖出信号的响应性，并在成交量确认价格上涨时加快买入信号。然而，当...</p>
+</section>
+<section class="book-page" data-pdf-page="196">
+<p class="caption"><strong>图16.12</strong> 异同移动平均线（MACD）与趋势推力指标（TTI）缓冲版的响应性</p>
+<p>当成交量与上升的价格走势背离时，由价差移动平均线给出的买入信号会被延迟，或者可能否定买入信号。同样，当成交量与下跌的价格背离时，自适应特性会减缓或可能否定许多卖出信号。此特性旨在基于成交量理论减少“虚假或不良”信号的数量，而增加的可靠性可能会降低趋势推力指标（TTI）的总交易次数。</p>
+<p>然而，由于成交量领先价格，TTI在大、中、小盘股的所有三个市值领域产生了更多的交易。在四种风格中，TTI在三种风格中产生了更多交易，包括低波动性和高波动性品种以及低成交量品种（见图16.12）。然而，MACD在高成交量类别中产生了更多的交易。</p>
+<p>当考察12个子群组时，TTI在12个子群组中的9个产生了更多交易。中盘高波动性品种以及中盘和小盘高成交量品种是例外。总体来看，在所测试的60只证券中，TTI平均每只证券产生200次交易，而MACD每只证券产生181次交易，响应性提升了近10%。</p>
+<h3 id="reliability">可靠性</h3>
+<p>一个指标能够产生更早的进场信号固然很好，但该信号的可靠性至关重要。通常，可靠性和响应性之间存在权衡。短期</p>
+</section>
+<section class="book-page" data-pdf-page="197">
+<p>图16.13 TTI与MACD对所有品种的可靠性对比。</p>
+<p>移动平均线可能会因市场波动而产生更多虚假信号，但短期移动平均线能让交易者更快跟上趋势的变动。长期移动平均线通常更为可靠。然而，其缺点在于长期移动平均线通常会让交易者进出场的时机滞后，从而错失部分利润。技术分析师已探索了多种方法来优化这种跟随趋势时在响应速度与可靠性之间的权衡，包括对均线进行时间加权或增加更多移动平均线参数（多重移动平均线）。然而，从整体来看，这些改进并未显著提升系统表现。根据技术分析理论，成交量加权应该能同时改善这两个方面，原因有二。第一，成交量应在放量时确认价格变动。第二，当成交量与价格背离时，它发出的信号会延迟，甚至根本不发出信号。因此，如果这一假设成立，将成交量信息输入价格均线不仅能产生更快的信号，还能产生更可靠的信号。我通过使用MACD指标与成交量增强的TTI（趋势推力指标）比较盈利交易百分比，测试并衡量了其可靠性。结果无可争议地支持了我们的成交量假设。</p>
+<p>TTI在所有60只证券中都产生了更高的盈利交易百分比（100%）。具体来说，在这60只证券中，使用MACD指标产生最高盈利率的是OXM（Oxford Industries）。使用MACD指标时，OXM的盈利时间占比为42.96%，这是用MACD测试的证券中最高的可靠性。相比之下，使用TTI时，任何单只证券的最低可靠性……</p>
+</section>
+<section class="book-page" data-pdf-page="198">
+  <figure>
+    <figcaption>图16.14 MACD与TTI按三种规模组和四个特征的可靠性比较。</figcaption>
+  </figure>
+  <p>表现最不稳定的证券是ATML（Atmel）。ATML的盈利时间占比为42.18%，是经TTI测试的所有证券中可靠性最低的。总体来看，MACD的平均盈利比率为34.67%，而TTI的平均盈利比率为51.61%。因此，若将传统MACD作为独立指标使用，其信号中略多于三分之一是盈利的；而TTI产生的交易中超过50%实现了实际盈利（见图16.14）。</p>
+  <h3 id="profitability">盈利能力</h3>
+  <p>任何此类研究若不纳入投资者最为关心的因素——即最终收益——便不完整；也就是，哪个指标（MACD还是TTI）赚的钱最多。接下来，我将据此最关键因素再度审视数据，以判断成交量信息的价值。</p>
+  <p>在分析三种市值类别的结果后，TTI在所有三类（小盘股、中盘股和大盘股）中的表现均优于MACD。在小盘股类别中，TTI比MACD多获利88,400美元。同时，在所有四个中盘股子类别（高成交量、低成交量、高波动性和低波动性）中，TTI也产生了更高的利润。在中盘股板块，TTI比MACD多获利35,865美元。TTI在……中也跑赢MACD</p>
+</section>
+<section class="book-page" data-pdf-page="199">
+  <p>盈利能力：趋势推力指标（TTI）相对于MACD按类别划分的改进</p>
+  <p>在四个中盘子群中的三个，包括低成交量以及高波动率和低波动率的股票，TTI的表现优于MACD。在大盘股板块中，大盘低成交量股票是唯一使用MACD表现更好的子群。总体而言，使用成交量增强的TTI指标的大盘股比MACD指标多产生了137,138美元。因此，TTI在所有三个市值类别中都产生了更丰厚的盈利（见图16.15）。</p>
+  <p>接下来，我将TTI的盈利能力与MACD按四种风格进行了比较。与三个规模组一样，TTI在所有四个风格组中都产生了更丰厚的盈利。在高成交量组中，TTI多产生了72,125美元；在低成交量股票中增加了21,199美元；在低波动率股票中获得了90,550美元的改进；在高波动率类别中比MACD高出了77,529美元。总体而言，TTI比MACD指标多赚了261,403美元。这相当于使用TTI指标每只股票平均改进4,356美元（见图16.15）。</p>
+  <p>衡量经风险调整后的盈利能力的一种方法是使用称为盈利因子的比率。盈利因子计算交易策略每一美元亏损对应多少美元的盈利。该比率通过总盈利除以总亏损计算得出。MACD在所有七个主要组别中再次落后，TTI在小盘股、中盘股和大盘股，以及低成交量和高成交量、低波动率和高波动率股票中均录得更高的盈利因子。在12个子群中，TTI指标在10个子群中产生了更高的平均盈利因子，中盘高成交量和大盘低成交量是例外。总体而言，成交量信息公式化...</p>
+</section>
+<section class="book-page" data-pdf-page="200">
+<p>通过趋势推力指标（TTI），MACD的利润因子平均提高了超过10%。</p>
+<p>总之，使用成交量信息调整的趋势推力指标（TTI），比仅由价格衍生的趋势指标，更能有效识别投资者不断变化的观点。通过这项研究可以看出，经过恰当分析的成交量信息确实能证实价格趋势。进一步说明，借助成交量确认，确实能更好地识别投资者的吸筹和派发模式。同样，那些与成交量资金流向背离的趋势吸筹和派发模式的证据应予以忽略。通过MACD与TTI指标的比较观察到，在本研究测量的所有主要方面，成交量持续提升了表现。恰当运用成交量信息的投资者通常会更早进入盈利交易，同时提高做出正确投资决策的概率。</p>
+</section>
+<nav class="chapter-nav"><a href="/investing-with-volume-analysis-cn/chapter-15/">上一章：第15章：基于逐笔成交的成交量指标</a><a href="/investing-with-volume-analysis-cn/chapter-17/">下一章：第17章：成交量价格确认指标</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=acb1f6812298"></script>
+</body>
+</html>

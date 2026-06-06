@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="第19章：升级你的成交量：引入资本加权成交量 | 《成交量分析投资法》中文译稿">
+  <title>第19章：升级你的成交量：引入资本加权成交量 | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=62159d02abf1">
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <div class="sidebar-heading">
+    <h2>书稿目录</h2>
+  </div>
+  <nav class="sidebar-list"><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/">首页</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/introduction/">引言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-1/">第1章：市场分析的两种视角</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-2/">第2章：技术分析的历史</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-3/">第3章：价格分析</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-4/">第4章：成交量分析</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-5/">第5章：成交量：市场的力量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-6/">第6章：如何像读书一样解读市场</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-7/">第7章：趋势中的成交量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-8/">第8章：形态中的成交量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-9/">第9章：衡量成交量信息</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-10/">第10章：纯成交量指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-11/">第11章：日间成交量累积指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-12/">第12章：日内成交量累积振荡器</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-13/">第13章：价格区间成交量指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-14/">第14章：基于成交量指标的价格累积</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-15/">第15章：基于逐笔成交的成交量指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-16/">第16章：成交量加权价格指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-17/">第17章：成交量价格确认指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/volume-indicators-table/">成交量指标表</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-18/">第18章：广度指标概览</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item is-current"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-19/" aria-current="page">第19章：升级你的成交量：引入资本加权成交量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-20/">第20章：风险事业</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-21/">第21章：综合运用：成交量主导的策略</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-22/">第22章：现代成交量问题</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/bibliography/">参考文献</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/index/">索引</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <h1>第19章：升级你的成交量：引入资本加权成交量</h1>
+<section class="book-page" data-pdf-page="245">
+<h1 id="chapter-19">第19章：升级你的成交量：引入资本加权成交量</h1>
+<blockquote>“我们面临的重大问题无法在我们创造它们时的同一思维水平上得到解决。”<cite>——阿尔伯特·爱因斯坦</cite></blockquote>
+<h2 id="its-time-to-buff-up-your-volume">是时候升级你的成交量了</h2>
+<p>无论投资者是收听新闻、阅读报纸，还是通过数字方式获取金融信息，主要标题都是主要指数的价格变动。指数的价格是头条；指数的成交量有幸被收录在脚注中。然而，对于我们这些深入研究这些数据集的人来说，指数和交易所的成交量数据存在一个更基本的问题，那就是它具有极大的误导性。然而，每一个主要的数据提供商——道琼斯、路透社、汤森路透——提供的成交量数据几乎同样毫无价值。这种具有欺骗性的指数数据被分发给经纪公司、新闻提供商和互联网用户。这个数据问题如此严重，以至于我在超过十年的时间里，都没有在分析中使用过来自指数的成交量数据。</p>
+</section>
+<section class="book-page" data-pdf-page="246">
+<h2 id="traditional-volume-price-volume-relationship-disconnect">传统成交量：价量关系脱节</h2>
+<blockquote>
+<p>“随着股票市场学习者的进步，他会发现相对数据几乎总是比原始数据（实际数据）更有用。因此，更进阶的观察者不仅要研究某段时间内股票的实际成交量，还要研究该成交量占总成交量的比率或百分比。” ——哈罗德·M·加特利，1935年</p>
+</blockquote>
+<p>那么，指数和交易所的成交量数据究竟出了什么问题？价格指数与其成交量总量之间的关系存在显著脱节。然而，本书始终传达的核心主题是，成交量最好结合价格来理解。基于这一视角，理解价格指数与成交量总量的编制方式之间的差异至关重要。价格指数是通过将每个成分股的表现按其在该指数中的权重加总计算得出的。确定权重的方法有很多，包括市值加权、等权重、收入加权、股息加权以及其他无数种可能。但通常情况下，权重是按市值确定的——即每家公司相对于整体市场而言价值占比多少。一家公司的市值是通过将可供出售的股票数量（发行在外股份，shares outstanding）乘以股价计算得出的。因此，在市值加权指数中，价值更高的公司对指数的影响力按比例更大。同样，价值较低的公司对指数的影响则较小。</p>
+<p>另一方面，对应的指数成交量并未进行加权，甚至没有编制成指数。相反，指数成交量只是指数内所有股票成交股数的总和。这意味着指数的价格关系与其成交量总量不成比例。采用等权重价格指数也无法解决问题——远远不能。尽管每个成分股具有相同的价格权重，但每个成分股的成交量权重并不相同。举个例子，我们来考察两只</p>
+</section>
+<section class="book-page" data-pdf-page="247"><p>两家市值相等的股票。股票1的交易价格为每股10美元，股票2为每股100美元。假设这两只股票吸引相同的市场兴趣，那么价格较低的股票其成交量应当是价格较高股票的10倍。2:1股票分拆就是这一原理的很好例证。分拆时成交量会发生什么变化？通常会翻倍。</p><p>主要问题就在于此。指数成交量总和与价格指数之间的数据并不具有同质性。例如，等权重指数中的一只股票价格上涨了2%。在等权重的标准普尔500指数中，这2%的价格变动对价格指数的影响仅为0.00004（0.02 × 1/500）。然而，同样的成交量变动是否会产生相同效果则令人怀疑。继续前面的例子，假设该股票的成交量也增加了2%。因此，股票价格和成交量都增加了2%。但这种2%的比例性成交量增长，在标准普尔500指数总成交量的计算中，极不可能也呈现出同等比例。这是因为标准普尔500指数的成交量只是将500只成分股的成交量简单相加。更糟糕的是，通常所显示的标准普尔500指数成交量根本不是标准普尔500指数自身的成交量，而是纽约证券交易所所有上市证券的成交量。</p><p>继续我们的例子，如果这只价格和成交量都上涨了2%的股票是一只高成交量、低价格的小盘低价股，那么该股票的日成交量可能会在指数总成交量中占有不成比例的巨大比重。如果这只股票占指数总成交量的1%，那么其2%的成交量变动对总成交量的影响将达0.0002（0.02 × 0.01）。相比之下，同样的2%价格变动仅仅导致价格指数0.00004的变化。如此一来，该股票2%的价格和成交量变化对指数成交量的影响，竟是对价格指数影响的五倍。这样一来，等权重指数在价格上是等权重的，但在成交量方面却并非按比例加权。因此，在等权重价格指数中，最终得到的是成交量的不平等代表。无论价格指数是等权重的、市值加权的，还是其他形式的价格加权，通常低价且成交量较大的股票会对成交量总和产生不成比例的较大影响，而高价且成交量较低的股票则具有显著偏低且不具代表性的比例影响。</p></section>
+<section class="book-page" data-pdf-page="248">
+    <p>金额成交量（即股价乘以成交量）在一定程度上对低价股有助益，但并未解决权重差异问题。</p>
+    <h3 id="blue-chips-to-cow-chips">从蓝筹股到牛粪股</h3>
+    <p>指数成交量这一问题在2008年信贷危机的影响中表现得最为明显。有人将此次危机称为“蓝筹股变牛粪股”现象，因为一些原本大型的蓝筹股在信贷危机中一落千丈，变得相对默默无闻。房利美（Fannie Mae）、房地美（Freddie Mac）、美国银行（Bank of America）、美国国际集团（American International Group）和花旗集团（Citigroup）就是明显的例子。这些股票曾经对指数的价格走势有着巨大的资本加权影响。然而，在撰写本文时，这些股票的交易价格仅为信贷危机前水平的极小一部分。典型的牛粪股跌幅达90%。然而，它们的市场成交量发生了什么变化呢？由于规模缩水和新股发行，这些股票的成交量飙升了500%甚至更多。</p>
+    <p>信贷危机对花旗集团与埃克森美孚（Exxon）的影响，就是“蓝筹股变牛粪股”现象的一个例证。2007年时，埃克森美孚股价为90美元，按市值计算占标普500指数的3.8%。同时，花旗集团股价为50美元，占标普500指数的1.72%。然而，到2010年5月25日，埃克森美孚股价为60美元，其资本权重降至标普500指数的3%。因此，埃克森美孚对标普500价格指数的影响力下降了21%。相比之下，花旗集团股价为3.65美元，仅占标普500价格指数的0.792%，其价格影响力下降了近54%。</p>
+    <p>现在我们来对比一下这两只知名股票在信贷危机后的成交量情况。在典型的2007年信贷危机前交易日中，标普500成分股每天成交约30亿股，其中花旗集团成交2700万股。相比之下，埃克森美孚在2007年每天通常成交1800万股。在撰写本文时，埃克森美孚成交5000万股，收于59.71美元。因此，埃克森美孚的成交量较信贷危机前平均水平上升了177%，而股价较同期下跌了33.6%。花旗集团</p>
+</section>
+<section class="book-page" data-pdf-page="249">
+<figure style="text-align:center;">
+<img src="/assets/img/investing-with-volume-analysis-cn/image-6d5a2b6db13a.png" alt="图19.1 牛粪股时有发生" />
+<figcaption>图19.1 牛粪股时有发生。该股票交易了惊人的2.38亿股，其经拆股调整后的价格下跌了90%。然而，花旗集团的成交量较2007年的典型水平上升了881%！</figcaption>
+</figure>
+<p>当时，埃克森美孚（Exxon）在标准普尔500指数中的权重为3%；因此，其价格变动对价格指数的贡献为3%。然而，该日标准普尔500指数成分股的总成交量为73亿股，这使得埃克森美孚的成交量仅占标准普尔500总成交量的0.68%。因此，埃克森美孚——标普500中第二大价格成分——在成交量总额中仅占一小部分。相比之下，花旗集团（Citigroup）的价格在标普500指数中的权重仅为0.792%，但其成交量却占标普500总成交量的3.26%。因此，花旗集团的价格变动对价格指数的影响不到1%，而其成交量却占指数总成交量的3%以上。因此，花旗集团的成交量数据几乎……</p>
+</section>
+<section class="book-page" data-pdf-page="250"><figure><img src="/assets/img/investing-with-volume-analysis-cn/image-58b03f411b39.png" alt="图19.2 牛粪股"/><figcaption>图19.2 牛粪股：其对总成交量数据的影响是埃克森的五倍，但埃克森的价格影响力却几乎是花旗的四倍！</figcaption></figure><p>通过这个例子，你很容易看到目前的成交量统计方法呈现出的是一幅多么不平等且完全扭曲的画面！尽管这个例证是针对标准普尔500指数（S&P 500）这一资本加权指数，但同样的问题出现在所有指数报告的成交量数据中。此外，同样的成交量数据问题也存在于所有交易所的成交量中，包括纽约证券交易所（NYSE）、美国证券交易所（AMEX）和纳斯达克（NASDAQ）。这是因为传统的成交量报告方式是通过总成交量计数。</p><h2 id="index-volume-analysis-alternatives">指数成交量分析的替代方案</h2><p>由于数据严重失真，十多年来，我在进行市场广度分析时一直没有使用交易所或指数的成交量。</p></section>
+<section class="book-page" data-pdf-page="251">
+  <p>相反，我曾经在成交量分析中使用交易所交易基金（<span lang="en">ETF</span>）数据，涵盖大盘、主要板块和行业组。尽管这代表了一大改进，但远非完美。之所以更好，是因为<span lang="en">ETF</span>中交易的每一单位都代表买方和卖方交换了一个经加权和比例调整后的指数单位，从而避免了较小的高成交量、低资本权重股票权重过大，而较大的低成交量、高资本权重股票权重不足的问题。我只使用主要的、最活跃的<span lang="en">ETF</span>，以避免流动性较差的<span lang="en">ETF</span>中经常出现的失真情况。</p>
+  <p>然而，使用<span lang="en">ETF</span>成交量数据远非完美的解决方案。一个问题是许多指数有多个<span lang="en">ETF</span>替代品。然而，更大的问题是这种方法假设成分股标的股票的交易活动会在<span lang="en">ETF</span>交易中复制。尽管在指数和交易所的分析中，这通常优于总成交量方法，但并不是一个准确的假设。此外，这种方法也缺乏透明度，因为你无法观察成交量流动的源头。它是来自权重较高的价格成分还是权重较低的？更重要的是，成交量是来自上涨的股票还是下跌的股票？仅从<span lang="en">ETF</span>成交量中不可能确定。然而，这些信息在广度分析中至关重要。</p>
+  <h2 id="cap-weighted-volume">资本加权成交量</h2>
+  <blockquote>“理性的人让自己适应世界；非理性的人则坚持让世界适应自己。因此，一切进步都依赖于非理性的人。”<br>——乔治·伯纳德·萧</blockquote>
+  <p>那么市场分析师该怎么办呢？我设计的解决方案是资本加权成交量。资本加权成交量根据每只股票在基础指数或交易所中的价格-资本权重，对单个股票的成交量进行加权。因此，如果一家公司是更大、更有影响力的成分股，那么其相应的成交量就……</p>
+</section>
+<section class="book-page" data-pdf-page="252">
+  <p>按比例反映了成分股成员较大的规模。同样，一个无足轻重的小公司的成交量也按比例反映了其较小的规模。通过这种方式，成分股的成交量相对于其对指数或交易所的资本加权价格影响得到了平等体现。以下六个步骤将使你的指数成交量升级：</p>
+  <h3 id="capital-weighted-volume">资本加权成交量</h3>
+  <ol>
+    <li><strong>第1步：计算市值。</strong><br/>市值 = 股票价格（收盘价或当前价格） × 流通股本数量</li>
+    <li><strong>第2步：计算指数/交易所总市值。</strong><br/>指数或交易所总市值 = 所有成分股公司的市值之和</li>
+    <li><strong>第3步：计算每只股票的资本权重。</strong><br/>单只股票的资本权重 = 该股票的市值 / 指数或交易所总市值</li>
+    <li><strong>第4步：计算股票的资本加权成交量。</strong><br/>单只股票的资本权重 × 成交量（收盘或当前）</li>
+    <li><strong>第5步：计算指数/交易所资本加权成交量。</strong><br/>指数或交易所资本加权成交量 = 所有单只股票的资本权重之和</li>
+    <li><strong>第6步：剔除价格指数变动的影响，重新计算指数或交易所资本加权成交量。</strong><br/>资本加权成交量指数 × –1 ×（指数的价格变动）</li>
+  </ol>
+  <h3 id="comparing-traditional-volume-tallies-to-cap-weighted-volume">比较传统成交量计数与资本加权成交量</h3>
+  <blockquote>
+    <p>“这一点很重要——百分比关系提供了一种方法，可以立即识别出某只股票中的任何异常活动（成交量）。”——埃德温·S·奎因，1935年</p>
+  </blockquote>
+</section>
+<section class="book-page" data-pdf-page="253">
+<p>让我们回到之前花旗集团和埃克森的例子。回顾一下，在信贷危机之前，埃克森的股价代表了标准普尔500指数价格变动的3.8%。其成交量仅占指数总成交量的0.6%。同样，花旗集团的股价代表了价格指数的1.7%，成交量占总成交量的0.9%。当时，埃克森是标准普尔500指数的最大成分股，但其成交量仅占总成交量的0.6%。花旗集团是标准普尔500指数的第五大成分股，但其成交量仅占总成交量的0.9%。然而，若采用资本加权成交量，埃克森通常1800万股的成交量对指数的影响将与其资本加权比重3.8%成正比。如果埃克森的成交量飙升或下跌50%，其成交量变化将通过其在指数中3.8%的资本加权得到反映，与价格成份变动的方式相同。花旗集团的资本加权成交量将与其在标准普尔500指数中1.7%的股权资本加权相等。通过这种方式，资本加权…</p>
+<figure class="illustration"><img src="/assets/img/investing-with-volume-analysis-cn/image-bef696b6e219.jpg" alt="图19.3"><figcaption>图19.3 不要被那些几分钱的股票所迷惑。</figcaption></figure>
+</section>
+<section class="book-page" data-pdf-page="254">
+<p>该方法按比例协调每个指数成分股的成交量贡献与其各自的资本价格权重。</p>
+<p>让我们回到埃克森美孚和花旗集团的例子中进行比较。这一次，我们考察信用危机后的日期，2010年5月25日。当天，埃克森美孚占标准普尔500指数权重的3%，成交量为5050万股，而此前几个月的日均成交量为2800万股。因此，埃克森美孚当天的成交量大幅激增了77%。同样，在同一天，花旗集团的成交量从正常水平的1.7亿股激增40%至2.38亿股。</p>
+<p>然而，使用过时的总成交量方法，埃克森美孚当天对标准普尔500总成交量计数的影响仅为0.7%。采用改进后的资本加权成交量数据，恢复了埃克森美孚3%的完整资本权重。因此，埃克森美孚的资本加权成交量占总资本加权成交量的3%，而传统指数成交量仅占0.7%——提升了超过400%！花旗集团的2.38亿股成交量占传统成交量总和的3.3%。然而，采用资本加权成交量协调了花旗集团的成交量与其仅0.792的微小资本权重——这次，花旗集团的成交量影响相比传统标准普尔500成交量计数降低了超过400%！当天标准普尔500全部成分股的总成交量为72亿股，而日均成交量为63亿股，上涨了15%。然而，基于资本加权成交量计算相对指数成交量变化，显示成交量上涨超过25%！</p>
+<h3 id="flash-crash-cap-weighted-volume-in-action">闪电崩盘：资本加权成交量在行动</h3>
+<blockquote>
+  <p>“请记住，成交量的相对变化远比实际变化重要得多，因为在活跃时期，几乎所有股票的交易量都会增加。”</p>
+  <cite>——哈罗德·M·加特利和埃德温·S·奎因，1935年</cite>
+</blockquote>
+</section>
+<section class="book-page" data-pdf-page="255">
+<p>资本加权数据（capital weighted volume）不仅提供了更准确的表述，还让我们能够更好地跟踪机构的操作。大型机构在交易小盘股时面临困难，因为它们在建立或退出头寸时会对价格产生影响。如果一家机构想要清算或吸筹，它可能会首先抛售流动性强的大盘股，以免惊动市场。资本加权成交量作用的一个完美例子来自“闪电崩盘”（Flash Crash）前夕的交易日。2010年5月6日，市场创造了历史：道琼斯工业平均指数暴跌近1000点，导致市场陷入混乱，创下有史以来最大单日点数跌幅。然而，资本加权成交量强烈暗示，在市场错位之前就已经出现了可疑迹象。使用传统数据，2010年4月16日是一个典型的下跌日。标准普尔500指数下跌19.5点（–1.6%），纽约证交所成交量为17.5亿股，纳斯达克综合指数下跌34.4点（–1.35%），成交量为28.9亿股。成交量变化显示，纽约证交所成交量较30天指数移动平均线增加了36.5%，纳斯达克综合指数增加了17%。总体而言，这是一个新闻淡日，评论员们难以找到头条新闻。</p>
+<p>然而，资本加权成交量却描绘了一幅完全不同的景象。4月16日，标准普尔500指数的资本加权成交量创下了历史成交纪录。从资本加权的角度来看，成交量较30天资本加权成交量指数移动平均线飙升了45%，这一纪录保持至今。为了便于理解，在闪电崩盘期间，纽约证交所的总成交量（非资本加权）是有史以来第二高的成交量日，较其30天指数移动平均成交量上涨了47%。然而，在闪电崩盘期间，资本加权成交量仅上涨了43%。纳斯达克综合指数的资本加权成交量上涨了53%，而传统纳斯达克成交量仅上涨了17%；纳斯达克100指数的变化更大，较其30天指数移动平均线上升了55%。4月16日的这些活动无异于鸣枪示警，警告大型机构正在大举抛售它们规模最大、流动性最强的持仓（见图19.4、图19.5和图19.6）。</p>
+</section>
+<section class="book-page" data-pdf-page="256">
+  <figure>
+    <img src="/assets/img/investing-with-volume-analysis-cn/image-e1295c846672.png" alt="图19.5 纳斯达克总资本加权成交量与总成交量（2010年4月16日）" />
+    <figcaption>图19.5 纳斯达克总资本加权成交量与总成交量（2010年4月16日）<br /><small>图表（或数据）由 TeleChart 2007® 或 StockFinder® 制作，它们是 Worden Brothers, Inc. 的注册商标，地址：Five Oaks Office Park, 4905 Pine Cone Drive, Durham, NC 27707。电话：(800) 776-4940 或 (919) 408-0542。网址：www.Worden.com。</small></figcaption>
+  </figure>
+  <figure>
+    <img src="/assets/img/investing-with-volume-analysis-cn/image-c0eeadd5111d.png" alt="图19.4 标普500资本加权成交量与纽约证券交易所传统成交量计数" />
+    <figcaption>图19.4 标普500资本加权成交量与纽约证券交易所传统成交量计数<br /><small>图表（或数据）由 TeleChart 2007® 或 StockFinder® 制作，它们是 Worden Brothers, Inc. 的注册商标，地址：Five Oaks Office Park, 4905 Pine Cone Drive, Durham, NC 27707。电话：(800) 776-4940 或 (919) 408-0542。网址：www.Worden.com。</small></figcaption>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="257">
+<figure class="centered">
+<img src="/assets/img/investing-with-volume-analysis-cn/image-b5d9b9e2d3fa.png" alt="图19.6"/>
+<figcaption>图19.6 标准普尔500指数资本加权成交量：2010年4月16日与5月6日闪电崩盘对比</figcaption>
+</figure>
+<h2 id="capital-weighted-volume-rebuilding-breadth-indicators">资本加权成交量：重建广度指标</h2>
+<p>与总成交量类似，资本加权成交量可用于构建各类市场广度指标。再次以4月16日为例，下跌成交量超过上涨成交量的90%（参见图19.7）。</p>
+<p>投资者还可以累计上涨与下跌成交量的区间总额。如果上涨/下跌成交量比率为正，则表明有更多成交量流入上涨的股票；而如果该比率为负，则表明下跌的股票中有更强的成交量。</p>
+<p>资本加权的上涨/下跌成交量的上升趋势，揭示了上涨股票成交量的增长；而下降趋势则显示了下跌股票成交量随时间的增长。</p>
+<p>此外，可以应用移动平均线来提供动量信号并提示趋势变化。以之前的闪电崩盘为例，资本加权的上涨/下跌成交量在5月3日（周一）——也就是闪电崩盘前三天——跌穿了其19日及29日指数移动平均线。这里的19日和29日代表了对资本加权上涨/下跌成交量进行修正的麦克莱伦振荡器。这...</p>
+</section>
+<section class="book-page" data-pdf-page="258">
+  <figure>
+    <img src="/assets/img/investing-with-volume-analysis-cn/image-53b75b90d8fd.png" alt="图19.8：闪电崩盘前预警，资本加权上涨与下跌成交量之差" />
+    <figcaption>图19.8 闪电崩盘前预警：资本加权上涨与下跌成交量之差<br/><span class="source">来源：图表或数据由 TeleChart 2007® 或 StockFinder® 生成，后者是 Worden Brothers, Inc. 的注册商标，地址：Five Oaks Office Park, 4905 Pine Cone Drive, Durham, NC 27707。电话：(800) 776-4940 或 (919) 408-0542。www.Worden.com。</span></figcaption>
+  </figure>
+  <p>该指标在事件前一天，即5月5日发出了预警信号（见图19.8）。</p>
+  <figure>
+    <img src="/assets/img/investing-with-volume-analysis-cn/image-bd0d0addf1aa.png" alt="图19.7：2010年4月16日资本加权上涨与下跌成交量" />
+    <figcaption>图19.7 2010年4月16日：资本加权上涨与下跌成交量</figcaption>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="259"><p>可以推知，任何使用指数总成交量的组合都可以与资本加权成交量有效结合。对于仅包含运营型公司的股票指数，这种方法堪称完美。然而，交易所综合指数很可能包含优先股、封闭式基金、追踪股票和多类别股份，因此会受到与非运营型公司相关的类似扭曲问题的影响。在保持长期资本加权成交量统计时，我建议将滚动累计总量保持在一年的时间范围内，因为成交量的长期增长会在更长的时间段内扭曲数据。</p><figure><img src="/assets/img/investing-with-volume-analysis-cn/image-121b13adb897.png" alt="图19.9 纳斯达克的麦克莱伦资本加权成交量在闪电崩盘前发出警告" /><figcaption>图19.9 纳斯达克的麦克莱伦资本加权成交量在闪电崩盘前发出警告</figcaption></figure></section>
+<nav class="chapter-nav"><a href="/investing-with-volume-analysis-cn/chapter-18/">上一章：第18章：广度指标概览</a><a href="/investing-with-volume-analysis-cn/chapter-20/">下一章：第20章：风险事业</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=acb1f6812298"></script>
+</body>
+</html>

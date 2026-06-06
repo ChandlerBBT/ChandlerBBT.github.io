@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="第17章：成交量价格确认指标 | 《成交量分析投资法》中文译稿">
+  <title>第17章：成交量价格确认指标 | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=62159d02abf1">
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <div class="sidebar-heading">
+    <h2>书稿目录</h2>
+  </div>
+  <nav class="sidebar-list"><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/">首页</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/introduction/">引言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-1/">第1章：市场分析的两种视角</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-2/">第2章：技术分析的历史</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-3/">第3章：价格分析</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-4/">第4章：成交量分析</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-5/">第5章：成交量：市场的力量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-6/">第6章：如何像读书一样解读市场</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-7/">第7章：趋势中的成交量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-8/">第8章：形态中的成交量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-9/">第9章：衡量成交量信息</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-10/">第10章：纯成交量指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-11/">第11章：日间成交量累积指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-12/">第12章：日内成交量累积振荡器</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-13/">第13章：价格区间成交量指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-14/">第14章：基于成交量指标的价格累积</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-15/">第15章：基于逐笔成交的成交量指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-16/">第16章：成交量加权价格指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item is-current"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-17/" aria-current="page">第17章：成交量价格确认指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/volume-indicators-table/">成交量指标表</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-18/">第18章：广度指标概览</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-19/">第19章：升级你的成交量：引入资本加权成交量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-20/">第20章：风险事业</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-21/">第21章：综合运用：成交量主导的策略</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-22/">第22章：现代成交量问题</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/bibliography/">参考文献</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/index/">索引</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <h1>第17章：成交量价格确认指标</h1>
+<section class="book-page" data-pdf-page="201">
+<h1 id="chapter-17">第17章：成交量价格确认指标</h1>
+<blockquote>
+<p>“成交量或许并不仅仅取决于市场是上涨还是下跌，还取决于各种市场状况。在上升趋势、下降趋势、盘整运动、持续上涨、逆势反弹等不同特征的市场中，成交量的表现各不相同。第二个需要注意的地方是，重要的并非是价格变动的符号，而是交易量的符号。”</p>
+<footer>——伊马德·A·穆萨（Imad A. Moosa）教授，《价量关系是不对称的吗？来自新兴股票市场的横截面证据》，2006</footer>
+</blockquote>
+<p>到目前为止，我已经研究了几种不同的使用成交量指标的方法。随着市场行情的展开，每个指标都有其独特的计算方法，代表了每日供需之间的相互作用。然而，机构的吸筹和派发模式并非主要基于这些日常波动。相反，它们的交易活动是在更大的市场趋势过程中进行战略性安排的。因此，从这一背景来理解成交量，趋势是捕捉市场中逐渐积累的潜在力量的最佳方式。短期市场行为可能具有误导性，有时甚至是故意的。然而，在长期市场趋势的背景下，机构行为不可避免地会暴露出来。鉴于这些模式，我们需要一个能够对比这些随时间推移的市场趋势的成交量指标。</p>
+<p>通过严格的测试，我还证实了，在传统的价格移动平均线中加入成交量信息，通常能更快地……</p>
+</section>
+<section class="book-page" data-pdf-page="202">
+<h1 id="chapter-17">第17章：成交量价格确认指标</h1>
+<p>这些指示同时更可靠，能够在降低风险的同时提高收益。鉴于这些发现，我希望找到一种方法，在市场的更长期趋势中找出那些表现出这些正向价量特征的个股。对这些研究的追求让我创新出了<span lang="en">Volume Price Confirmation Indicator</span>（成交量价格确认指标，VPCI）。</p>
+<h2 id="the-calculation">计算方法</h2>
+<p>VPCI将价格趋势与成交量加权价格趋势进行对比。这是通过将<span lang="en">Volume Weighted Moving Average</span>（成交量加权移动平均线，VWMA）与相应的<span lang="en">Simple Moving Average</span>（简单移动平均线，SMA）进行对比来实现的。这种检验揭示了价格趋势与其相应成交量之间内在关系的信息。虽然简单移动平均线展示了股票变化的价格水平，但它们并不反映投资者的参与程度。然而，对于成交量加权移动平均线来说，价格权重与每日成交量成正比。这两种趋势类型之间的不对称性提供了通过VPCI捕获的信息。然后对这些信息进行分析，以确定价格趋势是否有能力沿当前路径继续运行。因此，VPCI是一个主要用于确认或否定价格趋势的指标。</p>
+<p>VPCI涉及三项计算：</p>
+<ul>
+<li>成交量价格确认/否定（VPC+/–）</li>
+<li>成交量价格比率（VPR）</li>
+<li>成交量乘数（VM）</li>
+</ul>
+<p>计算VPCI的第一步是选择一个长期和一个短期时间框架。长期时间框架用于计算VPC，作为简单和成交量加权价格移动平均线的对比，并同样用于计算VM，作为简单成交量移动平均线。短期时间框架用于计算VPR，作为简单和成交量加权价格移动平均线的对比，并同样用于计算VM，作为简单成交量移动平均线。</p>
+<p>VPC的计算方法是，从同一时间框架的VWMA中减去长期SMA。本质上，这个计算是……</p>
+</section>
+<section class="book-page" data-pdf-page="203">
+  <figure style="text-align: center;">
+    <img src="/assets/img/investing-with-volume-analysis-cn/image-517810962e51.png" alt="VPC = VWMA – SMA">
+    <figcaption>图17.1 VPC = VWMA – SMA。揭示了价格与价格之间经成交量加权后的隐形联系。（来源：创建于TradeStation。©TradeStation Technologies, Inc. 保留所有权利。）</figcaption>
+  </figure>
+  <p>当该差值为正时，即为VPC+（成交量-价格确认），为负时则为VPC–（成交量-价格矛盾）。这一计算结果体现了价格与成交量随时间变化的不对称关系，具有极强的揭示作用。例如，50日简单移动平均线（SMA）为48.5，而50日成交量加权移动平均线（VWMA）为50，差值1.5代表上升趋势的成交量-价格确认。若计算值为负，则代表成交量-价格矛盾。仅此一点，就能提供关于价格趋势与其成交量之间内在不对称关系的纯粹信息（参见图17.1）。</p>
+  <p>下一步是计算成交量价格比（VPR）。VPR突出了与短期价量关系相关的VPC+/–。VPR的计算方法是用短期VWMA除以短期SMA。例如，假设短期时间框架为10天，10日VWMA为25，10日SMA为20，则VPR为25/20，即1.25。此系数乘以第一步中计算的VPC+/–。成交量价格比大于1会增加VPC+/–的权重，低于1则会减少其权重。</p>
+</section>
+<section class="book-page" data-pdf-page="204">
+<p>第三步也是最后一步是计算成交量乘数（Volume Multiplier，VM）。VM 的目标是在成交量增加时赋予 VPCI 更高的权重，而在成交量减少时降低其权重。这通过将短期成交量平均值除以长期成交量平均值来实现。例如，假设 SMA 简单移动平均线，10 天的短期平均成交量为每天 150 万股，而 50 天的长期平均成交量为每天 75 万股。则 VM 为 2（1,500,000 / 750,000）。然后将结果乘以 VPC+/-，此前 VPC+/- 已与 VPR 相乘。现在你已经拥有计算 VPCI 所需的所有信息。确认值 VPC+ 为 +1.5，乘以 VPR 1.25，得到 1.875。然后，1.875 乘以 VM 2，得出 VPCI 为 3.75。虽然这个数字表明该证券正处于非常强劲的成交量价格确认中，但最好结合价格趋势以及相对于近期 VPCI 水平来使用。接下来讨论如何最好地使用 VPCI。</p>
+<pre class="formula"><code>VPCI =
+c = close
+v = volume
+s = X # of periods short trend
+l = X × 5
+vpc = vwma(c, l) – sma(c, l)
+vpr = vwma(c, s) / sma(c, s)
+vm = sma(v, s) / sma(v, l)
+vpci = vpc × vpr × vm
+vpcis = vwma(vpci, s)</code></pre>
+<h2 id="using-vpci">使用 VPCI</h2>
+<p>与价格趋势和价格指标配合使用，VPCI 可以发出多种信号。其中包括 VPCI 大于零，表明价量关系是确认还是否定价格趋势，以及确认/否定的程度。这是 VPCI 指标给出的最重要指示。VPCI 正值确认上升趋势，而负值确认下降趋势，反之亦然。</p>
+</section>
+<section class="book-page" data-pdf-page="205">
+  <figure>
+    <img src="/assets/img/investing-with-volume-analysis-cn/image-73ff17195773.png" alt="VPCI V形底">
+    <figcaption>（来自TradeStation。©TradeStation Technologies, Inc. 保留所有权利。）<br>图17.2 VPCI V形底。接下来重要的是VPCI的趋势方向，它由VPCI的上升或下降决定。</figcaption>
+  </figure>
+  <p>接下来最重要的是VPCI（成交量价格确认指标）的趋势方向，该方向由VPCI的上升或下降决定。这提供了VPCI运动的当前路径，说明了VPCI的当前方向是与价格收敛还是背离。</p>
+  <p>最后，创建一个平滑的成交量加权VPCI平均值，称为VPCI平滑。VPCI平滑展示了VPCI相对于先前水平的变化程度。这用于指示VPCI的动量。VPCI穿过VPCI平滑线上方或下方可能表明正动量，或许是现有VPCI趋势的变化或加速。布林带也可应用于VPCI，暴露VPCI的极端情况（见图17.3）。</p>
+  <p>从根本上说，VPCI揭示了价格趋势与成交量调整后的价格趋势之间的比例失衡。成交量不断增加的上升趋势是贪婪的特征，它得到了增长所需燃料的支持。不带成交量的上升趋势则是自满的；贪婪剥夺了它维持自身所需的燃料。没有其他投资者涌入（成交量），投资者最终会失去兴趣，上升趋势最终应该会崩溃。</p>
+</section>
+<section class="book-page" data-pdf-page="206">
+  <table>
+    <caption>表17.1 价量关系的四种分类</caption>
+    <thead>
+      <tr>
+        <th>趋势与成交量方向</th>
+        <th>市场力量</th>
+        <th>心理描述</th>
+        <th>阶段1 (价格, 成交量)</th>
+        <th>阶段2 (价格, 成交量)</th>
+        <th>VWMA 计算</th>
+        <th>SMA</th>
+        <th>VPC</th>
+        <th>价格趋势对比 VPC 趋势</th>
+        <th>趋势结论</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>趋势向上，成交量上升</td>
+        <td>强劲需求</td>
+        <td>精力充沛的贪婪 = 加剧的贪婪</td>
+        <td>价格 10, 成交量 100</td>
+        <td>价格 12, 成交量 300</td>
+        <td>0.25×10 + 0.75×12 = 11.5</td>
+        <td>11</td>
+        <td>+0.5 (上升)</td>
+        <td>价格趋势 +2 (上升) vs VPC +0.5 (上升)</td>
+        <td>上升趋势，看涨确认</td>
+      </tr>
+      <tr>
+        <td>趋势向下，成交量下降</td>
+        <td>供应疲弱</td>
+        <td>带有熵的恐惧 = 冷漠</td>
+        <td>价格 12, 成交量 300</td>
+        <td>价格 10, 成交量 100</td>
+        <td>0.75×12 + 0.25×10 = 11.5</td>
+        <td>11</td>
+        <td>+0.5 (上升)</td>
+        <td>价格趋势 -2 (下降) vs VPC +0.5 (上升)</td>
+        <td>下降趋势，看涨矛盾</td>
+      </tr>
+      <tr>
+        <td>趋势向上，成交量下降</td>
+        <td>需求疲弱</td>
+        <td>带有熵的贪婪 = 自满</td>
+        <td>价格 10, 成交量 300</td>
+        <td>价格 12, 成交量 100</td>
+        <td>0.75×10 + 0.25×12 = 10.5</td>
+        <td>11</td>
+        <td>-0.5 (下降)</td>
+        <td>价格趋势 +2 (上升) vs VPC -0.5 (下降)</td>
+        <td>上升趋势，看跌矛盾</td>
+      </tr>
+      <tr>
+        <td>趋势向下，成交量上升</td>
+        <td>供应强劲</td>
+        <td>精力充沛的恐惧 = 恐惧</td>
+        <td>价格 12, 成交量 100</td>
+        <td>价格 10, 成交量 300</td>
+        <td>0.25×12 + 0.75×10 = 10.5</td>
+        <td>11</td>
+        <td>-0.5 (下降)</td>
+        <td>价格趋势 -2 (下降) vs VPC -0.5 (下降)</td>
+        <td>下降趋势，看跌确认</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <figure>
+    <img src="/assets/img/investing-with-volume-analysis-cn/image-d85365390469.png" alt="图17.3 2003年2月 VPCI V形底" />
+    <figcaption>图17.3 2003年2月 VPCI V形底</figcaption>
+  </figure>
+
+  <small class="source">（图表或数据由 Worden 兄弟公司的 TeleChart 2007® 或 StockFinder® 产生，该公司位于 Five Oaks Office Park, 4905 Pine Cone Drive, Durham, NC 27707。电话：(800) 776-4940 或 (919) 408-0542。www.Worden.com。）</small>
+</section>
+<section class="book-page" data-pdf-page="207">
+<figure style="text-align: center;">
+  <img src="/assets/img/investing-with-volume-analysis-cn/image-2d7a7bf59175.png" alt="2003年3月VPCI V形底双重确认信号">
+  <figcaption>图17.4 2003年3月成交量价格确认指标（VPCI）“V”形底双重确认信号<br/>（由TradeStation创建。©TradeStation Technologies, Inc. 保留所有权利。）</figcaption>
+</figure>
+<p>由恐惧驱动的市场表现为价格下跌趋势。没有成交量的价格下跌趋势是冷漠，是缺乏能量的恐惧。与贪婪不同，恐惧是自我维持的，可以在没有增加燃料或能量的情况下持续很长时间。给恐惧增加能量就好比给火浇油，通常在看跌方向，直到成交量价格确认指标（VPCI）反转。在这种情况下，意志薄弱的投资者被恐惧所征服，变得非理性恐惧，直到抛售高潮达到最大的同质性。此时，弱势投资者持有的筹码已被清除，产生一种“热寂”状态。这些现象可能通过VPCI跌至VPCI布林带下轨标准差之下，然后重新回升至下轨以上形成V形底来直观呈现。尽管V形底很少见，但自2002年VPCI问世以来，每一个真正的主要中期大市底部（标准普尔500指数）都由VPCI V形底标记（参见图17.3、图17.4、图17.5和图17.6）。</p>
+</section>
+<section class="book-page" data-pdf-page="208">
+  <figure>
+    <img src="/assets/img/investing-with-volume-analysis-cn/image-e86da5eaadb1.png" alt="图17.5 2006年6月 VPCI V形底" />
+    <figcaption>图17.5 2006年6月 VPCI V形底。（使用TradeStation创建。©TradeStation Technologies, Inc.保留所有权利。）</figcaption>
+  </figure>
+  <figure>
+    <img src="/assets/img/investing-with-volume-analysis-cn/image-b060c55c5c8c.png" alt="图17.6 2009年3月9日的V形底标志着毁灭性熊市的结束" />
+    <figcaption>图17.6 2009年3月9日的V形底标志着毁灭性熊市的结束。</figcaption>
+  </figure>
+  <p>注意，在使用<span lang="en">VPCI</span>（成交量价格确认指标）时，成交量领先或先于价格行为。与大多数指标不同，<span lang="en">VPCI</span>通常会在价格突破和趋势反转发生前给出信号。表17.2展示了价量趋势规则的速查表。</p>
+</section>
+<section class="book-page" data-pdf-page="209"><table><caption>表17.2 VPCI价格含义</caption><thead><tr><th>价格</th><th>VPCI</th><th>价格-趋势关系</th><th>含义</th></tr></thead><tbody><tr><td>上涨</td><td>上涨</td><td>确认</td><td>看涨</td></tr><tr><td>上涨</td><td>下降</td><td>矛盾</td><td>看跌</td></tr><tr><td>下跌</td><td>上涨</td><td>矛盾</td><td>看涨</td></tr><tr><td>下跌</td><td>下降</td><td>确认</td><td>看跌</td></tr></tbody></table><h3 id="vpci-in-action">VPCI的实际应用</h3><p>接下来，我们将查看四张股票图，每张图都展示了与VPCI指出的不同价量关系。</p><p>在图17.7中，SIRI股票的价格趋势上涨，VPCI也在上涨。在这种情况下，VPCI发出三个看涨信号。第一个信号是VPCI上升。这表明成交量和价格相互确认，体现了趋势内部的强度。同时，VPCI平滑线也在上升，且VPCI已上穿平滑线，表明确认中存在动能。这很好地预示着当前的看涨价格趋势将持续。最后也是最重要的一点是，VPCI和VPCI平滑线均位于零线上方，表明存在健康的长期吸筹。</p><p>接下来，在图17.8中，我们看到VPCI发出看跌矛盾信号的例子。TASR股票价格正在上涨，然而VPCI却在下跌。这种情况警告，显著的价格回调可能即将来临。尽管价格在上涨，成交量乍看之下似乎中性，但VPCI表明需求已不再占据主导。在这里，面对上涨的股价，出现了两个看跌信号。VPCI和VPCI平滑线均处于下降趋势，表明对上升趋势的承诺正在减弱。此外，VPCI和VPCI平滑线都位于零线下方，表明上升趋势不健康。</p><p>股价下跌而VPCI上升，是价量矛盾的一个例子。图17.9显示标准普尔500指数价格在下跌，而VPCI在上升。这表明，尽管市场下跌，但控制权在买方手中。VPCI和VPCI平滑线处于逐步上升趋势，与向下的价格走势相矛盾。最终，VPCI上穿VPCI平滑线，同时VPCI升至零线上方。随后不久，市场在温和的买压下实现突破。</p></section>
+<section class="book-page" data-pdf-page="210">
+  <figure><img src="/assets/img/investing-with-volume-analysis-cn/image-87fbd3d15ab1.png" alt=""><figcaption>图17.7 VPCI看涨确认。（由TradeStation创建。©TradeStation Technologies, Inc. 保留所有权利。）</figcaption></figure>
+  <figure><img src="/assets/img/investing-with-volume-analysis-cn/image-e271b7c33d76.png" alt=""><figcaption>图17.8 VPCI看跌背离。</figcaption></figure>
+</section>
+<section class="book-page" data-pdf-page="211">
+  <p>（图表由TeleChart 2007®或StockFinder®生成，两者是Worden Brothers, Inc.的注册商标，地址：Five Oaks Office Park, 4905 Pine Cone Drive, Durham, NC 27707。电话：(800) 776-4940或(919) 408-0542。网址：www.Worden.com。）</p>
+  <figure>
+    <img src="/assets/img/investing-with-volume-analysis-cn/image-ca81c26a4866.png" alt="图17.9 VPCI看涨背离" />
+    <figcaption>图17.9 VPCI看涨背离</figcaption>
+  </figure>
+  <p><strong>图17.10</strong> <span lang="en">RIMM</span>的价格在下跌，<span lang="en">VPCI</span>也在下降。价格下跌时<span lang="en">VPCI</span>下降通常是供应增加的迹象，尤其是如果股票之前处于长期上升趋势中（如<span lang="en">RIMM</span>的情况）。当<span lang="en">RIMM</span>开始破位下跌时，<span lang="en">VPCI</span>进一步跳水，表明抛售加剧。<span lang="en">VPCI</span>触底后，多头重新掌控<span lang="en">RIMM</span>，破位被逆转。<span lang="en">VPCI</span>转而向上，确认了新的价格上涨。<span lang="en">VPCI</span>确认反趋势是常见的情况。但这个例子说明，如果指标在嵌入更大主趋势的逆趋势背景下发出信号，那么这些信号可能会很快被收回。</p>
+  <p>综上所述，我们再来看最后一个例子，观察<span lang="en">VPCI</span>的实际表现。使用<span lang="en">VPCI</span>时极其重要的一点是，成交量常常领先或超前于价格行为。与大多数指标不同，<span lang="en">VPCI</span>通常先于价格指标发出信号。因此，当价格趋势不明朗时<span lang="en">VPCI</span>发出信号，</p>
+</section>
+<section class="book-page" data-pdf-page="212">
+<p>最好等待明确的趋势出现。图17.11中的最后一个例子是在周线时间框架中完成的，以说明VPCI在较长期周期中的指示。（由TradeStation创建。&copy;TradeStation Technologies, Inc. 保留所有权利。）</p>
+<figure style="text-align:center;"><img src="/assets/img/investing-with-volume-analysis-cn/image-21e854c7c6b5.png" alt="图17.10" /><figcaption>图17.10 看跌确认</figcaption></figure>
+<p>我们使用TM的图17.11来说明VPCI指标的用法。在图17.11的点1处，TM（丰田汽车）正在突破下降趋势，VPCI立即确认了这一突破，它上升并穿过平滑VPCI线，然后穿过零线。这是VPCI对价格趋势的看涨确认的一个例子。随后，VPCI在上升趋势中开始下跌，表明市场自满。到点2时，VPCI下穿平滑VPCI线，警告在新的上升趋势中可能出现停顿。这是VPCI看跌矛盾的经典例子。在达到点3之前，VPCI形成了一个V形底部的形态。这是一个看涨信号，通常表明抛售已经洗掉了许多卖家。后来在点3，VPCI以看涨交叉确认了之前的看涨V形形态，导致了强劲的牛市反弹。</p>
+</section>
+<section class="book-page" data-pdf-page="213">
+  <figure style="text-align: center;">
+    <img src="/assets/img/investing-with-volume-analysis-cn/image-33bec51555d5.png" alt="图 17.11 VPCI 指标应用">
+    <figcaption>图17.11 VPCI：唯一一个在市场下跌前预测到上一次主要回调（2006年5月）的成交量指标。<br>(Created with TradeStation. ©TradeStation Technologies, Inc. All rights reserved.)</figcaption>
+  </figure>
+  <h2 id="the-study">研究</h2>
+  <p>通过我们的成交量知识和之前的测试，VPCI是确认价格趋势的有效指标似乎已成定论。然而，要确凿地证明任何假设，必须进行一次准确且可测量的测试。VPCI指标的测试通过一个使用双均线系统的交易系统进行，类似于我在第16章“成交量加权价格指标”中测试成交量加权移动平均线（VWMA）的方式。</p>
+  <p>在第一项研究中，我对5日和20日交叉系统进行了回溯测试。当短期移动平均线上穿长期移动平均线时，建立多头头寸；当短期移动平均线下穿长期移动平均线时，建立空头头寸。这些操作通常代表动量和趋势的短期变化。在第二项（对比）研究中，我还使用了5日和20日交叉系统，但仅在VPCI也事先上穿平滑后的VPCI时才保留交易。这表示VPCI正在上升或价格确认。VPCI的参数设置将与移动平均线相同——长期分量为20日，短期分量为5日。</p>
+</section>
+<section class="book-page" data-pdf-page="214"><p>本研究存在若干局限性，但故意选择这些设置是为了保持研究的简洁性和无偏性。首先，5日和20日移动平均线的设置过短，不足以指示强劲趋势。这削弱了成交量价格确认指标（VPCI）作为价格趋势确认和背离指标的有效性。不过，这些设置反应迅速，能提供更多交易信号，并允许更大的样本量。此外，当价格数据仅回溯20日时（长期移动平均线的长度），将VPCI设置在5日和20日也显得过短。使用这些时间设置，VPCI可能会在价格趋势或移动平均线给出的动量信号之前发出信号。然而，为了避免被误解为过度优化，我并未更改这些设置。为了克服这一问题，我对VPCI使用了10日回溯延迟，对平滑后的VPCI使用了5日回溯延迟。这种延迟使得VPCI确认信号能够更好地与滞后的移动平均线交叉信号同步。理想情况下，交易者应根据所投资或交易的时间框架，结合趋势线或其他趋势指标来使用VPCI。</p><p>为保持系统客观性，我们在测试中同时考虑了系统生成的多头和空头交易。每次交叉信号开仓1万美元，未计入佣金。测试期间为1996年8月15日至2004年6月22日，总计2,000个交易日。我通过可靠性和盈利能力来衡量结果。</p><p>我不仅需要建立一种客观汇总结果的方法，还关注所研究样本的显著性。可靠的测试必须采用科学方法，既无偏又全面。为此，测试被分解为几个全面的部分。股票按照三种市值规模进行选择：以标普小盘股指数衡量的小盘股，以标普400指数衡量的中盘股，以及以标普100指数衡量的大盘股。每只股票的交易特征同样重要。因此，股票又进一步按成交量和波动率特征进行划分。将这些特征组合起来，共形成12个组别：小盘高成交量、小盘低成交量、小盘高波动率、小盘低波动率、中盘高成交量、中盘低成交量、中盘高波动率、中盘低波动率、大盘高成交量、大盘低成交量、大盘高波动率和大盘低波动率。</p></section>
+<section class="book-page" data-pdf-page="215">
+<p>为了确保结果的公正性，每个子组中选取了5只证券进行回测，12个子组合计60只证券，以保证样本量充足。为了增强可信度，各组代表的5只证券并非随机抽取，而是根据不同特征指标识别出领先者。具体来说，基于彭博社2004年6月22日的数据，分别从三个市值组中选出成交量最高和最低的5只证券，以及波动性最高和最低的5只证券。重复出现的证券（如高成交量和贝塔值的股票偶尔重合）仅使用一次。历史数据不完整的证券被剔除，由次优候选替代。最终，我使用这60只证券（涵盖12个组、4种类型和3个类别）来检验假设。</p>
+<p><strong>收益率/盈利能力</strong> 回顾测试过程，首先仅凭5日和20日移动均线交叉信号评估盈利能力，然后只保留同时发出VPCI确认信号的交易进行再次测试。结果令人瞩目。总体来看，VPCI在三个规模组（小型股、中型股和大型股）以及四种风格分类（高成交量、低成交量、高波动性和低波动性）中均提升了盈利能力（参见图17.13）。此外，12个子组中有9个组表现出改善，例外情况是中型股高波动性组、小型股低成交量组和大型股低成交量组。在60只测试证券中，39只（65%）在使用VPCI后业绩得到提升。整体而言，引入VPCI后利润增加211,997美元。</p>
+<figure>
+<figcaption id="caption-0115">图17.13 VPCI在三个规模组和四种特征中的盈利能力提升</figcaption>
+</figure>
+</section>
+<section class="book-page" data-pdf-page="216">
+<h3 id="reliability">可靠性</h3>
+<p>在本研究中，我通过观察盈利交易的百分比来衡量可靠性。在5日/20日交叉系统中使用VPCI，每只股票的整体盈利能力平均提高了3.21%。在所有三个市值组和所有四个风格组中，通过加入VPCI都实现了改善。在12个子组中，有10个在加入VPCI后显示出可靠性的提高。大盘股和小盘股低波动性类别的股票是仅有的例外。总体而言，60只股票中超过43只（71%）在纳入VPCI后表现出了改善。</p>
+<h3 id="risk-adjusted-returns">风险调整后收益</h3>
+<p>看待盈利能力的另一种方式是通过夏普比率（Sharpe Ratio）。夏普比率将总回报减去无风险收益率（美国国债），然后将结果除以投资组合的月度标准差。因此，夏普比率为我们提供了一个风险调整后的回报率。VPCI再次改善了结果，在所有三个市值类别和所有四个风格组中均实现了改善。在12个子组中，有9个实现了改善。中盘股高波动性、大盘股低波动性和大盘股低成交量是例外。总体而言，加入VPCI后，夏普比率显示出显著的改善。</p>
+<figure><img src="" alt="图17.14 使用VPCI的利润因子改善" /><figcaption>图17.14 使用VPCI的利润因子改善</figcaption></figure>
+</section>
+<section class="book-page" data-pdf-page="217">
+<pre>
+$0.00
+$0.10
+$0.20
+$0.30
+$0.40
+$0.50
+$0.60
+$0.70
+Profit factor improvement VPCI
+Scaps Mcaps Lcap Hvolume Lvolume HVIX LVIX
+</pre>
+
+<figure style="text-align:center;">
+  <figcaption>图17.15 七个主要组别的利润因子改善。看待风险调整后收益的另一种方式是通过利润</figcaption>
+</figure>
+
+<p>看待风险调整后收益的另一种方式是通过利润因子。利润因子考虑了在同一策略中每损失一美元可以获得多少收益。利润因子通过比较上行空间与下行空间来衡量风险。利润因子是用总利润除以总亏损计算得出的。例如，某只股票可能生成4万美元的亏损和5万美元的总收益，而另一只股票则生成1万美元的亏损和2万美元的总收益。两只股票都产生了1万美元的净利润。然而，在第一个系统中，投资者每损失一美元可望赚到1.25美元，而在第二个系统中，每损失一美元可赚到2美元。1.25和2这两个数字就代表了利润因子。VPCI在这一领域取得了更为显著的改善（见图17.15）。同样，VPCI在大盘股、中盘股和小盘股类别中均表现出改善，并且在所有四种风格组中也是如此：低成交量和*高成交量、低波动率和高波动率。在12个子组中，只有大盘股低波动率股票在使用VPCI时没有表现出改善。总体而言，利润因子改善了19%，这意味着在交易系统中融入VPCI后，每承担一美元的*风险，有望多赚19%的利润。</p>
+
+<h2 id="other-applications-comparing-vpci">其他应用：比较VPCI与其他价量指标</h2>
+
+<p>有许多价量指标可以与VPCI进行比较。然而，最负盛名的是最初的<span lang="en">On-Balance Volume</span>（能量潮，OBV）。认识到成交量是价格背后的力量，乔·格兰维尔（Joe Granville）</p>
+
+</section>
+<section class="book-page" data-pdf-page="218">
+<p>Joe Granville通过将上涨日（以收盘上涨衡量）计为正成交量，下跌日计为负成交量，从而创建了能量潮（OBV）。OBV是价格导向的成交量，即基于价格方向的成交量正负流量的累积。（关于Joe Granville的OBV更多信息，请参见第11章“日间成交量累积指标”。）Granville最初设计OBV的目的是在原本平静无趋势的市场中发现隐藏的盘整。凭借OBV指标，Granville成为了著名的市场策略师，他也普及了OBV以及在证券分析中使用成交量的智慧。</p>
+<p>VPCI与OBV的不同之处在于，VPCI计算的是价格趋势与成交量加权价格趋势之间的比例失衡，这揭示了成交量对价格趋势的影响。尽管OBV和VPCI都包含成交量衍生数据，但它们传达的信息不同。在构成上，VPCI并非像OBV那样是历史数据的累积，而是对特定时期内成交量对价格趋势影响的快照。这使得VPCI能够比累积指标（类似于振荡器）提供更快的信号。与OBV相比，VPCI的目的不是发现在无趋势市场中的隐藏盘整，而是评估现有趋势的健康状况。</p>
+<p>为了说明VPCI的有效性及其正确用法，我们进行了一项测试，将VPCI与OBV进行比较。VPCI最通用的买入信号是VPCI在上升趋势市场中向上穿越VPCI平滑线，这表明VPCI相对于之前的水平正在上升。传统的OBV没有像VPCI平滑线那样的滞后触发线，因此我对OBV进行了修正，增加了一条8周期简单移动平均线作为OBV的平滑线。净效果是给OBV提供了一个与VPCI平滑线相对应的触发线。OBV上穿其平滑线表明OBV相对于之前的水平正在上升。请记住，VPCI是设计用于趋势市场的。因此，我需要另外两个工具来完成这项测试。首先，需要一个指标来验证市场是否处于趋势中。7日平均趋向指数（ADX）满足这一标准。其次，需要一个趋势指标来指示趋势的方向。本次测试使用了传统参数（12，26，9）的异同移动平均线（MACD）。</p>
+</section>
+<section class="book-page" data-pdf-page="219">
+<p>最后，我需要一个测试对象来说明这些指标在整个市场中的表现。我认为没有比SPDR标普500交易所交易基金（ETF）更广泛或更受欢迎的测试工具了。测试期从1993年2月成立至2006年底。结果未以任何方式、形式进行优化。在该系统中，仅当上述条件满足且第一次测试中伴随OBV交叉，第二次测试中伴随VPCI交叉时，才建立多头仓位。第一次测试中，当平滑OBV向下交叉时退出多头仓位；第二次研究中，当VPCI向下交叉时退出（见图17.16）。</p>
+<figure><img src="/assets/img/investing-with-volume-analysis-cn/image-bfd7b0b472d2.png" alt="Figure 17.16"><figcaption>图17.16 MACD OBV VPCI 设置 TradeStation。</figcaption></figure>
+<p>虽然这项测试是为了观察和可信度目的而简单、传统地创建的，但结果令人震惊（见图17.17和图17.18）。</p>
+</section>
+<section class="book-page" data-pdf-page="220"><figure><figcaption>图17.17 SPY（标普500 ETF）：能量潮（OBV）权益曲线</figcaption></figure><figure><figcaption>图17.18 SPY：成交量价格确认指标（VPCI）权益曲线</figcaption></figure></section>
+<section class="book-page" data-pdf-page="221">
+<figure>
+<table>
+<caption>
+表17.3 策略收益比较
+</caption>
+<thead>
+<tr>
+<th>策略*</th>
+<th>年化回报</th>
+<th>持仓时间</th>
+<th>标准差</th>
+<th>5年夏普比率</th>
+<th>盈利百分比</th>
+<th>盈利因子</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>买入持有</td>
+<td>9.94%</td>
+<td>100.00%</td>
+<td>17.75%</td>
+<td>0.10</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>MACD</td>
+<td>-3.88%</td>
+<td>24.79%</td>
+<td>13.03%</td>
+<td>0.27</td>
+<td>41.79%</td>
+<td>0.97</td>
+</tr>
+<tr>
+<td>VPCI</td>
+<td>8.11%</td>
+<td>35.63%</td>
+<td>7.42%</td>
+<td>0.74</td>
+<td>65.15%</td>
+<td>2.47</td>
+</tr>
+<tr>
+<td>OBV</td>
+<td>-1.57%</td>
+<td>27.02%</td>
+<td>17.40%</td>
+<td>0.05</td>
+<td>42.86%</td>
+<td>1.00</td>
+</tr>
+</tbody>
+</table>
+<p><em>*未包含股息收益。</em></p>
+</figure>
+<p>扣除股息和利息后，该系统中OBV的年化收益率为–1.57%，而VPCI的年化收益率为8.11%，年化超额收益超过9.5%。VPCI提高了可靠性，发出盈利信号的频率超过65%，而OBV仅为42.86%。评估表现的另一个考量因素是风险。以波动率衡量，VPCI的风险不到OBV的一半，其标准差为7.42，而OBV的标准差偏离均值17.4。因此，VPCI的风险调整后收益率显著更优，这并不令人意外。VPCI自成立以来的夏普比率为0.70，盈利因子为2.47，而OBV的夏普比率为–0.09，盈利因子小于1（见表17.3）。诚然，这一测试环境并不均衡。VPCI利用成交量加权价格的信息来评估现有趋势的健康状况。相比之下，OBV根据价格变化累积成交量流，以揭示隐藏的盘整区域。因此，该系统设定的条件——趋势市场且具有明显的价格方向——正是VPCI设计来发挥优势的环境。尽管OBV并非注定会失败，但这项研究说明了不太精明的实践者常常未能正确使用指标信息，或未能妥善协调指标。</p>
+<p>如果投资者在同一系统中仅使用MACD的买卖信号，而不使用VPCI信息，结果会如何？这位投资者将错失近12%的年化回报，即VPCI的正8.11%与MACD的</p>
+</section>
+<section class="book-page" data-pdf-page="222">
+  <p>负3.88%，同时显著增加了风险。如果这位投资者只是采用买入并持有策略呢？尽管该投资者会获得略高的回报，但会承受大得多的风险。以标准偏差衡量，VPCI策略的回报率接近买入并持有策略的90%，而风险降低了约60%。从另一角度看风险调整后收益，标准普尔500指数ETF（SPDR S&P 500）的五年夏普比率仅为0.1，而VPCI系统为0.74。此外，VPCI投资者仅有35%的时间持有仓位，这使得投资者有机会投资于其他品种。在65%的空仓期间，投资者只需获得1.84%的货币市场收益率，就能超过买入并持有策略。而且，投资者的业绩会更加平滑，不会出现那么大幅度的资金回撤。VPCI最差的年化收益率仅为微不足道的-2.71%，而基础投资最差年份为-22.81%，收益率差距超过20个百分点（见表17.4）！如果投资者在未投资于SPDR标准普尔500指数ETF期间，仅投资于货币市场工具，使用此策略甚至不会出现任何一个负收益年份。</p>
+  <figure>
+    <figcaption>表17.4 年度业绩比较</figcaption>
+    <table>
+      <thead>
+        <tr>
+          <th>策略*</th>
+          <th>1993</th>
+          <th>1994</th>
+          <th>1995</th>
+          <th>1996</th>
+          <th>1997</th>
+          <th>1998</th>
+          <th>1999</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>买入持有</td>
+          <td>3.61</td>
+          <td>-2.21</td>
+          <td>34.95</td>
+          <td>20.1</td>
+          <td>31.44</td>
+          <td>27.04</td>
+          <td>19.11</td>
+        </tr>
+        <tr>
+          <td>MACD</td>
+          <td>0.31</td>
+          <td>5.42</td>
+          <td>0.88</td>
+          <td>12.63</td>
+          <td>14.72</td>
+          <td>-12.93</td>
+          <td>-30.6</td>
+        </tr>
+        <tr>
+          <td>VPCI</td>
+          <td>2.93</td>
+          <td>6.42</td>
+          <td>6.12</td>
+          <td>19.83</td>
+          <td>19.09</td>
+          <td>8.9</td>
+          <td>3.17</td>
+        </tr>
+        <tr>
+          <td>OBV</td>
+          <td>-1.03</td>
+          <td>-1.24</td>
+          <td>0</td>
+          <td>18.81</td>
+          <td>7.3</td>
+          <td>12.4</td>
+          <td>-12.43</td>
+        </tr>
+      </tbody>
+      <thead>
+        <tr>
+          <th>策略*</th>
+          <th>2000</th>
+          <th>2001</th>
+          <th>2002</th>
+          <th>2003</th>
+          <th>2004</th>
+          <th>2005</th>
+          <th>2006</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>买入持有</td>
+          <td>-10.68</td>
+          <td>-12.87</td>
+          <td>-22.81</td>
+          <td>26.12</td>
+          <td>8.62</td>
+          <td>3.01</td>
+          <td>13.74</td>
+        </tr>
+        <tr>
+          <td>MACD</td>
+          <td>9.27</td>
+          <td>11.12</td>
+          <td>0.9</td>
+          <td>1.34</td>
+          <td>1.8</td>
+          <td>1.69</td>
+          <td>-11.32</td>
+        </tr>
+        <tr>
+          <td>VPCI</td>
+          <td>-2.71</td>
+          <td>21.28</td>
+          <td>-0.65</td>
+          <td>10.4</td>
+          <td>4.27</td>
+          <td>4.8</td>
+          <td>9.29</td>
+        </tr>
+        <tr>
+          <td>OBV</td>
+          <td>-26.55</td>
+          <td>-28.34</td>
+          <td>12.45</td>
+          <td>-12.79</td>
+          <td>33.32</td>
+          <td>-15.58</td>
+          <td>-8.33</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="table-footnote">*年化收益率不含股息。</p>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="223">
+  <h2 id="other-applications">其他应用</h2>
+  <p>原始的VPCI计算值可作为乘数或除数与其他指标结合使用，例如移动平均线、动量指标，或者价格和成交量数据。例如，如果投资者将追踪止损单设置在五周最低价的移动平均线上，那么他可以将止损价格除以VPCI计算值。当价格与成交量相互确认时，这样做会降低止损价格，从而增加将股票维持在吸筹状态的可能性。然而，当价格与成交量出现矛盾时，将止损价除以VPCI会提高止损价格，从而保留更多资本。同样，将VPCI作为乘数应用于其他价格、成交量和动量指标，不仅可能提高可靠性，还能增强响应能力。</p>
+  <p>总之，VPCI根据成交量和价格各自的比例权重，对二者进行了协调。这些信息可用于确认或否认当前价格趋势延续的可能性。这些研究清楚地表明，将VPCI指标加入趋势跟踪系统，能够在研究所衡量的所有主要方面带来持续改善的绩效。合理使用VPCI信息的投资者可能会提高利润、降低风险并增强可靠性。通过本研究可以明显看出，合理分析的价格和成交量信息可用于证实或反驳价格趋势。就像一位熟练投资者手中的指挥家指挥棒，VPCI是一个能够显著加速盈利、降低风险并赋予投资者做出更可靠投资决策能力的工具。</p>
+</section>
+<nav class="chapter-nav"><a href="/investing-with-volume-analysis-cn/chapter-16/">上一章：第16章：成交量加权价格指标</a><a href="/investing-with-volume-analysis-cn/volume-indicators-table/">下一章：成交量指标表</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=acb1f6812298"></script>
+</body>
+</html>

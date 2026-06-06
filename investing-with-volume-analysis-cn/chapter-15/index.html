@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="第15章：基于逐笔成交的成交量指标 | 《成交量分析投资法》中文译稿">
+  <title>第15章：基于逐笔成交的成交量指标 | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=62159d02abf1">
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <div class="sidebar-heading">
+    <h2>书稿目录</h2>
+  </div>
+  <nav class="sidebar-list"><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/">首页</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/introduction/">引言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-1/">第1章：市场分析的两种视角</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-2/">第2章：技术分析的历史</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-3/">第3章：价格分析</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-4/">第4章：成交量分析</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-5/">第5章：成交量：市场的力量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-6/">第6章：如何像读书一样解读市场</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-7/">第7章：趋势中的成交量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-8/">第8章：形态中的成交量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-9/">第9章：衡量成交量信息</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-10/">第10章：纯成交量指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-11/">第11章：日间成交量累积指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-12/">第12章：日内成交量累积振荡器</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-13/">第13章：价格区间成交量指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-14/">第14章：基于成交量指标的价格累积</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item is-current"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-15/" aria-current="page">第15章：基于逐笔成交的成交量指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-16/">第16章：成交量加权价格指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-17/">第17章：成交量价格确认指标</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/volume-indicators-table/">成交量指标表</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-18/">第18章：广度指标概览</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-19/">第19章：升级你的成交量：引入资本加权成交量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-20/">第20章：风险事业</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-21/">第21章：综合运用：成交量主导的策略</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/chapter-22/">第22章：现代成交量问题</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/bibliography/">参考文献</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/investing-with-volume-analysis-cn/index/">索引</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <h1>第15章：基于逐笔成交的成交量指标</h1>
+<section class="book-page" data-pdf-page="170">
+  <h1 id="chapter-15">第15章：基于逐笔成交的成交量指标</h1>
+  <blockquote>
+    <p>“根据词典，‘distribution’（分布）是‘在某一区域或整个空间或时间单位内的位置、排列或发生频率’。所有事物的成交量都随时间围绕均值分布。为什么交易成交量会有所不同？”</p>
+    <footer>——市场轮廓，芝加哥期货交易所</footer>
+  </blockquote>
+  <p>在迄今为了更深入地理解供需关系所做的探索中，我们已经研究了多种方法来确定资金是流入还是流出市场。这些方法包括收盘价到收盘价比较、开盘价与收盘价比较，以及价格区间的各种判定。所有这些方法都代表了对如何衡量这一关系的不同观点。</p>
+  <p>早些时候，我讨论了股票如何在交易所市场交易。你了解到交易所市场的运作非常类似于拍卖：由两位对未来价格走向持不同意见的投资者，就交换金融工具达成一致，从而形成价格。如果交易在涨点达成，则买方施加的需求大于卖方施加的供给。同样，如果交易在跌点达成，则卖方的行动力量大于买方。通过逐笔成交量，你可以明确量化这种价格与成交量之间的关系。</p>
+</section>
+<section class="book-page" data-pdf-page="171">
+<h2 id="volume-weighted-average-price">成交量加权平均价格（VWAP）</h2>
+<p>成交量加权平均价格（<span lang="en">Volume-Weighted Average Price</span>, VWAP）是投资者在给定时间段（通常为一个交易日）内参与交易的平均价格。计算方法是：将每个价格点乘以相应成交量，然后将所有这些交易的金额汇总，再除以总成交股数：</p>
+<p><code>VWAP = （每笔成交价格 × 该笔成交量）的总和 / 总成交量</code></p>
+<p>VWAP 更多地被用作一项统计数据，而非指标。它是行业内确定一只股票在整个交易时段内可能买入或卖出价格的标准。不妨从机构的角度来理解 VWAP。例如，假设你是一家机构，今天需要买入 200,000 股 XYZ 股票。这一数量相当于该股典型交易日成交量的 2%。如果你按市价下单，很可能会显著影响市场，从而抬高你的买入成本，让你的客户不满。如果你经常这么做，很快就不会再有客户需要你操心了。另一种策略是根据常见的成交量流动，在一天内逐步进行平均成本法交易。只需支付少许费用，就可以雇请交易员来执行这样的交易。但你该如何评估交易员的执行情况呢？需要一个基准，将你支付的价格与普通投资者为该股票支付的价格进行比较。这个基准通常就是 VWAP。机构广泛使用 VWAP 来降低大规模操作对市场的影响（见图 15.1）。</p>
+<h2 id="money-flow-tick-volume">资金流/逐笔成交量（Money Flow/Tick Volume）</h2>
+<p>投资者使用“<span lang="en">tick</span>”一词时，指的是每笔交易。<span lang="en">Uptick</span>（上涨成交，或 +tick）是指价格高于前一交易的成交。<span lang="en">Downtick</span>（下跌成交，或 –tick）是指价格低于前一交易的成交。逐笔成交量（<span lang="en">tick volume</span>）指每笔交易所涉及的股数。逐笔成交量分析是在逐笔交易的基础上评估价格与成交量的变化。上涨成交量（<span lang="en">uptick volume</span>）是指发生在上涨成交中的成交量，同样地，下跌成交量（<span lang="en">downtick volume</span>）是指发生在下跌成交中的成交量。模糊之处在于常见的</p>
+</section>
+<section class="book-page" data-pdf-page="172">
+<h1 id="chapter-15">第15章：基于逐笔成交的成交量指标</h1>
+<figure class="page-image">
+<img src="/assets/img/investing-with-volume-analysis-cn/image-1e67aeba5152.png" alt="图15.1">
+<figcaption>图15.1 成交量加权平均价格（VWAP）。以与前一报价相同价格（不变报价）成交的交易实例。</figcaption>
+</figure>
+<p class="source">（图表或数据由 TeleChart 2007® 或 StockFinder® 生成，这些是 Worden Brothers, Inc. 的注册商标，地址：Five Oaks Office Park, 4905 Pine Cone Drive, Durham, NC 27707。电话：(800) 776-4940 或 (919) 408-0542。网址：www.Worden.com。）</p>
+<p>在这种情况下，普遍接受的观点是将不变报价的成交量视为前一笔报价成交量的一部分。因此，如果前一笔报价为上涨，那么不变报价的成交量也将被视为上涨报价成交量，反之亦然。接下来讨论的指标——资金流（Money Flow），就是从逐笔报价的角度来看待价格及其对应的成交量。</p>
+<p>价格加权逐笔成交量使用逐笔数据，按每个交易对应的价格对其成交量进行加权。上涨报价成交量减去下跌报价成交量，并随时间累积。这一过程过去常被称为逐笔成交量（Tick Volume），但现在大多被称为资金流（Money Flow）。本质上，资金流是以逐笔方式累积的、经对应价格加权的成交量：</p>
+<p><code>逐笔成交量 / 资金流 = 累积总和（逐笔价格 × 上涨报价成交量）– 累积总和（逐笔价格 × 下跌报价成交量）</code></p>
+<p>这一计算精确衡量了每笔交易基础上的供给相对于需求，并持续累积其差额。</p>
+</section>
+<section class="book-page" data-pdf-page="173">
+  <p>它根据上涨成交视为买入、下跌成交视为卖出的原则，揭示资金是在流入还是流出该股票。举个例子，我们使用两笔交易来计算资金流。第一笔交易以100美元上涨成交100股。紧接着，下一笔交易以99.99美元下跌成交10,000股。资金流为–989,000美元（(100美元 × 100股) – (99.99美元 × 10,000股)），意味着卖出股票比买入多出989,000美元。从这个例子可以看出，通过赋予较大成交量交易更高的权重，资金流可能大幅偏离价格方向。</p>
+  <p>这一信息的用法与其他成交量指标类似。当资金流上升时，表明需求正在积聚，预示着价格可能上涨。当资金流下降时，表明供给正在积聚，预示着价格可能下跌。</p>
+  <p>沃登兄弟公司（Worden Brothers）总裁兼创始人唐·沃登（Don Worden）在20世纪50年代末提出了资金流的概念，当时名为“逐笔成交量”（Tick Volume）。如今，资金流主要由拉兹洛·比里尼（Laszlo Birinyi）推广。与沃登一样，比里尼将价格加权的逐笔成交量细分为大宗交易、非大宗交易和总资金流。总资金流是在指定时间段内所有价格加权成交量流的累积值。非大宗交易通常代表少于10,000股的交易，被认为是由散户投资者进行的交易。大宗交易通常指10,000股或以上的交易，这类交易量暗示着机构投资者的参与。</p>
+  <p>对比大宗交易、非大宗交易和总资金流，可能揭示出市场情绪。机构被视为“知情人”或“聪明钱”（smart money），理论上，它们在策略上处于有利位置。散户投资者被视作信息不足且弱势，即被认为更倾向于反应性而非策略性。如果大宗交易资金流上升，而总资金流或非大宗交易资金流下降，则表明机构正在建仓，或称为吸筹。如果情况相反，则资金流表明机构正在派发。</p>
+  <p>观察这些交易是发生在市场强势期还是弱势期，可能有助于为机构行为建立背景。如果大宗交易在强势期为正，则表明机构相信更多的好事即将到来。</p>
+</section>
+<section class="book-page" data-pdf-page="174">
+<p>类似地，如果在市场疲软时出现正向大额资金流（block Money Flow），机构交易者很可能相信最终基本面会被认可为积极。然而，如果在上升趋势中大额资金流为负值，则表明机构认为该股票已被充分估值，他们正在强势中向公众派发股票。同样，如果在下跌市场中大额资金流为负值，机构活动暗示抛售可能有其合理依据。</p>
+<p>比里尼（Birinyi）将资金流（Money Flow）分析描述为类似于杰西·利弗莫尔（Jesse Livermore）时代的读盘（tape reading），只不过资金流这一过程是计算机化的。在谈论资金流时，比里尼在1993年8月《彭博》的一篇文章中说道：“这是现有最有用的指标，因为它能在人们行动的同时告诉你他们正在做什么。”</p>
+<p>另一方面，Worden对此持不同观点。根据Worden在其用户论坛上回答关于逐笔成交量（Tick Volume）/资金流的问题时所说：“最初，它（逐笔成交量/资金流）具有与即时价格趋势相悖的非凡能力，能有效预测未来的反向走势。然而，随着市场逐渐从90%由公众主导变为90%由机构主导，大额交易产生了压倒性的负偏压。”结果，Worden放弃了逐笔成交量指标，尽管它在Muller and Company经纪公司短暂延续了一段时间。然而，逐笔成交量的概念催生了Worden后来开发的专有指标：力量平衡指标（BOP）、资金流指标（Money Stream）和时间分段成交量（Time-Segmented Volume）。</p>
+<p>在我职业生涯早期，我对资金流的看法更接近拉斯洛·比里尼。然而，交易所市场已变得越来越自动化，同时证券价格的十进制化已大大降低了这种日内分析形式的可靠性。抢帽客（scalpers）和做市商（market makers）执行的交易多半来自现有库存，这使得累积上涨和下跌tick的概念变得更加模糊。此外，机构通常在整个交易时段内“运作”其大额交易，以避免其活动对公众透明。通常，这种操作包括在市场上涨的tick中卖出，在……</p>
+</section>
+<section class="book-page" data-pdf-page="175">
+<p>在卖价（offer）卖出并使用买价（bid）在下跌跳价（downtick）时买入。以我个人的经验，我管理的投资组合所进行的大宗交易，通常就是以这种方式执行的。就资金流（Money Flow）计算而言，这类活动表现出的情况往往与实际相反。帕斯卡尔·威廉（Pascal Willain）在其著作《Value in Time, Better Trading Through Effective Volume》（时间价值：通过有效成交量改善交易）中，探讨了许多后十进制化时代的问题，并提供了一套他自创的基于成交量的指标，旨在看透这些现代机构交易行为。</p>
+<p>不过，最终而言，无论是日线、周线还是月线收盘，投资者的行为最终都会反映在盘面上。因此，我认为成交量数据——与逐笔成交（tick）数据相比——最好通过平滑技术来使用，这些技术能在整体趋势的大背景下累积与价格运动相关的成交量。相对于价格趋势累积成交量，能让成交量指标在特定背景下捕捉价量运动的逐步形成。这种类型的分析将我们引向第七种，也是最后一种成交量指标——成交量加权价格指标（volume-weighted price indicators）。</p>
+</section>
+<nav class="chapter-nav"><a href="/investing-with-volume-analysis-cn/chapter-14/">上一章：第14章：基于成交量指标的价格累积</a><a href="/investing-with-volume-analysis-cn/chapter-16/">下一章：第16章：成交量加权价格指标</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=acb1f6812298"></script>
+</body>
+</html>

@@ -513,12 +513,14 @@ def render_sitemap(posts: list[dict], tags: list[str]) -> str:
     urls = ["/", "/posts/", "/tags/", "/about/"]
     urls.extend(post_url(post) for post in posts)
     urls.extend(f"/tags/{slugify(tag)}/" for tag in tags)
-    tutorial_root = ROOT / "bayes-rules-python-cn"
-    if tutorial_root.exists():
-        for index_file in sorted(tutorial_root.glob("**/index.html")):
-            rel = "/" + index_file.parent.relative_to(ROOT).as_posix().strip("/") + "/"
-            if rel not in urls:
-                urls.append(rel)
+    tutorial_slugs = ["bayes-rules-python-cn", "investing-with-volume-analysis-cn"]
+    for tutorial_slug in tutorial_slugs:
+        tutorial_root = ROOT / tutorial_slug
+        if tutorial_root.exists():
+            for index_file in sorted(tutorial_root.glob("**/index.html")):
+                rel = "/" + index_file.parent.relative_to(ROOT).as_posix().strip("/") + "/"
+                if rel not in urls:
+                    urls.append(rel)
     entries = "\n".join(f"  <url><loc>{SITE_URL}{url}</loc></url>" for url in urls)
     return f"""<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
