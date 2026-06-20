@@ -513,7 +513,11 @@ def render_sitemap(posts: list[dict], tags: list[str]) -> str:
     urls = ["/", "/posts/", "/tags/", "/about/"]
     urls.extend(post_url(post) for post in posts)
     urls.extend(f"/tags/{slugify(tag)}/" for tag in tags)
-    tutorial_slugs = ["bayes-rules-python-cn", "investing-with-volume-analysis-cn"]
+    tutorial_slugs = [
+        "bayes-rules-python-cn",
+        "investing-with-volume-analysis-cn",
+        "financial-reporting-statement-analysis-valuation-cn",
+    ]
     for tutorial_slug in tutorial_slugs:
         tutorial_root = ROOT / tutorial_slug
         if tutorial_root.exists():

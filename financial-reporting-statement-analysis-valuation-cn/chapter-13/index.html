@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="第 13 章 基于收益的估值方法 | 《财务报告、财务报表分析与估值》中文译稿">
+  <title>第 13 章 基于收益的估值方法 | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=62159d02abf1">
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <div class="sidebar-heading">
+    <h2>书稿目录</h2>
+  </div>
+  <nav class="sidebar-list"><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/">首页</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/summary-of-key-ratios/">关键财务报表比率汇总</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/preface/">前言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/about-the-authors/">作者简介</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/chapter-1/">第 1 章 财务报告、财务报表分析与估值概览</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/chapter-2/">第 2 章 资产和负债估值与收益确认</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/chapter-3/">第 3 章 理解现金流量表</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/chapter-4/">第 4 章 盈利能力分析</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/chapter-5/">第 5 章 风险分析</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/chapter-6/">第 6 章 会计质量</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/chapter-7/">第 7 章 融资活动</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/chapter-8/">第 8 章 投资活动</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/chapter-9/">第 9 章 经营活动</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/chapter-10/">第 10 章 预测财务报表</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/chapter-11/">第 11 章 风险调整后的预期报酬率与股利估值方法</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/chapter-12/">第 12 章 基于现金流的估值方法</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item is-current"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/chapter-13/" aria-current="page">第 13 章 基于收益的估值方法</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/chapter-14/">第 14 章 基于市场的估值方法</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/appendix-a/">附录 A Clorox 公司的财务报表及附注</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/appendix-b/">附录 B Clorox 公司的管理层讨论与分析</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/appendix-c/">附录 C 财务报表分析包 FSAP</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/appendix-d/">附录 D 按行业划分的财务报表比率描述性统计</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/financial-reporting-statement-analysis-valuation-cn/index/">索引</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <h1>第 13 章 基于收益的估值方法</h1>
+<section class="book-page" data-pdf-page="761">
+<h1 id="chapter-13">第13章 估值：基于收益的方法</h1>
+<h2>学习目标</h2>
+<ol>
+<li class="lo-13-1">描述基于收益的估值，并解释收益、股利和自由现金流的不同估值含义。</li>
+<li class="lo-13-2">解释基于收益的估值在概念和实践上的优势和劣势。</li>
+<li class="lo-13-3">展示对剩余收益估值的概念性理解，包括：
+<ol type="a">
+<li>利用普通股股东权益账面价值、综合收益、股利以及清洁盈余会计。</li>
+<li>计量要求收益。</li>
+<li>计量剩余收益。</li>
+<li>确定普通股权益的价值。</li>
+</ol>
+</li>
+<li class="lo-13-4">展示对有限预测期和持续价值计算的剩余收益估值的概念性理解。</li>
+<li class="lo-13-5">运用剩余收益估值法对Clorox公司普通股进行估值。</li>
+<li class="lo-13-6">评估股票价值估计对关键参数（如折现率和预期长期增长率）的敏感性。</li>
+<li class="lo-13-7">描述剩余收益估值法的四个重要实施问题。</li>
+<li class="lo-13-8">识别在剩余收益、自由现金流和股利估值未能产生相同价值估计时可能导致错误的原因。</li>
+</ol>
+<h2>本章概览</h2>
+<p>报告盈余数字是衡量企业财务业绩中最广泛关注的指标。会计准则制定者（尤其是FASB和IASB）以及会计职业界和财务报表使用者群体设计了权责发生制会计流程，以盈余作为每期企业盈利能力的最终结果。因此，企业报告盈余数字是在资本市场中用于股票定价和资本配置的主要价值相关业绩指标。</p>
+<p>由于资本市场对盈余信息的需求，企业通常在会计师编制并核实数据后立即向公众发布季度和年度盈余，往往比详细发布季度和年度利润表、资产负债表、现金流量表及附注早数周。企业通常通过电话会议和新闻发布会公布盈余，与会者包括投资者、分析师、管理层、董事会成员和财经媒体。</p>
+<p>分析师花费大量精力构建企业即将到来的季度和年度盈余预测，并在有新信息时修正这些盈余预测。卖方分析师将他们的盈余预测分发给感兴趣的投资者、经纪人和基金经理。商业公司如Thomson Reuters和Zacks Investment Research则汇编和分发</p>
+</section>
+<section class="book-page" data-pdf-page="762">
+  <p>此外，Seeking Alpha、The Motley Fool、Stocktwits及其他公司也提供在线收益信息及其他信息，以及用于评估股票和股价的各种工具。许多公司及这些基于股票市场的数据公司提供收益公告日历，以便投资者、分析师和其他人士能够预期并准备在每季度公司发布收益（及销售）信息时迅速做出反应。最近，Estimize开发了众包收益预测，利用一个平台收集来自数千名专业和业余分析师及投资者的收益预测。财经媒体（广播、纸媒和在线）每日报道公司的收益公告。例如，《华尔街日报》每日报道公司收益公告以及股价和市盈率的每日数据，而彭博社、CNBC等媒体公司则每天广泛报道收益和股价新闻。同样值得注意的是，所有这些报道和分析以及公司公告本身主要关注收益数据（以及销售数据），而非现金流量。</p>
+  <p>公司的股价通常会对收益公告做出迅速反应。市场反应的方向和幅度取决于收益消息相对于投资者预期的方向和幅度。发布的收益超出市场预期的公司（“好消息”）往往在公告当日及随后几个交易日股价大幅上涨。同样，发布的收益未达到市场预期的公司（“坏消息”）通常股价立即大幅下跌。如前面几章所述，开创性的Ball and Brown（1968）研究以及许多其他研究，包括第1章所述的Nichols and Wahlen（2021）研究，均表明公司的股票回报率与公司收益变动高度正相关。<sup>1</sup></p>
+  <p>由于收益为投资者及其他外部利益相关者提供了如此重要的信息，收益在公司内部资本分配决策中也起着关键作用。公司内部的新项目提案通常根据其对报告收益的影响进行评估。此外，公司董事会通常会通过薪酬和奖金计划来奖励或惩罚管理者，这些计划取决于公司业绩是否达到（或未能达到）某些收益目标。以下观点突出了收益的重要作用：</p>
+  <ul>
+    <li>收益是权责发生制会计体系产生的衡量公司业绩的主要指标。</li>
+    <li>收益对资本市场中股票的定价有重大影响。</li>
+    <li>公司管理者和董事会使用收益进行内部资本分配，并使管理者与股东的利益保持一致。</li>
+    <li>由于利益相关者对收益信息的巨大需求，财经媒体和分析师群体投入大量时间和精力报道、分析和预测收益。</li>
+  </ul>
+  <p>因此，会计收益自然也为估值提供了基础。本章阐述了剩余收益估值模型在概念和实务上的优势与不足。该模型基于预期的未来收益和普通股权益的账面价值进行估值。</p>
+  <p>本章采取了三个重要步骤，并探讨了一些关键问题：</p>
+  <ol>
+    <li>理论与概念基础：哪些理论和概念支持剩余收益估值？如何计量剩余收益？它代表什么经济内涵？</li>
+    <li>实际应用：如何使用剩余收益估值方法估算股票价值？我们需要理解哪些实施问题？</li>
+    <li>将剩余收益估值与股利估值和自由现金流估值联系起来：从概念和实务上看，为什么剩余收益估值方法等同于依赖股利和自由现金流的估值方法？</li>
+  </ol>
+  <p class="footnote"><sup>1</sup> Ray Ball and Philip Brown, “An Evaluation of Accounting Income Numbers,” <em>Journal of Accounting Research</em> (Autumn 1968), pp. 159–178; D. Craig Nichols and James Wahlen, “The Essential Role of Accounting Information in the Capital Markets: Updating Seminal Research Results with Current Evidence,” Working paper, Indiana University; May, 2021.</p>
+</section>
+<p>除了解释其基本原理以及概念和理论基础外，我们还将通过应用剩余收益模型对高乐氏公司普通股股东权益进行估值来演示该模型。在应用该模型时，我们将描述关键计量和实施问题。最后，我们将演示基于股利、基于自由现金流和基于收益的估值模型之间的内在一致性，以及如果三个模型的价值估计值彼此不同，如何识别和纠正错误。</p><p>剩余收益估值模型提供了一种强有力的方法，该方法等同于第11章介绍的经典股利估值法和第12章介绍的自由现金流估值法。剩余收益估值模型也为第14章描述的基于市场的估值倍数（包括市净率和市盈率）奠定了基础。</p><h2 id="rationale-for-earnings-based-valuation" data-original-id="rationale-for-earnings-based-valuation">基于收益估值的原理</h2><p>经济理论表明，任何资源的价值等于该资源预期未来回报的现值，折现率反映了这些预期未来回报所固有的风险。与第11章和第12章一样，我们从同一通用模型开始，计算具有预期寿命为n个未来期间的证券的现值（记为<i>V</i><sub>0</sub>，现值的时间点记为t=0），如下所示：<sup>2</sup></p><p style="text-align:center;"><i>V</i><sub>0</sub> = ∑<sub>t=1</sub><sup>n</sup> [ Expected Future Payoffs<sub>t</sub> / (1 + Discount Rate)<sup>t</sup> ]</p><p>第11章表明，一股普通股的价值应等于股东将收到的预期未来股利的现值。股利是基础性的与价值相关的回报，因为它们代表了财富从企业向股东的分配。因此，要使用股利对公司的股票进行估值，您需要将企业寿命期（或您预计持有该股票的预期时间长度）内的预期未来股利，包括最终清算股利，折现为现值。这是一种财富分配估值法。</p><p>第12章表明，一股普通股的价值也应等于企业将产生的预期未来自由现金流的现值，这些自由现金流最终将以股利的形式分配给普通股股东。基于自由现金流的估值法关注企业将产生的现金流的金额和时点。因此，要使用自由现金流对公司的股票进行估值，您需要将企业寿命期（或您预计持有该股票的预期时间长度）内归属于普通股股东的预期未来自由现金流，包括最终清算现金流，折现为现值。这是一种可分配财富估值法。</p><p>本章介绍的剩余收益估值法与股利估值法和自由现金流估值法类似，不同之处在于它使用了不同的回报衡量标准。剩余收益估值法使用普通股股东权益的账面价值和预期未来收益来确定与价值相关的、投资者所面临的预期未来回报（即上述通用估值模型的分子），以代替未来股利或未来自由现金流。</p><p>普通股股东权益账面价值的作用原理很简单：它是估值的起点，因为它是资产负债表中衡量普通股股东对企业净资产索求权的指标。</p><div class="learning-objective" style="border:1px solid #ccc; padding:5px; margin:10px 0;"><strong>学习目标 13-1</strong><br>描述基于收益的估值，并解释收益、股利和自由现金流在估值含义上的不同。</div><p>将预期未来收益作为估值基础的原因也同样简单：未来收益衡量的是企业将为股东创造的净利润或净亏损。在企业剩余寿命期内，收益衡量的是...</p><div class="footnote"><sup>2</sup> 本章使用与前面章节相同的符号，其中t指会计期间（通常为年或季度）。估值过程确定企业价值的估计值，记为V<sub>0</sub>，即当前（t=0时）的现值。期间t=1表示折现到现值的第一个会计期间。期间t=n表示预期最终或清算回报的期间。</div>
+<section class="book-page" data-pdf-page="764">
+  <p>企业为股东创造的总财富。剩余收益估值法（residual income valuation）关注的是作为股东财富创造衡量指标的收益，而不是通过股利支付进行的财富分配或通过自由现金流实现的可分配财富。在第11章中，图11.2展示了估值方法视角的差异：股利是财富分配的衡量指标；自由现金流是可分配财富的衡量指标；而收益是财富创造的衡量指标。</p>
+  <p>基于专业制定原则的权责发生制会计（accrual accounting）根据企业每个期间产生和消耗的经济资源净额来计量权益股东的收益。权责发生制会计还编制期间财务状况表——资产负债表（balance sheets），计量和报告企业控制并用于产生预期未来经济利益的资</p>
+</section>
+<section class="book-page" data-pdf-page="765">
+<p>分析人员、投资者、资本市场、管理层、董事会以及财经媒体关注的焦点是收益预测和收益报告而非自由现金流。很少有公司会召开新闻发布会来公布自由现金流。分析师发布收益预测的频率远高于发布自由现金流预测。董事会和薪酬委员会通常不会根据管理者实现自由现金流目标的情况来制定奖金计划；相反，这些薪酬计划通常依赖于基于收益的业绩衡量指标。这是因为与股利或自由现金流相比，收益与资本市场以及公司管理层和董事会对公司业绩的关注更为一致。<sup>4</sup></p>
+<div class="footnote">
+<p><sup>4</sup> 大量研究表明，长期累积的盈利和现金流与长期股票回报（例如五年期）高度正相关，但在较短期间（如一年），盈利与股票回报的关联性强于现金流。参见 Patricia M. Dechow, “Accounting Earnings and Cash Flows as Measures of Firm Performance: The Role of Accounting Accruals,” <em>Journal of Accounting and Economics</em> (1994), pp. 3–42; C. S. Cheng, Chao-Shin Liu, and Thomas F. Schaefer, “Earnings Permanence and the Incremental Information Content of Cash Flow from Operations,” <em>Journal of Accounting Research</em> (Spring 1996), pp. 173–181; Richard G. Sloan, “Do Stock Prices Fully Reflect Information in Accruals and Cash Flows about Future Earnings,” <em>The Accounting Review</em> (July 1996), pp. 289–315.</p>
+</div>
+<p>另一个实际优势在于，从预测收益直接进行估值比绕道自由现金流更为直接和高效。如图13.1所示，使用自由现金流估算公司价值会在估值过程中增加一个中间步骤。如第12章所示，自由现金流估值需要我们先预测未来的利润表和资产负债表。然后，我们通过对盈余中的应计项目、投入营运资本的现金流以及资本支出进行调整，从这些预测的利润表和资产负债表中推导出隐含的现金流量预测。我们利用这些现金流来确定自由现金流，然后用于计算价值。在剩余收益法下，我们在预测未来利润表和资产负债表之后立即开始估值。两种估值最终应该是相同的，但</p>
+<figure class="center">
+  <figcaption>图13.1 剩余收益估值法所需步骤少于自由现金流估值法</figcaption>
+</figure>
+</section>
+<section class="book-page" data-pdf-page="766">
+<p>基于自由现金流的方法需要更多的计算量，这需要更多的时间和精力，并增加了出错的可能性。<sup>5</sup></p>
+<p>经济学家有时表示担忧，认为收益对估值无用，因为收益不如现金或股利那样可靠或有意义，无法用于投资估值。在考虑收益时，经济学家有时指出，企业以现金而非收益支付股利；投资者可以花费现金，但不能用收益进行未来消费。然而，在估值中，这种担忧得以缓解，因为收益、现金流和股利之间的差异仅仅是时间差异：收益衡量企业创造财富的时点，自由现金流衡量企业以现金形式实现财富的时点，而股利则衡量企业向股东分配财富的时点。在企业整个生命周期内，未来收益、现金流和股利的现值将相等。</p>
+<p>一些经济学家担心，权责发生制会计下的收益反映了不再能捕捉基础经济价值变化的会计方法（例如，基于过时资产取得成本的折旧或摊销费用、已被证明成功的研究与开发支出，或已创造具有经济价值的品牌资产的广告费用）。基于企业剩余年限内预期收益的价值计量缓解了这一担忧。随着时间的推移，权责发生制会计过程最终将自行纠正会计数字中的计量错误。例如，如果一家公司的固定资产账面价值“过高”或“过低”，随着时间的推移（通常不需要太长时间），权责发生制会计将自然地纠正这些计量错误，因为后续的折旧费用将相应地“过高”或“过低”。如果当前的资产负债表未确认成功研发所创造的知识资本价值或成功营销所创造的品牌价值，随着企业从这些无形资本中获取更高收益，权责发生制会计将随着时间的推移自我纠正。<sup>6</sup></p>
+<p>一些经济学家担心，收益可能受到企业的操纵。诚然，我们必须始终警惕在某些期间某些企业可能进行盈余管理（或更糟，欺诈性报告）的可能性。但这更多是担忧过去和当前的收益是否是有用的指标，用来评估盈利能力和风险，从而对未来回报（无论是收益、股利还是自由现金流）做出可靠预测。只要我们仔细进行会计分析，确保不天真地基于过去被管理的收益来预测未来收益，剩余收益估值法就不会受到影响。基于股利和基于自由现金流的估值也是如此。前面各章，尤其是第6章至第9章，用了大量篇幅帮助你理解如何评估企业的会计质量以及如何构建可靠的预测。</p>
+<p>具有讽刺意味的是，企业可以很容易地管理某个期间内的现金流，但经济学家很少表达这种担忧。各期的自由现金流取决于现金流入和流出，企业可以通过在特定期间加速或延迟某些现金支付或现金收款来操纵它们。在企业剩余年限内（这是你预测和估值的重点），企业的收益和现金流最终将取决于企业经营、投资和融资活动的成功与否，而不是对收益或现金流的操纵。</p>
+<hr>
+<p><sup>5</sup> 当然，另一种节省步骤的方法是直接根据过去的现金流量表时间序列预测未来现金流，完全跳过权责发生制会计。然而，令人信服的证据表明，使用收益和应计项目的预测模型比仅使用现金流的预测模型准确得多。参见Kenneth S. Lorek和G. Lee Willinger，《现金流量数据的多元时间序列预测模型》，《<em>会计评论</em>》第71卷（1996年1月），第81-102页。</p>
+<p><sup>6</sup> 事实上，当分析师声称一家企业当前的资产负债表会计数字未反映基础经济价值时，该分析师是如何知道的？当分析师声称一家企业的资产负债表遗漏了以知识产权或品牌资产形式存在的有价值的无形资产时，该分析师是如何评估遗漏金额的？通常，分析师基于这样的评估提出此类主张：企业将从利用这些经济资产的业务中产生未来利润。基于收益的估值恰恰捕捉了同样的理念。企业价值取决于企业剩余年限内的预期未来收益。事实上，如果资产负债表完全反映了经济价值，那么对债务和权益分析师的需求将寥寥无几。企业的价值将由资产负债表上的总资产给出，债务价值将由资产负债表上的总债务给出，而权益价值将由资产负债表上的股东权益总额给出。</p>
+</section>
+<section class="book-page" data-pdf-page="767"><h2 id="theoretical-and-conceptual-foundations-for-residual-income-valuation">剩余收益估值的理论与概念基础</h2><p>剩余收益估值的基础是第11章中的经典股利估值模型，在该模型中，普通股权益的价值等于公司存续期内所有未来股利的现值。如第11章所述，股利被定义为公司与普通股股东之间现金流的总括指标，涵盖公司向股东支付的定期股利、股票回购、清算股利，以及公司发行股份时股东向公司的现金流入（负股利）。第11章演示了如何根据资本市场对普通股资本风险所要求的回报率（记为<var>R<sub>E</sub></var>）来估计适当的折现率（使用CAPM），并展示了基于股利的估值方法，该方法将普通股权益价值（记为<var>V<sub>0</sub></var>）计量为所有预期未来股利（记为<var>D<sub>t</sub></var>）的现值，一般模型如下：</p><p style="text-align:center"><var>V</var><sub>0</sub> = Σ<sub>t=1</sub><sup>∞</sup> <var>D</var><sub>t</sub> / (1+<var>R</var><sub>E</sub>)<sup>t</sup></p><p>分析师和投资者通常希望识别并预测决定公司未来股利的经济变量，从而以这些变量替代股利得出等价的估值。会计数字提供了解决方案。公司普通股权益账面价值（该总额包括实收资本、留存收益、累计其他综合收益以及其他普通股权益项目；记为<var>BV</var>）的会计处理可表达如下：</p><p style="text-align:center"><var>BV</var><sub>t</sub> = <var>BV</var><sub>t−1</sub> + <var>CI</var><sub>t</sub> − <var>D</var><sub>t</sub></p><p>在该表达式中，第t年末的普通股权益账面价值（<var>BV</var><sub>t</sub>）等于第t−1年末的账面价值（<var>BV</var><sub>t−1</sub>）加上第t年的综合收益（<var>CI</var><sub>t</sub>）减去第t年的总括股利（<var>D</var><sub>t</sub>）。如第11章股利估值法所述，我们假设净利润和股东权益账面价值的会计核算遵循干净盈余会计（Clean Surplus Accounting）。干净盈余会计意味着综合收益包含了公司普通股股东所有已确认的收益要素（即净利润加上所有其他综合收益项目），而股利则包括公司与普通股股东之间所有的直接资本交易（即定期股利支付、股票回购和股票发行）。</p><p>我们可以重新排列普通股权益账面价值的会计等式，将股利分离出来如下：</p><p style="text-align:center"><var>D</var><sub>t</sub> = <var>CI</var><sub>t</sub> + <var>BV</var><sub>t−1</sub> − <var>BV</var><sub>t</sub></p><p>在该表达式中，股利等于综合收益加上由于与普通股股东直接资本交易引起的账面价值变动。</p><p><strong>示例：干净盈余</strong></p><p>为说明干净盈余会计，假设一家公司在第t−1年末资产负债表中股东权益的账面价值为5,000美元。假设在第t年，公司实现综合收益600美元，向股东支付股利360美元，发行新股筹集250美元资本，并花费50美元回购普通股。则第t年末股东权益账面价值如下：</p><p style="text-align:center"><var>BV</var><sub>t</sub> = <var>BV</var><sub>t−1</sub> + <var>CI</var><sub>t</sub> − <var>D</var><sub>t</sub> = $5,000 + $600 − $360 + $250 − $50 = $5,000 + $600 − $160 = $5,440</p><p class="lo">LO 13-3 理解剩余收益估值概念，包括：a. 运用普通股权益账面价值、综合收益、股利以及干净盈余会计；b. 计量要求收益；c. 计量剩余收益；d. 确定普通股权益价值。</p></section>
+<section class="book-page" data-pdf-page="768">
+<p>在本例中，第t年全包股利（all-inclusive dividends）<em>D<sub>t</sub></em>为160美元。运用股利表达式表明：</p>
+<div class="equation"><em>D<sub>t</sub></em> = <em>CI<sub>t</sub></em> + <em>BV<sub>t−1</sub></em> − <em>BV<sub>t</sub></em> = $600 + $5,000 − $5,440 = $160</div>
+<p>因此，我们可以将综合收益（comprehensive income）加上普通股股东权益账面价值（book value of common shareholders’ equity）的变动代入经典股利估值模型，如下所示：</p>
+<div class="equation"><em>V</em><sub>0</sub> = Σ<sub><em>t</em>=1</sub><sup>∞</sup> <em>D<sub>t</sub></em> / (1 + <em>R<sub>E</sub></em>)<sup><em>t</em></sup></div>
+<div class="equation">= Σ<sub><em>t</em>=1</sub><sup>∞</sup> (<em>CI<sub>t</sub></em> + <em>BV<sub>t−1</sub></em> − <em>BV<sub>t</sub></em>) / (1 + <em>R<sub>E</sub></em>)<sup><em>t</em></sup></div>
+<p>从代数角度看，<em>BV<sub>t−1</sub></em>的现值可以改写如下：</p>
+<div class="equation"><em>BV<sub>t−1</sub></em> / (1 + <em>R<sub>E</sub></em>)<sup><em>t−1</em></sup> = <em>BV<sub>t</sub></em> / (1 + <em>R<sub>E</sub></em>)<sup><em>t</em></sup> + (<em>R<sub>E</sub></em> × <em>BV<sub>t−1</sub></em>) / (1 + <em>R<sub>E</sub></em>)<sup><em>t</em></sup></div>
+<p>我们将<em>BV<sub>t−1</sub></em>现值的右侧表达式代入方程，重排各项并化简，得到剩余收益估值模型（residual income valuation model）的以下表达式：</p>
+<div class="equation"><em>V</em><sub>0</sub> = <em>BV</em><sub>0</sub> + (<em>CI</em><sub>1</sub> − <em>R<sub>E</sub></em> × <em>BV</em><sub>0</sub>) / (1 + <em>R<sub>E</sub></em>) + (<em>CI</em><sub>2</sub> − <em>R<sub>E</sub></em> × <em>BV</em><sub>1</sub>) / (1 + <em>R<sub>E</sub></em>)<sup>2</sup> + (<em>CI</em><sub>3</sub> − <em>R<sub>E</sub></em> × <em>BV</em><sub>2</sub>) / (1 + <em>R<sub>E</sub></em>)<sup>3</sup> + …</div>
+<p>上述剩余收益估值模型因此是普通股股东权益的估值模型，在代数上等价于基于股利的估值，但依赖于收益与账面价值。<sup><a href="#fn7" id="ref7">7</a></sup></p>
+<h2 id="intuition-for-residual-income">剩余收益计量与估值的直觉理解</h2>
+<p>剩余收益估值模型的直觉理解十分简单。普通股股东权益价值由两部分构成：普通股权益账面价值加上所有预期未来剩余收益的现值。第一部分，普通股股东权益账面价值（<em>BV</em><sub>0</sub>），反映已投入企业的股东权益账面价值。第二部分是所有预期未来剩余收益的现值，即预期未来收益超过各期必要收益（required income）的金额。必要收益（也称正常收益）等于普通股权益资本成本（cost of common equity capital）乘以每期期初普通股权益资本账面价值的乘积。期间<em>t</em>的必要收益计算为 <em>R<sub>E</sub></em> × <em>BV</em><sub><em>t</em>−1</sub> 。必要收益反映企业在期间<em>t</em>仅仅为提供等于普通股权益资本成本的回报而必须产生的收益。必要收益类似于对权益资本成本的收费，就像利息费用是对债务资本成本的收费一样。</p>
+<aside class="footnote" id="fn7">
+<p><sup>7</sup> Credit for the rigorous development of the residual income valuation model goes to James A. Ohlson, “A Synthesis of Security Valuation Theory and the Role of Dividends, Cash Flows, and Earnings,” Contemporary Accounting Research (Spring 1990), pp. 648–676; James A. Ohlson, “Earnings, Book Values, and Dividends in Equity Valuation,” Contemporary Accounting Research (Spring 1995), pp. 661–687; Gerald A. Feltham and James A. Ohlson, “Valuation and Clean Surplus Accounting for Operating and Financial Activities,” Contemporary Accounting Research (Spring 1995), pp. 216–230. The ideas underlying the earnings-based valuation approach trace to early work by G. A. D. Preinreich, “Annual Survey of Economic Theory: The Theory of Depreciation,” Econometrica (1938), pp. 219–241, and Edgar O. Edwards and Philip W. Bell, The Theory and Measurement of Business Income (Berkeley, CA: University of California Press, 1961).</p>
+</aside>
+</section>
+<section class="book-page" data-pdf-page="769">
+<h2 id="theoretical-and-conceptual-foundations-for-residual-income-valuation">剩余收益估值的理论与概念基础</h2>
+<p>总之，我们可以如下计量剩余收益（Residual Income，亦称异常收益）：</p>
+<p style="text-align:center;"><strong>剩余收益 = CI<sub>t</sub> – (R<sub>E</sub> × BV<sub>t–1</sub>)</strong></p>
+<p>其中CI<sub>t</sub>为第t期综合收益（Comprehensive Income），R<sub>E</sub>为权益资本成本（Cost of Equity Capital），BV<sub>t–1</sub>为期初普通股权益的账面价值（Book Value）。剩余收益是企业预期产生的综合收益与同期要求收益（Required Income）之间的差额。正剩余收益表明股东财富增加，因为企业产生的综合收益超过了覆盖权益资本成本所要求的收益。如果剩余收益为负，则当期股东财富被侵蚀，因为企业产生的收益低于覆盖权益资本成本所要求的收益。如果企业当期产生的综合收益恰好等于要求收益[即 CI<sub>t</sub> – (R<sub>E</sub> × BV<sub>t–1</sub>) = 0]，则其收益恰好覆盖权益资本成本。此时，企业当期为股东创造了正常回报率，恰好等于权益资本成本，既不创造也不侵蚀股东财富。</p>
+<p>如果你预期企业未来期间将通过产生正的剩余收益为股东创造财富，那么企业价值等于普通股权益的账面价值加上所有预期未来剩余收益的现值。然而，如果你预期企业将通过产生负的剩余收益侵蚀股东财富，那么企业价值等于普通股权益的账面价值减去所有预期未来剩余收益的现值。如果企业未来每期产生的综合收益恰好等于要求收益[即所有未来期间的剩余收益均为零]，则企业价值恰好等于普通股权益的账面价值。<sup>8</sup></p>
+<h3 id="illustrations">剩余收益计量与估值示例</h3>
+<p>以下示例在不同假设下阐释剩余收益的计量与剩余收益估值模型。</p>
+<p><strong>示例1：零剩余收益，100%股利支付率</strong></p>
+<p>假设投资者在一家公司投入了10,000美元的普通权益。鉴于该公司的风险，投资者期望获得12%的回报，并预期公司每年将全部收益作为股利派发。每期的要求收益如下：</p>
+<p style="text-align:center;">R<sub>E</sub> × BV<sub>t–1</sub> = 0.12 × 10,000美元 = 1,200美元。</p>
+<p>假设投资者预测公司每年将恰好产生1,200美元的综合收益。投资者应如下计算企业的剩余收益：</p>
+<p style="text-align:center;">CI<sub>t</sub> – (R<sub>E</sub> × BV<sub>t–1</sub>) = 1,200美元 – (0.12 × 10,000美元) = 0美元</p>
+<p>采用剩余收益法，投资者将基于账面价值加上预期未来剩余收益对该企业进行估值，如下：</p>
+<p style="text-align:center;">V<sub>0</sub> = BV<sub>0</sub> + ∑<sub>t=1</sub><sup>∞</sup> [CI<sub>t</sub> – (R<sub>E</sub> × BV<sub>t–1</sub>)] / (1 + R<sub>E</sub>)<sup>t</sup></p>
+<p style="text-align:center;">V<sub>0</sub> = 10,000美元 + [1,200美元 – (0.12 × 10,000美元)] / (1.12) = 10,000美元 + 0美元/(1.12) = 10,000美元</p>
+<p class="footnote"><sup>8</sup> 经济学文献与会计学文献中的剩余收益概念，早在“经济增加值”（Economic Value Added）商业化之前数十年就已出现。剩余收益概念在估值与公司治理实践中的应用，可参见G. Bennett Stewart的《The Quest for Value》（New York: Harper Collins, 1991），以及日益丰富的经济增加值文献。</p>
+</section>
+<section class="book-page" data-pdf-page="770">
+<h3 id="example-2">例2：剩余收益为零，股利支付率为零</h3>
+<p>现在假设与例1相同的事实，但假设投资者预期公司每年不支付任何股利，所有收益将再投资于能够产生投资者要求的12%回报率的项目。<sup>9</sup> 那么第11年公司的必要收益为：</p>
+<p>R<sub>E</sub> × BV<sub>E10</sub> = 0.12 × $10,000 = $1,200。</p>
+<p>在第11年末，将留存收益$1,200加入股权账面价值后，第12年公司的必要收益为：</p>
+<p>R<sub>E</sub> × BV<sub>E11</sub> = 0.12 × [$10,000 + $1,200] = $1,344。</p>
+<p>在第12年末，将留存收益$1,344加入股权账面价值后，第13年公司的必要收益为：</p>
+<p>R<sub>E</sub> × BV<sub>E12</sub> = 0.12 × [$10,000 + $1,200 + $1,344] = $1,505。</p>
+<p>这些计算表明，随着公司留存并再投资收益，其必要收益将增长，投资者预期公司能获得要求的回报率。</p>
+<p>假设投资者预期公司未来每年的综合收益恰好等于每年的必要收益，因此每年产生零剩余收益。假设公司在剩余年限内（即第14年及以后）将继续再投资其所有收益并获得要求的12%回报率，那么我们可以使用剩余收益模型确定公司股权资本的价值如下：</p>
+<p>V<sub>0</sub> = BV<sub>0</sub> + ∑<sub>t=1</sub><sup>∞</sup> (CI<sub>t</sub> − R<sub>E</sub> × BV<sub>t−1</sub>) / (1+R<sub>E</sub>)<sup>t</sup></p>
+<p>= $10,000 + ($1,200 − 0.12 × $10,000) / (1.12) + ($1,344 − 0.12 × $11,200) / (1.12)<sup>2</sup> + ($1,505 − 0.12 × $12,544) / (1.12)<sup>3</sup> + …</p>
+<p>= $10,000 + $0 / (1.12) + $0 / (1.12)<sup>2</sup> + $0 / (1.12)<sup>3</sup> + … = $10,000。</p>
+<p><sup>9</sup>虽然这只是一个示例，但请注意这是一个重要假设，因为它假定公司可以扩大经营规模而不降低未来回报。</p>
+
+<h3 id="example-3">例3：剩余收益递减，股利支付率为零</h3>
+<p>现在假设与例2相同的事实，但假设投资者预期公司在未来三个期间内仅将收益再投资于现金或其他不产生额外回报的资产。投资者预期公司仍每年基于初始投资$10,000赚取$1,200，但预期最初三年的收益再投资不会产生任何增量回报。为简化起见，还假设在第14年及以后，公司将投资于能为股权股东带来12%总回报率的项目。</p>
+</section>
+<section class="book-page" data-pdf-page="771">
+<p>第11年企业所需收益为：</p>
+<pre>$1,200 = 0.12 × $10,000</pre>
+<p>在第11年末将留存收益1,200美元加入权益账面价值后，第12年所需收益为：</p>
+<pre>$1,344 = 0.12 × ($10,000 + $1,200)</pre>
+<p>在第12年末将留存收益1,200美元加入权益账面价值后，第13年所需收益为：</p>
+<pre>$1,488 = 0.12 × ($11,200 + $1,200)</pre>
+<p>假设第14年及以后，企业为权益股东带来的回报率稳定在12%，等于权益资本成本，因此剩余收益为零。利用剩余收益模型可以确定企业权益资本价值如下：</p>
+<pre>
+V<sub>E</sub> = BV<sub>0</sub> + Σ<sub>t=1</sub> (CI<sub>t</sub> – R<sub>E</sub> × BV<sub>t-1</sub>) / (1 + R<sub>E</sub>)<sup>t</sup>
+  = $10,000 + ($1,200 – 0.12 × $10,000) / (1.12) + ($1,200 – 0.12 × $11,200) / (1.12)² + ($1,200 – 0.12 × $12,400) / (1.12)³ + ($0) / (0.12) × (1 / 1.12)³
+  = $10,000 + $0 / (1.12) – $144 / (1.12)² – $288 / (1.12)³ + $0
+  = $10,000 + $0 – $115 – $205 + $0
+  = $9,680
+</pre>
+<p>本例表明，通过将收益再投资于仅产生零增量回报的项目，而非所需12%的回报，企业再投资产生的收益在第12年将比所需收益少144美元，在第13年将比所需收益少288美元。以现值衡量，企业在第12年将摧毁115美元的股东价值，在第13年摧毁205美元的股东价值。因此，在此例中，投资者对企业的估值仅为9,680美元，而前两个例子为10,000美元。</p>
+<p><strong>例4：正的剩余收益</strong></p>
+<p>现在假设投资者将10,000美元投入某企业的普通股权益，期望获得12%的回报，并预期公司每年将100%的收益作为股利支付。再假设这些投资者预期企业第11年净利润为1,000美元，第12年为2,000美元，第13年为1,500美元，此后每年均为1,200美元。投资者应按下述方式计算剩余收益估值：</p>
+<pre>
+V<sub>E</sub> = BV<sub>0</sub> + Σ<sub>t=1</sub> (CI<sub>t</sub> – R<sub>E</sub> × BV<sub>t-1</sub>) / (1 + R<sub>E</sub>)<sup>t</sup>
+  = $10,000 + ($1,000 – 0.12 × $10,000) / (1.12) + ($2,000 – 0.12 × $10,000) / (1.12)² + ($1,500 – 0.12 × $10,000) / (1.12)³ + ($1,200 – 0.12 × $10,000) / (0.12) × (1 / 1.12)³
+  = $10,000 – $200 / (1.12) + $800 / (1.12)² + $300 / (1.12)³ + $0
+  = $10,000 – $179 + $638 + $214 + $0
+  = $10,673
+</pre>
+</section>
+<section class="book-page" data-pdf-page="772">
+<p>在这个例子中，公司将在第11年产生-200美元的剩余收益，第12年产生800美元，第13年产生300美元，此后每年为0美元。该公司在第11年因未能赚取足够的收益来弥补权益资本成本而损害了股东财富，但在第12年和第13年创造了日益增长的股东财富，并且此后每年恰好弥补权益资本成本。根据这些假设，在剩余收益模型下，该公司的现值为10,673美元。</p>
+<h3 id="example-5">例5：不同会计处理方法下的剩余收益估值</h3>
+<p>如前所述，与权责发生制会计一样，剩余收益估值模型会在公司生命周期内自然地纠正会计方法的差异。为说明这一点，假设我们在以下假设下对一家非常简单的公司进行估值。该公司只有一项资产（现金）200美元，普通股权益的期初账面价值等于200美元。投资者预期获得10%的回报率。在第1年，公司投资100美元现金于一个研发项目。在第1年，公司没有实现任何收入，但在第2年，从研发项目中实现了200美元的收入。这家（确实非常简单的）公司的唯一活动就是这些，它在第2年结束后将不复存在。</p>
+<p>假设公司在第1年将全部研发支出费用化。该公司的收益在第1年将为-100美元（0美元收入减去100美元研发费用），第2年为200美元（200美元收入减去0美元费用）。使用剩余收益估值模型，我们将对公司估值如下：</p>
+<p>V<sub>0</sub> = BVE<sub>0</sub> + Σ [RI<sub>t</sub> / (1 + r<sub>E</sub>)<sup>t</sup>]<br>
+= $200 + [ (-$100 + 0.10 × $200) / 1.10 ] + [ ($200 - 0.10 × $100) / (1.10)<sup>2</sup> ]<br>
+= $200 + [ (-$120) / 1.10 ] + [ $190 / 1.21 ]<br>
+= $200 - $109 + $157 = $248</p>
+<p>现在假设公司在第1年将全部研发支出资本化为资产，并在研发产生收入的第2年将其费用化。该公司的收益在第1年将为0美元（0美元收入减去0美元研发费用），第2年为100美元（200美元收入减去100美元研发费用）。使用剩余收益估值模型，我们将对公司估值如下：</p>
+<p>V<sub>0</sub> = BVE<sub>0</sub> + Σ [RI<sub>t</sub> / (1 + r<sub>E</sub>)<sup>t</sup>]<br>
+= $200 + [ ($0 - 0.10 × $200) / 1.10 ] + [ ($100 - 0.10 × $200) / (1.10)<sup>2</sup> ]<br>
+= $200 + [ (-$20) / 1.10 ] + [ $80 / 1.21 ]<br>
+= $200 - $18 + $66 = $248</p>
+<p>注意，无论公司在第1年将研发支出资本化还是费用化，我们得到的估值完全相同。</p>
+<p>现在假设我们使用基于自由现金流或基于股利的估值法对公司进行估值。在第2年末，公司拥有300美元的自由现金流，因此可以支付300美元的清算股利，这基于初始200美元现金投资减去第1年研发支出100美元现金加上第2年收入收取200美元现金。在第2年末支付的300美元股利，按10%折现的现值为248美元，与我们通过剩余收益模型确定的价值完全相同。</p>
+</section>
+<section class="book-page" data-pdf-page="773"><h2 id="finite-horizon-residual-income">有限预测期收益预测与持续价值计算下的剩余收益估值</h2><p>没有人能够精确预测企业在未来许多年的利润表和资产负债表。因此，我们通常在可预见的有限预测期内预测利润表和资产负债表，然后对预测期之后持续的各年做出简化的增长率假设。我们可以修改剩余收益估值模型，将净利润（综合收益）和普通股权益账面价值的明确预测包含至第 T 年（T 为有限预测期，通常是未来 5 年或 10 年），然后对第 T+1 年及之后所有年份的剩余收益应用一个固定的增长率假设（记为 g）。我们在第 11 章和第 12 章中以类似的方法预测股利和自由现金流。</p><p>为应对长期预测中的不确定性，你必须在明确的预测期内预测净利润、股东权益账面价值和剩余收益，直至你预期企业将进入稳态增长阶段，在这一阶段收益、股利和现金流将（平均）以一个稳定、可预测的速率增长（类似于上面例子中的做法）。我们将这一长期稳态增长期产生的剩余收益称为持续剩余收益，因为它反映了企业持续到遥远未来的剩余收益。未来持续剩余收益的长期稳态增长率可以为正、负或零。剩余收益的稳态增长可能源于对通货膨胀、行业销售额、总体经济或人口的长期预期。在某些行业中，竞争态势最终会推动企业未来的收益（例如，未来的普通股权益收益率 ROCE）达到与长期预期权益资本成本相等的均衡水平。一旦企业达到该均衡，预期未来剩余收益将为零。你应选择一个能够捕捉企业现实长期预期的持续剩余收益增长率。</p><p>为计算第 T+1 年的剩余收益，你应将第 T 年的综合收益乘以增长因子 (1+g) 来预测第 T+1 年的综合收益。第 T+1 年的剩余收益（记为 <span class="math">RI<sub>T+1</sub></span>）可计算如下：</p><div class="formula">RI<sub>T+1</sub> = CI<sub>T</sub> × (1+g) − R<sub>E</sub> × BV<sub>T</sub></div><p>通过这种方式估算 RI<sub>T+1</sub>，你同样可以应用统一的长期增长因子 (1+g) 来估算第 T+1 年的利润表和资产负债表金额，并计算内在一致的 T+1 年自由现金流和股利预测值。然后，你可以将其用于基于自由现金流和基于股利的估值模型，以确定内在一致的价值估计。第 11 章和第 12 章展示了这些方法。</p><p>接下来，你可以将 RI<sub>T+1</sub> 视为从第 T+1 年开始的永续增长剩余收益。你可以利用第 11 章和第 12 章介绍的永续增长价值模型，将该永续剩余收益折现为现值。我们将持续价值计算纳入有限预测期剩余收益模型，如下所示：</p><div class="formula">V<sub>0</sub><sup>E</sup> = BV<sub>0</sub> + Σ<sub>t=1</sub><sup>T</sup> <span class="frac"><span>CI<sub>t</sub> − R<sub>E</sub> × BV<sub>t−1</sub></span><span>(1+R<sub>E</sub>)<sup>t</sup></span></span> + <span class="frac"><span>CI<sub>T</sub>(1+g) − R<sub>E</sub> × BV<sub>T</sub></span><span>(R<sub>E</sub> − g)(1+R<sub>E</sub>)<sup>T</sup></span></span></div><div class="learning-objective"><strong>学习目标 13-4</strong> 展示对有限预测期及持续价值计算的剩余收益估值模型的概念性理解。</div></section>
+<section class="book-page" data-pdf-page="774">
+  <p>该模型基于以下三个部分计算普通股权益价值，分别对应上式中的(1)、(2)和(3)：</p>
+  <ol>
+    <li>第0时点股东权益的账面价值（<em>BV</em><sub>0</sub>项）。</li>
+    <li>明确预测期间（至第T年）剩余收益的现值（求和项）。</li>
+    <li>自第T+1年起以永续增长形式计算的剩余收益持续价值的现值（方括号项）。</li>
+  </ol>
+  <p>为计算持续价值，我们首先确定第T+1年的剩余收益：<em>RI</em><sub>T+1</sub> = <em>CI</em><sub>T+1</sub> − (<em>R</em><sub>E</sub> − 1) × <em>BV</em><sub>T</sub>。假设第T+1年起剩余收益以恒定增长率<em>g</em>永续增长，因此使用永续增长估值因子[1/(<em>R</em><sub>E</sub> − <em>g</em>)]计算第T年初的持续价值。最后，使用现值因子[1/(1 + <em>R</em><sub>E</sub>)<sup>T</sup>]将持续价值折现至第0时点的现值。</p>
+  <p>估值方程中的持续价值部分（第(3)项）在大多数公司的估值中通常占较大比重。遗憾的是，这一估值组成部分在时间上最为遥远，因而涉及最高的不确定性与潜在的预测误差。基于股利和自由现金流的估值法尤其如此。然而，剩余收益估值法赋予持续价值项的权重较小，因为该方法重视已投入公司的权益价值（第(1)项）以及有限预测期间内的预计未来剩余收益（第(2)项），这两部分涉及的不确定性和潜在预测误差要小得多。</p>
+  <h3 id="coaching-tip-avoid-common-mistake">辅导提示：避免这个常见错误</h3>
+  <p>前文描述了如何计算第T+1年的剩余收益：</p>
+  <p><em>RI</em><sub>T+1</sub> = <em>CI</em><sub>T+1</sub> − (<em>R</em><sub>E</sub> − 1) × <em>BV</em><sub>T</sub></p>
+  <p>通过这种方式估算<em>RI</em><sub>T+1</sub>，你实际上会将一个统一的长期增长因子(1 + <em>g</em>)应用于综合收益来计算剩余收益。回忆第11章和第12章也演示了如何通过将相同的长期增长因子(1 + <em>g</em>)应用于预测第T年所有利润表及资产负债表项目，进而推导出内部一致的第T+1年自由现金流和股利预测。借助这一简单而重要的步骤，你可以在三种估值模型下得出内部一致的价值估计（从而避免分析师常犯的、在使用不同估值模型时得出同一公司不同价值的错误）。</p>
+  <p>分析师常犯且你应借助本提示避免的错误是，简单地将<em>RI</em><sub>T+1</sub> = <em>RI</em><sub>T</sub> × (1 + <em>g</em>)。这种简化预测隐含假设<em>RI</em><sub>T</sub>(1 + <em>g</em>) = <em>CI</em><sub>T</sub>(1 + <em>g</em>) − (<em>R</em><sub>E</sub> − 1) × <em>BV</em><sub>T</sub>。该假设要求<em>BV</em><sub>T</sub> = <em>BV</em><sub>T−1</sub> × (1 + <em>g</em>)，但这未必成立。第T+1年的剩余收益取决于第T年末的账面价值。我们假设自第T+1年起剩余收益以恒定速率(1 + <em>g</em>)增长，因此第T+1年剩余收益等于第T年剩余收益乘以(1 + <em>g</em>)的唯一途径是第T年的账面价值恰好（偶然地）以相同速率(1 + <em>g</em>)增长。这种巧合极为罕见。通过正确计算<em>RI</em><sub>T+1</sub> = <em>CI</em><sub>T+1</sub> − (<em>R</em><sub>E</sub> − 1) × <em>BV</em><sub>T</sub>，你可以轻松规避关于<em>RI</em><sub>T+1</sub>的这一预测与估值错误。</p>
+  <h3 id="valuation-clorox-residual-income-model">利用剩余收益模型对高乐氏进行估值</h3>
+  <p>接下来，我们运用第10章形成的预测，应用剩余收益估值法对高乐氏公司普通股股东权益进行估值。2020财年末，高乐氏股票在纽约证券交易所的收盘价为217.19美元。在第11章采用基于股利的估值法时，我们确定了截至……对高乐氏股票价值的中心估计。<span class="lo-tag">LO 13-5 应用剩余收益估值法对高乐氏普通股进行估值。</span></p>
+</section>
+<section class="book-page" data-pdf-page="775">
+<h2 id="valuation-of-clorox-using-the-residual-income-model">使用剩余收益模型对高乐氏进行估值</h2>
+<p>至2020财年末约为205.65美元。我们在第12章中使用基于自由现金流的估值方法也得到了相同的205.65美元估值。FSAP（附录C）中的预测与估值电子表格同样展示了预测和估值结果。</p>
+<p>我们使用剩余收益法对普通股进行估值，遵循以下六个步骤：</p>
+<ol>
+<li>使用权益资本的风险调整必要收益率估计合适的折现率。</li>
+<li>确定最近资产负债表上的普通股股东权益账面价值。</li>
+<li>根据第10章所述的财务报表预测，预测未来预期剩余收益。</li>
+<li>预测预测期之后永续期内剩余收益的长期增长率。</li>
+<li>将预期未来剩余收益（包括永续价值）折现至现值。</li>
+<li>将权益账面价值与预期未来剩余收益的现值相加，得出普通股股东权益的总价值，进行年中折现调整，再除以发行在外的股份数，从而转换为每股价值估计。</li>
+</ol>
+<p>在演示完这六步估值过程后，我们将进行敏感性分析，以确定合理股票价值的区间范围。然后，我们将市场价格与这一区间进行比较，并提出分析所指示的适当投资决策。</p>
+<h3 id="discount-rates-for-residual-income">剩余收益的折现率</h3>
+<p>为计算剩余收益的适当折现率，我们再次使用资本资产定价模型（CAPM）来估计市场对高乐氏普通股的必要收益率，正如第11章和第12章所示。2020财年末，高乐氏普通股的市场贝塔值约为0.75。同期，10年期美国国库券的收益率约为3.0%，我们将其作为无风险利率。假设市场风险溢价为5.0%，CAPM表明高乐氏在2020财年末（即估值期初）的普通股权益资本成本为6.75%（R<sub>E</sub> = 3.0% + 0.75 × 5.0% = 6.75%）。我们在第11章使用未来股利的现值以及第12章使用归属于普通股股东的自由现金流的现值对高乐氏股票进行估值时，均采用了相同的普通股权益资本成本。</p>
+<p>使用剩余收益估值模型，我们无需计算加权平均资本成本。这并不意味着我们忽略了债务资本或与债务资本相关的成本。相反，我们依赖会计来捕捉债务的影响。我们从总资产中扣除债务后预测股东权益的账面价值，并在扣除利息费用（税后净额）后预测净利润。</p>
+<h3 id="book-value-of-equity-and-the-projection-of-residual-income">权益账面价值与剩余收益预测</h3>
+<p>根据高乐氏的资产负债表（附录A），2020财年末普通股股东权益的账面价值为9.08亿美元。这一金额是剩余收益估值模型的起点，在估值方程中用BV<sub>0</sub>表示。</p>
+<p>为预测有限预测期内第+1年至第+5年的剩余收益，我们从第10章中对预期未来综合收益和未来普通股股东权益账面价值的预测开始。回想一下，在第10章中，我们通过对利润表各项目作出具体假设，预测了高乐氏的未来综合收益。我们还通过预测高乐氏的资产、负债和普通股权益，包括对股利、股票发行和股票回购的具体预测，预测了资产负债表上的未来普通股股东权益。</p>
+<p>然后，我们通过以下两项计算来衡量未来各期的剩余收益：</p>
+<ol>
+<li>计算预期未来必要收益，即权益资本成本乘以各期期初普通股股东权益账面价值的乘积（R<sub>E</sub> × BV<sub>t-1</sub>）。</li>
+</ol>
+</section>
+<section class="book-page" data-pdf-page="776"><p><strong>2. 确定预期未来剩余收益</strong> 通过从预期未来综合收益中减去预期未来要求收益：(CI<sub>t</sub> – R<sub>E</sub> × BV<sub>t–1</sub>)。</p><p>图13.2展示了高乐氏公司截至第15年的综合收益、普通股权益账面价值、要求收益和剩余收益的预测，这些预测使用了第10章讨论的预测以及6.75%的权益资本成本（cost of equity capital）。</p><p>例如，在第10章中，我们预测归属于高乐氏普通股股东的净利润（net income attributable to common shareholders）在第11年为11.038亿美元。我们预测其他综合收益项目为零，因此预测的综合收益与净利润相等。（回想之前讨论，剩余收益模型要求我们基于清洁盈余会计（clean surplus accounting）使用归属于普通股股东的综合收益。）鉴于高乐氏第11年初的普通股股东权益账面价值为9.08亿美元，且高乐氏的权益资本成本为6.75%，我们预测第11年要求收益（required income）为6130万美元（0.0675 × 9.08亿美元）。因此，我们预测第11年剩余收益为10.425亿美元（11.038亿美元 – 6130万美元）。我们对第12年至第15年重复这些计算，如图13.2所示。</p><p>为预测高乐氏第16年及以后的持续剩余收益，我们预测高乐氏能够维持每年3.0%的长期增长，这与经济长期平均增长一致。我们在第11章预测股利长期增长以及第12章预测自由现金流长期增长时做了相同假设。我们预测第16年剩余收益为10.392亿美元，计算方法是：预测第15年综合收益增长3.0%，并减去要求收益（权益资本成本乘以第15年末账面价值），如下所示：</p><p>RI<sub>16</sub> = CI<sub>15</sub>(1 + g) – (R<sub>E</sub> × BV<sub>15</sub>)<br>= [$1,060.4百万 × 1.03] – (0.0675 × $785.4百万)<br>= $1,092.2百万 – $53.0百万<br>= $1,039.2百万</p><h4 id="discounting-residual-income">将剩余收益折现为现值</h4><p>我们使用高乐氏6.75%的权益资本成本将剩余收益折现为现值。图13.2显示，高乐氏第11年至第15年剩余收益的现值合计为42.061亿美元。</p><figure><figcaption><strong>表13.2 高乐氏估值：第11年至第15年剩余收益的现值</strong>（金额单位：百万美元；允许四舍五入）</figcaption><table><thead><tr><th></th><th>第11年</th><th>第12年</th><th>第13年</th><th>第14年</th><th>第15年</th></tr></thead><tbody><tr><td>年初普通股股东权益（记为BV<sub>t–1</sub>）</td><td style="text-align:right">$908.0</td><td style="text-align:right">$839.5</td><td style="text-align:right">$776.8</td><td style="text-align:right">$779.1</td><td style="text-align:right">$784.2</td></tr><tr><td>可供普通股股东的综合收益（记为CI<sub>t</sub>）</td><td style="text-align:right">$1,103.8</td><td style="text-align:right">$1,066.5</td><td style="text-align:right">$1,091.1</td><td style="text-align:right">$1,043.1</td><td style="text-align:right">$1,060.4</td></tr><tr><td>要求收益（R<sub>E</sub> × BV<sub>t–1</sub>；R<sub>E</sub> = 6.75%）</td><td style="text-align:right">(61.3)</td><td style="text-align:right">(56.7)</td><td style="text-align:right">(52.4)</td><td style="text-align:right">(52.6)</td><td style="text-align:right">(52.9)</td></tr><tr><td>剩余收益（CI<sub>t</sub> – R<sub>E</sub> × BV<sub>t–1</sub>）</td><td style="text-align:right">$1,042.5</td><td style="text-align:right">$1,009.8</td><td style="text-align:right">$1,038.7</td><td style="text-align:right">$990.5</td><td style="text-align:right">$1,007.5</td></tr><tr><td>现值系数（R<sub>E</sub> = 6.75%）</td><td style="text-align:right">0.937</td><td style="text-align:right">0.878</td><td style="text-align:right">0.822</td><td style="text-align:right">0.770</td><td style="text-align:right">0.721</td></tr><tr><td>剩余收益的现值</td><td style="text-align:right">$976.6</td><td style="text-align:right">$886.1</td><td style="text-align:right">$853.8</td><td style="text-align:right">$762.7</td><td style="text-align:right">$726.8</td></tr></tbody><tfoot><tr><td colspan="6">第11年至第15年剩余收益现值合计：$4,206.1</td></tr></tfoot></table></figure></section>
+<section class="book-page" data-pdf-page="777">
+<p>我们按照永续年金方式，从第16年开始以3.0%的增长率计算高乐氏剩余收益持续价值的现值。为计算持续价值估计值，我们使用永续增长估值模型，该模型在永续期初确定增长型永续年金的现值。然后将该值折现回时间点 t = 0 的现值。高乐氏剩余收益持续价值的现值计算如下（考虑四舍五入）：</p>
+<p>持续价值的现值<sub>0</sub> = [CI<sub>16</sub>(1+g) − (R<sub>E</sub> × BV<sub>15</sub>)] × [1/(R<sub>E</sub> − g)] × [1/(1+R<sub>E</sub>)<sup>15</sup>]<br>= [10.604亿美元 × 1.03 − (0.0675 × 7.854亿美元)] × [1/(0.0675 − 0.03)] × [1/(1.0675)<sup>15</sup>]<br>= (10.922亿美元 − 0.530亿美元) × 26.6667 × 0.721<br>= 10.392亿美元 × 26.6667 × 0.721<br>= 199.910亿美元</p>
+<p>高乐氏剩余收益的总现值是这两部分之和：</p>
+<p>第11年至第15年剩余收益的现值（图表13.2） 42.061亿美元<br>第16年及以后持续价值的现值 199.910亿美元<br>剩余收益的现值 241.971亿美元</p>
+<p>计算普通股权益价值<br>为计算普通股权益总价值，我们将高乐氏的普通股权益账面价值与剩余收益的现值相加。第11年年初的普通股权益总价值为以下两项之和：</p>
+<p>剩余收益的现值 241.971亿美元<br>普通股股东权益账面价值 9.080亿美元<br>年中折现调整前的普通股股东权益现值 251.051亿美元</p>
+<p>如第11章和第12章所述，我们的现值计算存在过度折现，因为我们对每年的剩余收益进行了整个期间的折现，而实际上剩余收益是在整个期间内产生的，应当从每年的年中折现到当前时点。因此，为进行修正，我们将总额乘以年中调整因子 (1+R<sub>E</sub>)<sup>1/2</sup> = (1.0675)<sup>1/2</sup> = 1.03375。因此，普通股股东权益的总现值应计算如下：</p>
+<p>年中折现调整前的普通股股东权益现值 251.051亿美元<br>年中折现调整因子 × 1.03375<br>普通股股东权益的总现值 259.524亿美元</p>
+<p>将普通股股东权益总现值259.524亿美元除以14.851亿股流通股，得出高乐氏普通股每股价值为205.65美元。该价值估计与第11章基于股利的估值以及第12章基于普通股股东自由现金流的估值结果相同。图表13.3汇总了高乐氏普通股每股价值的计算过程。图表13.4展示了运用FSAP对高乐氏进行剩余收益模型估值的情况。</p>
+<p>敏感性分析与投资决策<br>我们在第11章和第12章中已提醒，在此再次强调，不应过度信赖使用这些（或任何）预测得出的单一公司价值点估计的精确性。</p>
+<p>LO 13-6<br>评估股票价值估计对关键参数的敏感性，例如折现率和预期长期增长率。</p>
+<p>749 运用剩余收益模型对高乐氏进行估值</p>
+<p>版权 2023 Cengage Learning。保留所有权利。未经许可，不得复制、扫描或以任何形式、任何部分进行传播。由于电子权利限制，某些第三方内容可能从电子书和/或章节中删除。编辑审查认定，任何被删除的内容不会对整体学习体验产生实质性影响。如果后续权利限制有要求，Cengage Learning 保留随时删除额外内容的权利。</p>
+</section>
+<section class="book-page" data-pdf-page="778">
+<div class="exhibit" id="exhibit-13-3">
+<h3>表 13.3 高乐氏公司剩余收益估值模型估值<br>（金额单位：百万美元，每股数据除外）</h3>
+<table>
+<thead>
+<tr><th>估值步骤</th><th>计算</th><th>金额</th></tr>
+</thead>
+<tbody>
+<tr><td>第11年至第15年剩余收益现值的总和</td><td>参见表13.2</td><td>$ 4,206.1</td></tr>
+<tr><td>加：终值现值</td><td>假设第16年剩余收益以3.0%增长；按6.75%折现</td><td>119,991.0</td></tr>
+<tr><td>剩余收益现值总额</td><td></td><td>$ 24,197.1</td></tr>
+<tr><td>加：权益账面价值期初余额</td><td>来自2020财年资产负债表的权益账面价值期初余额</td><td>1 908.0</td></tr>
+<tr><td>合计</td><td></td><td>$ 25,105.1</td></tr>
+<tr><td>调整至年中折现</td><td>乘以 (1+RE)<sup>1/2</sup></td><td>3 1.03375</td></tr>
+<tr><td>普通股权益现值总额</td><td></td><td>$ 25,952.4</td></tr>
+<tr><td>除以发行在外股数</td><td>1.262亿股发行在外股</td><td>4 126.2</td></tr>
+<tr><td>每股估计价值</td><td></td><td>$ 205.65</td></tr>
+<tr><td>当前每股价格</td><td></td><td>$ 217.19</td></tr>
+<tr><td>差异百分比</td><td>负数表示定价过高</td><td>25%</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="exhibit" id="exhibit-13-4">
+<h3>表 13.4 高乐氏公司估值：FSAP中的剩余收益估值法<br>（金额单位：百万美元，每股数据除外）</h3>
+<table>
+<thead>
+<tr>
+<th>剩余收益估值</th>
+<th>第11年</th>
+<th>第12年</th>
+<th>第13年</th>
+<th>第14年</th>
+<th>第15年</th>
+<th>终值<br>第16年</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>普通股股东可获综合收益</td><td>$ 1,103.8</td><td>$ 1,066.5</td><td>$ 1,091.1</td><td>$ 1,043.1</td><td>$ 1,060.4</td><td>$ 1,092.2</td></tr>
+<tr><td>普通股股东权益滞后账面价值（t-1期）</td><td>$ 908.0</td><td>$ 839.5</td><td>$ 776.8</td><td>$ 779.1</td><td>$ 784.2</td><td>$ 785.4</td></tr>
+<tr><td>要求收益</td><td>$ 61.3</td><td>$ 56.7</td><td>$ 52.4</td><td>$ 52.6</td><td>$ 52.9</td><td>$ 53.0</td></tr>
+<tr><td>剩余收益</td><td>$ 1,042.5</td><td>$ 1,009.8</td><td>$ 1,038.7</td><td>$ 990.5</td><td>$ 1,007.5</td><td>$ 1,039.2</td></tr>
+<tr><td>现值系数</td><td>0.937</td><td>0.878</td><td>0.822</td><td>0.770</td><td>0.721</td><td></td></tr>
+<tr><td>剩余收益现值</td><td>$ 976.6</td><td>$ 886.1</td><td>$ 853.8</td><td>$ 762.7</td><td>$ 726.8</td><td></td></tr>
+</tbody>
+</table>
+<table>
+<tbody>
+<tr><td>剩余收益现值总和</td><td>$ 4,206.1</td></tr>
+<tr><td>终值现值</td><td>$ 19,991.0</td></tr>
+<tr><td>合计</td><td>$ 24,197.1</td></tr>
+<tr><td>加：权益账面价值期初余额</td><td>$ 908.0</td></tr>
+<tr><td>权益现值</td><td>$ 25,105.1</td></tr>
+<tr><td>调整至年中折现</td><td>1.03375</td></tr>
+<tr><td>权益现值总额</td><td>$ 25,952.4</td></tr>
+<tr><td>发行在外股数</td><td>126.2</td></tr>
+<tr><td>每股估计价值</td><td>$ 205.65</td></tr>
+<tr><td>当前股价</td><td>$ 217.19</td></tr>
+<tr><td>差异百分比</td><td>25%</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+<section class="book-page" data-pdf-page="779">
+  <p>对于任何公司剩余寿命内的剩余收益，即便是成熟公司如高乐氏（Clorox）。尽管我们仔细构建了这些预测和价值估计，但预测和估值过程本身具有高度的不确定性和估计误差。因此，不应过分依赖公司股票价值的点估计，而应描述一个合理的价值区间。</p>
+  <p>两个关键的预测和估值参数是长期增长假设（3.0%）和权益资本成本（6.75%）。基于这些假设，我们的基准估计是高乐氏普通股每股价值约为205.65美元。与第11章和第12章一样，我们通过在合理范围内改变这两个参数来评估高乐氏股票价值估计的敏感性。表13.5展示了在FSAP中敏感性分析的结果，将长期增长假设从0%变化到5%，权益资本成本从5.25%变化到9.0%。表13.5中的数据表明，在增长率保持不变的情况下，股票价值估计随折现率上升而下降。相反，在折现率保持不变的情况下，股票价值估计随增长率上升而上升。<sup>10</sup></p>
+  <p>正如我们在第11章和第12章的敏感性分析中观察到的那样，这些数据表明我们的价值估计对基准假设（3.0%的长期增长和6.75%的折现率）的微小变化很敏感。估值参数的轻微不利变化（例如长期增长率2.5%和折现率7.0%）会将高乐氏的股票价值降至约175美元，而稍微有利的变化（例如长期增长率3.5%和折现率6.5%）则将高乐氏的股票价值提高至约250美元。如果我们的预测和估值假设是现实的，那么高乐氏的基准每股价值在2020财年末为205.65美元。当时，每股217.19美元的市场价格表明高乐氏股票被高估了约5%。根据我们的预测假设，高乐氏股票价值可能在以下区间内波动：</p>
+  <p class="footnote"><sup>10</sup>当增长率等于或超过折现率时，我们省略敏感性分析中的价值估计，因为持续价值计算无意义。</p>
+  <table>
+    <caption>表13.5 高乐氏公司估值：股价估值对增长率和权益资本成本的敏感性分析</caption>
+    <thead>
+      <tr>
+        <th></th>
+        <th colspan="9">长期增长假设：</th>
+      </tr>
+      <tr>
+        <th></th>
+        <th>0.0%</th>
+        <th>1.0%</th>
+        <th>2.0%</th>
+        <th>2.5%</th>
+        <th>3.0%</th>
+        <th>3.5%</th>
+        <th>4.0%</th>
+        <th>5.0%</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><th>折现率：</th><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+      <tr><th>5.25%</th><td>165.67</td><td>196.00</td><td>244.99</td><td>282.86</td><td>337.54</td><td>423.48</td><td>578.17</td><td>2743.83</td></tr>
+      <tr><th>5.50%</th><td>158.39</td><td>185.46</td><td>228.00</td><td>259.91</td><td>304.58</td><td>371.58</td><td>483.25</td><td>1376.63</td></tr>
+      <tr><th>5.75%</th><td>151.74</td><td>176.03</td><td>213.27</td><td>240.49</td><td>277.60</td><td>331.21</td><td>415.45</td><td>920.88</td></tr>
+      <tr><th>6.00%</th><td>145.65</td><td>167.54</td><td>200.39</td><td>223.84</td><td>255.12</td><td>298.91</td><td>364.59</td><td>692.99</td></tr>
+      <tr><th>6.25%</th><td>140.05</td><td>159.87</td><td>189.01</td><td>209.41</td><td>236.09</td><td>272.48</td><td>325.03</td><td>556.25</td></tr>
+      <tr><th>6.50%</th><td>134.87</td><td>152.88</td><td>178.90</td><td>196.79</td><td>219.78</td><td>250.45</td><td>293.37</td><td>465.08</td></tr>
+      <tr><th>6.75%</th><td>130.08</td><td>146.51</td><td>169.85</td><td>185.65</td><td>205.65</td><td>231.81</td><td>267.47</td><td>399.96</td></tr>
+      <tr><th>7.00%</th><td>125.63</td><td>140.67</td><td>161.71</td><td>175.74</td><td>193.28</td><td>215.82</td><td>245.89</td><td>351.11</td></tr>
+      <tr><th>7.25%</th><td>121.49</td><td>135.29</td><td>154.34</td><td>166.88</td><td>182.36</td><td>201.97</td><td>227.62</td><td>313.11</td></tr>
+      <tr><th>7.50%</th><td>117.63</td><td>130.33</td><td>147.64</td><td>158.90</td><td>172.65</td><td>189.85</td><td>211.96</td><td>282.71</td></tr>
+      <tr><th>7.75%</th><td>114.01</td><td>125.73</td><td>141.52</td><td>151.68</td><td>163.97</td><td>179.15</td><td>198.39</td><td>257.83</td></tr>
+      <tr><th>8.00%</th><td>110.62</td><td>121.46</td><td>135.91</td><td>145.11</td><td>156.15</td><td>169.64</td><td>186.51</td><td>237.10</td></tr>
+      <tr><th>8.50%</th><td>104.44</td><td>113.78</td><td>125.99</td><td>133.62</td><td>142.64</td><td>153.47</td><td>166.70</td><td>204.51</td></tr>
+      <tr><th>9.00%</th><td>98.94</td><td>107.05</td><td>117.48</td><td>123.90</td><td>131.38</td><td>140.23</td><td>150.85</td><td>180.05</td></tr>
+    </tbody>
+  </table>
+</section>
+<section class="book-page" data-pdf-page="780">
+  <p>估值区间低至每股175美元，高至每股250美元，仅在我们的增长率和折现率假设中出现微小变动。鉴于Clorox每股217.19美元的股价高于该价值区间的中值，且比我们的基准估计每股205.65美元低5%，我们本应在2020财年末支持卖出建议。</p>
+  <h2 id="residual-income-model-implementation-issues">剩余收益模型（Residual Income Model）实施问题</h2>
+  <p>剩余收益估值模型是一种严谨而直接的估值方法，但您应注意四个重要的实施问题：</p>
+  <ol>
+    <li>“脏盈余（Dirty surplus）”会计项目。</li>
+    <li>普通股交易。</li>
+    <li>归属于普通股股东以外的其他权益索取人的净利润部分。</li>
+    <li>权益账面价值为负。</li>
+  </ol>
+  <p>接下来的四节将描述这些问题及其处理方法。</p>
+  <h3 id="dirty-surplus-accounting">脏盈余会计（Dirty Surplus Accounting）</h3>
+  <p>剩余收益模型要求您在预期未来综合收益、股利和账面价值时遵循清洁盈余会计（clean surplus accounting）。这意味着预期未来综合收益金额应包括企业为普通股股东确认的所有收益，而全含股利应包括与普通股股东的所有资本交易。我们使用综合收益而非净利润，是因为美国通用会计准则（U.S. GAAP）和国际财务报告准则（IFRS）并非采用清洁盈余会计计量净利润。美国通用会计准则从净利润中省略了五个收益项目，我们称之为“脏盈余”项目。这些项目是其他综合收益金额，企业直接在股东权益和综合收益中确认（因此这是“清洁盈余”会计）。</p>
+  <ol>
+    <li>被分类为可供出售的债务证券投资的未实现公允价值利得和损失。</li>
+    <li>外币折算利得和损失。</li>
+    <li>与养老金和离职后福利相关的因计划修订和精算经验产生的资产和负债变动。</li>
+    <li>现金流量套期的公允价值利得和损失。</li>
+    <li>因企业自身（即特定工具）信用风险变化导致的债务重估的公允价值利得和损失。</li>
+  </ol>
+  <p>美国通用会计准则要求企业将这些项目确认为综合收益的一部分，但不允许在净利润中确认，直至其实现（例如，当企业通过出售可供出售投资证券实现利得或损失时）。根据美国通用会计准则和国际财务报告准则，企业需在单独的业绩报表中报告综合收益，以伴随利润表。在剩余收益估值中，务必使用预计综合收益（而非净利润），以与清洁盈余会计保持一致。</p>
+  <p>例如，Clorox在其2020年合并综合收益表（附录A）中报告其他综合收益项目合计为 $(38.0) 百万。由于这些项目，Clorox的综合收益为 $901.0 百万（净利润 $939.0 百万减去其他综合收益项目 $38.0 百万）。到2020财年末，累计其他综合损失总额（衡量Clorox成立以来的累计其他综合收益调整额，并作为股东权益的组成部分）为 $(640.0) 百万。如第8章和第10章所述，导致Clorox其他综合损失的主要因素是外币折算调整，2020财年为 $(36.0) 百万。</p>
+  <p><strong>学习目标 13-7</strong> 描述剩余收益估值法的四个重要实施问题。</p>
+</section>
+<section class="book-page" data-pdf-page="781">
+<p>在美国通用会计准则（U.S. GAAP）下，五项肮脏盈余项目通常因市场价格变动产生的未实现利得和损失而产生，例如债务投资证券公允价值、外币汇率或利率的变动。因此，在预期中，你可以确定这类利得和损失必然会发生，但无法精确预测未来未实现利得和损失的方向或金额。在这种情况下，你很可能预期未来的其他综合收益项目平均而言为零，从而预测净利润（net income）与综合收益（comprehensive income）相等。我们在第10章为高乐氏（Clorox）构建预测时采用了这一假设。另一方面，如果你能够可靠地预测这些项目的金额和发生时间，就应将其纳入综合收益预测中。</p>
+<p><strong>普通股交易</strong></p>
+<p>改变现有普通股股东权益内在价值的普通股交易，也可能导致清洁盈余会计关系（clean surplus accounting）的违背，并阻碍剩余收益模型（residual income model）正确衡量公司价值。举例来说，假设公司以恰好反映股份内在价值的交易价格出售或回购普通股。也就是说，股票发行或回购对现有股东的价值影响中性（既不稀释也不增厚）。此类交易不会改变现有股东的价值，清洁盈余会计对这些交易成立。另一方面，假设公司以低于内在价值的价格发行普通股。该交易会对所有现有普通股产生稀释效应（即降低其价值）。综合收益和全含股利（all-inclusive dividend）无法反映现有股东的价值损失，因此违背了清洁盈余会计。</p>
+<p>有理由预期，清洁盈余会计对大多数普通股交易成立，因为大多数普通股发行和回购均按市场价值入账。因此，它们对现有股东的股票价值可能具有中性影响，并符合清洁盈余会计。然而，最突出的例外是员工行权时发行普通股。如第7章所述，员工以低于当前市场价格的行使价行使股票期权，会稀释现有股东的权益价值。如果公司在授予时估计员工股票期权的公允价值，并在计量净利润时将估计的授予价值确认为费用，就能减轻清洁盈余会计的违背。在这种情况下，你应预测未来预期期权授予的公允价值，并在预测预期未来净利润时减去这些估计费用。我们在第10章为高乐氏构建净利润预测时隐含地遵循了这一方法，因为高乐氏在授予日将股票期权的公允价值费用化。根据第123号准则（2004年修订版）和国际会计准则第2号（IAS 2），公司必须通过在授予日开始的等待期内摊销，将股票期权的公允价值费用化<sup>11</sup>。</p>
+<p>公司经常在公开市场回购普通股，然后用这些股票满足股票期权的行权。在这种情况下，按市场价值回购股票和按期权行使价发行库存股的会计处理，会反映期权行权对股东权益的稀释效应。例如，如果公司在市场上以60美元回购一股，并以40美元的行使价发行给行权的员工，会计处理的净影响将反映股东权益减少20美元。另一方面，如果公司通过发行新股（或以前期间按不反映当期市场价值的价格回购的库存股）满足股票期权行权，会计处理将按期权的行使价反映股票发行，而对现有股东的稀释效应将违背清洁盈余会计。</p>
+<p>例如，高乐氏在其2020年合并普通股股东权益表（附录A）中报告，共回购153.1万股，耗资2.42亿美元，隐含——</p>
+<p style="font-size: smaller; margin-top: 8pt;"><sup>11</sup> 财务会计准则委员会（FASB）第123号准则（2004年修订版）“以股份为基础的支付会计处理”与国际会计准则理事会（IASB）国际财务报告准则第2号“以股份为基础的支付”于2004年发布。</p>
+<p style="font-weight:bold; margin-top:8pt;">剩余收益模型实施问题</p>
+</section>
+<section class="book-page" data-pdf-page="782">
+<p>平均成本为每股158美元。Clorox还在该声明中披露，其因期权行权和受限制股份单位归属而重新发行了204.3万股，从而增加了权益资本1.21亿美元，平均每股发行账面价值为59美元。每股158美元的平均成本与每股59美元的平均账面价值之差表明，每股发行平均稀释了99美元。鉴于Clorox发行了204.3万股，总稀释额为1.21亿美元。按照1.262亿股流通股计算，每股稀释0.96美元，约占年末股价217.19美元的0.4%。</p>
+<p>在对拥有大量未到期期权且/或未来可能授予大量期权的公司进行估值时，如果你预期这些期权很可能会被行权，则应特别关注股权激励（你预期最终将过期或作废的期权不会对估值造成问题）。在这些情况下，你应明确预测未来的股权激励费用，包括未来期权授予的公允价值。此外，你应预测期权行权对普通股权益账面价值的未来稀释影响。你应在估值中同时捕捉这两种效应。<sup>12</sup></p>
+<h3 id="portions-of-net-income">12  归属于除普通股股东以外的其他权益索取权人的净利润部分</h3>
+<p>剩余收益估值应基于可供普通股股东享有的综合收益。在某些情况下，部分综合收益归属于除普通股股东以外的其他权益索取权人。例如，优先股股东可能享有优先于普通股股东的股利分配权。此外，非控制性权益股东对其所拥有的子公司权益份额享有的综合收益部分具有索取权。就剩余收益计量和估值而言，这些综合收益部分不属于普通股股东，因此应从剩余收益中排除。我们在第10章的预测中假设Clorox不会拥有归属于非控制性权益的权益。因此，我们对综合收益和普通股股东权益的预测完全归属于Clorox的普通股股东。这样，我们的剩余收益估值正确地基于可供普通股股东享有的综合收益。</p>
+<h3 id="negative-book-value">普通股股东权益账面价值为负</h3>
+<p>有些公司报告的普通股股东权益总额（负债超过资产）为负。这并不常见，但可能出现在处于生命周期初创阶段的公司，此时公司经营可能产生重大亏损。普通股权益账面价值为负也可能在再杠杆化之后出现，当公司使用大量债务资本回购股票或支付股利，导致股东权益总额低于零时。例如，2018至2020财年三年间，星巴克为股利和股票回购支付了超过240亿美元现金，导致截至2020财年末股东权益赤字为78亿美元。权益账面价值为负还可能出现在处于严重困境、破产风险高的公司（本质上，负债超过总资产）。</p>
+<p>在这些罕见情况下，你不应使用剩余收益估值法，因为所需收益（<em>Required Income</em>）<em>RE × BV<sub>t-1</sub></em>的计算结果将为负。剩余收益<em>(CI<sub>t</sub> – RE × BV<sub>t-1</sub>)</em>的计算实际上会因此将所需收益加到净利润（减去一个负数），这是不正确的。在这种情况下，你只应使用基于股利和基于自由现金流的估值法。<sup>13</sup></p>
+<div class="footnotes">
+<p class="footnote"><sup>12</sup> 关于股票期权与估值的示例，参见Leonard Soffer, “SFAS No. 123 Disclosures and Discounted Cash Flow Valuation,” <em>Accounting Horizons</em> 14, no. 2 (June 2000), pp. 169–189.</p>
+<p class="footnote"><sup>13</sup> 请注意，这一实施问题仅出现在普通股股东权益账面价值总额为负时。当留存收益为负（称为留存亏损）但普通股股东权益账面价值总额为正时，不会出现此问题。这种情况发生在已产生重大经营亏损的公司，尤其是在初创阶段。</p>
+</div>
+</section>
+<section class="book-page" data-pdf-page="783">
+<h2 id="consistency-in-residual-income">剩余收益、股利与自由现金流估值估计的一致性</h2>
+<p>基于股利、自由现金流和收益的估值方法应当具有内在一致性。在第11章至第13章中，我们从概念和理论层面将每种估值方法与一般估值模型（在各章引言中已阐述）联系起来。在此过程中，我们通过对高乐氏公司的分析和估值展示了这些方法的内在一致性，并证明了基于剩余收益、自由现金流和股利的价值估计是等价的。</p>
+<p>前棒球运动员兼教练尤吉·贝拉（Yogi Berra）据说曾言：“理论上，实践与理论是相同的。实践中，它们却不同。”理论上，如果三种估值模型均正确运用且基于内在一致的假设，它们将得出相同的价值估计值。但在实践中，你可能会发现三种模型得出不同的估值结果。若如此，请检查你的分析是否存在以下三种常见错误之一：<sup>14</sup></p>
+<p>1. <strong>不完整或不一致的收益与现金流预测。</strong>你应确保预测的收益、现金流和股利是完整的，且基于相互一致的假设。正如第10章所强调的，通过预测完整的财务报表可以减少预测不完整或不一致的可能性；在这些报表中，资产负债表平衡，利润表计量普通股股东的综合收益，现金流量表与利润表和资产负债表的变化相衔接。你还应确保预测的股东权益反映了干净盈余会计（clean surplus accounting）。</p>
+<p>2. <strong>加权平均资本成本估计不一致。</strong>假设你使用加权平均资本成本作为折现率计算自由现金流对所有债务和权益资本的现值，然后减去债务和优先股的现值以确定普通股权益的现值（如第12章所示）。要使该方法得出的价值估计与剩余收益法或股利法的价值估计一致，唯一的途径是：加权平均资本成本中所使用的权重与债务、优先股及普通股权益的现值完全内在一致。因此，你可能需要反复迭代计算加权平均资本成本，直至所有权重和现值均达到内在一致。</p>
+<p>3. <strong>终值计算错误。</strong>第11章至第13章强调，你必须仔细估计终值，尤其是第T+1年的剩余收益、自由现金流和股利金额。如果计算终值时使用了不一致的假设来预测初始金额，最终得到的价值估计将不一致。为避免此问题，你应首先假设统一增长率（1+g），预测第T+1年的利润表和资产负债表金额，然后利用这些预测推算出第T+1年的剩余收益、自由现金流和股利金额。推算出的第T+1年金额即可作为永续年金的起始值，用于计算终值。分析师常犯的一个错误是简单地假设第T年的所有剩余收益、自由现金流和股利均以相同速率g增长。这种捷径很可能导致假设不一致，进而造成估值偏差。</p>
+<p>学习目标 13-8<br/>识别当剩余收益、自由现金流和股利估值未产生相同估值估计时可能导致错误的潜在原因。</p>
+<div class="footnote">
+<p><sup>14</sup> 有关诊断导致三种估值模型估计差异的错误的更完整描述，参见 Russell Lundholm 和 Terry O'Keefe，“Reconciling Value Estimates from the Discounted Cash Flow Model and the Residual Income Model”，《当代会计研究》（Contemporary Accounting Research）（2001年夏季），第11-26页。</p>
+</div>
+</section>
+<section class="book-page" data-pdf-page="784">
+<h2 id="summary">本章小结</h2>
+<p>第11至13章介绍并应用了三种不同但等价的估值方法：使用预计股利的现值、预计自由现金流的现值和预计剩余收益的现值。综合来看，这些方法在理论上是合理的，且是估算企业价值的实用技术。我们的估值经验表明，在所有情况下采用多种估值方法比仅使用一种方法能提供更有用的洞察。第14章将展示各种附加估值技术，包括基于市场的估值倍数，如市净率和市盈率。</p>
+
+<h2 id="questions-exercises-problems-cases">问答题、练习题、思考题与案例</h2>
+<h3 id="questions-exercises">问答题与练习题</h3>
+<ol>
+<li>
+<strong>13.1 估值方法的等价性。</strong> 从概念上讲，为什么基于股利、基于普通股股东自由现金流和基于剩余收益的估值对同一家企业应产生相等的价值估计？
+</li>
+<li>
+<strong>13.2 要求收益。</strong> 解释要求收益。要求收益代表什么？它在概念上如何类比于利息费用？
+</li>
+<li>
+<strong>13.3 剩余收益。</strong> 解释剩余收益。如何计量？剩余收益代表什么？
+</li>
+<li>
+<strong>13.4 剩余收益估值理论。</strong> 解释剩余收益估值法背后的理论。为何剩余收益价值与普通股股东相关？
+</li>
+<li>
+<strong>13.5 剩余收益估值法。</strong> 解释普通股权益账面价值在剩余收益估值法中的两个作用。
+</li>
+<li>
+<strong>13.6 解读剩余收益。</strong> 如果一家公司某年剩余收益为正，是否意味着公司盈利？请解释。如果剩余收益为负，是否意味着公司在利润表上必定报告了亏损？请解释。当公司剩余收益为零时，意味着什么？
+</li>
+<li>
+<strong>13.7 投资对剩余收益的影响。</strong> 假设公司的权益资本成本为10%，且现有资产和经营产生的普通股权益收益率为10%。如果公司筹集额外权益资本并投资于收益率低于10%的资产，该项投资将如何影响公司的剩余收益？如果公司筹集额外权益资本并投资于收益率超过10%的资产，该项投资又将如何影响剩余收益？
+</li>
+<li>
+<strong>13.8 借款对剩余收益的影响。</strong> 如果公司从银行借入资金并投资于收益率高于银行利率的资产，这将对公司剩余收益产生什么影响？这种影响与第4章和第5章描述的资本结构杠杆效应相比如何？
+</li>
+<li>
+<strong>13.9 竞争对剩余收益的影响。</strong> 如果公司处于竞争激烈、成熟的行业，竞争状况将如何影响该公司及行业其他公司的剩余收益？现在假设公司拥有竞争优势，但该优势难以持续超过数年。随着竞争优势的减弱，其剩余收益会如何变化？
+</li>
+<li>
+<strong>13.10 保守会计对剩余收益估值的影响。</strong> 假设你正运用剩余收益估值模型对一家极度...
+</li>
+</ol>
+<p>LO 13-1, LO 13-2</p>
+<p>LO 13-3</p>
+<p>...</p>
+</section>
+<section class="book-page" data-pdf-page="785"><p>……保守会计。例如，假设该公司遵循美国通用会计准则（U.S. GAAP）或国际财务报告准则（IFRS），但并未在资产负债表上确认一项重要的无形资产。（也许该公司已将大量研发支出费用化，这些支出形成了有价值的知识产权，或者已将大量广告费用费用化，这些费用创造了有价值的品牌名称。）由于这种保守会计，该公司报告的资产和权益账面价值远低于其相应的经济价值。请解释为何剩余收益估值（residual income valuation）不会被保守会计扭曲。剩余收益估值模型如何纠正保守会计和低估的权益账面价值的影响？</p>
+<p><strong>13.11 激进会计对剩余收益估值的影响。</strong> 假设你正在运用剩余收益估值模型对一家采用极其激进会计的公司进行估值。例如，假设该公司资产负债表上有一项被严重高估的资产。（也许该公司在资产负债表上列示了数额巨大的商誉，来源于以前的收购，并且已延迟记录必要的减值损失，该减值损失将冲销该商誉的价值。）由于这种激进会计，该公司报告的资产和权益账面价值远高于其相应的经济价值。请解释为何剩余收益估值不会被激进会计扭曲。剩余收益估值模型如何纠正激进会计和高估的权益账面价值的影响？</p>
+<p><strong>13.12 恰当的折现率。</strong> 在使用剩余收益估值法时，为什么采用权益资本要求收益率（required rate of return on equity capital）而非加权平均资本成本（weighted-average cost of capital）作为折现率是恰当的？</p>
+<p><strong>习题与案例</strong></p>
+<p><strong>13.13 计算剩余收益。</strong> 假设以下假想数据代表雅培（Abbott Labs）、IBM和塔吉特百货（Target Stores）的总资产、普通股股东权益的账面价值和市场价值（金额单位：百万美元）。雅培生产和销售医疗保健产品。IBM开发和生产计算机硬件，并提供相关技术服务。塔吉特百货经营一系列综合商品零售店。此外，这些数据还包括这三家公司假想的市场贝塔值以及分析师对第11年净利润的一致预测。假设对于每家公司，分析师预期第11年其他综合收益项目为零，因此第11年净利润和综合收益相等。假设经济中的无风险收益率为3.0%，市场风险溢价为5.0%。</p>
+<table>
+<thead><tr><th>（金额单位：百万美元）</th><th>雅培</th><th>IBM</th><th>塔吉特百货</th></tr></thead>
+<tbody>
+<tr><td>总资产</td><td>$42,419</td><td>$109,524</td><td>$44,106</td></tr>
+<tr><td>普通股权益：</td><td></td><td></td><td></td></tr>
+<tr><td> 账面价值</td><td>$17,480</td><td>$13,466</td><td>$13,712</td></tr>
+<tr><td> 市场价值</td><td>$83,050</td><td>$166,420</td><td>$34,600</td></tr>
+<tr><td> 市场权益贝塔值</td><td>0.27</td><td>0.73</td><td>1.09</td></tr>
+<tr><td>分析师对第11年净利润的一致预测</td><td>$5,750</td><td>$12,956</td><td>$2,384</td></tr>
+</tbody>
+</table>
+<p><strong>要求</strong></p>
+<ol type="a">
+<li>运用资本资产定价模型（CAPM），计算每家公司的权益资本要求收益率。</li>
+<li>预测每家公司第11年的要求收益。</li>
+<li>预测每家公司第11年的剩余收益。</li>
+<li>不同数额的剩余收益对公司有何含义？预测的剩余收益数额是否有助于解释这三家公司权益市场价值的差异？请解释。</li>
+</ol>
+<p><strong>13.14 计算剩余收益。</strong> 假设以下假想数据代表微软（Microsoft）、英特尔（Intel）和戴尔（Dell）这三家处于计算机行业不同领域的公司的总资产、普通股股东权益的账面价值和市场价值（金额单位：百万美元）。</p></section>
+<section class="book-page" data-pdf-page="786">
+  <div class="problem-continuation">
+    <p>技术行业。微软 (Microsoft) 主要从事软件产品的开发、制造、许可和支持。英特尔 (Intel) 为计算和通信行业开发并制造半导体芯片和微处理器。戴尔 (Dell) 设计并制造一系列计算机硬件系统，如笔记本电脑、台式机和服务器。这些数据还包括假设的这三家公司的市场贝塔系数，以及分析师对第11年净利润的一致预测。对于每家公司，分析师预计第11年的其他综合收益项目为零，因此第11年的净利润与综合收益将相同。假设经济中的无风险收益率为3.0%，市场风险溢价为5.0%。</p>
+    <table>
+      <caption>(金额单位：百万美元)</caption>
+      <thead>
+        <tr>
+          <th></th>
+          <th>微软</th>
+          <th>英特尔</th>
+          <th>戴尔</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>总资产</td>
+          <td>$77,888</td>
+          <td>$50,715</td>
+          <td>$26,500</td>
+        </tr>
+        <tr>
+          <td colspan="4"><strong>普通股权益：</strong></td>
+        </tr>
+        <tr>
+          <td> 账面价值</td>
+          <td>$39,558</td>
+          <td>$39,088</td>
+          <td>$4,271</td>
+        </tr>
+        <tr>
+          <td> 市场价值</td>
+          <td>$264,510</td>
+          <td>$112,480</td>
+          <td>$26,000</td>
+        </tr>
+        <tr>
+          <td>市场权益贝塔系数</td>
+          <td>0.96</td>
+          <td>1.12</td>
+          <td>1.28</td>
+        </tr>
+        <tr>
+          <td>分析师对第11年净利润的一致预测</td>
+          <td>$16,250</td>
+          <td>$8,060</td>
+          <td>$1,882</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="required-heading">要求</p>
+    <ol type="a">
+      <li>使用CAPM（资本资产定价模型），计算每家公司的权益资本要求收益率。</li>
+      <li>预测每家公司第11年的要求收益。</li>
+      <li>预测每家公司第11年的剩余收益。</li>
+      <li>使用第11年预期剩余收益相对于普通股权益账面价值的比率，对三家公司进行排名。</li>
+      <li>不同金额的剩余收益对每家公司有何含义？预测的剩余收益金额是否有助于解释这三家公司股权市场价值的差异？请解释。</li>
+    </ol>
+  </div>
+  <div class="problem" id="problem-13-15">
+    <h3>13.15 计算剩余收益</h3>
+    <p>假设以下虚构数据代表三家公司的总资产、普通股权益账面价值和市场价值（金额单位为百万美元）。这三家公司——西南航空 (Southwest Airlines)、克罗格 (Kroger) 和百胜餐饮集团 (Yum! Brands)——各自运作于不同的行业，但都处于竞争非常激烈的行业。西南航空是一家提供低成本点对点航空运输服务的美国国内航空公司。克罗格在美国各地经营零售超市。百胜餐饮集团经营并特许快餐厅，包括肯德基 (KFC)、必胜客 (Pizza Hut)、塔可钟 (Taco Bell)、Long John Silver’s 以及 A&W All American Food 餐厅。这些数据还包括假设的这三家公司的市场贝塔系数，以及分析师对第11年净利润的一致预测。对于每家公司，分析师预计第11年的其他综合收益项目为零，因此第11年的净利润与综合收益将相同。假设经济中的无风险收益率为3.0%，市场风险溢价为5.0%。</p>
+    <table>
+      <caption>(金额单位：百万美元)</caption>
+      <thead>
+        <tr>
+          <th></th>
+          <th>西南航空</th>
+          <th>克罗格</th>
+          <th>百胜餐饮集团</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>总资产</td>
+          <td>$14,308</td>
+          <td>$23,211</td>
+          <td>$7,242</td>
+        </tr>
+        <tr>
+          <td colspan="4"><strong>普通股权益：</strong></td>
+        </tr>
+        <tr>
+          <td> 账面价值</td>
+          <td>$4,953</td>
+          <td>$5,176</td>
+          <td>$1,139</td>
+        </tr>
+        <tr>
+          <td> 市场价值</td>
+          <td>$7,490</td>
+          <td>$14,870</td>
+          <td>$15,950</td>
+        </tr>
+        <tr>
+          <td>市场权益贝塔系数</td>
+          <td>1.10</td>
+          <td>0.35</td>
+          <td>1.04</td>
+        </tr>
+        <tr>
+          <td>分析师对第11年净利润的一致预测</td>
+          <td>$252</td>
+          <td>$1,263</td>
+          <td>$1,010</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="required-heading">要求</p>
+    <ol type="a">
+      <li>使用CAPM（资本资产定价模型），计算每家公司的权益资本要求收益率。</li>
+      <li>预测每家公司第11年的要求收益。</li>
+      <li>预测每家公司第11年的剩余收益。</li>
+      <li>使用第11年预期剩余收益相对于普通股权益账面价值的比率，对三家公司进行排名。</li>
+      <li>不同金额的剩余收益对每家公司有何含义？预测的剩余收益金额是否有助于解释这三家公司股权市场价值的差异？请解释。</li>
+    </ol>
+  </div>
+</section>
+<section class="book-page" data-pdf-page="787"><p>e. 不同的剩余收益金额对每家公司意味着什么？预测的剩余收益金额是否有助于解释这三家公司股权市场价值的差异？请解释。</p><h3>13.16 股权估值：剩余收益模型。</h3><p>莫里西工具公司（Morrissey Tool Company）为其他制造企业制造机床。该公司由凯尔西·莫里西（Kelsey Morrissey）全资拥有。公司会计师编制了以下综合收益的长期预测：</p><p>第11年：$213,948<br>第12年：$192,008<br>第13年：$187,444<br>第14年：$196,442<br>第15年：$206,667</p><p>会计师预计第15年后综合收益每年增长5%。凯尔西每年将综合收益的30%作为股利提取。第11年1月1日的普通股股东权益总额为$1,111,141。凯尔西预期其投入的权益资本每年获得12%的回报率。</p><p>要求<br>a. 使用剩余收益估值模型，计算莫里西工具公司在第11年1月1日的价值。<br>b. 关于她对该公司的所有权，你会给凯尔西什么建议？</p><h3>13.17 股权估值：剩余收益模型与股利贴现模型。</h3><p>Priority Contractors 为纽约市的各类企业客户提供维护和清洁服务。该公司提供了第11年至第15年的如下综合收益预测：</p><p>第11年：$478,246<br>第12年：$491,882<br>第13年：$485,568<br>第14年：$515,533<br>第15年：$554,198</p><p>第11年1月1日的普通股股东权益总额为$2,224,401。公司预计在第11年至第15年期间不支付股利。权益资本成本为12%。</p><p>要求<br>a. 使用剩余收益估值模型计算 Priority Contractors 在第11年1月1日的价值。公司预计第15年后综合收益每年增长5%。<br>b. 使用股利贴现模型计算 Priority Contractors 在第11年1月1日的价值。公司将在第16年支付第一笔股利。（提示：利用清洁盈余会计（clean surplus accounting）以及第16年综合收益和股东权益5%的增长率计算股利金额。）</p><h3>13.18 股权估值：剩余收益、自由现金流和股利贴现模型。</h3><p>图13.6 呈现了Steak ‘n Shake第11年至第111年的预测财务报表中的部分假设数据。第111年的金额反映了3%的长期增长假设。权益资本成本为9.34%。假设净利润与综合收益相同。</p><p>要求<br>a. 使用剩余收益模型计算 Steak ‘n Shake 在第11年1月1日的价值。<br>b. 使用普通股股东预期自由现金流现值重复要求a。<br>c. 使用股利贴现模型重复要求a。<br>d. 指出要求a、b、c中估值存在差异的原因。<br>e. 假设 Steak ‘n Shake 在第11年1月1日的市场价值为$309.98百万。根据你在要求a、b、c中的估值，你对该公司的市场价值有何评估？</p><p>LO 13-3, LO 13-4, LO 13-5<br>LO 13-3, LO 13-4, LO 13-5, LO 13-8<br>LO 13-3, LO 13-4, LO 13-5, LO 13-6, LO 13-8</p></section>
+<section class="book-page" data-pdf-page="788">
+  <h3 id="exhibit-13-6">图 13.6 Steak ‘n Shake</h3>
+  <p>选定财务信息（金额单位：百万美元；允许四舍五入）（问题 13.18）</p>
+  <table>
+    <thead>
+      <tr><th></th><th>Year 11</th><th>Year 12</th><th>Year 13</th><th>Year 14</th><th>Year 15</th><th>Year 16</th><th>Year 17</th><th>Year 18</th><th>Year 19</th><th>Year 110</th><th>Year 111</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>普通股权益，年初</td><td>$165.8</td><td>$177.6</td><td>$192.0</td><td>$206.0</td><td>$216.6</td><td>$227.7</td><td>$234.2</td><td>$238.1</td><td>$239.4</td><td>$255.8</td><td>$269.5</td></tr>
+      <tr><td>净利润</td><td>24.5</td><td>25.8</td><td>27.6</td><td>29.6</td><td>31.8</td><td>34.2</td><td>36.8</td><td>39.5</td><td>53.9</td><td>57.0</td><td>58.7</td></tr>
+      <tr><td>股利</td><td>(12.7)</td><td>(11.4)</td><td>(13.6)</td><td>(19.0)</td><td>(20.8)</td><td>(27.7)</td><td>(32.9)</td><td>(38.2)</td><td>(37.4)</td><td>(43.3)</td><td>(50.6)</td></tr>
+      <tr><td>普通股权益，年末<sup>b</sup></td><td>$177.6</td><td>$192.0</td><td>$206.0</td><td>$216.6</td><td>$227.7</td><td>$234.2</td><td>$238.1</td><td>$239.4</td><td>$255.8</td><td>$269.5</td><td>$277.6</td></tr>
+      <tr><td>经营活动现金流</td><td>$45.4</td><td>$51.2</td><td>$56.3</td><td>$61.5</td><td>$67.1</td><td>$72.9</td><td>$78.9</td><td>$85.2</td><td>$85.6</td><td>$92.4</td><td>$73.2</td></tr>
+      <tr><td>投资活动现金流</td><td>(35.2)</td><td>(41.1)</td><td>(41.9)</td><td>(42.7)</td><td>(43.5)</td><td>(44.4)</td><td>(45.2)</td><td>(46.0)</td><td>(47.3)</td><td>(48.1)</td><td>(22.1)</td></tr>
+      <tr><td>长期债务现金流</td><td>(0.5)</td><td>2.0</td><td>—</td><td>1.0</td><td>(2.0)</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>股利现金流</td><td>(12.7)</td><td>(11.4)</td><td>(13.6)</td><td>(19.0)</td><td>(20.8)</td><td>(27.7)</td><td>(32.9)</td><td>(38.2)</td><td>(37.4)</td><td>(43.3)</td><td>(50.6)</td></tr>
+      <tr><td>现金净变动</td><td>$(3.0)</td><td>$0.7</td><td>$0.8</td><td>$0.8</td><td>$0.8</td><td>$0.8</td><td>$0.8</td><td>$1.0</td><td>$0.9</td><td>$1.0</td><td>$0.5</td></tr>
+    </tbody>
+  </table>
+  <p><sup>a</sup> Year 111 的金额是将利润表和资产负债表的每项金额按预期的长期增长率 3% 增加后，再推导出现金流量表的金额。</p>
+  <p><sup>b</sup> 本行金额可能反映了中间计算过程中的四舍五入影响。</p>
+</section>
+<section class="book-page" data-pdf-page="789">
+<strong>13.19 剩余收益估值。</strong>可口可乐公司是一家全球软饮料公司（股票代码：KO）。第12章图表12.14、12.15和12.16（第712-715页）中包括了可口可乐公司2020年的实际金额以及第11年至第16年的利润表、资产负债表和现金流量表的预测金额。可口可乐在2020年末的市场权益贝塔值为0.60。假设无风险利率为3.0%，市场风险溢价为5.0%。2020年末可口可乐有43.02亿股发行在外股票，当时股价为54.39美元。
+<p><strong>要求</strong></p>
+<p><strong>第一部分——使用剩余收益估值法计算可口可乐的每股价值</strong></p>
+<ol type="a">
+<li>使用资本资产定价模型（CAPM）计算可口可乐普通股权益的要求回报率。</li>
+<li>基于预测的财务报表，推导可口可乐第11年至第16年的预计剩余收益。第16年的财务报表预测假设可口可乐将在第16年及以后经历3%的稳态长期增长率。</li>
+<li>使用要求a中的普通股权益要求回报率作为折现率，计算可口可乐第11年至第15年剩余收益现值的总和。</li>
+<li>使用要求a中的普通股权益要求回报率作为折现率和要求b中的长期增长率，基于可口可乐第16年及以后的持续剩余收益，计算可口可乐在第16年年初的持续价值。计算第16年年初的持续价值后，将其折现至第11年年初的现值。</li>
+<li>计算可口可乐普通股每股价值。
+<ol type="1">
+<li>计算所有剩余收益现值的总和（来自要求c和d）。</li>
+<li>加上估值期初（即2020年末，或第11年年初）的普通股权益账面价值。</li>
+<li>使用年中折现调整因子调整剩余收益现值加上普通股权益账面价值的总和。</li>
+<li>计算每股价值估计值。</li>
+</ol>
+</li>
+</ol>
+<p><strong>第二部分——敏感性分析和建议</strong></p>
+<ol type="f" start="6">
+<li>使用剩余收益估值法，计算两种备选情景下可口可乐股票的价值。
+<p>情景1：假设可口可乐的长期增长率为2.5%，而非上述的3%，并且可口可乐的权益要求回报率比要求a中计算的高0.5%。</p>
+<p>情景2：假设可口可乐的长期增长率为3.5%，而非上述的3%，并且可口可乐的权益要求回报率比要求a中计算的低0.5%。</p>
+<p>为了量化你估计的可口可乐股票价值对这些增长率和折现率变化的敏感性，将这两种情景下的价值估计值与要求e中的价值估计值进行比较（以百分比表示）。</p>
+</li>
+<li>利用2020年末的这些数据，你预期可口可乐普通股的合理价值区间是多少？当时，可口可乐股票的市场价格相对于这个区间如何？你会给出什么建议？</li>
+<li>如果你完成了第12章的问题12.16，请比较你在该问题要求e中获得的价值估计值（使用普通股股东自由现金流估值法）与这里使用剩余收益估值法获得的价值估计值。这两个价值估计值应该相同。如果你尚未完成问题12.16，那么现在完成它将对你有所裨益。</li>
+</ol>
+<p><em>学习目标 LO 13-3, LO 13-4, LO 13-5, LO 13-6, LO 13-7, LO 13-8</em></p>
+</section>
+<section class="book-page" data-pdf-page="790">
+<h3>综合案例13.1</h3>
+<h4>沃尔玛</h4>
+<p><strong>沃尔玛普通股权益的剩余收益估值</strong></p>
+<p>在综合案例10.1中，我们为沃尔玛公司（沃尔玛）预测了第11年至第15年的财务报表。第12章的图12.17、12.18和12.19（第718-721页）中分别包括了沃尔玛2020财年的实际数据以及第11年至第16年利润表、资产负债表和现金流量表的预测数据。沃尔玛在2020财年末的市场权益贝塔系数为0.50。假设无风险利率为3.0%，市场风险溢价为6.0%。沃尔玛在2020财年末发行在外的股票为28.21亿股，股价为138.69美元。</p>
+<p><strong>要求</strong></p>
+<p><strong>第一部分——使用剩余收益估值法计算沃尔玛的股票价值</strong></p>
+<p><strong>a.</strong> 使用资本资产定价模型（CAPM）计算沃尔玛普通股权益资本的要求回报率。</p>
+<p><strong>b.</strong> 根据预测财务报表推导沃尔玛第11年至第16年的预测剩余收益。</p>
+<p><strong>c.</strong> 以要求a中得出的普通股权益要求回报率作为折现率，计算沃尔玛第11年至第15年剩余收益的现值之和。</p>
+<p><strong>d.</strong> 以要求a中得出的普通股权益要求回报率作为折现率，假设长期增长率为3.0%，根据沃尔玛第16年及以后的持续剩余收益计算沃尔玛在第16年初的持续价值。计算出第16年初的持续价值后，将其折现至第11年初的现值。</p>
+<p><strong>e.</strong> 计算沃尔玛普通股每股价值。</p>
+<ol>
+<li>计算所有未来剩余收益的现值总额（根据要求c和d）。</li>
+<li>加上估值期初（即2020财年末或第11年初）的权益账面价值。</li>
+<li>使用年中折现调整系数，对剩余收益现值与普通股权益账面价值之和进行调整。</li>
+<li>计算每股价值估计值。</li>
+</ol>
+<p><strong>第二部分——敏感性分析与建议</strong></p>
+<p><strong>f.</strong> 使用剩余收益估值法，在两种备选情景下计算沃尔玛股票的价值。</p>
+<blockquote>
+<p><strong>情景1：</strong>假设沃尔玛的长期增长率为2.5%（而非上述的3%），且沃尔玛的权益要求回报率比要求a中利用CAPM计算得出的比率高出0.5个百分点。</p>
+<p><strong>情景2：</strong>假设沃尔玛的长期增长率为3.5%（而非上述的3%），且沃尔玛的权益要求回报率比要求a中利用CAPM计算得出的比率低0.5个百分点。</p>
+</blockquote>
+<p>为量化沃尔玛股票价值估计值对增长率和折现率变化的敏感性，请比较（以百分比形式）这两种情景下的价值估计值与要求e中得出的价值估计值。</p>
+<p><strong>g.</strong> 根据2020财年末的这些数据，你预期沃尔玛普通股股票的合理价值区间是多少？当时沃尔玛股价相对于该区间的市场水平如何？你会给出什么建议？</p>
+<p><strong>h.</strong> 如果你已经完成了第11章的案例11.1，并使用股利估值法计算了沃尔玛的股票价值，请将那道题得出的价值估计值与本题所得估计值进行比较。同样，如果你完成了第12章的案例12.1，并使用归属于普通股股东的自由现金流计算了沃尔玛的股票价值，请将那道题得出的价值估计值与本题所得估计值进行比较。你应该会在这三种方法下得出相同的沃尔玛股票价值估计值。如果你尚未完成这两道题，建议现在完成以获得收益。</p>
+</section>
+<nav class="chapter-nav"><a href="/financial-reporting-statement-analysis-valuation-cn/chapter-12/">上一节：第 12 章 基于现金流的估值方法</a><a href="/financial-reporting-statement-analysis-valuation-cn/chapter-14/">下一节：第 14 章 基于市场的估值方法</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=acb1f6812298"></script>
+</body>
+</html>
