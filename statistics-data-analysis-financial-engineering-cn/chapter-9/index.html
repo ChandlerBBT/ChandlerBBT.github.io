@@ -1,0 +1,1081 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="第9章 回归：基础 | 《金融工程统计与数据分析：R 示例》">
+  <title>第9章 回归：基础 | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=7670d9cf9549">
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <div class="sidebar-heading">
+    <h2>书籍目录</h2>
+    <div class="sidebar-actions" aria-label="二级目录控制">
+      <button type="button" data-sidebar-action="expand">全部展开</button>
+      <button type="button" data-sidebar-action="collapse">全部收起</button>
+    </div>
+  </div>
+  <nav class="sidebar-list"><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/">首页</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/preface/">前言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/preface-first-edition/">第一版前言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/notation/">符号说明</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-1/">第1章 引言</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-1" aria-label="展开第1章 引言二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-1" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-1/#section-1-1">1.1 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-1/#references">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/">第2章 收益率</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-2" aria-label="展开第2章 收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-2" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#section-2-1">2.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#section-2-2">2.2 The Random Walk Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#section-2-3">2.3 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#section-2-4">2.4 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#section-2-5">2.5 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#references-2">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/">第3章 固定收益证券</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-3" aria-label="展开第3章 固定收益证券二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-3" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-1">3.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-2">3.2 Zero-Coupon Bonds</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-3">3.3 Coupon Bonds</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-4">3.4 Yield to Maturity</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-5">3.5 Term Structure</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-6">3.6 Continuous Compounding</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-7">3.7 Continuous Forward Rates</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-8">3.8 Sensitivity of Price to Yield</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-9">3.9 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-10">3.10 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-11">3.11 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#references-3">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/">第4章 探索性数据分析</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-4" aria-label="展开第4章 探索性数据分析二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-4" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-1">4.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-2">4.2 Histograms and Kernel Density Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-3">4.3 Order Statistics, the Sample CDF, and Sample Quantiles</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-4">4.4 Tests of Normality</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-5">4.5 Boxplots</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-6">4.6 Data Transformation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-7">4.7 The Geometry of Transformations</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-8">4.8 Transformation Kernel Density Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-9">4.9 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-10">4.10 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-11">4.11 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#references-4">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/">第5章 单变量分布建模</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-5" aria-label="展开第5章 单变量分布建模二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-5" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-1">5.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-2">5.2 Parametric Models and Parsimony</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-3">5.3 Location, Scale, and Shape Parameters</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-4">5.4 Skewness, Kurtosis, and Moments</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-5">5.5 Heavy-Tailed Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-6">5.6 Generalized Error Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-7">5.7 Creating Skewed from Symmetric Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-8">5.8 Quantile-Based Location, Scale, and Shape Parameters</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-9">5.9 Maximum Likelihood Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-10">5.10 Fisher Information and the Central Limit Theoremfor the MLE</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-11">5.11 Likelihood Ratio Tests</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-12">5.12 AIC and BIC</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-13">5.13 Validation Data and Cross-Validation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-14">5.14 Fitting Distributions by Maximum Likelihood</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-15">5.15 Profile Likelihood</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-16">5.16 Robust Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-17">5.17 Transformation Kernel Density Estimation with a Parametric Transformation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-18">5.18 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-19">5.19 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-20">5.20 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#references-5">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/">第6章 重抽样</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-6" aria-label="展开第6章 重抽样二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-6" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-1">6.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-2">6.2 Bootstrap Estimates of Bias, Standard Deviation, and MSE</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-3">6.3 Bootstrap Confidence Intervals</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-4">6.4 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-5">6.5 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-6">6.6 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#references-6">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/">第7章 多元统计模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-7" aria-label="展开第7章 多元统计模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-7" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-1">7.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-2">7.2 Covariance and Correlation Matrices</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-3">7.3 Linear Functions of Random Variables</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-4">7.4 Scatterplot Matrices</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-5">7.5 The Multivariate Normal Distribution</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-6">7.6 The Multivariate t-Distribution</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-7">7.7 Fitting the Multivariate t-Distribution by MaximumLikelihood</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-8">7.8 Elliptically Contoured Densities</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-9">7.9 The Multivariate Skewed t-Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-10">7.10 The Fisher Information Matrix</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-11">7.11 Bootstrapping Multivariate Data</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-12">7.12 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-13">7.13 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-14">7.14 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#references-7">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/">第8章 Copula</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-8" aria-label="展开第8章 Copula二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-8" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-1">8.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-2">8.2 Special Copulas</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-3">8.3 Gaussian and t-Copulas</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-4">8.4 Archimedean Copulas</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-5">8.5 Rank Correlation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-6">8.6 Tail Dependence</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-7">8.7 Calibrating Copulas</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-8">8.8 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-9">8.9 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-10">8.10 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#references-8">References</a></div></div><div class="sidebar-item is-current is-open"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/" aria-current="page">第9章 回归：基础</a><button class="sidebar-toggle" type="button" aria-expanded="true" aria-controls="sidebar-sections-chapter-9" aria-label="收起第9章 回归：基础二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-9"><a class="section-link" href="#section-9-1">9.1 Introduction</a><a class="section-link" href="#section-9-2">9.2 Straight-Line Regression</a><a class="section-link" href="#section-9-3">9.3 Multiple Linear Regression</a><a class="section-link" href="#section-9-4">9.4 Analysis of Variance, Sums of Squares, and R2</a><a class="section-link" href="#section-9-5">9.5 Model Selection</a><a class="section-link" href="#section-9-6">9.6 Collinearity and Variance Inflation</a><a class="section-link" href="#section-9-7">9.7 Partial Residual Plots</a><a class="section-link" href="#section-9-8">9.8 Centering the Predictors</a><a class="section-link" href="#section-9-9">9.9 Orthogonal Polynomials</a><a class="section-link" href="#section-9-10">9.10 Bibliographic Notes</a><a class="section-link" href="#section-9-11">9.11 R Lab</a><a class="section-link" href="#section-9-12">9.12 Exercises</a><a class="section-link" href="#references-9">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/">第10章 回归：问题诊断</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-10" aria-label="展开第10章 回归：问题诊断二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-10" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-1">10.1 Regression Diagnostics</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-2">10.2 Checking Model Assumptions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-3">10.3 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-4">10.4 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-5">10.5 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#references-10">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/">第11章 回归：高级专题</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-11" aria-label="展开第11章 回归：高级专题二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-11" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-1">11.1 The Theory Behind Linear Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-2">11.2 Nonlinear Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-3">11.3 Estimating Forward Rates from Zero-Coupon Bond Prices</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-4">11.4 Transform-Both-Sides Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-5">11.5 Transforming Only the Response</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-6">11.6 Binary Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-7">11.7 Linearizing a Nonlinear Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-8">11.8 Robust Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-9">11.9 Regression and Best Linear Prediction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-10">11.10 Regression Hedging</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-11">11.11 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-12">11.12 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-13">11.13 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#references-11">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/">第12章 时间序列模型：基础</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-12" aria-label="展开第12章 时间序列模型：基础二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-12" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-1">12.1 Time Series Data</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-2">12.2 Stationary Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-3">12.3 Estimating Parameters of a Stationary Process</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-4">12.4 AR(1) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-5">12.5 Estimation of AR(1) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-6">12.6 AR(p) Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-7">12.7 Moving Average (MA) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-8">12.8 ARMA Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-9">12.9 ARIMA Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-10">12.10 Unit Root Tests</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-11">12.11 Automatic Selection of an ARIMA Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-12">12.12 Forecasting</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-13">12.13 Partial Autocorrelation Coefficients</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-14">12.14 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-15">12.15 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-16">12.16 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#references-12">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/">第13章 时间序列模型：深入专题</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-13" aria-label="展开第13章 时间序列模型：深入专题二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-13" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-1">13.1 Seasonal ARIMA Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-2">13.2 Box-Cox Transformation for Time Series</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-3">13.3 Time Series and Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-4">13.4 Multivariate Time Series</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-5">13.5 Long-Memory Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-6">13.6 Bootstrapping Time Series</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-7">13.7 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-8">13.8 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-9">13.9 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#references-13">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/">第14章 GARCH模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-14" aria-label="展开第14章 GARCH模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-14" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-1">14.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-2">14.2 Estimating Conditional Means and Variances</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-3">14.3 ARCH(1) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-4">14.4 The AR(1)+ARCH(1) Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-5">14.5 ARCH(p) Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-6">14.6 ARIMA(pM,d,qM)+GARCH(pV, qV) Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-7">14.7 GARCH Processes Have Heavy Tails</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-8">14.8 Fitting ARMA+GARCH Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-9">14.9 GARCH Models as ARMA Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-10">14.10 GARCH(1,1) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-11">14.11 APARCH Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-12">14.12 Linear Regression with ARMA+GARCH Errors</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-13">14.13 Forecasting ARMA+GARCH Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-14">14.14 Multivariate GARCH Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-15">14.15 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-16">14.16 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-17">14.17 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#references-14">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/">第15章 协整</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-15" aria-label="展开第15章 协整二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-15" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-1">15.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-2">15.2 Vector Error Correction Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-3">15.3 Trading Strategies</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-4">15.4 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-5">15.5 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-6">15.6 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#references-15">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/">第16章 投资组合选择</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-16" aria-label="展开第16章 投资组合选择二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-16" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-1">16.1 Trading Off Expected Return and Risk</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-2">16.2 One Risky Asset and One Risk-Free Asset</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-3">16.3 Two Risky Assets</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-4">16.4 Combining Two Risky Assets with a Risk-Free Asset</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-5">16.5 Selling Short</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-6">16.6 Risk-Efficient Portfolios with N Risky Assets</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-7">16.7 Resampling and Efficient Portfolios</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-8">16.8 Utility</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-9">16.9 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-10">16.10 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-11">16.11 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#references-16">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/">第17章 资本资产定价模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-17" aria-label="展开第17章 资本资产定价模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-17" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-1">17.1 Introduction to the CAPM</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-2">17.2 The Capital Market Line (CML)</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-3">17.3 Betas and the Security Market Line</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-4">17.4 The Security Characteristic Line</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-5">17.5 Some More Portfolio Theory</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-6">17.6 Estimation of Beta and Testing the CAPM</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-7">17.7 Using the CAPM in Portfolio Analysis</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-8">17.8 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-9">17.9 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-10">17.10 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#references-17">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/">第18章 因子模型与主成分</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-18" aria-label="展开第18章 因子模型与主成分二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-18" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-1">18.1 Dimension Reduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-2">18.2 Principal Components Analysis</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-3">18.3 Factor Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-4">18.4 Fitting Factor Models by Time Series Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-5">18.5 Cross-Sectional Factor Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-6">18.6 Statistical Factor Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-7">18.7 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-8">18.8 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-9">18.9 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#references-18">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/">第19章 风险管理</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-19" aria-label="展开第19章 风险管理二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-19" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-1">19.1 The Need for Risk Management</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-2">19.2 Estimating VaR and ES with One Asset</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-3">19.3 Bootstrap Confidence Intervals for VaR and ES</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-4">19.4 Estimating VaR and ES Using ARMA+GARCH Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-5">19.5 Estimating VaR and ES for a Portfolio of Assets</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-6">19.6 Estimation of VaR Assuming Polynomial Tails</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-7">19.7 Pareto Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-8">19.8 Choosing the Horizon and Confidence Level</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-9">19.9 VaR and Diversification</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-10">19.10 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-11">19.11 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-12">19.12 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#references-19">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/">第20章 贝叶斯数据分析与MCMC</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-20" aria-label="展开第20章 贝叶斯数据分析与MCMC二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-20" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-1">20.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-2">20.2 Bayes&#x27;s Theorem</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-3">20.3 Prior and Posterior Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-4">20.4 Conjugate Priors</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-5">20.5 Central Limit Theorem for the Posterior</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-6">20.6 Posterior Intervals</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-7">20.7 Markov Chain Monte Carlo</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-8">20.8 Hierarchical Priors</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-9">20.9 Bayesian Estimation of a Covariance Matrix</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-10">20.10 Stochastic Volatility Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-11">20.11 Fitting GARCH Models with MCMC</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-12">20.12 Fitting a Factor Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-13">20.13 Sampling a Stationary Process</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-14">20.14 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-15">20.15 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-16">20.16 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#references-20">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/">第21章 非参数回归与样条</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-21" aria-label="展开第21章 非参数回归与样条二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-21" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-1">21.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-2">21.2 Local Polynomial Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-3">21.3 Linear Smoothers</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-4">21.4 Polynomial Splines</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-5">21.5 Penalized Splines</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-6">21.6 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-7">21.7 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-8">21.8 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#references-21">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/">附录A 概率、统计与代数基础知识</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-appendix-a" aria-label="展开附录A 概率、统计与代数基础知识二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-appendix-a" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-1-introduction">A.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-2-probability-distributions">A.2 Probability Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-3-when-do-expected-values-and-variances-exist">A.3 When Do Expected Values and Variances Exist?</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-4-monotonic-functions">A.4 Monotonic Functions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-5-the-minimum-maximum-infinum-and-supremum-of-a-set">A.5 The Minimum, Maximum, Infinum, and Supremum of a Set</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-6-functions-of-random-variables">A.6 Functions of Random Variables</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-7-random-samples">A.7 Random Samples</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-8-the-binomial-distribution">A.8 The Binomial Distribution</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-9-some-common-continuous-distributions">A.9 Some Common Continuous Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-10-sampling-a-normal-distribution">A.10 Sampling a Normal Distribution</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-11-law-of-large-numbers-and-the-central-limit-theoremfor-the-sample-mean">A.11 Law of Large Numbers and the Central Limit Theoremfor the Sample Mean</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-12-bivariate-distributions">A.12 Bivariate Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-13-correlation-and-covariance">A.13 Correlation and Covariance</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-14-multivariate-distributions">A.14 Multivariate Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-15-stochastic-processes">A.15 Stochastic Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-16-estimation">A.16 Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-17-confidence-intervals">A.17 Confidence Intervals</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-18-hypothesis-testing">A.18 Hypothesis Testing</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-19-prediction">A.19 Prediction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-20-facts-about-vectors-and-matrices">A.20 Facts About Vectors and Matrices</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-21-roots-of-polynomials-and-complex-numbers">A.21 Roots of Polynomials and Complex Numbers</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-22-bibliographic-notes">A.22 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#references-22">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/index/">索引</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <h1>第9章 回归：基础</h1>
+<section class="book-page" data-pdf-page="240">
+  <h1 id="chapter-9">第9章 回归：基础</h1>
+  <h2 id="section-9-1">9.1 引言</h2>
+  <p>回归是所有统计方法中应用最广泛的方法之一。</p>
+  <p>对于单变量回归，可用的数据包括一个响应变量和\(p\)个预测变量，每个变量在\(n\)个观测上都有测量值。我们用\(Y\)表示响应变量，\(X_1,\ldots,X_p\)表示预测变量或解释变量。此外，\(Y_i\)和\(X_{i,1},\ldots,X_{i,p}\)是第\(i\)个观测的这些变量的值。</p>
+  <p>回归建模的目标包括研究\(Y\)与\(X_1,\ldots,X_p\)的关系，估计给定\(X_1,\ldots,X_p\)的条件下\(Y\)的条件期望，以及在已知\(X_1,\ldots,X_p\)对应值时预测未来的\(Y\)值。这些目标紧密相连。</p>
+  <p>将\(Y\)与预测变量或回归变量联系起来的多元线性回归模型为</p>
+  \[Y_i = \beta_0 + \beta_1 X_{i,1} + \cdots + \beta_p X_{i,p} + \epsilon_i, \tag{9.1}\]
+  <p>其中\(\epsilon_i\)称为噪声、扰动或误差。形容词“多元”指的是预测变量。具有多个响应变量的多元回归将在第18章中讨论。</p>
+  <p>\(\epsilon_i\)通常被称为“误差”，因为当用\(\beta_0 + \beta_1 X_{i,1} + \cdots + \beta_p X_{i,p}\)预测\(Y_i\)时，它们就是预测误差。假设</p>
+  \[\mathrm{E}(\epsilon_i | X_{i,1}, \ldots, X_{i,p}) = 0, \tag{9.2}\]
+  <p>结合(9.1)可得</p>
+  \[\mathrm{E}(Y_i | X_{i,1}, \ldots, X_{i,p}) = \beta_0 + \beta_1 X_{i,1} + \cdots + \beta_p X_{i,p}.\]
+  <p>参数\(\beta_0\)是截距。回归系数\(\beta_1,\ldots,\beta_p\)是斜率。更准确地，\(\beta_j\)是期望响应对第\(j\)个预测变量的偏导数：</p>
+</section>
+<section class="book-page" data-pdf-page="241">
+  <h2 id="section-9-2">9.2 直线回归</h2>
+  <p>直线回归是仅有一个预测变量的线性回归。模型为</p>
+  \[ Y_i = \beta_0 + \beta_1 X_i + \epsilon_i, \tag{9.4} \]
+  <p>其中\(\beta_0\)和\(\beta_1\)是未知的截距和斜率，\(\epsilon_i\)称为噪声或误差。</p>
+
+  <h3>9.2.1 最小二乘估计</h3>
+  <p>回归系数可以通过最小二乘法估计。最小二乘估计是使得下式最小的\(\hat{\beta}_0\)和\(\hat{\beta}_1\)的值：</p>
+  \[ \sum_{i=1}^n \left\{ Y_i - (\hat{\beta}_0 + \hat{\beta}_1 X_i) \right\}^2. \tag{9.5} \]
+  <p>从几何上看，我们是在最小化图9.1中竖直线段长度的平方和。数据点用星号表示，竖直线连接数据点与使用线性方程得到的预测值。预测值本身称为拟合值或“y-hat”，并用空心圆表示。\(Y\)值与拟合值之间的差异称为残差。利用微积分求(9.5)的最小值，可以证明</p>
+</section>
+<section class="book-page" data-pdf-page="242">
+  <h2>9.2 直线回归</h2>
+  <figure class="book-figure" id="fig-9.1"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-e0f3ed739aa3.png" alt="最小二乘估计">
+    <figcaption>图9.1 最小二乘估计。垂直线连接数据点（*）和拟合值（o），代表残差。最小二乘线定义为使残差平方和尽可能小的那条直线。</figcaption>
+  </figure>
+  <p>
+    \[
+    \hat{\beta}_1 = \frac{\sum_{i=1}^n (Y_i - \bar{Y})(X_i - \bar{X})}{\sum_{i=1}^n (X_i - \bar{X})^2} = \frac{\sum_{i=1}^n Y_i (X_i - \bar{X})}{\sum_{i=1}^n (X_i - \bar{X})^2}. \tag{9.6}
+    \]
+    以及
+    \[
+    \hat{\beta}_0 = \bar{Y} - \hat{\beta}_1 \bar{X}. \tag{9.7}
+    \]
+    最小二乘直线为
+    \[
+    \hat{Y} = \hat{\beta}_0 + \hat{\beta}_1 X = \bar{Y} + \hat{\beta}_1 (X - \bar{X})
+    = \bar{Y} + \left\{ \frac{\sum_{i=1}^n (Y_i - \bar{Y})(X_i - \bar{X})}{\sum_{i=1}^n (X_i - \bar{X})^2} \right\} (X - \bar{X})
+    = \bar{Y} + \frac{s_{XY}}{s_X^2} (X - \bar{X}),
+    \]
+    其中 \(s_{XY} = (n-1)^{-1} \sum_{i=1}^n (Y_i - \bar{Y})(X_i - \bar{X})\) 是 \(X\) 和 \(Y\) 的样本协方差，\(s_X^2\) 是 \(X\) 的样本方差。
+  </p>
+  <p><strong>例9.1</strong> 周利率——最小二乘估计</p>
+  <p>1977年2月16日至1993年12月31日的周利率数据来自芝加哥联邦储备银行 (Federal Reserve Bank of Chicago)。图9.2是...</p>
+</section>
+<section class="book-page" data-pdf-page="243">
+<h2>第9章 回归：基础</h2>
+<figure class="book-figure" id="fig-9.2"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-0814dae88cdb.png" alt="图9.2 穆迪长期公司AAA级债券收益率变化对10年期国债恒定到期收益率变化的散点图">
+<figcaption>图9.2 穆迪长期公司AAA级债券收益率变化对10年期国债恒定到期收益率变化的散点图。数据来自美联储统计发布H.15，取自芝加哥联邦储备银行网站。</figcaption>
+</figure>
+<p>10年期国债恒定到期收益率的变化与穆迪长期公司AAA级债券收益率的变化之间的关系图。散点图呈现线性关系，因此我们尝试使用R的<code>lm()</code>函数进行线性回归。代码如下：</p>
+<div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">options(digits = 3)
+summary(lm(aaa_dif ~ cm10_dif))</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import statsmodels.api as sm
+import numpy as np
+# 假设变量 aaa_dif 和 cm10_dif 已定义
+X = sm.add_constant(cm10_dif)
+model = sm.OLS(aaa_dif, X).fit()
+print(model.summary())</code></pre>
+  </div>
+</div>
+<p>代码 <code>aaa_dif ~ cm10_dif</code> 是R中公式的示例，其中结果变量在“~”左侧，解释变量在“~”右侧。在此例中，只有一个解释变量。当有多个解释变量时，它们用“+”分隔。以下是输出结果：</p>
+<pre><code>Call:
+lm(formula = aaa_dif ~ cm10_dif)
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept) -0.000109   0.002221   -0.05    0.96
+cm10_dif     0.615762   0.012117   50.82   &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.066 on 878 degrees of freedom
+Multiple R-squared:  0.746, Adjusted R-squared:  0.746
+F-statistic: 2.58e+03 on 1 and 878 DF,  p-value: &lt;2e-16</code></pre>
+</section>
+<section class="book-page" data-pdf-page="244">
+<h3>9.2 直线回归</h3>
+<p>从输出中我们看到，截距和斜率的最小二乘估计分别为 \(-0.000109\) 和 \(0.616\)。<strong>残差标准误</strong>为 \(0.066\)；这就是我们所说的 \(\hat{\sigma}_{\epsilon}\) 或 \(s\)，即 \(\sigma_{\epsilon}\) 的估计值，详见第 9.3 节。输出中的其余项目将在稍后解释。□</p>
+<div class="figure-wrapper">
+<figure class="book-figure" id="fig-9.3"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-e1eabd74f2b3.png" alt="食品行业超额收益率与市场超额收益率的散点图" />
+<figcaption>图 9.3 食品行业超额收益率与市场超额收益率的散点图。数据来自 R 包 <code>Ecdat</code> 中的 <code>Capm</code> 数据集。</figcaption>
+</figure>
+</div>
+<p><strong>例 9.2</strong> 食品行业与市场组合的超额收益率</p>
+<p>证券或市场指数的超额收益率是收益率减去无风险利率。线性回归在金融中的一个重要应用是将资产或市场板块的超额收益率对整体市场的超额收益率进行回归。这类应用将在第 17 章中更全面地讨论。在本例中，我们将食品行业的月度超额收益率（<code>rfood</code>）对市场组合的月度超额收益率（<code>rmrf</code>）进行回归。数据来自 R 包 <code>Ecdat</code> 中的 <code>Capm</code> 数据集，并绘制在图 9.3 中。数据集中收益率以百分比表示，但本例中已转换为小数。<code>lm</code> 的输出为：</p>
+<pre><code>Call:
+lm(formula = rfood ~ rmrf)
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept) -0.000109   0.002741  -0.040    0.968
+rmrf         0.616000   0.042379  14.535   &lt;2e-16 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.066 on 426 degrees of freedom
+Multiple R-squared:  0.3316, Adjusted R-squared:  0.3301
+F-statistic: 211.3 on 1 and 426 DF,  p-value: &lt; 2.2e-16</code></pre>
+</section>
+<section class="book-page" data-pdf-page="245">
+<h2>222 9 回归：基础</h2>
+<pre><code>(Intercept) 0.00339 0.00128 2.66 0.0081 **
+rmrf       0.78342 0.02835 27.63 &lt;2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 0.0289 on 514 degrees of freedom
+Multiple R-squared:  0.598, Adjusted R-squared:  0.597
+F-statistic: 763 on 1 and 514 DF,  p-value: &lt;2e-16</code></pre>
+<p>因此，拟合的回归方程为</p>
+<p>\[ \text{rfood} = 0.00339 + 0.78342 \, \text{rmrf} + \epsilon, \]</p>
+<p>且 \(\hat{\sigma}_\epsilon = 0.0289\)。□</p>
+<h3>9.2.2 \(\hat{\beta}_1\) 的方差</h3>
+<p>了解估计量方差的公式是有用的，它能说明估计量的精度如何取决于数据的各个方面，例如样本量和预测变量的取值。幸运的是，很容易推导出 \(\hat{\beta}_1\) 的方差公式。由 (9.6)，我们可以将 \(\hat{\beta}_1\) 写成响应的加权平均：</p>
+<p>\[ \hat{\beta}_1 = \sum_{i=1}^n w_i Y_i, \]</p>
+<p>其中权重 \(w_i\) 为</p>
+<p>\[ w_i = \frac{X_i - \bar{X}}{\sum_{i=1}^n (X_i - \bar{X})^2}. \]</p>
+<p>我们将 \(X_1, \ldots, X_n\) 视为固定的，因此如果它们是随机的，我们是在给定其值的条件下进行讨论。根据回归模型的假设，有 \(\text{Var}(Y_i \mid X_1, \ldots, X_n) = \sigma_\epsilon^2\) 且 \(Y_1, \ldots, Y_n\) 条件不相关。因此，</p>
+<p>\[ \text{Var}(\hat{\beta}_1 \mid X_1, \ldots, X_n) = \sigma_\epsilon^2 \sum_{i=1}^n w_i^2 = \frac{\sigma_\epsilon^2}{\sum_{i=1}^n (X_i - \bar{X})^2} = \frac{\sigma_\epsilon^2}{(n-1)s_X^2}. \qquad (9.8) </p>
+<p>值得花些时间审视这个公式。首先，分子 \(\sigma_\epsilon^2\) 就是 \(\epsilon_i\) 的方差。这并不意外。噪声的变异性越大，估计量的变异性就越大。分母表明 \(\hat{\beta}_1\) 的方差与 \((n-1)\) 和 \(s_X^2\) 成反比。因此，\(\hat{\beta}_1\) 的精度随着 \(\sigma_\epsilon^2\) 减小、\(n\) 增大或 \(s_X^2\) 增大而提高。为什么增大 \(s_X^2\) 会减小 \(\text{Var}(\hat{\beta}_1 \mid X_1, \ldots, X_n)\)？原因在于增大 \(s_X^2\) 意味着 \(X_i\) 散布得更开，这使得直线的斜率更容易估计。</p>
+</section>
+<span class="section-anchor" id="section-9-3"></span>
+<section class="book-page" data-pdf-page="246"><p><strong>例 9.3</strong> 回归的最优采样频率</p><p>这里是 (9.8) 的一个重要应用。假设我们有两个平稳时间序列 \(X_t\) 和 \(Y_t\)，我们想将 \(Y_t\) 对 \(X_t\) 进行回归。我们刚刚看到了这方面的例子。一个重要的实际问题是我们应该使用日度数据还是周度数据，或者甚至月度或季度数据。采样频率的选择重要吗？答案是“是的”，并且最高可能的采样频率能给出最精确的斜率估计。为了理解原因，我们比较日度和周度数据。假设 \(X_t\) 和 \(Y_t\) 是白噪声序列。由于周度对数收益率就是一周内五个日度对数收益率之和，因此如果从日度对数收益率改为周度对数收益率，\(\sigma^2_\epsilon\) 和 \(s^2_X\) 都将增加五倍，所以比率 \(\sigma^2_\epsilon / s^2_X\) 不会改变。然而，从日度改为周度对数收益率时，\((n-1)\) 大约减少为原来的五分之一。结果是，使用日度对数收益率时 \(\mathrm{Var}(\hat{\beta}_1 | X_1, \ldots, X_n)\) 大约比使用周度对数收益率小五倍。类似地，使用月度收益率比使用周度收益率时 \(\mathrm{Var}(\hat{\beta}_1 | X_1, \ldots, X_n)\) 大约大四倍。</p><p>明显的结论是应该使用最高可用的采样频率，通常是日度收益率。为了简化计算，我们假设了 \(X_t\) 和 \(Y_t\) 是白噪声，但这个结论在它们平稳但自相关时仍然成立（自相关将在第12章讨论）。然而，噪声序列，即 (9.4) 中的 \(\epsilon_i, i=1,\ldots,n\) 需要是不相关的。如果噪声是自相关的，并且随着采样频率的增加而变得更高度相关，那么这个结论不一定成立。可能存在边际收益递减的点，其中更频繁的采样并不能提高估计精度。□</p><h2>9.3 多元线性回归</h2><p>多元线性回归模型为</p>\[ Y_i = \beta_0 + \beta_1 X_{i,1} + \cdots + \beta_p X_{i,p} + \epsilon_i. \]<p>最小二乘估计是使下式最小的 \(\hat{\beta}_0, \hat{\beta}_1, \ldots, \hat{\beta}_p\) 的值：</p>\[ \sum_{i=1}^n \left\{ Y_i - (\hat{\beta}_0 + \hat{\beta}_1 X_{i,1} + \cdots + \hat{\beta}_p X_{i,p}) \right\}^2. \tag{9.9} \]<p>最小二乘估计的计算将在 11.1 节讨论。对于应用而言，技术细节并不重要，因为最小二乘估计的软件很容易获得。</p><p>第 \(i\) 个拟合值为</p>\[ \hat{Y}_i = \hat{\beta}_0 + \hat{\beta}_1 X_{i,1} + \cdots + \hat{\beta}_p X_{i,p}. \tag{9.10} \]</section>
+<section class="book-page" data-pdf-page="247">
+  <h4>224 第9章 回归：基础</h4>
+  <p>并估计 \(E(Y_i \mid X_{i,1}, \ldots, X_{i,p})\)。第 \(i\) 个残差为</p>
+  \[
+  \hat{\epsilon}_i = Y_i - \hat{Y}_i = Y_i - (\hat{\beta}_0 + \hat{\beta}_1 X_{i,1} + \cdots + \hat{\beta}_p X_{i,p}) \tag{9.11}
+  \]
+  <p>并估计 \(\epsilon_i\)。值得注意，(9.11) 可以重写为</p>
+  \[
+  Y_i = \hat{Y}_i + \hat{\epsilon}_i. \tag{9.12}
+  \]
+  <p>\(\sigma^2_\epsilon\) 的无偏估计为</p>
+  \[
+  \hat{\sigma}^2_\epsilon = \frac{\sum_{i=1}^n \hat{\epsilon}_i^2}{n-1-p}. \tag{9.13}
+  \]
+  <p>(9.13) 中的分母是样本量减去估计的回归系数个数。</p>
+
+  <p><strong>例9.4</strong> 利率数据的多元线性回归</p>
+  <p>作为示例，我们继续分析周利率数据，但现在加入30年期国债收益率的变化 (cm30 dif) 和联邦基金利率的变化 (ff dif) 作为额外预测变量。因此 \(p = 3\)。图9.4是四个时间序列的散点图矩阵。所有配对 \(aaa\_dif\)、\(cm10\_dif\) 和 \(cm30\_dif\) 之间均存在强线性关系，但 \(ff\_dif\) 与其他序列的关系不强。代码为：</p>
+  <div class="code-tabs" data-code-tabs id="regression_example_9_4">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="regression_example_9_4-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="regression_example_9_4-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="regression_example_9_4-r" role="tabpanel">
+    <pre><code class="language-r">summary(lm(aaa_dif ~ cm10_dif + cm30_dif + ff_dif))</code></pre>
+  </div>
+  <div class="code-tab-panel" id="regression_example_9_4-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import statsmodels.api as sm
+# 假设数据框 df 包含变量 aaa_dif, cm10_dif, cm30_dif, ff_dif
+X = df[[&#x27;cm10_dif&#x27;, &#x27;cm30_dif&#x27;, &#x27;ff_dif&#x27;]]
+X = sm.add_constant(X)
+y = df[&#x27;aaa_dif&#x27;]
+model = sm.OLS(y, X).fit()
+print(model.summary())</code></pre>
+  </div>
+</div>
+  <p>lm() 输出的结果为：</p>
+  <pre><code>Call:
+lm(formula = aaa_dif ~ cm10_dif + cm30_dif + ff_dif)
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept) -9.07e-05  2.18e-03   -0.04    0.97
+cm10_dif     3.55e-01  4.51e-02    7.86 1.1e-14 ***
+cm30_dif     3.00e-01  5.00e-02    6.00 2.9e-09 ***
+ff_dif       4.12e-03  5.28e-03    0.78    0.44
+---
+Residual standard error: 0.0646 on 876 degrees of freedom
+Multiple R-squared:  0.756, Adjusted R-squared:  0.755
+F-statistic: 906 on 3 and 876 DF,  p-value: &lt;2e-16</code></pre>
+  <p>我们看到 \(\hat{\beta}_0 = -9.07 \times 10^{-05}\)，\(\hat{\beta}_1 = 0.355\)，\(\hat{\beta}_2 = 0.300\)，\(\hat{\beta}_3 = 0.00412\)。□</p>
+
+  <p>多元回归的一个常用特例是多项式回归模型，该模型使用预测变量的幂次以及预测变量本身</p>
+</section>
+<section class="book-page" data-pdf-page="248">
+  <h3>9.3 多元线性回归</h3>
+  <pre>
+aaa_dif
+−1.0 0.0 0.5 −2 0 1 2 3
+−0.6 0.0 0.4
+−1.0 0.0
+cm10_dif
+cm30_dif
+−0.5 0.5
+−0.6 −0.2 0.2 0.6
+−2 0 2
+−0.5 0.0 0.5
+ff_dif
+  </pre>
+  <p>图9.4 四周利率变化量的散点图矩阵。变量 aaa_dif 是例9.4中的响应变量。</p>
+  <p>本身。例如，当只有一个自变量时，p次多项式回归模型为</p>
+  \[ Y_i = \beta_0 + \beta_1 X_i + \cdots + \beta_p X_i^p + \epsilon_i. \]
+  <p>另一个例子是带两个预测变量的二次回归模型：</p>
+  \[ Y_i = \beta_0 + \beta_1 X_{i,1} + \beta_2 X_{i,1}^2 + \beta_3 X_{i,1} X_{i,2} + \beta_4 X_{i,2} + \beta_5 X_{i,2}^2 + \epsilon_i. \]
+  <h4>9.3.1 标准误、t值与p值</h4>
+  <p>在本节中，我们解释回归输出中包含的几个统计量的用法。我们以例9.4中的输出作为说明。</p>
+  <p>如前所述，估计系数为 \(\hat{\beta}_0 = -9.07 \times 10^{-5}\)，\(\hat{\beta}_1 = 0.355\)，\(\hat{\beta}_2 = 0.300\)，\(\hat{\beta}_3 = 0.00412\)。每个系数都关联着另外三个统计量。</p>
+  <ul>
+    <li><strong>标准误（SE）</strong>，即最小二乘估计量估计的标准差，告诉了我们估计量的精确度。</li>
+    <li><strong>t值</strong>，是检验系数为0的t统计量。t值为估计值与其标准误的比值。例如，对于 cm10_dif，t值为 7.86 = 0.355 / 0.0451。</li>
+  </ul>
+</section>
+<section class="book-page" data-pdf-page="249">
+  <p>• p值（lm()输出中的Pr(&gt;|t|)）与检验系数为0的原假设相对于系数不为0的备择假设相关。如果斜率参数的p值很小（如这里的\(\beta_1\)），那么这是相应系数不为0的证据，这意味着预测变量与响应变量存在线性关系。</p>
+  <p>牢记这一点很重要：p值仅告诉我们是否存在线性关系。\(Y_i\)与\(X_{i,j}\)之间存在线性关系仅意味着\(Y_i\)的线性预测器在\(X_{i,j}\)上的斜率非零，或者等价地，\(X_{i,j}\)与\(Y_i\)之间的偏相关系数不为零。（两个变量之间的偏相关系数是在所有其他变量固定时它们的相关性。）当p值很小（即存在线性关系）时，也可能存在如图A.4g所示的与线性关系的强非线性偏离。此外，当p值很大（即不存在线性关系）时，仍可能存在如图A.4f所示的强非线性关系。由于线性回归分析中可能无法检测到非线性关系，因此数据的图形分析（例如图9.4）和残差分析（见第10章）至关重要。</p>
+  <figure class="book-figure" id="fig-9.4"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-4cca4cac881c.png" alt="图9.4：数据图形分析示例">
+    <figcaption>图9.4：数据图形分析</figcaption>
+  </figure>
+  <p>\(\beta_1\)和\(\beta_2\)的p值非常小，因此我们可以得出结论：这些斜率不为0。\(\beta_0\)的p值很大（0.97），所以我们不会拒绝截距为0的假设。</p>
+  <p>类似地，我们不会拒绝\(\beta_3\)为零的原假设。换言之，我们可以接受这样的原假设：在给定<code>cm10 dif</code>和<code>cm30 dif</code>的条件下，<code>aaa dif</code>和<code>ff dif</code>不是线性相关的。这一结果不应被解释为<code>aaa dif</code>和<code>ff dif</code>无关，而仅仅意味着当回归模型中包含<code>cm10 dif</code>和<code>cm30 dif</code>时，<code>ff dif</code>对预测<code>aaa dif</code>没有帮助。（实际上，<code>aaa dif</code>和<code>ff dif</code>的相关系数为0.25（这是完全相关系数，而非偏相关系数），并且<code>aaa dif</code>仅对<code>ff dif</code>的线性回归非常显著；检验斜率为0的p值为\(5.158 \times 10^{-14}\)。）</p>
+  <p>由于联邦基金利率是短期（隔夜）利率，因此<code>ff dif</code>不如10年和30年期国债利率的变化对预测<code>aaa dif</code>有用也就不足为奇了。</p>
+  <p>对于只有一个预测变量的回归，由(9.8)可知，\(\hat{\beta}_1\)的标准误为\(\hat{\sigma}_\epsilon / \sqrt{\sum_{i=1}^n (X_i - \bar{X})^2}\)。当有两个以上预测变量时，标准误的公式更为复杂，借助矩阵表示可以简化。由于标准误可以使用诸如<code>lm</code>之类的标准软件计算，因此这些公式在应用中不需要，故推迟到第11.1节讨论。</p>
+</section>
+<section class="book-page" data-pdf-page="250">
+<h2 id="section-9-4">9.4 方差分析、平方和与R²</h2>
+<h3>9.4.1 方差分析表</h3>
+<p>回归拟合的某些结果通常展示在方差分析表中，也称为ANOVA或AOV表。ANOVA表的基本思想是描述在已知\(X_1,\ldots,X_p\)的情况下，\(Y\)的变异中有多少是可预测的。下面给出例9.4中模型的ANOVA表。</p>
+<div class="code-tabs" data-code-tabs id="1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="1-r" role="tabpanel">
+    <pre><code class="language-r">anova(lm(aaa_dif ~ cm10_dif + cm30_dif + ff_dif))
+# Output:
+# Analysis of Variance Table
+# Response: aaa_dif
+#           Df Sum Sq Mean Sq F value Pr(&gt;F)
+# cm10_dif   1 11.21   11.21 2682.61 &lt; 2e-16 ***
+# cm30_dif   1  0.15    0.15   35.46 3.8e-09 ***
+# ff_dif     1  0.0025  0.0025  0.61   0.44
+# Residuals 876  3.66    0.0042</code></pre>
+  </div>
+  <div class="code-tab-panel" id="1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import statsmodels.api as sm
+import pandas as pd
+# Assuming aaa_dif, cm10_dif, cm30_dif, ff_dif are pandas Series
+X = pd.DataFrame({&#x27;cm10_dif&#x27;: cm10_dif, &#x27;cm30_dif&#x27;: cm30_dif, &#x27;ff_dif&#x27;: ff_dif})
+X = sm.add_constant(X)
+y = aaa_dif
+model = sm.OLS(y, X).fit()
+anova_table = sm.stats.anova_lm(model, typ=1)
+print(anova_table)</code></pre>
+  </div>
+</div>
+<p>\(Y\)的总变异可以分解为两部分：由\(X_1,\ldots,X_p\)可预测的变异和不可预测的变异。可预测的变异由回归平方和度量，即
+\[
+\text{regression SS} = \sum_{i=1}^n (\hat{Y}_i - \bar{Y})^2.
+\]
+仅使用\(\texttt{cm10\_dif}\)的模型的回归平方和在ANOVA表的第一行，为11.21。第二行的0.15是将\(\texttt{cm30\_dif}\)加入模型后回归平方和的增量。类似地，0.0025是加入\(\texttt{ff\_dif}\)后的增量。因此，四舍五入到两位小数，包含所有三个预测变量的模型回归平方和为\(11.36 = 11.21 + 0.15 + 0.00\)。</p>
+<p>\(Y\)中不能被\(X_1,\ldots,X_p\)的线性函数预测的变异量由残差平方和度量，即残差的平方和：
+\[
+\text{residual error SS} = \sum_{i=1}^n (Y_i - \hat{Y}_i)^2.
+\]
+在ANOVA表中，残差平方和位于最后一行，为3.66。总变异由总平方和（total SS）度量，即\(Y\)与其均值的离差平方和：
+\[
+\text{total SS} = \sum_{i=1}^n (Y_i - \bar{Y})^2. \tag{9.14}
+\]</p>
+</section>
+<section class="book-page" data-pdf-page="251">
+<p>可以代数证明，</p>
+\[
+\text{总平方和} = \text{回归平方和} + \text{残差平方和}. \tag{9.15}
+\]
+<p>因此，在例9.4中，总平方和为11.36 + 3.66 = 15.02。</p>
+<p>R方，记为\(R^2\)，定义为</p>
+\[
+R^2 = \frac{\text{回归平方和}}{\text{总平方和}} = 1 - \frac{\text{残差平方和}}{\text{总平方和}},
+\]
+<p>衡量了\(Y\)的总变异中能被\(X\)线性预测的比例。在本例中，若只含cm10 dif作为模型，\(R^2\)为0.746 = 11.21/15.02；若三个预测变量都纳入模型，则为11.36/15.02 = 0.756。该值可在例9.4的显示输出中找到。</p>
+<p>当只有一个\(X\)变量时，\(R^2 = r_{XY}^2 = r_{\hat{Y}Y}^2\)，其中\(r_{XY}\)和\(r_{\hat{Y}Y}\)分别是\(Y\)与\(X\)以及\(Y\)与预测值之间的样本相关系数。换言之，\(R^2\)是\(Y\)与\(X\)之间的相关系数的平方，也是\(Y\)与\(\hat{Y}\)之间的相关系数的平方。当有多个预测变量时，仍然有\(R^2 = r_{\hat{Y}Y}^2\)。由于\(\hat{Y}\)是\(X\)变量的线性组合，\(R\)可视为\(Y\)与多个\(X\)之间的“复”相关系数。残差平方和也称为误差平方和，记作SSE。</p>
+<p>理解方差分析表中的平方和依赖于回归中预测变量的顺序很重要，因为任何一个变量的平方和等于该变量被添加到模型中已有预测变量之后所增加的回归平方和。</p>
+<p>下面的表格使用了与之前相同的变量，但预测变量的顺序被颠倒了。现在ff dif是第一个预测变量，它的平方和比以前大得多，且其p值高度显著；之前它是非显著的，只有0.44。cm30 dif的平方和现在比cm10 dif大得多，这与我们之前看到的情况相反，因为cm10 dif和cm30 dif高度相关，而在预测变量列表中先出现的那一个将获得更大的平方和。</p>
+<div class="code-tabs" data-code-tabs id="0">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="0-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="0-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="0-r" role="tabpanel">
+    <pre><code class="language-r">&gt; anova(lm(aaa_dif ~ ff_dif + cm30_dif + cm10_dif))
+Analysis of Variance Table
+Response: aaa_dif
+Df Sum Sq Mean Sq F value Pr(&gt;F)
+ff_dif 1 0.94 0.94 224.8 &lt; 2e-16 ***
+cm30_dif 1 10.16 10.16 2432.1 &lt; 2e-16 ***
+cm10_dif 1 0.26 0.26 61.8 1.1e-14 ***
+Residuals 876 3.66 0.0042</code></pre>
+  </div>
+  <div class="code-tab-panel" id="0-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import statsmodels.api as sm
+import pandas as pd
+
+# 假设数据框df包含变量: aaa_dif, ff_dif, cm30_dif, cm10_dif
+model = sm.OLS(df[&#x27;aaa_dif&#x27;], sm.add_constant(df[[&#x27;ff_dif&#x27;, &#x27;cm30_dif&#x27;, &#x27;cm10_dif&#x27;]])).fit()
+anova_table = sm.stats.anova_lm(model, typ=1)
+print(anova_table)</code></pre>
+  </div>
+</div>
+<p>这里的教训是，方差分析表对于按某种自然顺序添加预测变量的效果评估最为有用。由于AAA债券的到期期限更接近10年而非30年，且联邦基金利率是隔夜利率，因此最初按cm10 dif、cm30 dif和ff dif的顺序排列预测变量是合理的。</p>
+</section>
+<section class="book-page" data-pdf-page="252">
+  <h4>9.4.2 自由度 (DF)</h4>
+  <p>每个变异源都有对应的自由度 (DF)。回归的自由度为 \(p\)，即预测变量的个数。总的自由度为 \(n-1\)。残差误差的自由度为 \(n-p-1\)。下面是一种理解自由度的方式：最初，有 \(n\) 个自由度，每个观测值对应一个。然后，一个自由度被分配给截距的估计，剩下 \(n-1\) 个自由度用于估计 \(X\) 变量和 \(\sigma^2_{\epsilon}\) 的效应。每个回归参数在估计中使用一个自由度。因此，剩余 \((n-1)-p\) 个自由度用于利用残差估计 \(\sigma^2_{\epsilon}\)。回归有一个优雅的几何理论，其中响应被视为位于一个 \(n\) 维向量空间中，自由度是各个子空间的维度。然而，这里没有足够的篇幅来深入探讨此话题。</p>
+  <h4>9.4.3 均方和 (MS) 与 \(F\) 检验</h4>
+  <p>如上所述，ANOVA 表中的每个平方和都有一个对应的自由度。平方和与自由度的比值称为均方和：</p>
+  <p>\[ \text{均方和} = \frac{\text{平方和}}{\text{自由度}} \]</p>
+  <p>残差均方和是 \(\sigma^2_{\epsilon}\) 的无偏估计，由 (9.13) 给出，即</p>
+  <p>\[ \hat{\sigma}^2_{\epsilon} = \frac{\sum_{i=1}^n (Y_i - \hat{Y}_i)^2}{n-1-p} \tag{9.16} \]</p>
+  <p>\[ = \text{残差均方和} = \frac{\text{残差误差 SS}}{\text{残差自由度}} \]</p>
+  <p>其他均方和用于检验。假设我们有两个模型 I 和 II，且模型 I 中的预测变量是模型 II 中预测变量的子集，则模型 I 是模型 II 的子模型。一个常见的零假设是数据由模型 I 生成。等价地，在模型 II 中，对于不在模型 I 中的变量，其斜率为零。为了检验这个假设，我们使用模型 II 相对于模型 I 的超额回归平方和：</p>
+  <p>\[ \text{SS(II|I)} = \text{模型 II 的回归 SS} - \text{模型 I 的回归 SS} \]</p>
+  <p>\[ = \text{模型 I 的残差 SS} - \text{模型 II 的残差 SS} \tag{9.17} \]</p>
+  <p>等式 (9.17) 成立是因为 (9.15) 对所有模型都成立，特别是对模型 I 和模型 II 都成立。SS(II|I) 的自由度等于模型 II 中特有变量的个数，即</p>
+  <p>\[ \text{自由度} = \text{模型 II 的回归自由度} - \text{模型 I 的回归自由度} = p_{II} - p_I \]</p>
+</section>
+<section class="book-page" data-pdf-page="253">
+<h2>第9章 回归：基础</h2>
+<p>在模型II中相比模型I多出的预测变量个数。均方记为MS(II|I)。换句话说，若pᵉ和pᵉᵉ分别为模型I和模型II的参数个数，则df₂₂₂₂₂₂ = pᵉᵉ−pᵉ，而MS(II|I) = SS(II|I)/df₂₂₂₂₂₂。用于检验原假设的F统计量为</p>
+<p>\[F = \frac{\text{MS(II|I)}}{\hat{\sigma}_\epsilon^2},\]</p>
+<p>其中\hat{\sigma}_\epsilon^2是模型II的残差均方。在原假设下，F统计量服从自由度为df₂₂₂₂₂₂和n−pᵉᵉ−1的F分布，若F统计量超过该F分布的α上分位数，则拒绝原假设。</p>
+<h3>示例9.5 周利率——检验单预测变量对三预测变量模型</h3>
+<p>在本例中，原假设为在三预测变量模型中，cm30ᴅᵉᵆ和ffᴅᵉᵆ的斜率均为零。可以使用R的anova函数计算F检验。输出结果为：</p>
+<pre><code>Analysis of Variance Table
+
+Model 1: aaa_dif ~ cm10_dif
+Model 2: aaa_dif ~ cm10_dif + cm30_dif + ff_dif
+  Res.Df   RSS Df Sum of Sq      F    Pr(>F)
+1    878 3.81
+2    876 3.66  2      0.15 18.0 2.1e-08 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+<p>在最后一行，“Df”列的2是两个模型参数个数之差，“Sum of Sq”列的0.15是两个模型残差平方和（RSS）之差。非常小的p值（2.1×10⁻⁸）使我们拒绝原假设，并认为结果“高度显著”。需要注意的是，这里指的是统计显著性。当样本量像本例如此之大时，拒绝原假设是常见的。原因是原假设几乎不可能完全成立，在大样本下，即使与原假设存在微小偏差也很可能被检测到。统计显著性必须与实际显著性区分开。两个变量模型和三个变量模型的调整R²值非常接近，分别为0.746和0.755。因此，拒绝两个变量模型可能不具有实际重要性。□</p>
+<h3>示例9.6 周利率——检验两预测变量对三预测变量模型</h3>
+</section>
+<section class="book-page" data-pdf-page="254">
+  <h3 id="section-9-5">9.5 模型选择</h3>
+  <p>在此例中，对于包含三个预测变量的模型，原假设是斜率 \(\beta_{\text{ff\_dif}}\) 为零。F 检验再次使用 R 的 <code>anova</code> 函数计算，输出如下：</p>
+  <table class="book-table">
+    <caption>方差分析表</caption>
+    <thead>
+      <tr>
+        <th>模型</th>
+        <th>Res.Df</th>
+        <th>RSS</th>
+        <th>Df</th>
+        <th>Sum of Sq</th>
+        <th>F</th>
+        <th>Pr(&gt;F)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Model 1: aaa_dif ~ cm10_dif + cm30_dif</td>
+        <td>877</td>
+        <td>3.66</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td>Model 2: aaa_dif ~ cm10_dif + cm30_dif + ff_dif</td>
+        <td>876</td>
+        <td>3.66</td>
+        <td>1</td>
+        <td>0.0025</td>
+        <td>0.61</td>
+        <td>0.44</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>极大的 p 值（0.44）使我们接受原假设。注意，这与第 9.4.1 节方差分析表中 ff_dif 的 p 值相同。这并非巧合。两个 p 值相同，因为它们检验的是同一假设。□</p>
+  <h4>9.4.4 调整 R²</h4>
+  <p>\(R^2\) 倾向于偏向大模型，因为添加更多预测变量（即使它们与响应变量独立）总会增加 \(R^2\)。回忆：</p>
+  \[ R^2 = 1 - \frac{\text{残差误差平方和}}{\text{总平方和}} = 1 - \frac{n^{-1} \text{残差误差平方和}}{n^{-1} \text{总平方和}}. \]
+  <p>通过使用以下“调整”，即用相应的自由度替换两处的 \(n\)，可以减小 \(R^2\) 的偏倚：</p>
+  \[ \text{调整 } R^2 = 1 - \frac{(n-p-1)^{-1} \text{残差误差平方和}}{(n-1)^{-1} \text{总平方和}} = 1 - \frac{\text{残差均方}}{\text{总均方}}. \]
+  <p>调整 \(R^2\) 中存在 \(p\)，对预测变量数量进行了惩罚，因此当向模型添加预测变量时，调整 \(R^2\) 可能增加也可能减少。如果添加的变量使残差平方和减少到足以补偿 \(p\) 的增加，则调整 \(R^2\) 会增加。</p>
+  <h3>9.5 模型选择</h3>
+  <p>当存在许多潜在预测变量时，我们通常希望找到一个子集，以建立简约的回归模型。F 检验并不十分适合模型选择。问题之一在于可能存在大量 F 检验，且所有这些检验的联合统计行为是未知的。对于模型选择，使用模型选择准则（如 AIC 或 BIC）更为合适。对于线性回归模型，AIC 为</p>
+</section>
+<section class="book-page" data-pdf-page="255">
+  <p>232 第9章 回归：基础</p>
+
+  <p>\(AIC = n\log(\hat{\sigma}^2) + 2(1+p)\)，</p>
+  <p>其中 \(1+p\) 是包含 \(p\) 个预测变量的模型中的参数个数；截距项给出最后一个参数。BIC 用 \(\log(n)(1+p)\) 替换 AIC 中的 \(2(1+p)\)。第一项 \(n\log(\hat{\sigma}^2)\) 等于（在忽略一个不影响模型比较的加性常数下）\(-2\) 倍在 MLE 处评估的对数似然，假设噪声为高斯分布。</p>
+
+  <p>除了 AIC 和 BIC 外，还有两种专门用于回归的模型选择准则。一种是调整 \(R^2\)，我们之前已经见过。另一种是 \(C_p\)。\(C_p\) 与 AIC 相关，通常 \(C_p\) 和 AIC 由同一个模型最小化。使用 \(C_p\) 而非 AIC 的主要原因是某些回归软件只计算 \(C_p\) 而不计算 AIC——例如 R 语言 <code>leaps</code> 包中的 <code>regsubsets()</code> 函数，它将在接下来的例子中使用。</p>
+
+  <p>为了定义 \(C_p\)，假设有 \(M\) 个预测变量。令 \(\hat{\sigma}^2_{\epsilon,M}\) 是使用所有预测变量时的 \(\sigma^2_\epsilon\) 的估计量，令 \(SSE(p)\) 是仅使用 \(p \leq M\) 个预测变量的子集模型的残差平方和。如常，\(n\) 是样本量。那么 \(C_p\) 定义为</p>
+  \[ C_p = \frac{SSE(p)}{\hat{\sigma}^2_{\epsilon,M}} - n + 2(p+1). \qquad (9.18) \]
+  <p>当然，\(C_p\) 将依赖于所有包含 \(p\) 个预测变量的模型中具体选择哪一个，因此记号“\(C_p\)”可能并不理想。</p>
+
+  <p>对于 \(C_p\)、AIC 和 BIC，值越小越好，但对于调整 \(R^2\)，值越大越好。</p>
+
+  <p>不应盲目使用模型选择准则。模型选择应依据经济理论和实际考虑，以及模型选择准则。最终模型必须对用户有意义，这一点很重要。领域专业知识可能导致采纳一个并非根据所用准则最优的模型，而是一个略低于最优但更简约或具有更好经济依据的模型。</p>
+
+  <figure class="book-figure" id="fig-9.5"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-7dd53cfc0dd8.png" alt="图9.5 周度利率的变化。模型选择的图形。">
+    <figcaption>图9.5. 周度利率的变化。模型选择的图形。</figcaption>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="256">
+  <h4>例9.7 每周利率——基于AIC和BIC的模型选择</h4>
+  <p>图9.5展示了模型中预测变量个数与选择准则优化值的关系图。所谓“优化值”，是指给定预测变量个数下所有模型中的最佳值。“最佳”对BIC和\(C_p\)而言是最小值，对调整\(R^2\)而言是最大值。图中包含三个子图，分别对应BIC、\(C_p\)和调整\(R^2\)。三个准则均在两个预测变量时达到最优。</p>
+  <p>存在三个含有两个预测变量的模型（总共三个预测变量）。其中使准则达到最优的模型<a id="fnref-p256-1" href="#fn-p256-1">¹</a>是包含<code>cm10_dif</code>和<code>cm30_dif</code>的模型，如<code>regsubsets</code>的以下输出所示。这里"*"表示变量在模型中，" "表示变量不在模型中，因此表的三行表明：最佳单变量模型是<code>cm10_dif</code>，最佳双变量模型是<code>cm10_dif</code>和<code>cm30_dif</code>——第三行不包含任何实际信息，因为只有三个变量时，仅有一种三变量模型。</p>
+  <pre><code>Selection Algorithm: exhaustive
+cm10_dif cm30_dif ff_dif
+1 (1) " * " " " " "
+2 ( 1 ) "*" "*" " "
+3 ( 1 ) "*" "*" "*"</code></pre>
+  <p>□</p>
+  <h3 id="section-9-6">9.6 共线性与方差膨胀</h3>
+  <p>如果两个或多个预测变量彼此高度相关，那么很难估计它们各自对响应变量的影响。例如，<code>cm10_dif</code>和<code>cm30_dif</code>的相关系数为0.96，散点图9.4显示它们高度相关。如果用<code>aaa_dif</code>对<code>cm10_dif</code>回归，调整\(R^2\)为0.7460，但加入<code>cm30_dif</code>作为第二个预测变量后，调整\(R^2\)仅增加到0.7556。这似乎表明<code>cm30_dif</code>可能与<code>aaa_dif</code>无关，但事实并非如此。实际上，当<code>cm30_dif</code>是唯一预测变量时，调整\(R^2\)为0.7376，说明<code>cm30_dif</code>对<code>aaa_dif</code>有很好的预测能力，与<code>cm10_dif</code>几乎相当。</p>
+  <p>预测变量之间高度相关的另一个影响是，每个变量的回归系数对另一个变量是否在模型中非常敏感。例如，当<code>cm10_dif</code>是唯一预测变量时，其系数为0.616，但若同时包含<code>cm30_dif</code>，则系数仅为0.360。</p>
+  <ol class="footnotes">
+    <li id="fn-p256-1">当比较具有相同参数个数的模型时，所有三个准则由同一个模型优化。 <a href="#fnref-p256-1">↩</a></li>
+  </ol>
+</section>
+<section class="book-page" data-pdf-page="257">
+<p>第9章 回归：基础</p>
+<p>这里的问题在于，<code>cm10_dif</code> 和 <code>cm30_dif</code> 由于高度相关提供了冗余信息。这个问题被称为共线性，当预测变量多于两个时，则称为多重共线性。共线性会增加标准误。当模型中只有 <code>cm10_dif</code> 时，其 \(\beta\) 的标准误为 0.01212，但如果加入 <code>cm30_dif</code>，标准误增至 0.0451，增幅达 372%。</p>
+<p>一个变量的方差膨胀因子（VIF）告诉我们，由于模型中包含其他预测变量，该变量的平方标准误（即 \(\hat{\beta}\) 的方差）增加了多少。例如，如果一个变量的 VIF 为 4，那么它的 \(\hat{\beta}\) 的方差是当其他预测变量被删除或与之不相关时的四倍。标准误增大了 2 倍。</p>
+<p>假设我们有预测变量 \(X_1, \ldots, X_p\)。那么 \(X_j\) 的 VIF 可通过将 \(X_j\) 对其他 \(p-1\) 个预测变量进行回归得到。令 \(R^2_j\) 为该回归的 \(R^2\) 值，因此 \(R^2_j\) 度量了 \(X_j\) 可以被其他 \(X\) 预测的程度。那么 \(X_j\) 的 VIF 为</p>
+\[ \text{VIF}_j = \frac{1}{1 - R^2_j}. \]
+<p>\(R^2_j\) 接近 1 意味着大的 VIF。换句话说，\(X_j\) 能越准确地被其他 \(X\) 预测，它就越冗余，其 VIF 越高。VIF\(_j\) 的最小值为 1，当 \(R^2_j = 0\) 时出现。不幸的是，VIF\(_j\) 没有上界。当 \(R^2_j\) 趋近于 1 时，方差膨胀趋于无穷。</p>
+<p>在解释 VIF 时，重要的是要记住，VIF\(_j\) 并未告诉我们响应变量与第 \(j\) 个预测变量之间的关系。相反，它只告诉我们第 \(j\) 个预测变量与其他预测变量的相关程度。事实上，VIF 可以在不知道响应变量值的情况下计算。</p>
+<p>共线性通常的解决方法是使用 9.5 节讨论的模型选择准则之一来减少预测变量的数量。</p>
+<p><strong>例 9.8</strong> 周利率示例的方差膨胀因子。R 包 <code>faraway</code> 中的函数 <code>vif()</code> 返回了周利率变化数据的如下 VIF 值：</p>
+<pre><code class="language-r"><div class="code-tabs" data-code-tabs id="vif-example">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="vif-example-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="vif-example-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="vif-example-r" role="tabpanel">
+    <pre><code class="language-r">&gt; library(faraway)
+&gt; options(digits = 2)
+&gt; vif(lm(aaa_dif ~ cm10_dif + cm30_dif + ff_dif))
+cm10_dif cm30_dif ff_dif
+14.4 14.1 1.1</code></pre>
+  </div>
+  <div class="code-tab-panel" id="vif-example-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import pandas as pd
+import statsmodels.api as sm
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+
+# Assuming df is a pandas DataFrame with columns: aaa_dif, cm10_dif, cm30_dif, ff_dif
+X = df[[&#x27;cm10_dif&#x27;, &#x27;cm30_dif&#x27;, &#x27;ff_dif&#x27;]]
+X = sm.add_constant(X)  # add intercept
+vif_data = pd.DataFrame()
+vif_data[&#x27;variable&#x27;] = X.columns
+vif_data[&#x27;VIF&#x27;] = [variance_inflation_factor(X.values, i) for i in range(X.shape[1])]
+# Remove constant row to match R output
+vif_data = vif_data[vif_data[&#x27;variable&#x27;] != &#x27;const&#x27;]
+print(vif_data.to_string(index=False, float_format=&#x27;%.1f&#x27;))</code></pre>
+  </div>
+</div></code></pre>
+</section>
+<section class="book-page" data-pdf-page="258">
+  <p>9.6 共线性与方差膨胀因子 235</p>
+  <p><code>cm10_dif</code> 和 <code>cm30_dif</code> 具有较大的 VIF，这是因为它们彼此之间高度相关。预测变量 <code>ff_dif</code> 与 <code>cm10_dif</code> 和 <code>cm30_dif</code> 的相关性不高，因此其 VIF 较低。</p>
+  <p>VIF 值为我们提供了关于预测变量之间线性关系的信息，但并不提供它们与响应变量之间关系的信息。在本例中，<code>ff_dif</code> 的 VIF 值较小，但它并不是一个重要预测变量，因为它与响应变量的相关性较低。尽管 <code>cm10_dif</code> 和 <code>cm30_dif</code> 的 VIF 值较高，但它们仍是重要的预测变量。高 VIF 值只是告诉我们，<code>cm10_dif</code> 和 <code>cm30_dif</code> 的回归系数难以高精度估计。</p>
+  <p>问题在于，VIF 值为 14.4 和 14.1 是否大到需要将预测变量个数减少到 1，即是否应该只使用 <code>cm10_dif</code>。答案是“或许不需要”，因为同时包含 <code>cm10_dif</code> 和 <code>cm30_dif</code> 的模型最小化了 BIC。BIC 通常选择简约模型，因为其对预测变量个数施加了较高的惩罚。因此，最小化 BIC 的模型不太可能仅仅为了降低 VIF 值而需要进一步删除预测变量。然而，我们之前看到，将 <code>cm30_dif</code> 加入仅包含 <code>cm10_dif</code> 的模型，仅能小幅提高调整 \(R^2\)，因此是否包含 <code>cm30_dif</code> 的问题并不明确。□</p>
+  <p><strong>示例 9.9. Nelson–Plosser 宏观经济变量</strong></p>
+  <p>为了说明模型选择，我们现在转向一个具有更多预测变量的示例。我们将从六个预测变量开始，但会发现仅有两个预测变量的模型拟合效果相当好。</p>
+  <p>本例使用了著名的 Nelson–Plosser 美国年度宏观经济时间序列数据集的一个子集。这些数据可在文件 <code>nelsonplosser.csv</code> 中获得。我们将使用的变量如下：</p>
+  <ol>
+    <li><code>sp</code> — 股票价格 [指数；1941–43 = 100]，[1871–1970]。
+    </li>
+    <li><code>gnp.r</code> — 实际 GNP [1958 年十亿美元]，[1909–1970]。
+    </li>
+    <li><code>gnp.pc</code> — 人均实际 GNP [1958 年美元]，[1909–1970]。
+    </li>
+    <li><code>ip</code> — 工业生产指数 [1967 = 100]，[1860–1970]。
+    </li>
+    <li><code>cpi</code> — 消费者价格指数 [1967 = 100]，[1860–1970]。
+    </li>
+    <li><code>emp</code> — 总就业人数 [千人]，[1890–1970]。
+    </li>
+    <li><code>bnd</code> — 30 年期公司债券的基本收益率 [年百分比]，[1900–1970]。
+    </li>
+  </ol>
+  <p>由于其中两个时间序列始于 1909 年，我们仅使用从 1909 年到系列结束的 1970 年之间的数据，共计 62 年。响应变量将是 \(\log(sp)\) 的差分，即股票价格的对数收益率。回归变量将是变量 2 至 7 的差分，其中变量 4 和 5 在差分前先进行对数变换。对对数序列进行差分，得到原始变量的近似相对变化，正如对数收益率近似于作为价格相对变化的收益率一样。</p>
+</section>
+<section class="book-page" data-pdf-page="259">
+  <p>如何决定是对原始序列、对数变换后的序列还是其他函数变换后的序列进行差分？通常的目标是稳定差分后序列的波动性。图9.6的上行显示了 <code>gnp.r</code>、<code>log(gnp.r)</code> 和 <code>sqrt(gnp.r)</code> 变化量的时间序列图，下行显示了 <code>ip</code> 的类似图。对于 <code>ip</code>，差分后序列的波动性随时间稳步增加，但如果使用序列的平方根或对数，这种趋势会减弱。这就是为什么这里使用 <code>diff(log(ip))</code> 作为回归量的原因。对于 <code>gnp.r</code>，变化量的波动性更稳定，我们使用 <code>diff(gnp.r)</code> 而非 <code>diff(log(gnp.r))</code> 作为回归量。在本分析中，我们没有考虑平方根变换，因为平方根的变化量不如原始变量或其对数的变化量易于解释。然而，两个序列的平方根变化量都相当稳定，因此可以考虑平方根变换。另一种可能性是使用能给出最佳拟合模型的变换。例如，可以将所有三个变量 <code>diff(ip)</code>、<code>diff(log(ip))</code> 和 <code>diff(sqrt(ip))</code> 放入模型中，并通过模型选择来决定哪个给出最佳拟合。对于 <code>gnp.r</code> 和其他回归量也可采用相同方法。</p>
+  <p>注意，变量是先变换后差分的。先差分再取对数或平方根会导致复数值变量，这至少可以说是难以解释的。</p>
+  <figure class="book-figure" id="fig-9.6"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-161c4c101a49.png" alt="图9.6 对gnp.r和ip进行变换与不进行变换时的差分值">
+    <figcaption>图9.6 对 <code>gnp.r</code> 和 <code>ip</code> 进行变换与不进行变换时的差分值</figcaption>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="260">
+  <h3>9.6 共线性与方差膨胀</h3>
+  <p>该数据集中还有其他变量可尝试纳入模型。此处分析仅为示例，此丰富数据集显然值得进行更多探索。</p>
+  <p>对所有八个差分序列的时间序列图和正态概率图进行检查，未发现异常值。正态概率图仅用于检测异常值，而非检验正态分布。回归分析中并不要求回归变量服从正态分布，也不要求响应变量具有边缘正态分布。仅假定给定回归变量时响应变量的条件分布为正态分布，且该假设甚至可放宽。</p>
+  <p>包含所有回归变量的线性回归显示，仅<code>diff(log(ip))</code>和<code>diff(bnd)</code>在0.05水平上统计显著，而有些变量的p值非常大：</p>
+  <pre><code>Call:
+lm(formula = diff(log(sp)) ~ diff(gnp.r) + diff(gnp.pc)
++ diff(log(ip)) + diff(log(cpi))
++ diff(emp) + diff(bnd), data = new_np)
+
+Coefficients:
+Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept) -2.766e-02 3.135e-02 -0.882 0.3815
+diff(gnp.r) 8.384e-03 4.605e-03 1.821 0.0742
+diff(gnp.pc) -9.752e-04 9.490e-04 -1.028 0.3087
+diff(log(ip)) 6.245e-01 2.996e-01 2.085 0.0418
+diff(log(cpi)) 4.935e-01 4.017e-01 1.229 0.2246
+diff(emp) -9.591e-06 3.347e-05 -0.287 0.7756
+diff(bnd) -2.030e-01 7.394e-02 -2.745 0.0082</code></pre>
+  <p>一个可能的问题是多重共线性，因此计算了方差膨胀因子：</p>
+  <pre><code>diff(gnp.r) diff(gnp.pc) diff(log(ip)) diff(log(cpi))
+16.0 31.8 3.3 1.3
+diff(emp) diff(bnd)
+10.9 1.5</code></pre>
+  <p>我们看到<code>diff(gnp.r)</code>和<code>diff(gnp.pc)</code>的VIF值很高，这并不奇怪，因为预期它们高度相关。实际上，它们的相关系数为0.96。</p>
+  <p>接下来，我们使用<code>stepAIC()</code>搜索更简约的模型，这是R中的一个变量选择过程，从用户指定的模型开始，顺序添加或删除变量。每一步要么添加要么删除最能使AIC改善的变量。在本例中，<code>stepAIC()</code>将从所有六个预测变量开始。</p>
+</section>
+<section class="book-page" data-pdf-page="261">
+  <h2>238 第9章 回归：基础</h2>
+  <p>第一步如下：</p>
+  <pre><code class="language-r">Start: AIC=-224.92
+diff(log(sp)) ~ diff(gnp.r) + diff(gnp.pc) + diff(log(ip)) +
+diff(log(cpi)) + diff(emp) + diff(bnd)
+Df Sum of Sq RSS AIC
+- diff(emp) 1 0.002 1.216 -226.826
+- diff(gnp.pc) 1 0.024 1.238 -225.737
+- diff(log(cpi)) 1 0.034 1.248 -225.237
+&lt;none&gt; 1.214 -224.918
+- diff(gnp.r) 1 0.075 1.289 -223.284
+- diff(log(ip)) 1 0.098 1.312 -222.196
+- diff(bnd) 1 0.169 1.384 -218.949</code></pre>
+  <p>列出的模型中，要么从包含所有回归变量的初始模型中删除了零个变量，要么删除了一个变量。这些模型按照其AIC值排序。第一个模型移除了 <code>diff(emp)</code>（负号表示已移除的变量），具有最佳（最小）的AIC。因此，在第一步中，<code>diff(emp)</code> 被移除。注意，第四好的模型没有移除任何变量。</p>
+  <p>第二步从不包含 <code>diff(emp)</code> 的模型开始，并检查移除额外变量对AIC的影响。移除 <code>diff(log(cpi))</code> 导致AIC最大改进，因此在第二步中移除了该变量：</p>
+  <pre><code class="language-r">Step: AIC=-226.83
+diff(log(sp)) ~ diff(gnp.r) + diff(gnp.pc) + diff(log(ip)) +
+diff(log(cpi)) + diff(bnd)
+Df Sum of Sq RSS AIC
+- diff(log(cpi)) 1 0.032 1.248 -227.236
+&lt;none&gt; 1.216 -226.826
+- diff(gnp.pc) 1 0.057 1.273 -226.025
+- diff(gnp.r) 1 0.084 1.301 -224.730
+- diff(log(ip)) 1 0.096 1.312 -224.179
+- diff(bnd) 1 0.189 1.405 -220.032</code></pre>
+  <p>在第三步中，没有变量被移除，过程停止：</p>
+  <pre><code class="language-r">Step: AIC=-227.24
+diff(log(sp)) ~ diff(gnp.r) + diff(gnp.pc) + diff(log(ip)) +
+diff(bnd)
+Df Sum of Sq RSS AIC
+&lt;none&gt; 1.248 -227.236
+- diff(gnp.pc) 1 0.047 1.295 -227.001
+- diff(gnp.r) 1 0.069 1.318 -225.942
+- diff(log(ip)) 1 0.122 1.371 -223.534
+- diff(bnd) 1 0.157 1.405 -222.001</code></pre>
+</section>
+<section class="book-page" data-pdf-page="262">
+<h5>9.6 共线性与方差膨胀</h5>
+<p>注意，删除 <code>diff(gnp.pc)</code> 将只会导致 AIC 非常微小的增加。我们应该研究是否可以考虑移除这个变量。新模型重新拟合数据如下：</p>
+<pre><code>Coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept) -0.018664   0.028723  -0.65   0.518
+diff(gnp.r)  0.007743   0.004393   1.76   0.083
+diff(gnp.pc) -0.001029   0.000712  -1.45   0.154
+diff(log(ip)) 0.672924   0.287276   2.34   0.023
+diff(bnd)    -0.177490   0.066840  -2.66   0.010
+
+Residual standard error: 0.15 on 56 degrees of freedom
+Multiple R-squared: 0.347, Adjusted R-squared: 0.3
+F-statistic: 7.44 on 4 and 56 DF, p-value: 7.06e-05</code></pre>
+<p>现在四个变量中有三个在 0.1 水平上统计显著，尽管 <code>diff(gnp.pc)</code> 的 p 值较大，似乎值得探索其他可能的模型。</p>
+<p>R 函数 <code>leaps()</code>（来自 leaps 包）可以计算所有可能模型的 \(C_p\) 值。为了减少输出量，仅打印每个 k（\(k=1,\dots,\dim(eta)\)）个回归元的最佳模型（nbest 由用户选择，本例中 nbest 设为 1，因此每个 k 只给出最佳模型）。下表给出了最佳 k 变量模型的 \(C_p\) 值（最后一列），其中 \(k=1,\dots,6\)（k 在第一列）。其余列用“1”表示哪些变量包含在模型中。所有预测变量均已差分，但为节省空间，列标题中的变量名省略了“diff”。</p>
+<table>
+<thead>
+<tr><th>gnp.r</th><th>gnp.pc</th><th>log(ip)</th><th>log(cpi)</th><th>emp</th><th>bnd</th><th>Cp</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>6.3</td></tr>
+<tr><td>0</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>3.8</td></tr>
+<tr><td>1</td><td>0</td><td>1</td><td>0</td><td>0</td><td>1</td><td>4.6</td></tr>
+<tr><td>1</td><td>1</td><td>1</td><td>0</td><td>0</td><td>1</td><td>4.5</td></tr>
+<tr><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td><td>1</td><td>5.1</td></tr>
+<tr><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>1</td><td>7.0</td></tr>
+</tbody>
+</table>
+<p>我们看到 <code>stepAIC</code> 在四变量模型处停止可能为时过早。模型选择过程在四变量模型处停止，因为三变量模型的 \(C_p\) 值略大。然而，如果继续到最佳二变量模型，可以取到 \(C_p\) 的最小值。以下是最佳二变量模型的拟合结果：</p>
+<pre><code>Call:
+lm(formula = diff(log(sp)) ~ +diff(log(ip)) + diff(bnd),
+data = new_np)
+
+Residuals:</code></pre>
+</section>
+<section class="book-page" data-pdf-page="263">
+<p><span class="original-page">240</span> 第9章 回归：基础</p>
+<pre><code class="language-r">Min 1Q Median 3Q Max
+-0.44254 -0.09786 0.00377 0.10525 0.28136
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept)  0.0166    0.0210    0.79   0.43332
+diff(log(ip)) 0.6975    0.1683    4.14   0.00011
+diff(bnd)   -0.1322    0.0623   -2.12   0.03792
+
+Residual standard error: 0.15 on 58 degrees of freedom
+Multiple R-squared: 0.309, Adjusted R-squared: 0.285
+F-statistic: 12.9 on 2 and 58 DF, p-value: 2.24e-05</code></pre>
+<p>两个变量在0.05水平上都是显著的。然而，并非所有回归变量都必须在0.05或任何其他预定水平上显著。如果存在充分的经济理由，也可以使用其他模型。我们不能说包含两个变量的模型是最好的，除非在最小化\(C_p\)的狭义意义上，选择最好的三变量或四变量模型并不会使\(C_p\)增加太多。另外，哪个模型最好取决于所采用的标准。最好的四变量模型比最好的两变量模型具有更好的调整\(R^2\)。□</p>
+<h2 id="section-9-7">9.7 偏残差图</h2>
+<p>偏残差图用于在去除其他预测变量影响的条件下，可视化某个预测变量对响应变量的效应。第\(j\)个预测变量的偏残差为</p>
+\[Y_i - \left( \hat{\beta}_0 + \sum_{j' \neq j} X_{i,j'} \hat{\beta}_{j'} \right) = \hat{Y}_i + \hat{\epsilon}_i - \left( \hat{\beta}_0 + \sum_{j' \neq j} X_{i,j'} \hat{\beta}_{j'} \right) = X_{i,j} \hat{\beta}_j + \hat{\epsilon}_i,
+\tag{9.19}\]
+<p>其中第一个等式利用了(9.12)，第二个等式利用了(9.10)。注意，(9.19)的左边表明，偏残差是减去了除第\(j\)个变量之外所有预测变量效应的响应变量。(9.19)的右边表明，偏残差也等于残差加上第\(j\)个变量的效应。偏残差图就是响应变量对这些偏残差的散点图。</p>
+<p><strong>例9.10</strong> 周利率示例的偏残差图</p>
+<p>周利率示例的偏残差图如图9.7a、b所示。为了比较，cm10_dif和cm30_dif对aaa_dif的散点图以及相应的一元拟合线显示在图(c)和(d)中。从图中得出的主要结论是，(a)和(b)中的斜率比(c)和(d)中的斜率更平缓。这意味着什么？</p>
+</section>
+<section class="book-page" data-pdf-page="264">
+  <p>9.7 偏残差图 241</p>
+  <p>它表明，由于多重共线性，当模型中包含 <code>cm30_dif</code> 时，<code>cm10_dif</code> 对 <code>aaa_dif</code> 的效应[图(a)]小于模型中不包含 <code>cm30_dif</code> 时的效应[图(c)]；同样，当交换 <code>cm10_dif</code> 和 <code>cm30_dif</code> 的角色时也是如此。</p>
+  <p>通过查看估计的回归系数也可以得到相同的结论。从例9.1和例9.4中我们可以看出，当模型中只有 <code>cm10_dif</code> 一个变量时，<code>cm10_dif</code> 的系数为0.615，但当模型中同时包含 <code>cm30_dif</code> 时，系数下降到0.355。当 <code>cm10_dif</code> 加入模型时，<code>cm30_dif</code> 的系数也有类似的下降。□</p>
+
+  <figure class="book-figure" id="fig-9.7"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-d5cec4516921.png" alt="周利率的偏残差图[(a)和(b)]以及预测变量与响应变量的散点图[(c)和(d)]" />
+    <figcaption>图9.7. 周利率的偏残差图[(a)和(b)]以及预测变量与响应变量的散点图[(c)和(d)]。</figcaption>
+  </figure>
+
+  <p>例9.11. Nelson–Plosser宏观经济变量——偏残差图</p>
+  <p>本例继续分析Nelson–Plosser宏观经济变量。图9.8展示了例9.9中由stepAIC选择的四变量模型的偏残差图。可以看出，所有四个变量都具有解释力，因为偏残差相对于变量呈现线性趋势。</p>
+  <p>该模型的一个令人困惑的方面是<code>gnp.pc</code>的斜率为负。然而，该变量的p值较大，且最小Cp模型……</p>
+</section>
+<section class="book-page" data-pdf-page="265">
+  <p>不包含 gnp.r 或 gnp.pc。通常，与其他回归变量高度相关的回归变量，其估计斜率往往违反直觉。如果单独使用，gnp.r 和 gnp.pc 的斜率都是正的。只有当 gnp.r 在模型中时，gnp.pc 的斜率才为负。□</p>
+  <h2 id="section-9-8">9.8 预测变量的中心化</h2>
+  <p>中心化，更准确地说，均值中心化（mean-centering）一个变量意味着将其表示为与均值的偏差。因此，如果 \(X_{1,k}, \ldots, X_{n,k}\) 是第 \(k\) 个预测变量的值，\(\bar{X}_k\) 是其均值，那么 \((X_{1,k} - \bar{X}_k), \ldots, (X_{n,k} - \bar{X}_k)\) 就是中心化后的预测变量的值。</p>
+  <figure class="book-figure" id="fig-9.8"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-65a5d7a3dc96.png" alt="Nelson-Plosser 美国经济时间序列的偏残差图" />
+    <figcaption>图 9.8 Nelson–Plosser 美国经济时间序列的偏残差图。(a) gnp.r 的变化量。(b) gnp.pc 的变化量。(c) log(ip) 的变化量。(d) bnd 的变化量。</figcaption>
+  </figure>
+  <p>中心化有两个作用：</p>
+  <ul>
+    <li>中心化可以减少多项式回归中的多重共线性；</li>
+    <li>如果所有预测变量都经过中心化，那么 \(\beta_0\) 是当每个预测变量都等于其均值时 \(Y\) 的期望值。这赋予了 \(\beta_0\) 可解释的意义。相反，如果变量没有中心化，那么 \(\beta_0\) 是当所有预测变量都等于 0 时 \(Y\) 的期望值。通常，0 在某些预测变量的取值范围之外，这使得除非变量经过中心化，否则对 \(\beta_0\) 的解释几乎没有实际意义。</li>
+  </ul>
+</section>
+<section class="book-page" data-pdf-page="266">
+  <h3 id="section-9-9">9.9 正交多项式</h3>
+  <p>如上所述，中心化可以减少多项式回归中的共线性，因为例如，如果 <em>X</em> 为正，则 <em>X</em> 和 <em>X</em><sup>2</sup> 会高度相关，但 <em>X</em> − <em>X̄</em> 和 (<em>X</em> − <em>X̄</em>)<sup>2</sup> 的相关性会降低。</p>
+  <p>正交多项式可以完全消除相关性，因为它们被定义为不相关的。这是通过线性代数教材中讨论的 Gram–Schmidt 正交化过程实现的。大多数软件包都可以轻松创建正交多项式，例如使用 R 中的 <code>poly()</code> 函数。正交多项式对于次数高于 2 的多项式回归特别有用，因为中心化在减少共线性方面效果较差。然而，不鼓励使用 4 次及以上的多项式模型，建议改用非参数回归（见第 21 章）。即使三次回归也可能有问题，因为三次多项式的形状范围有限。</p>
+
+  <h3 id="section-9-10">9.10 文献注释</h3>
+  <p>Harrell (2001), Ryan (1997), Neter et al. (1996) 和 Draper and Smith (1998) 是许多优秀回归导论中的四本。Faraway (2005) 是使用 R 进行线性回归的现代优秀著作。关于其数据集的信息参见 Nelson and Plosser (1982)。</p>
+
+  <h3 id="section-9-11">9.11 R 实验</h3>
+  <h4>9.11.1 美国宏观经济变量</h4>
+  <p>本节使用 R 的 <code>AER</code> 包中的 <code>USMacroG</code> 数据集。该数据集包含 1950–2000 年美国 12 个宏观经济变量的季度时间序列。我们将使用变量：<code>consumption</code> = 实际消费支出，<code>dpi</code> = 实际个人可支配收入，<code>government</code> = 实际政府支出，以及 <code>unemp</code> = 失业率。我们的目标是预测消费变化对其他变量变化的响应。</p>
+  <p>运行以下 R 代码以加载数据，对数据进行差分（因为我们希望使用这些变量的变化），并创建散点图矩阵。</p>
+  <div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">library(AER)
+data(&quot;USMacroG&quot;)
+MacroDiff = as.data.frame(apply(USMacroG, 2, diff))
+attach(MacroDiff)
+pairs(cbind(consumption, dpi, cpi, government, unemp))</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import statsmodels.api as sm
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+data = sm.datasets.get_rdataset(&#x27;USMacroG&#x27;, &#x27;AER&#x27;).data
+MacroDiff = data.diff().dropna()
+# 选择变量
+vars = [&#x27;consumption&#x27;, &#x27;dpi&#x27;, &#x27;cpi&#x27;, &#x27;government&#x27;, &#x27;unemp&#x27;]
+sns.pairplot(MacroDiff[vars])
+plt.show()</code></pre>
+  </div>
+</div>
+</section>
+<section class="book-page" data-pdf-page="267">
+  <p>244 第9章 回归分析：基础</p>
+  <p><strong>问题1</strong> 描述散点图矩阵中看到的任何有趣特征，例如异常值。请记住，目标是预测消费的变化。哪些变量似乎最适合此目的？您认为会存在共线性问题吗？</p>
+  <p>接下来，运行下面的代码，使用其他四个变量作为预测变量，对<code>consumption</code>拟合多元线性回归模型。</p>
+  <div class="code-tabs" data-code-tabs id="code1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code1-r" role="tabpanel">
+    <pre><code class="language-r">fitLm1 = lm(consumption ~ dpi + cpi + government + unemp)
+summary(fitLm1)
+confint(fitLm1)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import statsmodels.formula.api as smf
+fitLm1 = smf.ols(&#x27;consumption ~ dpi + cpi + government + unemp&#x27;, data=df).fit()
+print(fitLm1.summary())
+print(fitLm1.conf_int())</code></pre>
+  </div>
+</div>
+  <p><strong>问题2</strong> 从汇总输出中，哪些变量似乎对预测消费变化有用？</p>
+  <p>接下来，打印方差分析表。</p>
+  <div class="code-tabs" data-code-tabs id="code2">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code2-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code2-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code2-r" role="tabpanel">
+    <pre><code class="language-r">anova(fitLm1)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code2-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import statsmodels.api as sm
+print(sm.stats.anova_lm(fitLm1, typ=2))</code></pre>
+  </div>
+</div>
+  <p><strong>问题3</strong> 就变量选择而言，方差分析表是否提供了汇总输出中尚未包含的有用信息？</p>
+  <p>检查p值后，我们可能倾向于从回归模型中删除几个变量，但我们不会这样做，因为变量应一次一个地从模型中移除。原因是，由于预测变量之间的相关性，当移除一个变量时，其他变量的显著性会发生变化。为了顺序移除变量，我们将使用 <code>MASS</code> 包中的函数 <code>stepAIC()</code>。</p>
+  <div class="code-tabs" data-code-tabs id="code3">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code3-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code3-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code3-r" role="tabpanel">
+    <pre><code class="language-r">library(MASS)
+fitLm2 = stepAIC(fitLm1)
+summary(fitLm2)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code3-python" role="tabpanel" hidden>
+    <pre><code class="language-python">def stepAIC_py(model_full, data):
+    import numpy as np
+    import statsmodels.formula.api as smf
+    current_vars = list(model_full.params.index[1:])
+    best_model = model_full
+    best_aic = model_full.aic
+    while True:
+        improved = False
+        for var in current_vars:
+            vars_reduced = [v for v in current_vars if v != var]
+            if not vars_reduced:
+                formula = &#x27;consumption ~ 1&#x27;
+            else:
+                formula = &#x27;consumption ~ &#x27; + &#x27; + &#x27;.join(vars_reduced)
+            model_reduced = smf.ols(formula, data=data).fit()
+            if model_reduced.aic &lt; best_aic:
+                best_aic = model_reduced.aic
+                best_model = model_reduced
+                current_vars = vars_reduced
+                improved = True
+                break
+        if not improved:
+            break
+    return best_model
+
+fitLm2 = stepAIC_py(fitLm1, df)
+print(fitLm2.summary())</code></pre>
+  </div>
+</div>
+  <p><strong>问题4</strong> 从模型中移除了哪些变量，顺序如何？</p>
+  <p>现在通过AIC比较初始模型和最终模型。</p>
+  <div class="code-tabs" data-code-tabs id="code4">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code4-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code4-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code4-r" role="tabpanel">
+    <pre><code class="language-r">AIC(fitLm1)
+AIC(fitLm2)
+AIC(fitLm1) - AIC(fitLm2)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code4-python" role="tabpanel" hidden>
+    <pre><code class="language-python">print(fitLm1.aic)
+print(fitLm2.aic)
+print(fitLm1.aic - fitLm2.aic)</code></pre>
+  </div>
+</div>
+  <p><strong>问题5</strong> 移除变量后AIC改进了多少？改进大吗？如果是，你能建议原因吗？如果不是，为什么？</p>
+</section>
+<section class="book-page" data-pdf-page="268">
+<h2 id="section-9-12">9.12 习题</h2>
+<p>函数 <code>vif()</code>（在 <code>car</code> 包中）将计算变异膨胀因子。<code>faraway</code> 包中也有一个同名的类似函数。运行</p>
+<pre><code><div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">library(car)
+vif(fitLm1)
+vif(fitLm2)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import statsmodels.api as sm
+from statsmodels.stats.outliers_influence import variance_inflation_factor
+import pandas as pd
+
+# 假设 fitLm1 和 fitLm2 是已拟合的 statsmodels OLS 结果对象
+# 获取设计矩阵（包含截距项）
+def compute_vif(model):
+    exog = model.model.exog
+    vif = pd.DataFrame()
+    vif[&#x27;VIF&#x27;] = [variance_inflation_factor(exog, i) for i in range(exog.shape[1])]
+    vif[&#x27;variable&#x27;] = model.model.exog_names
+    return vif
+
+# 打印 VIF
+print(&quot;VIF for fitLm1:&quot;)
+print(compute_vif(fitLm1))
+print(&quot;\nVIF for fitLm2:&quot;)
+print(compute_vif(fitLm2))</code></pre>
+  </div>
+</div></code></pre>
+<p>问题 6 原始四变量模型中是否存在严重的共线性？删去两个变量后，共线性是否大为减轻？</p>
+<p>偏残差图（也称为分量加残差图或 CR 图）可以使用 <code>car</code> 包中的函数 <code>crPlot()</code> 来构造。运行</p>
+<pre><code><div class="code-tabs" data-code-tabs id="code-2">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-2-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-2-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-2-r" role="tabpanel">
+    <pre><code class="language-r">par(mfrow = c(2, 2))
+sp = 0.8
+crPlot(fitLm1, dpi, span = sp, col = &quot;black&quot;)
+crPlot(fitLm1, cpi, span = sp, col = &quot;black&quot;)
+crPlot(fitLm1, government, span = sp, col = &quot;black&quot;)
+crPlot(fitLm1, unemp, span = sp, col = &quot;black&quot;)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-2-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import matplotlib.pyplot as plt
+import statsmodels.api as sm
+from statsmodels.nonparametric.smoothers_lowess import lowess
+
+# 假设 fitLm1 是已拟合的 sm.OLS 结果对象，包含变量 &#x27;dpi&#x27;, &#x27;cpi&#x27;, &#x27;government&#x27;, &#x27;unemp&#x27;
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+ax = axes.flatten()
+var_list = [&#x27;dpi&#x27;, &#x27;cpi&#x27;, &#x27;government&#x27;, &#x27;unemp&#x27;]
+for i, var in enumerate(var_list):
+    # 使用 statsmodels 的 component-component plus residual 图
+    sm.graphics.plot_ccpr(fitLm1, var, ax=ax[i])
+    # 更改曲线颜色为黑色（最小二乘线）
+    for line in ax[i].get_lines():
+        line.set_color(&#x27;black&#x27;)
+    # 手动添加 lowess 平滑
+    resid = fitLm1.resid
+    coeff = fitLm1.params[var]
+    # 获取变量列
+    var_idx = fitLm1.model.exog_names.index(var)
+    x = fitLm1.model.exog[:, var_idx]
+    partial_residual = resid + coeff * x
+    lowess_smooth = lowess(partial_residual, x, frac=0.8)
+    ax[i].plot(lowess_smooth[:, 0], lowess_smooth[:, 1], &#x27;k-&#x27;, linewidth=1.5)
+    ax[i].set_title(var)
+plt.tight_layout()
+plt.show()</code></pre>
+  </div>
+</div></code></pre>
+<p>除了用虚线表示的最小二乘线之外，偏残差图还包含实线 lowess 平滑曲线（除非通过指定 <code>smooth=F</code> 关闭该特性，如图 9.8 所示）。Lowess 是 loess 的早期版本。lowess 曲线的平滑度由参数 <code>span</code> 控制，<code>span</code> 值越大，曲线越平滑。默认值为 <code>span = 0.5</code>。在上述代码中，<code>span</code> 设为 0.8，但可以通过改变变量 <code>sp</code> 来同时更改所有四个图的平滑参数。Lowess、loess 和 span 在第 21.2.1 节中有详细介绍。如果 lowess 曲线与最小二乘线存在明显偏差，则表明该预测变量的影响是非线性的。<code>crPlot</code> 图形的默认颜色是红色，但可以像上面代码那样进行更改。</p>
+<p>问题 7 从偏残差图中你能得出什么结论？</p>
+<ol>
+<li><p>假设 \(Y_i = \beta_0 + \beta_1 X_i + \epsilon_i\)，其中 \(\epsilon_i \sim N(0, 0.3)\)，\(\beta_0 = 1.4\)，且 \(\beta_1 = 1.7\)。</p>
+<ol type="a">
+<li>给定 \(X_i = 1\) 时，\(Y_i\) 的条件均值和条件标准差是多少？\(P(Y_i \le 3 \mid X_i = 1)\) 是多少？</li>
+<li>回归模型是给定 \(X_i\) 时 \(Y_i\) 的条件分布模型。然而，如果我们也有关于 \(X_i\) 边缘分布的模型，那么我们可以求出 \(Y_i\) 的边缘分布。假设 \(X_i \sim N(1, 0.7)\)。\(Y_i\) 的边缘分布是什么？\(P(Y_i \le 3)\) 是多少？</li>
+</ol>
+</li>
+</ol>
+</section>
+<section class="book-page" data-pdf-page="269">
+  <p class="page-header">246 9 回归：基础</p>
+  <ol start="2">
+    <li>
+      <p>证明：如果 \(\epsilon_1, \ldots, \epsilon_n\) 独立同分布 \(N(0, \sigma^2_\epsilon)\)，那么在直线回归中，\(\beta_0\) 和 \(\beta_1\) 的最小二乘估计也是极大似然估计。</p>
+      <p>提示：此问题类似于第5.9节中的例子。唯一的区别在于，该节中 \(Y_1, \ldots, Y_n\) 独立同分布 \(N(\mu, \sigma^2)\)，而本练习中 \(Y_1, \ldots, Y_n\) 独立同分布 \(N(\beta_0 + \beta_1 X_i, \sigma^2_\epsilon)\)。</p>
+    </li>
+    <li>
+      <p>使用(7.11)、(9.3)和(9.2)证明(9.8)成立。</p>
+    </li>
+    <li>
+      <p>在第9.8节中曾提到中心化可以减少共线性。作为说明，考虑二次多项式回归的例子，其中 \(X\) 在1到15之间取30个等间距值。</p>
+      <ol type="a">
+        <li>
+          <p>\(X\) 和 \(X^2\) 之间的相关性是多少？\(X\) 和 \(X^2\) 的方差膨胀因子（VIF）是多少？</p>
+        </li>
+        <li>
+          <p>现在假设我们在平方之前对 \(X\) 进行中心化。\((X - \bar{X})\) 和 \((X - \bar{X})^2\) 之间的相关性是多少？\((X - \bar{X})\) 和 \((X - \bar{X})^2\) 的方差膨胀因子（VIF）是多少？</p>
+        </li>
+      </ol>
+    </li>
+    <li>
+      <p>一个包含三个预测变量的线性回归模型拟合了一个有40个观测值的数据集。\(Y\) 和 \(\hat{Y}\) 之间的相关性为0.65。总平方和为100。</p>
+      <ol type="a">
+        <li>
+          <p>\(R^2\) 的值是多少？</p>
+        </li>
+        <li>
+          <p>残差平方和的值是多少？</p>
+        </li>
+        <li>
+          <p>回归平方和的值是多少？</p>
+        </li>
+        <li>
+          <p>\(s^2\) 的值是多少？</p>
+        </li>
+      </ol>
+    </li>
+    <li>
+      <p>一个数据集有66个观测值和五个预测变量。正在考虑三个模型。一个包含所有五个预测变量，其他两个较小。下面是所有三个模型的残差平方和。总 \(SS\) 为48。计算所有三个模型的 \(C_p\) 和 \(R^2\)。基于这些信息，应该使用哪个模型？</p>
+      <table>
+        <thead>
+          <tr>
+            <th>预测变量数量</th>
+            <th>残差平方和</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>3</td>
+            <td>12.2</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>10.1</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>10.0</td>
+          </tr>
+        </tbody>
+      </table>
+    </li>
+    <li>
+      <p>二次多项式回归模型</p>
+      <p>\[Y_i = \beta_0 + \beta_1 X_i + \beta_2 X_i^2 + \epsilon_i\]</p>
+      <p>拟合了数据。\(\beta_1\) 的 \(p\) 值为0.67，\(\beta_2\) 的 \(p\) 值为0.84。我们能接受 \(\beta_1\) 和 \(\beta_2\) 都为0的假设吗？讨论。</p>
+    </li>
+    <li>
+      <p>有时认为 \(\beta_0 = 0\) 是因为我们相信 \(E(Y|X=0)=0\)。那么适当的模型是</p>
+      <p>\[y_i = \beta_1 X_i + \epsilon_i.\]</p>
+      <p>这个模型通常称为“通过原点的回归”，因为回归线被迫通过原点。\(\beta_1\) 的最小二乘估计最小化</p>
+    </li>
+  </ol>
+</section>
+<section class="book-page" data-pdf-page="270">
+<h3>9.12 习题 247</h3>
+
+<ol start="9">
+  <li>
+    <p>完成以下方差分析表，模型为 \(Y_i = \beta_0 + \beta_1 X_{i,1} + \beta_2 X_{i,2} + \epsilon_i\)：</p>
+    <table>
+      <thead>
+        <tr><th>来源</th><th>自由度</th><th>平方和</th><th>均方</th><th>\(F\) 值</th><th>\(P\) 值</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>回归</td><td>?</td><td>?</td><td>?</td><td>?</td><td>0.04</td></tr>
+        <tr><td>误差</td><td>?</td><td>5.66</td><td>?</td><td></td><td></td></tr>
+        <tr><td>总计</td><td>15</td><td>?</td><td></td><td></td><td></td></tr>
+      </tbody>
+      <tfoot>
+        <tr><td colspan="6">\(R^2 = \)?</td></tr>
+      </tfoot>
+    </table>
+  </li>
+  <li>
+    <p>观察了随机变量对 \((X_i, Y_i)\)。假设它们遵循线性回归模型 \(\mathbb{E}(Y_i | X_i) = \theta_1 + \theta_2 X_i\)，但噪声服从 \(t\) 分布，而非通常的正态分布。具体而言，假设在给定 \(X_i\) 的条件下，\(Y_i\) 服从均值为 \(\theta_1 + \theta_2 X_i\)、标准差为 \(\theta_3\)、自由度为 \(\theta_4\) 的 \(t\) 分布。此外，\((X_1, Y_1), \ldots, (X_n, Y_n)\) 相互独立。该模型也可表示为</p>
+    <p>\[Y_i = \theta_1 + \theta_2 X_i + \epsilon_i\]</p>
+    <p>其中 \(\epsilon_1, \ldots, \epsilon_n\) 独立同分布，均值为 \(0\)、标准差为 \(\theta_3\)、自由度为 \(\theta_4\) 的 \(t\) 分布。该模型通过极大似然估计拟合。R 代码和输出如下：</p>
+    <pre><code class="r">#(Code to input x and y not shown)
+library(fGarch)
+start = c(lmfit$coef, sd(lmfit$resid), 4)
+loglik = function(theta)
+{
+-sum(log(dstd(y, mean = theta[1] + theta[2] * x, sd = theta[3],
+nu = theta[4])))
+}
+mle = optim(start, loglik, hessian = TRUE)
+InvFishInfo = solve(mle$hessian)
+mle$par
+mle$value
+mle$convergence
+sqrt(diag(InvFishInfo))
+qnorm(0.975)
+&gt; mle$par
+[1] 0.511 1.042 0.152 4.133
+&gt; mle$value
+[1] -188</code></pre>
+  </li>
+</ol>
+</section>
+<section class="book-page" data-pdf-page="271"><p>248 第9章 回归：基础</p><pre><code class="language-r">&gt; mle$convergence
+[1] 0
+&gt; sqrt(diag(InvFishInfo))
+[1] 0.00697 0.11522 0.01209 0.93492
+&gt;
+&gt; qnorm(.975)
+[1] 1.96
+&gt;</code></pre><ol><li>(a) Yi对Xi斜率的最大似然估计是什么？</li><li>(b) 自由度参数的最大似然估计的标准误是什么？</li><li>(c) 求噪声标准差95%的置信区间。</li><li>(d) optim是否收敛？为什么？</li></ol><h2 id="references-9">参考文献</h2><p>Draper, N. R. and Smith, H. (1998) Applied Regression Analysis, 3rd ed., Wiley, New York.</p><p>Faraway, J. J. (2005) Linear Models with R, Chapman &amp; Hall, Boca Raton, FL.</p><p>Harrell, F. E., Jr. (2001) Regression Modeling Strategies, Springer-Verlag, New York.</p><p>Nelson C.R., and Plosser C.I. (1982) Trends and random walks in macroeconomic time series. Journal of Monetary Economics, 10, 139–162.</p><p>Neter, J., Kutner, M. H., Nachtsheim, C. J., and Wasserman, W. (1996) Applied Linear Statistical Models, 4th ed., Irwin, Chicago.</p><p>Ryan, T. P. (1997) Modern Regression Methods, Wiley, New York.</p></section>
+<nav class="chapter-nav"><a href="/statistics-data-analysis-financial-engineering-cn/chapter-8/">上一节：第8章 Copula</a><a href="/statistics-data-analysis-financial-engineering-cn/chapter-10/">下一节：第10章 回归：问题诊断</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=638ea974b0aa"></script>
+</body>
+</html>

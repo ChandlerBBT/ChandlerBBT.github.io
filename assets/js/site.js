@@ -129,6 +129,45 @@ function setupCodeCopyButtons() {
   }
 }
 
+function setupCodeTabs() {
+  for (const group of document.querySelectorAll("[data-code-tabs]")) {
+    const tabs = Array.from(group.querySelectorAll('[role="tab"]'));
+    const panels = Array.from(group.querySelectorAll('[role="tabpanel"]'));
+    if (!tabs.length || !panels.length) continue;
+
+    function activate(tab) {
+      const targetId = tab.getAttribute("aria-controls");
+      for (const item of tabs) {
+        const active = item === tab;
+        item.classList.toggle("is-active", active);
+        item.setAttribute("aria-selected", String(active));
+        item.tabIndex = active ? 0 : -1;
+      }
+      for (const panel of panels) {
+        const active = panel.id === targetId;
+        panel.classList.toggle("is-active", active);
+        panel.hidden = !active;
+      }
+    }
+
+    for (const tab of tabs) {
+      tab.addEventListener("click", () => activate(tab));
+      tab.addEventListener("keydown", (event) => {
+        if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+        event.preventDefault();
+        const current = tabs.indexOf(tab);
+        let next = current;
+        if (event.key === "ArrowLeft") next = (current - 1 + tabs.length) % tabs.length;
+        if (event.key === "ArrowRight") next = (current + 1) % tabs.length;
+        if (event.key === "Home") next = 0;
+        if (event.key === "End") next = tabs.length - 1;
+        tabs[next].focus();
+        activate(tabs[next]);
+      });
+    }
+  }
+}
+
 function buildArticleToc() {
   const articleShell = document.querySelector(".article-shell");
   const articleBody = document.querySelector(".article-body");
@@ -265,4 +304,5 @@ function setupTutorialSidebar() {
 
 buildArticleToc();
 setupTutorialSidebar();
+setupCodeTabs();
 setupCodeCopyButtons();

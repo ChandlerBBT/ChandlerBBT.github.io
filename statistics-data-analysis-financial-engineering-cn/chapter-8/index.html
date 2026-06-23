@@ -1,0 +1,1631 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="第8章 Copula | 《金融工程统计与数据分析：R 示例》">
+  <title>第8章 Copula | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=7670d9cf9549">
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <div class="sidebar-heading">
+    <h2>书籍目录</h2>
+    <div class="sidebar-actions" aria-label="二级目录控制">
+      <button type="button" data-sidebar-action="expand">全部展开</button>
+      <button type="button" data-sidebar-action="collapse">全部收起</button>
+    </div>
+  </div>
+  <nav class="sidebar-list"><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/">首页</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/preface/">前言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/preface-first-edition/">第一版前言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/notation/">符号说明</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-1/">第1章 引言</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-1" aria-label="展开第1章 引言二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-1" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-1/#section-1-1">1.1 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-1/#references">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/">第2章 收益率</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-2" aria-label="展开第2章 收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-2" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#section-2-1">2.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#section-2-2">2.2 The Random Walk Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#section-2-3">2.3 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#section-2-4">2.4 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#section-2-5">2.5 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#references-2">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/">第3章 固定收益证券</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-3" aria-label="展开第3章 固定收益证券二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-3" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-1">3.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-2">3.2 Zero-Coupon Bonds</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-3">3.3 Coupon Bonds</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-4">3.4 Yield to Maturity</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-5">3.5 Term Structure</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-6">3.6 Continuous Compounding</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-7">3.7 Continuous Forward Rates</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-8">3.8 Sensitivity of Price to Yield</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-9">3.9 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-10">3.10 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-11">3.11 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#references-3">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/">第4章 探索性数据分析</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-4" aria-label="展开第4章 探索性数据分析二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-4" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-1">4.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-2">4.2 Histograms and Kernel Density Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-3">4.3 Order Statistics, the Sample CDF, and Sample Quantiles</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-4">4.4 Tests of Normality</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-5">4.5 Boxplots</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-6">4.6 Data Transformation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-7">4.7 The Geometry of Transformations</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-8">4.8 Transformation Kernel Density Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-9">4.9 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-10">4.10 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-11">4.11 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#references-4">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/">第5章 单变量分布建模</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-5" aria-label="展开第5章 单变量分布建模二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-5" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-1">5.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-2">5.2 Parametric Models and Parsimony</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-3">5.3 Location, Scale, and Shape Parameters</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-4">5.4 Skewness, Kurtosis, and Moments</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-5">5.5 Heavy-Tailed Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-6">5.6 Generalized Error Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-7">5.7 Creating Skewed from Symmetric Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-8">5.8 Quantile-Based Location, Scale, and Shape Parameters</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-9">5.9 Maximum Likelihood Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-10">5.10 Fisher Information and the Central Limit Theoremfor the MLE</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-11">5.11 Likelihood Ratio Tests</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-12">5.12 AIC and BIC</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-13">5.13 Validation Data and Cross-Validation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-14">5.14 Fitting Distributions by Maximum Likelihood</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-15">5.15 Profile Likelihood</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-16">5.16 Robust Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-17">5.17 Transformation Kernel Density Estimation with a Parametric Transformation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-18">5.18 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-19">5.19 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-20">5.20 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#references-5">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/">第6章 重抽样</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-6" aria-label="展开第6章 重抽样二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-6" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-1">6.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-2">6.2 Bootstrap Estimates of Bias, Standard Deviation, and MSE</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-3">6.3 Bootstrap Confidence Intervals</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-4">6.4 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-5">6.5 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-6">6.6 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#references-6">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/">第7章 多元统计模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-7" aria-label="展开第7章 多元统计模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-7" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-1">7.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-2">7.2 Covariance and Correlation Matrices</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-3">7.3 Linear Functions of Random Variables</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-4">7.4 Scatterplot Matrices</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-5">7.5 The Multivariate Normal Distribution</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-6">7.6 The Multivariate t-Distribution</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-7">7.7 Fitting the Multivariate t-Distribution by MaximumLikelihood</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-8">7.8 Elliptically Contoured Densities</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-9">7.9 The Multivariate Skewed t-Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-10">7.10 The Fisher Information Matrix</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-11">7.11 Bootstrapping Multivariate Data</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-12">7.12 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-13">7.13 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-14">7.14 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#references-7">References</a></div></div><div class="sidebar-item is-current is-open"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/" aria-current="page">第8章 Copula</a><button class="sidebar-toggle" type="button" aria-expanded="true" aria-controls="sidebar-sections-chapter-8" aria-label="收起第8章 Copula二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-8"><a class="section-link" href="#section-8-1">8.1 Introduction</a><a class="section-link" href="#section-8-2">8.2 Special Copulas</a><a class="section-link" href="#section-8-3">8.3 Gaussian and t-Copulas</a><a class="section-link" href="#section-8-4">8.4 Archimedean Copulas</a><a class="section-link" href="#section-8-5">8.5 Rank Correlation</a><a class="section-link" href="#section-8-6">8.6 Tail Dependence</a><a class="section-link" href="#section-8-7">8.7 Calibrating Copulas</a><a class="section-link" href="#section-8-8">8.8 Bibliographic Notes</a><a class="section-link" href="#section-8-9">8.9 R Lab</a><a class="section-link" href="#section-8-10">8.10 Exercises</a><a class="section-link" href="#references-8">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/">第9章 回归：基础</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-9" aria-label="展开第9章 回归：基础二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-9" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-1">9.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-2">9.2 Straight-Line Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-3">9.3 Multiple Linear Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-4">9.4 Analysis of Variance, Sums of Squares, and R2</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-5">9.5 Model Selection</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-6">9.6 Collinearity and Variance Inflation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-7">9.7 Partial Residual Plots</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-8">9.8 Centering the Predictors</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-9">9.9 Orthogonal Polynomials</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-10">9.10 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-11">9.11 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-12">9.12 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#references-9">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/">第10章 回归：问题诊断</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-10" aria-label="展开第10章 回归：问题诊断二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-10" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-1">10.1 Regression Diagnostics</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-2">10.2 Checking Model Assumptions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-3">10.3 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-4">10.4 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-5">10.5 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#references-10">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/">第11章 回归：高级专题</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-11" aria-label="展开第11章 回归：高级专题二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-11" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-1">11.1 The Theory Behind Linear Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-2">11.2 Nonlinear Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-3">11.3 Estimating Forward Rates from Zero-Coupon Bond Prices</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-4">11.4 Transform-Both-Sides Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-5">11.5 Transforming Only the Response</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-6">11.6 Binary Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-7">11.7 Linearizing a Nonlinear Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-8">11.8 Robust Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-9">11.9 Regression and Best Linear Prediction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-10">11.10 Regression Hedging</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-11">11.11 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-12">11.12 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-13">11.13 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#references-11">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/">第12章 时间序列模型：基础</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-12" aria-label="展开第12章 时间序列模型：基础二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-12" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-1">12.1 Time Series Data</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-2">12.2 Stationary Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-3">12.3 Estimating Parameters of a Stationary Process</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-4">12.4 AR(1) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-5">12.5 Estimation of AR(1) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-6">12.6 AR(p) Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-7">12.7 Moving Average (MA) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-8">12.8 ARMA Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-9">12.9 ARIMA Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-10">12.10 Unit Root Tests</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-11">12.11 Automatic Selection of an ARIMA Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-12">12.12 Forecasting</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-13">12.13 Partial Autocorrelation Coefficients</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-14">12.14 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-15">12.15 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-16">12.16 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#references-12">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/">第13章 时间序列模型：深入专题</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-13" aria-label="展开第13章 时间序列模型：深入专题二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-13" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-1">13.1 Seasonal ARIMA Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-2">13.2 Box-Cox Transformation for Time Series</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-3">13.3 Time Series and Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-4">13.4 Multivariate Time Series</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-5">13.5 Long-Memory Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-6">13.6 Bootstrapping Time Series</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-7">13.7 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-8">13.8 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-9">13.9 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#references-13">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/">第14章 GARCH模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-14" aria-label="展开第14章 GARCH模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-14" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-1">14.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-2">14.2 Estimating Conditional Means and Variances</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-3">14.3 ARCH(1) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-4">14.4 The AR(1)+ARCH(1) Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-5">14.5 ARCH(p) Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-6">14.6 ARIMA(pM,d,qM)+GARCH(pV, qV) Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-7">14.7 GARCH Processes Have Heavy Tails</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-8">14.8 Fitting ARMA+GARCH Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-9">14.9 GARCH Models as ARMA Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-10">14.10 GARCH(1,1) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-11">14.11 APARCH Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-12">14.12 Linear Regression with ARMA+GARCH Errors</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-13">14.13 Forecasting ARMA+GARCH Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-14">14.14 Multivariate GARCH Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-15">14.15 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-16">14.16 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-17">14.17 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#references-14">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/">第15章 协整</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-15" aria-label="展开第15章 协整二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-15" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-1">15.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-2">15.2 Vector Error Correction Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-3">15.3 Trading Strategies</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-4">15.4 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-5">15.5 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-6">15.6 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#references-15">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/">第16章 投资组合选择</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-16" aria-label="展开第16章 投资组合选择二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-16" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-1">16.1 Trading Off Expected Return and Risk</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-2">16.2 One Risky Asset and One Risk-Free Asset</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-3">16.3 Two Risky Assets</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-4">16.4 Combining Two Risky Assets with a Risk-Free Asset</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-5">16.5 Selling Short</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-6">16.6 Risk-Efficient Portfolios with N Risky Assets</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-7">16.7 Resampling and Efficient Portfolios</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-8">16.8 Utility</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-9">16.9 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-10">16.10 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-11">16.11 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#references-16">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/">第17章 资本资产定价模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-17" aria-label="展开第17章 资本资产定价模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-17" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-1">17.1 Introduction to the CAPM</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-2">17.2 The Capital Market Line (CML)</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-3">17.3 Betas and the Security Market Line</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-4">17.4 The Security Characteristic Line</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-5">17.5 Some More Portfolio Theory</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-6">17.6 Estimation of Beta and Testing the CAPM</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-7">17.7 Using the CAPM in Portfolio Analysis</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-8">17.8 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-9">17.9 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-10">17.10 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#references-17">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/">第18章 因子模型与主成分</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-18" aria-label="展开第18章 因子模型与主成分二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-18" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-1">18.1 Dimension Reduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-2">18.2 Principal Components Analysis</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-3">18.3 Factor Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-4">18.4 Fitting Factor Models by Time Series Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-5">18.5 Cross-Sectional Factor Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-6">18.6 Statistical Factor Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-7">18.7 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-8">18.8 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-9">18.9 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#references-18">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/">第19章 风险管理</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-19" aria-label="展开第19章 风险管理二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-19" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-1">19.1 The Need for Risk Management</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-2">19.2 Estimating VaR and ES with One Asset</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-3">19.3 Bootstrap Confidence Intervals for VaR and ES</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-4">19.4 Estimating VaR and ES Using ARMA+GARCH Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-5">19.5 Estimating VaR and ES for a Portfolio of Assets</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-6">19.6 Estimation of VaR Assuming Polynomial Tails</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-7">19.7 Pareto Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-8">19.8 Choosing the Horizon and Confidence Level</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-9">19.9 VaR and Diversification</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-10">19.10 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-11">19.11 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-12">19.12 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#references-19">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/">第20章 贝叶斯数据分析与MCMC</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-20" aria-label="展开第20章 贝叶斯数据分析与MCMC二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-20" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-1">20.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-2">20.2 Bayes&#x27;s Theorem</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-3">20.3 Prior and Posterior Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-4">20.4 Conjugate Priors</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-5">20.5 Central Limit Theorem for the Posterior</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-6">20.6 Posterior Intervals</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-7">20.7 Markov Chain Monte Carlo</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-8">20.8 Hierarchical Priors</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-9">20.9 Bayesian Estimation of a Covariance Matrix</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-10">20.10 Stochastic Volatility Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-11">20.11 Fitting GARCH Models with MCMC</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-12">20.12 Fitting a Factor Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-13">20.13 Sampling a Stationary Process</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-14">20.14 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-15">20.15 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-16">20.16 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#references-20">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/">第21章 非参数回归与样条</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-21" aria-label="展开第21章 非参数回归与样条二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-21" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-1">21.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-2">21.2 Local Polynomial Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-3">21.3 Linear Smoothers</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-4">21.4 Polynomial Splines</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-5">21.5 Penalized Splines</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-6">21.6 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-7">21.7 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-8">21.8 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#references-21">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/">附录A 概率、统计与代数基础知识</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-appendix-a" aria-label="展开附录A 概率、统计与代数基础知识二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-appendix-a" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-1-introduction">A.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-2-probability-distributions">A.2 Probability Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-3-when-do-expected-values-and-variances-exist">A.3 When Do Expected Values and Variances Exist?</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-4-monotonic-functions">A.4 Monotonic Functions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-5-the-minimum-maximum-infinum-and-supremum-of-a-set">A.5 The Minimum, Maximum, Infinum, and Supremum of a Set</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-6-functions-of-random-variables">A.6 Functions of Random Variables</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-7-random-samples">A.7 Random Samples</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-8-the-binomial-distribution">A.8 The Binomial Distribution</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-9-some-common-continuous-distributions">A.9 Some Common Continuous Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-10-sampling-a-normal-distribution">A.10 Sampling a Normal Distribution</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-11-law-of-large-numbers-and-the-central-limit-theoremfor-the-sample-mean">A.11 Law of Large Numbers and the Central Limit Theoremfor the Sample Mean</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-12-bivariate-distributions">A.12 Bivariate Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-13-correlation-and-covariance">A.13 Correlation and Covariance</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-14-multivariate-distributions">A.14 Multivariate Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-15-stochastic-processes">A.15 Stochastic Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-16-estimation">A.16 Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-17-confidence-intervals">A.17 Confidence Intervals</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-18-hypothesis-testing">A.18 Hypothesis Testing</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-19-prediction">A.19 Prediction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-20-facts-about-vectors-and-matrices">A.20 Facts About Vectors and Matrices</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-21-roots-of-polynomials-and-complex-numbers">A.21 Roots of Polynomials and Complex Numbers</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-22-bibliographic-notes">A.22 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#references-22">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/index/">索引</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <h1>第8章 Copula</h1>
+<section class="book-page" data-pdf-page="207">
+<h1 id="section-8-1">第8章 Copula</h1>
+<h2 id="section-8-1">8.1 引言</h2>
+<p>Copula是一种流行的框架，用于定义多元分布和建模多元数据。Copula刻画了多元分布各分量之间的相依性——且仅刻画相依性；它们可以与任意一组单变量边际分布结合，从而构成完整的联合分布。因此，使用Copula使我们能够利用已有的各种单变量模型。</p>
+<p>Copula模型在金融中的主要应用是风险评价与管理，针对那些资产在极端行为中表现出共同运动的投资组合。例如，一对资产的收益率可能弱相关，但它们最大的损失往往发生在同一时期。Copula模型常应用于贷款组合、债券组合和债务抵押债券（CDOs）。然而，它们在金融中的误用也有充分记录，见8.8节的参考文献。</p>
+<p>Copula是一个多元CDF，其单变量边际分布均为Uniform(0,1)。假设 \(\mathbf{Y} = (Y_1, \ldots, Y_d)\) 具有多元CDF \(F_{\mathbf{Y}}\)，且连续的单变量边际CDF为 \(F_{Y_1}, \ldots, F_{Y_d}\)。那么，由附录A.9.2中的式(A.9)，每个 \(F_{Y_1}(Y_1), \ldots, F_{Y_d}(Y_d)\) 都服从Uniform(0,1)分布。因此，\(\{F_{Y_1}(Y_1), \ldots, F_{Y_d}(Y_d)\}\) 的CDF就是一个Copula。这个CDF被称为 \(\mathbf{Y}\) 的Copula，记作 \(C_{\mathbf{Y}}\)。 \(C_{\mathbf{Y}}\) 包含了 \(\mathbf{Y}\) 各分量间相依性的全部信息，但不包含 \(\mathbf{Y}\) 的边际CDF信息。</p>
+<p>容易找到 \(C_{\mathbf{Y}}\) 的公式。为避免技术问题，本节假设所有随机变量具有连续且严格递增的CDF。更准确地说，CDF在其支撑上是递增的。例如，标准指数CDF</p>
+</section>
+<section class="book-page" data-pdf-page="208">
+<p>184 第8章 Copula</p>
+<p>\[F(y)=\begin{cases}1-e^{-y}, & y\ge 0,\\ 0, & y<0,\end{cases}\] 的定义域为 \([0,\infty)\) 且在该集合上严格递增。在许多金融应用中，假设 CDF 连续且严格递增是合理的，但在数学更高级的文献中会避免这一假设；参见 8.8 节。</p>
+<p>由于 \(C_{\mathbf Y}\) 是 \(\{F_{Y_1}(Y_1),\dots, F_{Y_d}(Y_d)\}\) 的 CDF，根据 CDF 的定义，有</p>
+\[C_{\mathbf Y}(u_1,\dots, u_d) = P\{F_{Y_1}(Y_1)\le u_1,\dots, F_{Y_d}(Y_d)\le u_d\} = P\left\{Y_1\le F_{Y_1}^{-1}(u_1),\dots, Y_d\le F_{Y_d}^{-1}(u_d)\right\} = F_{\mathbf Y}\left(F_{Y_1}^{-1}(u_1),\dots, F_{Y_d}^{-1}(u_d)\right). \qquad (8.1)\]
+<p>接下来，令 \(u_j = F_{Y_j}(y_j)\), \(j=1,\dots,d\)，代入 (8.1) 得</p>
+\[F_{\mathbf Y}(y_1,\dots, y_d) = C_{\mathbf Y}\{F_{Y_1}(y_1),\dots, F_{Y_d}(y_d)\}. \qquad (8.2)\]
+<p>方程 (8.2) 是著名的 Sklar 定理的一部分，该定理指出联合 CDF \(F_{\mathbf Y}\) 可以分解为 copula \(C_{\mathbf Y}\) 和单变量边际 CDF \(F_{Y_1},\dots, F_{Y_d}\)，其中 copula 包含 \((Y_1,\dots, Y_d)\) 之间依赖关系的全部信息，而单变量边际 CDF 包含各单变量边际分布的全部信息。</p>
+<p>设</p>
+\[c_{\mathbf Y}(u_1,\dots, u_d) = \frac{\partial^d}{\partial u_1\cdots\partial u_d} C_{\mathbf Y}(u_1,\dots, u_d) \qquad (8.3)\]
+<p>为与 \(C_{\mathbf Y}\) 关联的密度函数。对 (8.2) 求导，我们发现 \(\mathbf Y\) 的密度等于</p>
+\[f_{\mathbf Y}(y_1,\dots, y_d) = c_{\mathbf Y}\{F_{Y_1}(y_1),\dots, F_{Y_d}(y_d)\} f_{Y_1}(y_1)\cdots f_{Y_d}(y_d), \qquad (8.4)\]
+<p>其中 \(f_{Y_1},\dots, f_{Y_d}\) 分别为 \(Y_1,\dots, Y_d\) 的单变量边际密度。</p>
+<p>Copula 的一个重要性质是它们对分量变量的严格递增变换具有不变性。更精确地说，假设 \(g_j\) 严格递增且 \(X_j = g_j(Y_j)\), \(j=1,\dots,d\)。则 \(\mathbf X = (X_1,\dots, X_d)\) 和 \(\mathbf Y\) 具有相同的 copula。为了说明这一点，首先注意 \(\mathbf X\) 的 CDF 为</p>
+\[F_{\mathbf X}(x_1,\dots, x_d) = P\{g_1(Y_1)\le x_1,\dots, g_d(Y_d)\le x_d\} = P\left\{Y_1\le g_1^{-1}(x_1),\dots, Y_d\le g_d^{-1}(x_d)\right\} = F_{\mathbf Y}\left(g_1^{-1}(x_1),\dots, g_d^{-1}(x_d)\right). \qquad (8.5)\]
+<p>因此 \(X_j\) 的 CDF 为</p>
+\[F_{X_j}(x_j) = F_{Y_j}\left(g_j^{-1}(x_j)\right).\]
+</section>
+<section class="book-page" data-pdf-page="209"><h1 id="section-8-2">8.2 特殊Copula</h1><p>因此，</p>\[F^{-1}_{X_j}(u_j) = g_j\left\{F^{-1}_{Y_j}(u_j)\right\}\]<p>且</p>\[g^{-1}_j\left\{F^{-1}_{X_j}(u_j)\right\} = F^{-1}_{Y_j}(u_j), \qquad (8.6)\]<p>通过对 \(X\) 应用 (8.1)，接着应用 (8.5)、(8.6)，再对 \(Y\) 应用 (8.1)，我们得出结论：\(X\) 的 copula 为</p>\[\begin{aligned} C_X(u_1,\ldots,u_d) &= F_X\left\{F^{-1}_{X_1}(u_1),\ldots,F^{-1}_{X_d}(u_d)\right\} \\ &= F_Y\left[ g^{-1}\left\{F^{-1}_{X_1}(u_1)\right\},\ldots,g^{-1}_d\left\{F^{-1}_{X_d}(u_d)\right\} \right] \\ &= F_Y\left\{F^{-1}_{Y_1}(u_1),\ldots,F^{-1}_{Y_d}(u_d)\right\} \\ &= C_Y(u_1,\ldots,u_d). \end{aligned}\]<p>所有 \(d\) 维 copula 函数 \(C\) 的定义域为 \([0,1]^d\)，值域为 \([0,1]\)。有三种特殊的 copula 值得关注，因为它们代表独立性和两种极端相关情形。</p><p>\(d\) 维独立性 copula \(C_0\) 是 \(d\) 个相互独立的 Uniform(0,1) 随机变量的联合分布函数。它等于</p>\[C_0(u_1,\ldots,u_d) = u_1 \cdots u_d, \qquad (8.7)\]<p>其相应的密度在 \([0,1]^d\) 上均匀，即 \(c_0(u_1,\ldots,u_d)=1\) 在 \([0,1]^d\) 上，其他地方为零。</p><p>\(d\) 维同单调 copula \(C_+\) 刻画了完全正相关。令 \(U\) 服从 Uniform(0,1)。则同单调 copula 是 \(\mathbf{U} = (U,\ldots,U)\) 的分布函数；即 \(\mathbf{U}\) 包含 \(d\) 个 \(U\) 的副本，使得 \(\mathbf{U}\) 的所有分量都相等。因此，</p>\[\begin{aligned} C_+(u_1,\ldots,u_d) &= P(U \le u_1,\ldots,U \le u_d) \\ &= P\{U \le \min(u_1,\ldots,u_d)\} = \min(u_1,\ldots,u_d). \end{aligned}\]<p>同单调 copula 也是所有 copula 函数的上界：</p>\[C(u_1,\ldots,u_d) \le C_+(u_1,\ldots,u_d), \quad \forall (u_1,\ldots,u_d) \in [0,1]^d.\]<p>二维反单调 copula \(C_-\) 定义为 \((U, 1-U)\) 的分布函数，它具有完全负相关。因此，</p>\[\begin{aligned} C_-(u_1,u_2) &= P(U \le u_1, \; 1-U \le u_2) \\ &= P(1-u_2 \le U \le u_1) = \max(u_1+u_2-1,0). \qquad (8.8) \end{aligned}\]<p>容易推导出 (8.8) 中的最后一个等式。如果 \(1-u_2 > u_1\)，则事件 \(\{1-u_2 \le U \le u_1\}\) 不可能发生，故概率为 0。否则，</p></section>
+<section class="book-page" data-pdf-page="210">
+<p>概率是区间 \((1-u_2, u_1)\) 的长度，即 \(u_1 + u_2 - 1\)。
+所有二维 copula 函数都被 (8.8) 下界所界定。不可能存在 \(d > 2\) 的反单调 copula。例如，如果 \(U_1\) 与 \(U_2\) 反单调，且 \(U_2\) 与 \(U_3\) 反单调，那么 \(U_1\) 与 \(U_3\) 将是同单调的，而不是反单调的。然而，所有 copula 函数的一个下界是：\(\max(u_1 + \cdots + u_d + 1 - d, 0) \leq C(u_1, \ldots, u_d)\)，对所有 \((u_1, \ldots, u_d) \in [0,1]^d\)。这个下界仅能逐点达到，但对于 \(d > 2\)，它本身不是一个 copula 函数。</p>
+<p>为了使用 copula 建模多元依赖性，我们接下来考虑参数化的 copula 族。</p>
+<h3 id="section-8-3">8.3 高斯 copula 与 t-copula</h3>
+<p>多元正态分布和多元 t 分布为生成 copula 族提供了一种便捷方式。设 \(\mathbf{Y} = (Y_1, \ldots, Y_d)\) 具有多元正态分布。由于 \(C_{\mathbf{Y}}\) 仅依赖于 \(\mathbf{Y}\) 内部的依赖性，而不依赖一元边际分布，\(C_{\mathbf{Y}}\) 仅依赖于 \(\mathbf{Y}\) 的 \(d \times d\) 相关矩阵，记作 \(\boldsymbol{\Omega}\)。因此，相关矩阵与高斯 copula 之间存在一一对应。具有相关矩阵 \(\boldsymbol{\Omega}\) 的高斯 copula 将记作 \(C_{\text{Gauss}}(u_1, \ldots, u_d | \boldsymbol{\Omega})\)。</p>
+<p>如果随机向量 \(\mathbf{Y}\) 具有高斯 copula，则称 \(\mathbf{Y}\) 具有元高斯分布（meta-Gaussian distribution）。当然，这并不意味着 \(\mathbf{Y}\) 具有多元高斯分布，因为 \(\mathbf{Y}\) 的一元边际分布可以是任何分布。相关矩阵为单位矩阵（因此所有相关性为零）的 \(d\) 维高斯 copula 就是 \(d\) 维独立 copula。如果 \(\boldsymbol{\Omega}\) 中所有相关性收敛到 1，则高斯 copula 收敛到同单调 copula \(C^+\)；在二元情况下，当两两相关性收敛到 -1 时，copula 收敛到反单调 copula \(C^-\)。</p>
+<p>类似地，令 \(C_t(u_1, \ldots, u_d | \boldsymbol{\Omega}, \nu)\) 表示具有多元 t 分布（尾部指数 \(\nu\) 和相关矩阵 \(\boldsymbol{\Omega}\)）的随机向量的 copula<sup><a id="fn-p210-3" href="#fn3-text">3</a></sup>。对于多元 t 随机向量，尾部指数 \(\nu\) 同时影响一元边际分布和分量之间的尾部依赖性，因此 \(\nu\) 是 t-copula \(C_t\) 的一个参数。我们将在 8.6 节看到，\(\nu\) 类似地决定了具有 t-copula 的随机向量的尾部依赖性程度。这样的向量称为具有元 t 分布（meta-t-distribution）。</p>
+<p>1. 高斯分布与正态分布是同义词，高斯 copula 也可称为正态 copula，尤其是在 R 函数中<sup><a id="fn-p210-1" href="#fn1-text">1</a></sup>。<br/>
+2. t 分布的尾部指数参数通常也被称为自由度参数，这与线性回归理论有关，一些 R 函数使用缩写 df 或 nu<sup><a id="fn-p210-2" href="#fn2-text">2</a></sup>。<br/>
+3. 这里存在一个小的技术问题，如果 \(\nu \leq 2\)。此时 t 分布没有协方差矩阵和相关矩阵。但它仍然有一个尺度矩阵，我们假设该尺度矩阵等于某个相关矩阵 \(\boldsymbol{\Omega}\)<sup><a id="fn3b" href="#fn3-text">3</a></sup>。</p>
+<ol class="footnotes">
+  <li id="fn1-text">高斯分布与正态分布是同义词，高斯 copula 也可称为正态 copula，尤其是在 R 函数中。 <a href="#fn-p210-1">↩</a></li>
+  <li id="fn2-text">t 分布的尾部指数参数通常也被称为自由度参数，这与线性回归理论有关，一些 R 函数使用缩写 df 或 nu。 <a href="#fn-p210-2">↩</a></li>
+  <li id="fn3-text">这里存在一个小的技术问题，如果 \(\nu \leq 2\)。此时 t 分布没有协方差矩阵和相关矩阵。但它仍然有一个尺度矩阵，我们假设该尺度矩阵等于某个相关矩阵 \(\boldsymbol{\Omega}\)。 <a href="#fn-p210-3">↩</a></li>
+</ol>
+</section>
+<section class="book-page" data-pdf-page="211">
+<h2 id="section-8-4">8.4 阿基米德Copula</h2>
+<p>具有严格生成函数的阿基米德Copula的形式为</p>
+\[C(u_1,\ldots,u_d)=\phi^{-1}\{\phi(u_1)+\cdots+\phi(u_d)\},\tag{8.9}\]
+<p>其中生成函数\(\phi\)满足以下条件：</p>
+<ol>
+<li>\(\phi\)是一个连续、严格递减且凸的函数，将\([0,1]\)映射到\([0,\infty]\)；</li>
+<li>\(\phi(0)=\infty\)；</li>
+<li>\(\phi(1)=0\)。</li>
+</ol>
+<p>图8.1展示了一个生成函数的图形，以说明这些性质。该图通过R的copula包中的<code>iPsi()</code>函数生成，命令如下：</p>
+<div class="code-tabs" data-code-tabs id="code1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code1-r" role="tabpanel">
+    <pre><code class="language-r">library(copula)
+u = seq(0.000001, 1, length=500)
+frank = iPsi(copula=archmCopula(family=&quot;frank&quot;, param=1), u)
+plot(u, frank, type=&quot;l&quot;, lwd=3, ylab=expression(phi(u)))
+abline(h=0) ; abline(v=0)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+
+def psi_frank(u, theta=1):
+    return -np.log((np.exp(-theta*u)-1)/(np.exp(-theta)-1))
+
+u = np.linspace(0.000001, 1, 500)
+frank = psi_frank(u, theta=1)
+plt.plot(u, frank, &#x27;k-&#x27;, lw=3)
+plt.axhline(0, color=&#x27;black&#x27;, lw=1)
+plt.axvline(0, color=&#x27;black&#x27;, lw=1)
+plt.ylabel(r&#x27;$\phi(u)$&#x27;)
+plt.show()</code></pre>
+  </div>
+</div>
+<p>可以放宽假设2，但此时生成函数不再称为严格，且copula的构造更为复杂。生成函数\(\phi\)不是唯一的；例如，\(a\phi\)（其中\(a\)为任意正常数）生成与\(\phi\)相同的copula。独立copula \(C_0\)是一个阿基米德Copula，其生成函数为\(\phi(u)=-\log(u)\)。阿基米德Copula有许多族，但我们只关注其中四种：Frank、Clayton、Gumbel和Joe copula。</p>
+<p>注意在(8.9)中，若交换\(u_1,\ldots,u_d\)的顺序，\(C(u_1,\ldots,u_d)\)的值不变。具有这种性质的分布称为<strong>可交换</strong>。可交换性的一个后果是，后面8.5节介绍的Kendall秩相关和Spearman秩相关对所有变量对都相同。阿基米德Copula在二元情形或期望所有对具有相似依赖性的应用中最为有用。</p>
+<h3>8.4.1 Frank Copula</h3>
+<p>Frank copula的生成函数为</p>
+\[\phi_{\text{Fr}}(u|\theta)=-\log\left(\frac{e^{-\theta u}-1}{e^{-\theta}-1}\right),\quad -\infty<\theta<\infty.\]
+<p>逆生成函数为</p>
+\[\phi_{\text{Fr}}^{-1}(y|\theta)=-\frac{1}{\theta}\log\left\{e^{-y}(e^{-\theta}-1)+1\right\}.\]
+</section>
+<section class="book-page" data-pdf-page="212">
+<p>188 第8章 Copula</p>
+<p>因此，根据(8.9)，二元Frank copula为</p>
+<figure class="book-figure" id="fig-8.1"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-70c2bb7ae6da.png" alt="Frank copula的生成函数（θ=1）" />
+<figcaption>图8.1 Frank copula的生成函数（θ=1）。\(C^{Fr}(u_1,u_2|\theta) = -1\)</figcaption>
+</figure>
+<p>\[
+C^{Fr}(u_1,u_2|\theta) = -\frac{1}{\theta} \log\left\{1 + \frac{(e^{-\theta u_1} - 1)(e^{-\theta u_2} - 1)}{e^{-\theta} - 1}\right\}. \tag{8.10}
+\]</p>
+<p>参数θ=0的情况需要特别处理，因为将其代入(8.10)会得到0/0。相反，必须计算(8.10)在θ→0时的极限。利用近似关系\(e^x - 1 \approx x\)和\(\log(1+x) \approx x\)（当\(x \to 0\)时），可以证明当θ→0时，\(C^{Fr}(u_1,u_2|\theta) \to u_1 u_2\)，即二元独立copula \(C_0\)。因此，对于θ=0，我们将Frank copula定义为独立copula。</p>
+<p>研究\(C^{Fr}(u_1,u_2|\theta)\)当θ→±∞时的极限是有意义的。当θ→-∞时，二元Frank copula收敛于逆单调copula \(C_-\)。为了说明这一点，首先注意到当θ→-∞时，
+\[
+C^{Fr}(u_1,u_2|\theta) \sim -\frac{1}{\theta} \log\left\{1 + e^{-\theta(u_1+u_2-1)}\right\}. \tag{8.11}
+\]
+如果\(u_1+u_2-1 > 0\)，那么当θ→-∞时，(8.11)中的指数项\(-\theta(u_1+u_2-1)\)趋于∞，且\(\log\{1 + e^{-\theta(u_1+u_2-1)}\} \sim -\theta(u_1+u_2-1)\)，因此\(C^{Fr}(u_1,u_2|\theta) \to u_1+u_2-1\)。类似地，如果\(u_1+u_2-1 < 0\)，则\(-\theta(u_1+u_2-1) \to -\infty\)，且\(C^{Fr}(u_1,u_2|\theta) \to 0\)。综合这些结果，我们看到当θ→-∞时，\(C^{Fr}(u_1,u_2|\theta)\)收敛于\(\max(0, u_1+u_2-1)\)，即逆单调copula \(C_-\)。</p>
+<p>当θ→∞时，\(C^{Fr}(u_1,u_2|\theta) \to \min(u_1,u_2)\)，即协同单调copula \(C_+\)。其验证留给读者作为练习。</p>
+</section>
+<section class="book-page" data-pdf-page="213">
+<h3>8.4 阿基米德Copula</h3>
+<p>图8.2展示了来自不同Frank copula的九个二元随机样本的散点图，所有样本容量均为200，且参数θ的取值使得变量的相依性从强负相关到强正相关。可以使用R中copula包的rCopula()函数从本章讨论的copula分布中生成伪随机样本。随着θ→−∞ (+∞)时向反单调性（共单调性）copula的收敛可以在散点图中观察到。</p>
+<pre><code class="R"><div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">set.seed(5640)
+theta = c(-100, -50, -10, -1, 0, 5, 20, 50, 500)
+par(mfrow=c(3,3), cex.axis=1.2, cex.lab=1.2, cex.main=1.2)
+for(i in 1:9) {
+  U = rCopula(n=200,
+              copula=archmCopula(family=&quot;frank&quot;, param=theta[i]))
+  plot(U, xlab=expression(u[1]), ylab=expression(u[2]),
+       main=eval(substitute(expression(paste(theta,&quot; = &quot;,j)),
+                            list(j = as.character(theta[i])))))
+}</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from copulae import FrankCopula
+
+np.random.seed(5640)
+theta_vals = [-100, -50, -10, -1, 0, 5, 20, 50, 500]
+
+fig, axes = plt.subplots(3, 3, figsize=(12, 12))
+axes = axes.flatten()
+for i, theta in enumerate(theta_vals):
+    cop = FrankCopula(theta=theta, dim=2)
+    U = cop.sample(200)
+    ax = axes[i]
+    ax.scatter(U[:, 0], U[:, 1], s=2)
+    ax.set_xlabel(&#x27;$u_1$&#x27;)
+    ax.set_ylabel(&#x27;$u_2$&#x27;)
+    ax.set_title(f&#x27;θ = {theta}&#x27;)
+plt.tight_layout()
+plt.show()</code></pre>
+  </div>
+</div></code></pre>
+
+<h4>8.4.2 Clayton Copula</h4>
+<p>Clayton copula的生成函数为 \(\phi_{Cl}(u|\theta) = \frac{1}{\theta}(u^{-\theta} - 1), \; \theta > 0\)，其分布函数为</p>
+\[
+C_{Cl}(u_1, \ldots, u_d | \theta) = \left( u_1^{-\theta} + \cdots + u_d^{-\theta} + 1 - d \right)^{-1/\theta}.
+\]
+<p>我们定义当θ=0时的Clayton copula为</p>
+\[
+\lim_{\theta \downarrow 0} C_{Cl}(u_1, \ldots, u_d | \theta) = u_1 \cdots u_d,
+\]
+<p>即独立性copula \(C_0\)。还有另一种推导此结果的方式。当θ↓0时，根据洛必达法则，生成函数 \(\frac{1}{\theta}(u^{-\theta}-1)\) 收敛于 \(\phi_{Cl}(u|\theta \downarrow 0) = -\log(u)\)，其逆函数为 \(\phi_{Cl}^{-1}(y|\theta \downarrow 0) = \exp(-y)\)。因此，</p>
+\[
+\lim_{\theta \downarrow 0} C_{Cl}(u_1, \ldots, u_d | \theta) = \phi_{Cl}^{-1}\{ \phi_{Cl}(u_1|\theta \downarrow 0) + \cdots + \phi_{Cl}(u_d|\theta \downarrow 0) | \theta \downarrow 0 \} = \exp\{-(-\log u_1 - \cdots - \log u_d)\} = u_1 \cdots u_d.
+\]
+<p>可以将θ的范围扩展到包括-1 ≤ θ < 0，但此时生成函数 \((u^{-\theta} - 1)/\theta\) 在u=0处有限，违反了严格生成元的条件2。因此，当θ<0时生成元不是严格的。结果，在这种情况下，对于较小的u_i值，必须定义 \(C_{Cl}(u_1, \ldots, u_d | \theta)\) 等于0。为理解这一点，考虑二元Clayton copula。如果-1 ≤ θ < 0，那么当u_1和u_2都很小时，\(u_1^{-\theta} + u_2^{-\theta} - 1 < 0\)。在这些情况下，\(C_{Cl}(u_1, u_2|\theta)\) 被设为0。因此，在区域 \(u_1^{-\theta} + u_2^{-\theta} - 1 < 0\) 内没有概率。当θ→−1时，在区域u_1 + u_2 < 1内没有概率。</p>
+<p>当θ→−1时，二元Clayton copula收敛于反单调性copula \(C_-\)，而当θ→∞时，Clayton copula收敛于共单调性copula \(C_+\)。</p>
+</section>
+<section class="book-page" data-pdf-page="214">
+<figure class="book-figure" id="fig-8.2"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-41e376fda62e.png" alt="来自各种Frank copula的大小为200的二元随机样本" />
+<figcaption>图8.2 来自各种Frank copula的大小为200的二元随机样本。</figcaption>
+</figure>
+<p>图8.3 包含了来自各种Clayton copula的九个大小为200的二元随机样本散点图，\(\theta\)值的变化使相依性从反单调性到共单调性。</p>
+<div class="code-tabs" data-code-tabs id="code-001">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-001-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-001-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-001-r" role="tabpanel">
+    <pre><code class="language-r">16 set.seed(5640)
+17 theta = c(-0.98, -0.7, -0.3, -0.1, 0.1, 1, 5, 15, 100)
+18 par(mfrow=c(3,3), cex.axis=1.2, cex.lab=1.2, cex.main=1.2)
+19 for(i in 1:9) {
+20 U = rCopula(n=200,
+21 copula=archmCopula(family=&quot;clayton&quot;, param=theta[i]))
+22 plot(U, xlab=expression(u[1]), ylab=expression(u[2]),
+23 main=eval(substitute(expression(paste(theta,&quot; = &quot;,j)),
+24 list(j = as.character(theta[i])))))
+25 }</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-001-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from pycopula import copula as cp
+
+np.random.seed(5640)
+theta = [-0.98, -0.7, -0.3, -0.1, 0.1, 1, 5, 15, 100]
+fig, axes = plt.subplots(3, 3, figsize=(9,9))
+for i, th in enumerate(theta):
+    U = cp.generate(200, family=&quot;clayton&quot;, theta=th)
+    axes.flat[i].scatter(U[:,0], U[:,1], s=2)
+    axes.flat[i].set_xlabel(&#x27;u1&#x27;)
+    axes.flat[i].set_ylabel(&#x27;u2&#x27;)
+    axes.flat[i].set_title(f&#x27;θ = {th}&#x27;)
+plt.tight_layout()
+plt.show()</code></pre>
+  </div>
+</div>
+<p>比较图8.2和图8.3，我们看到当相依性处于这两种极端之间时，Frank copula和Clayton copula存在很大差异。特别地，当\(\theta < 0\)时，Clayton copula排除了区域\(u_1^{-\theta} + u_2^{-\theta} - 1 < 0\)，这在\(\theta = -1\)的例子中尤为明显……</p>
+</section>
+<section class="book-page" data-pdf-page="215">
+<p><strong>8.4 阿基米德Copula</strong></p>
+<figure class="book-figure" id="fig-8.3"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-51dd73c5a716.png" alt="图8.3：来自不同Clayton Copula的200个二元随机样本。"/>
+<figcaption>图8.3：来自不同Clayton Copula的200个二元随机样本。\(\theta = -0.7\)。相比之下，Frank Copula在整个单位正方形上具有正概率。Frank Copula关于从(0,1)到(1,0)的对角线对称，但Clayton Copula不具有这种对称性。</figcaption>
+</figure>
+<h4>8.4.3 Gumbel Copula</h4>
+<p>Gumbel Copula的生成函数为 \(\phi_{Gu}(u|\theta) = (-\log u)^\theta\)，其中 \(\theta \ge 1\)，因此其Copula为</p>
+\[
+C_{Gu}(u_1,\dots,u_d|\theta) = \exp\left[ -\left\{ (-\log u_1)^\theta + \cdots + (-\log u_d)^\theta \right\}^{1/\theta} \right].
+\]
+<p>当 \(\theta = 1\) 时，Gumbel Copula退化为独立Copula \(C_0\)；当 \(\theta \to \infty\) 时，它收敛到共单调Copula \(C_+\)，但Gumbel Copula不能表示负相依。</p>
+</section>
+<section class="book-page" data-pdf-page="216">
+<h2>第8章 Copula</h2>
+<p>图8.4包含了来自不同Gumbel copula的六个二元随机样本的散点图，样本大小为200，参数θ的值给出了从接近独立到强正相关的依赖关系。</p>
+<figure class="book-figure" id="fig-8.4"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-2863255086e6.png" alt="来自不同Gumbel copula的200个二元随机样本" />
+<figcaption>图8.4：来自不同Gumbel copula的200个二元随机样本。</figcaption>
+</figure>
+<p>下面的R代码生成了图8.4：</p>
+<div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">set.seed(5640)
+theta = c(1.1, 1.5, 2, 4, 8, 50)
+par(mfrow=c(2,3), cex.axis=1.2, cex.lab=1.2, cex.main=1.2)
+for(i in 1:6) {
+  U = rCopula(n=200,
+              copula=archmCopula(family=&quot;gumbel&quot;, param=theta[i]))
+  plot(U, xlab=expression(u[1]), ylab=expression(u[2]),
+       main=eval(substitute(expression(paste(theta,&quot; = &quot;,j)),
+                            list(j = as.character(theta[i])))))
+}</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from copula import GumbelCopula
+
+np.random.seed(5640)
+theta_values = [1.1, 1.5, 2, 4, 8, 50]
+fig, axes = plt.subplots(2, 3, figsize=(12, 8))
+for i, theta in enumerate(theta_values):
+    U = GumbelCopula(theta=theta).sample(200)
+    ax = axes[i // 3, i % 3]
+    ax.scatter(U[:, 0], U[:, 1])
+    ax.set_xlabel(r&#x27;$u_1$&#x27;)
+    ax.set_ylabel(r&#x27;$u_2$&#x27;)
+    ax.set_title(r&#x27;$\theta = %s$&#x27; % theta)
+plt.tight_layout()
+plt.show()</code></pre>
+  </div>
+</div>
+<h3>8.4.4 Joe Copula</h3>
+<p>Joe copula与Gumbel copula类似；它不能具有负依赖关系，但允许更强的上尾依赖，并且在正依赖情况下更接近于Clayton copula的逆。Joe copula的生成器为 \(\phi_{\text{Joe}}(u|\theta) = -\log\{1-(1-u)^\theta\}\)，\(\theta \ge 1\)。在二元情形下，Joe copula等于</p>
+\[ C_{\text{Joe}}(u_1,u_2|\theta) = 1 - \left[(1-u_1)^\theta + (1-u_2)^\theta - (1-u_1)^\theta (1-u_2)^\theta\right]^{1/\theta}. \]
+<p>当 \(\theta=1\) 时，Joe copula 是独立 copula \(C_0\)，当 \(\theta \to \infty\) 时收敛于共单调 copula \(C_+\)。</p>
+</section>
+<section class="book-page" data-pdf-page="217">
+  <h3 id="section-8-5">8.5 秩相关</h3>
+  <p>Pearson相关系数（4.4节定义）在将copula拟合到数据时并不方便，因为它不仅依赖于copula，还依赖于单变量边际分布。秩相关系数解决了这一问题，因为它们仅依赖于copula。</p>
+  <figure class="book-figure" id="fig-8.5"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-393ba7b62224.png" alt="图8.5 来自不同Joe copula的200个双变量随机样本">
+    <figcaption>图8.5 来自不同Joe copula的200个双变量随机样本。图8.5包含了来自不同Joe copula的六个双变量随机样本的散点图，样本量为200，<em>θ</em>的值从近似独立到强正相关。</figcaption>
+  </figure>
+  <p>生成图8.5的R代码如下：</p>
+  <pre><code class="language-r"><div class="code-tabs" data-code-tabs id="cp-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="cp-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="cp-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="cp-1-r" role="tabpanel">
+    <pre><code class="language-r">set.seed(5640)
+theta = c(1.1, 1.5, 2, 4, 8, 50)
+par(mfrow=c(2,3), cex.axis=1.2, cex.lab=1.2, cex.main=1.2)
+for(i in 1:6) {
+  U = rCopula(n=200,
+             copula=archmCopula(family=&quot;joe&quot;, param=theta[i]))
+  plot(U, xlab=expression(u[1]), ylab=expression(u[2]),
+       main=eval(substitute(
+         expression(paste(theta,&quot; = &quot;,j)),
+         list(j = as.character(theta[i])))))
+}</code></pre>
+  </div>
+  <div class="code-tab-panel" id="cp-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from statsmodels.distributions.copula.api import JoeCopula
+
+np.random.seed(5640)
+theta_vals = [1.1, 1.5, 2, 4, 8, 50]
+fig, axes = plt.subplots(2, 3)
+for i, theta in enumerate(theta_vals):
+    copula = JoeCopula(theta=theta)
+    u = copula.rvs(n=200, random_state=np.random.RandomState(5640))
+    ax = axes[i//3, i%3]
+    ax.scatter(u[:,0], u[:,1])
+    ax.set_xlabel(r&#x27;$u_1$&#x27;)
+    ax.set_ylabel(r&#x27;$u_2$&#x27;)
+    ax.set_title(f&#x27;$\\theta = {theta}$&#x27;)
+plt.tight_layout()
+plt.show()</code></pre>
+  </div>
+</div></code></pre>
+  <p>在实际应用中，不同的copula族具有不同的特性是很有用的，因为这增加了我们找到合适拟合数据的copula的能力。</p>
+</section>
+<section class="book-page" data-pdf-page="218">
+<p>对于每个变量，该变量的秩通过将观测值从小到大排序来确定，最小的秩为1，次小的秩为2，以此类推。换句话说，如果\(Y_1,\ldots,Y_n\)是一个样本，那么\(Y_i\)在该样本中的秩等于1（如果\(Y_i\)是最小的观测值），等于2（如果\(Y_i\)是第二小的），以此类推。更数学地，\(Y_i\)的秩也可以由以下公式定义：</p>
+\[
+\operatorname{rank}(Y_i)=\sum_{j=1}^n I(Y_j\le Y_i), \tag{8.12}
+\]
+<p>它计算小于或等于\(Y_i\)的观测值（包括\(Y_i\)本身）的个数。秩统计量是仅通过数据的秩而依赖于数据的统计量。秩的一个关键性质是，它们不受变量的严格单调变换的影响。特别地，将每个变量按其CDF变换后，秩保持不变，因此任何秩统计量的分布仅取决于观测值的copula，而不取决于单变量边际分布。</p>
+<p>我们将关注衡量变量对之间统计关联的秩统计量。这些统计量称为秩相关。有两种广泛使用的秩相关系数：Kendall's τ 和 Spearman's ρ。</p>
+<h3>8.5.1 Kendall's τ</h3>
+<p>令\((Y_1,Y_2)\)为一个二元随机向量，令\((Y_1^*,Y_2^*)\)为\((Y_1,Y_2)\)的独立复制。那么，如果\(Y_1\)相对于\(Y_1^*\)的排序与\(Y_2\)相对于\(Y_2^*\)的排序相同，即要么\(Y_1>Y_1^*\)且\(Y_2>Y_2^*\)，要么\(Y_1<Y_1^*\)且\(Y_2<Y_2^*\)，则称\((Y_1,Y_2)\)和\((Y_1^*,Y_2^*)\)为一对一致对。无论哪种情况，都有\((Y_1-Y_1^*)(Y_2-Y_2^*)>0\)。类似地，如果\((Y_1-Y_1^*)(Y_2-Y_2^*)<0\)，则称\((Y_1,Y_2)\)和\((Y_1^*,Y_2^*)\)为一对不一致对。Kendall's τ 是一致对的概率减去不一致对的概率。因此，\((Y_1,Y_2)\)的Kendall's τ 为</p>
+\[
+\rho_\tau(Y_1,Y_2)=P\{(Y_1-Y_1^*)(Y_2-Y_2^*)>0\}-P\{(Y_1-Y_1^*)(Y_2-Y_2^*)<0\}=E[\operatorname{sign}\{(Y_1-Y_1^*)(Y_2-Y_2^*)\}], \tag{8.13}
+\]
+<p>其中符号函数为</p>
+\[
+\operatorname{sign}(x)=\begin{cases}
+1, & x>0,\\
+-1, & x<0,\\
+0, & x=0.
+\end{cases}
+\]
+<p>从(8.13)可以清楚看出，\(\rho_\tau\)关于其参数对称，且取值于\([-1,1]\)。容易验证，如果\(g\)和\(h\)是递增函数，则</p>
+\[
+\rho_\tau\{g(Y_1),h(Y_2)\}=\rho_\tau(Y_1,Y_2). \tag{8.14}
+\]
+</section>
+<section class='book-page' data-pdf-page='219'>
+<h2>8.5 秩相关</h2>
+<h3>8.5.1 Kendall's tau</h3>
+<p>换一种说法，Kendall's tau在单调递增变换下保持不变。若\(g\)和\(h\)分别为\(Y_1\)和\(Y_2\)的边际分布函数，则(8.14)式的左边是服从\((Y_1,Y_2)\)的copula的一对随机变量的Kendall's tau值。这表明Kendall's tau仅依赖于二元随机向量的copula。对于随机向量\(\boldsymbol{Y}\)，我们定义Kendall's tau相关矩阵\(\boldsymbol{\Omega}_\tau\)，其\((j,k)\)元素为\(\boldsymbol{Y}\)的第\(j\)个和第\(k\)个分量的Kendall's tau，即\([\boldsymbol{\Omega}_\tau(\boldsymbol{Y})]_{jk} = \rho_\tau(Y_j, Y_k)\)。</p>
+<p>若我们有二元样本\(\boldsymbol{Y}_{1:n} = \{(Y_{i,1}, Y_{i,2}): i = 1,\ldots,n\}\)，则样本Kendall's tau为</p>
+\[
+\hat{\rho}_\tau(\boldsymbol{Y}_{1:n}) = \binom{n}{2}^{-1} \sum_{1 \le i < j \le n} \operatorname{sign}\{(Y_{i,1} - Y_{j,1})(Y_{i,2} - Y_{j,2})\}. \tag{8.15}
+\]
+<p>注意，\(\binom{n}{2}\)是(8.15)中求和项的个数，因此\(\hat{\rho}_\tau\)是所有不同观测对之间\(\operatorname{sign}\{(Y_{i,1} - Y_{j,1})(Y_{i,2} - Y_{j,2})\}\)的平均值，是(8.13)的样本版本。样本Kendall's tau相关矩阵的定义与\(\boldsymbol{\Omega}_\tau\)类似。</p>
+
+<h3>8.5.2 Spearman秩相关系数</h3>
+<p>对于样本，Spearman相关系数就是根据数据的边际秩计算的通常的Pearson相关系数。对于分布（即无限总体而非有限样本），两个变量都通过其单变量边际分布函数进行变换，然后计算变换后变量的Pearson相关系数。用CDF变换随机变量类似于在有限样本中计算变量的秩。</p>
+<p>换一种说法，对于二元随机向量\((Y_1,Y_2)\)，Spearman秩相关系数（也称为Spearman's rho）记为\(\rho_S(Y_1,Y_2)\)，定义为\(\{F_{Y_1}(Y_1), F_{Y_2}(Y_2)\}\)的Pearson相关系数：</p>
+\[
+\rho_S(Y_1,Y_2) = \operatorname{Corr}\{F_{Y_1}(Y_1), F_{Y_2}(Y_2)\}.
+\]
+<p>由于\(\{F_{Y_1}(Y_1), F_{Y_2}(Y_2)\}\)的联合分布函数就是\((Y_1,Y_2)\)的copula，Spearman's rho与Kendall's tau一样，仅依赖于copula函数。</p>
+<p>Spearman相关系数的样本版本可根据数据的秩计算，对于二元样本\(\boldsymbol{Y}_{1:n} = \{(Y_{i,1}, Y_{i,2}): i = 1,\ldots,n\}\)，有</p>
+\[
+\hat{\rho}_S(\boldsymbol{Y}_{1:n}) = \frac{12}{n(n^2-1)} \sum_{i=1}^n \left\{ \operatorname{rank}(Y_{i,1}) - \frac{n+1}{2} \right\} \left\{ \operatorname{rank}(Y_{i,2}) - \frac{n+1}{2} \right\}. \tag{8.16}
+\]
+</section>
+<section class="book-page" data-pdf-page="220">
+  <p>任何变量的排名集合显然是整数 1 到 \(n\)，因此 \((n+1)/2\) 是其排名的均值。可以证明，样本 Spearman 相关系数 \(\hat{\rho}_S\) 是 \(\{Y_{i,1}\}\) 的排名与 \(\{Y_{i,2}\}\) 的排名之间的样本 Pearson 相关系数<sup id="fnref-4"><a href="#fn-4">4</a></sup>。</p>
+  <p>如果 \(Y = (Y_1, \ldots, Y_d)\) 是一个随机向量，则 \(Y\) 的 Spearman 相关矩阵 \(\Omega_S\) 是 \(\{F_{Y_1}(Y_1), \ldots, F_{Y_d}(Y_d)\}\) 的相关矩阵，包含 \(Y\) 所有分量对的 Spearman 相关系数，即 \([\Omega_S(Y)]_{jk} = \rho_S(Y_j, Y_k)\)，对所有 \(j, k = 1, \ldots, d\)。样本 Spearman 相关矩阵的定义类似。</p>
+  <h2 id="section-8-6">8.6 尾部相关性</h2>
+  <p>尾部相关性度量两个随机变量极端值之间的关联，且仅取决于它们的 copula。我们首先讨论下尾相关性，它使用下尾部的极端值。假设 \(Y = (Y_1, Y_2)\) 是一个二元随机向量，其 copula 为 \(C_Y\)。则下尾相关系数记为 \(\lambda_\ell\)，定义为</p>
+  \[
+  \lambda_\ell := \lim_{q \downarrow 0} P\left\{ Y_2 \leq F_{Y_2}^{-1}(q) \mid Y_1 \leq F_{Y_1}^{-1}(q) \right\} \tag{8.17}
+  \]
+  \[
+  = \lim_{q \downarrow 0} \frac{P\left\{ Y_1 \leq F_{Y_1}^{-1}(q), Y_2 \leq F_{Y_2}^{-1}(q) \right\}}{P\left\{ Y_1 \leq F_{Y_1}^{-1}(q) \right\}} \tag{8.18}
+  \]
+  \[
+  = \lim_{q \downarrow 0} \frac{P\{ F_{Y_1}(Y_1) \leq q, F_{Y_2}(Y_2) \leq q\}}{P\{ F_{Y_1}(Y_1) \leq q\}} \tag{8.19}
+  \]
+  \[
+  = \lim_{q \downarrow 0} \frac{C_Y(q, q)}{q}. \tag{8.20}
+  \]
+  <p>单独审视这些方程是很有帮助的。和本章其他地方一样，为简单起见，我们假设 \(F_{Y_1}\) 和 \(F_{Y_2}\) 在其支撑集上严格递增，因此存在反函数。</p>
+  <p>首先，(8.17) 将 \(\lambda_\ell\) 定义为当 \(q \downarrow 0\) 时，在给定 \(Y_1\) 小于等于其第 \(q\) 分位数的条件下，\(Y_2\) 小于等于其第 \(q\) 分位数的条件概率的极限。由于我们取 \(q \downarrow 0\) 的极限，我们关注的是极左尾部。如果 \(Y_1\) 和 \(Y_2\) 独立，会发生什么？那么 \(P(Y_2 \leq y_2 \mid Y_1 \leq y_1) = P(Y_2 \leq y_2)\) 对所有 \(y_1, y_2\) 成立。因此，(8.17) 中的条件概率等于无条件概率 \(P(Y_2 \leq F_{Y_2}^{-1}(q))\)，且该概率当 \(q \downarrow 0\) 时收敛到 0。因此，\(\lambda_\ell = 0\) 意味着在极左尾部，\(Y_1\) 和 \(Y_2\) 的表现如同独立。</p>
+  <p>方程 (8.18) 只是条件概率的定义。方程 (8.19) 是 (8.18) 在对每个变量应用概率变换后的结果。(8.19) 中的分子根据定义就是 copula，而</p>
+  <ol class="footnotes">
+    <li id="fn-4">如果存在并列值，则排名取并列观测的平均值。例如，如果有两个观测值并列最小，则它们各得 1.5 名。当存在并列值时，这些结果需要修改。<a href="#fnref-4">↩</a></li>
+  </ol>
+</section>
+<section class="book-page" data-pdf-page="221">
+  <h3 id="section-8-6">8.6 尾部相依性</h3>
+  <p>分母中的式(8.20)是\(F_{Y_1}(Y_1)\)服从\(\text{Uniform}(0,1)\)的结果；见(A.9)。</p>
+  <p>推导高斯Copula和t-Copula的\(\lambda_\ell\)公式最好留给更深入的书籍。这里我们只给出结果；进阶阅读见8.8节。对于任何双变量高斯Copula \(C^{\text{Gauss}}\)且\(\rho \neq 1\)，\(\lambda_\ell = 0\)，即高斯Copula没有尾部相依性，除了完全正相关的极端情况。对于双变量t-Copula \(C_t\)，具有尾指数\(\nu\)和相关系数\(\rho\)，有</p>
+  \[
+  \lambda_\ell = 2 F_{t,\nu+1}\left\{ -\sqrt{\frac{(\nu+1)(1-\rho)}{1+\rho}} \right\},
+  \]
+  <p>其中\(F_{t,\nu+1}\)是尾指数\(\nu+1\)的t分布的CDF。</p>
+  <p>由于\(F_{t,\nu+1}(-\infty)=0\)，我们看到\(\lambda_\ell\to 0\)当\(\nu\to\infty\)时，这是合理的，因为t-Copula随\(\nu\to\infty\)收敛到高斯Copula。同样，\(\lambda_\ell\to 0\)当\(\rho\to -1\)，这也并不意外，因为\(\rho=-1\)是完全负相依，而\(\lambda_\ell\)衡量的是正尾部相依。</p>
+  <p>上尾相依系数\(\lambda_u\)定义为</p>
+  \[
+  \lambda_u := \lim_{q\uparrow1} P\{ Y_2 \ge F_{Y_2}^{-1}(q) \mid Y_1 \ge F_{Y_1}^{-1}(q) \}
+  \]
+  \[
+  = 2 - \lim_{q\uparrow1} \frac{1-C_Y(q,q)}{1-q}.
+  \]
+  <p>我们看到\(\lambda_u\)的定义与\(\lambda_\ell\)类似；\(\lambda_u\)是当\(q\uparrow1\)时，条件概率\(P(Y_2\ge F_{Y_2}^{-1}(q)\mid Y_1\ge F_{Y_1}^{-1}(q))\)的极限。推导式(8.23)留给感兴趣的读者作为练习。对于高斯Copula和t-Copula，\(\lambda_u = \lambda_\ell\)，所以对于任何高斯Copula，\(\lambda_u=0\)，而对于t-Copula，\(\lambda_\ell\)由式(8.21)右侧给出。t-Copula的尾部相依系数绘制在图8.6中。可以看出\(\lambda_\ell = \lambda_u\)强烈依赖于\(\rho\)和\(\nu\)。对于独立Copula \(C_0\)，\(\lambda_\ell\)和\(\lambda_u\)均为0；对于共单调Copula \(C_+\)，两者均为1。</p>
+  <p>R代码生成图8.6：</p>
+  <pre><code><div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">46 rho = seq(-1,1, by=0.01)
+47 df = c(1, 4, 25, 240)
+48 x1 = -sqrt((df[1]+1)*(1-rho)/(1+rho))
+49 lambda1 = 2*pt(x1,df[1]+1)
+50 x4 = -sqrt((df[2]+1)*(1-rho)/(1+rho))
+51 lambda4 = 2*pt(x4,df[2]+1)
+52 x25 = -sqrt((df[3]+1)*(1-rho)/(1+rho))
+53 lambda25 = 2*pt(x25,df[3]+1)
+54 x250 = -sqrt((df[4]+1)*(1-rho)/(1+rho))
+55 lambda250 = 2*pt(x250,df[4]+1)
+56 par(mfrow=c(1,1), lwd=2, cex.axis=1.2, cex.lab=1.2)
+57 plot(rho, lambda1, type=&quot;l&quot;, lty=1, xlab=expression(rho),</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import scipy.stats as stats
+import matplotlib.pyplot as plt
+
+rho = np.arange(-1, 1.01, 0.01)  # seq(-1,1, by=0.01)
+df_vals = [1, 4, 25, 240]  # c(1,4,25,240)
+
+x1 = -np.sqrt((df_vals[0]+1)*(1-rho)/(1+rho))
+lambda1 = 2 * stats.t.cdf(x1, df_vals[0]+1)
+
+# 以下变量虽定义但未在后续绘图中使用，此处保留以保持一致性
+x4 = -np.sqrt((df_vals[1]+1)*(1-rho)/(1+rho))
+lambda4 = 2 * stats.t.cdf(x4, df_vals[1]+1)
+x25 = -np.sqrt((df_vals[2]+1)*(1-rho)/(1+rho))
+lambda25 = 2 * stats.t.cdf(x25, df_vals[2]+1)
+x250 = -np.sqrt((df_vals[3]+1)*(1-rho)/(1+rho))
+lambda250 = 2 * stats.t.cdf(x250, df_vals[3]+1)
+
+plt.figure(lw=2)
+plt.plot(rho, lambda1, &#x27;k-&#x27;, lw=2)  # type=&quot;l&quot;, lty=1
+plt.xlabel(r&#x27;$\rho$&#x27;)
+plt.show()</code></pre>
+  </div>
+</div></code></pre>
+</section>
+<section class="book-page" data-pdf-page="222">
+  <h2 id="section-8-7">8.7 校准Copula</h2>
+  <pre><code class="language-r">58 ylab=expression(lambda[l]==lambda[u]))
+59 lines(rho, lambda4, lty=2)
+60 lines(rho, lambda25, lty=3)
+61 lines(rho, lambda250, lty=4)
+62 legend("topleft", c(expression(nu==1), expression(nu==4),
+63 expression(nu==25), expression(nu==250)), lty=1:4)</code></pre>
+  <figure class="book-figure" id="fig-8.6"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-6cc9ef2050cd.png" alt="图8.6 二元t-copula的尾部相依系数作为ρ的函数，ν=1,4,25,250">
+    <figcaption>图8.6 二元t-copula的尾部相依系数作为ρ的函数，ν=1,4,25,250</figcaption>
+  </figure>
+  <p>了解是否存在尾部相依性对于风险管理至关重要。如果投资组合中资产收益率之间没有尾部相依性，那么同时出现非常负的收益率的风险就很小，投资组合出现极端负收益的风险也就较低。相反，如果存在尾部相依性，那么组合中多项资产同时出现极端负收益的可能性可能很高。因此，在评估任何投资组合的分散化和风险时，应考虑尾部相依性。</p>
+  <p>假设我们有一个i.i.d.样本 \(Y_{1:n} = \{(Y_{i,1}, \ldots, Y_{i,d}): i = 1, \ldots, n\}\)，我们希望估计 \(Y\) 的copula，或许还有其单变量边际分布。</p>
+  <p>一个重要的任务是选择copula模型。各种copula模型之间存在显著差异。例如，有些具有尾部相依性...</p>
+</section>
+<section class="book-page" data-pdf-page="223">
+<h3>8.7 校准Copula</h3>
+<p>Gumbel copula和Joe copula仅允许正相关或独立。带有负相关的Clayton copula排除了\(u_1\)和\(u_2\)都很小的区域。如本节所见，可以通过AIC和图形技术选择合适的copula模型。</p>
+<h4>8.7.1 极大似然</h4>
+<p>假设我们有参数模型\(F_{Y_1}(\cdot|\theta_1),\dots,F_{Y_d}(\cdot|\theta_d)\)用于边际CDF，以及参数模型\(c_Y(\cdot|\theta_C)\)用于copula密度。对(8.4)取对数，我们得到对数似然函数为</p>
+\[
+\log\{L(\theta_1,\dots,\theta_d,\theta_C)\} = \sum_{i=1}^n \left( \log[c_Y\{F_{Y_1}(Y_{i,1}|\theta_1),\dots,F_{Y_d}(Y_{i,d}|\theta_d)|\theta_C\}] + \log\{f_{Y_1}(Y_{i,1}|\theta_1)\} + \dots + \log\{f_{Y_d}(Y_{i,d}|\theta_d)\} \right). \tag{8.24}
+\]
+<p>极大似然估计是在整个参数集\((\theta_1,\dots,\theta_d,\theta_C)\)上最大化\(\log\{L(\theta_1,\dots,\theta_d,\theta_C)\}\)。</p>
+<p>极大似然估计有两个潜在问题。第一，由于参数数量众多，特别是当\(d\)很大时，数值最大化\(\log\{L(\theta_1,\dots,\theta_d,\theta_C)\}\)可能具有挑战性。可以通过使用接近MLE的起始值来缓解这一困难。下一节讨论的伪极大似然估计比MLE更容易计算，既可以作为MLE的替代，也可以作为MLE的起始值。</p>
+<p>第二，极大似然估计需要同时为copula和单变量边际分布指定参数模型。如果任何一个单变量边际分布不能被方便的参数族很好地拟合，就可能导致单变量边际分布和copula的参数估计出现偏差。半参数方法的伪极大似然估计（其中单变量边际分布是非参数估计的）为这个问题提供了补救措施。</p>
+<h4>8.7.2 伪极大似然</h4>
+<p>伪极大似然估计是一个两步过程。第一步，分别估计每个单变量边际分布函数，每次一个。令\(\hat{F}_{Y_j}\)为第\(j\)个单变量边际CDF的估计，\(j=1,\dots,d\)。第二步，关于\(\theta_C\)最大化</p>
+\[
+\sum_{i=1}^n \log\left[ c_Y\left( \hat{F}_{Y_1}(Y_{i,1}),\dots,\hat{F}_{Y_d}(Y_{i,d})|\theta_C \right) \right] \tag{8.25}
+\]
+<p>注意，(8.25)是通过从(8.24)中删除不依赖于\(\theta_C\)的项并用单变量边际CDF的估计替换得到的。</p>
+</section>
+<section class="book-page" data-pdf-page="224">
+  <h2>第8章 Copula</h2>
+  <p>通过分别估计单变量边缘分布和copula中的参数，伪极大似然方法避免了高维优化。</p>
+  <p>第一步有两种方法：参数化和非参数化。在参数化方法中，假设单变量边缘CDF的参数模型\(F_{Y_1}(\cdot\mid\theta_1),\ldots,F_{Y_d}(\cdot\mid\theta_d)\)，如同极大似然估计一样。第\(j\)个变量的数据\(Y_{1,j},\ldots,Y_{n,j}\)用于估计\(\theta_j\)，通常采用第5章讨论的极大似然法。然后，\(\hat{F}_{Y_j}(\cdot)=F_{Y_j}(\cdot\mid\hat{\theta}_j)\)。</p>
+  <p>在非参数化方法中，\(\hat{F}_{Y_j}\)由\(Y_{1,j},\ldots,Y_{n,j}\)的经验分布函数估计，但(4.2)中的除数\(n\)替换为\(n+1\)，使得
+  \[ \hat{F}_{Y_j}(y)=\frac{\sum_{i=1}^n I\{Y_{i,j}\le y\}}{n+1}. \tag{8.26}\]
+  使用这个修改后的除数，\(\hat{F}_{Y_j}(Y_{i,j})\)的最大值为\(n/(n+1)\)而不是1。避免取值为1至关重要，因为通常情况下，如果\(u_1,\ldots,u_d\)中有些等于1，则\(c_Y(u_1,\ldots,u_d\mid\theta_C)=\infty\)。</p>
+  <p>当两个步骤都是参数化时，估计方法称为参数化伪极大似然。非参数化第一步和参数化第二步的结合称为半参数化伪极大似然。</p>
+  <p>在伪极大似然的第二步中，当\(\theta_C\)是高维时，最大化可能很困难。例如，如果使用高斯或t-copula，则存在\(d(d-1)/2\)个相关参数。解决这个问题的一种方法是假设相关之间存在某种结构。一个极端情况是等相关模型（equi-correlation model），其中相关矩阵的所有非对角线元素都具有共同值，记为\(\rho\)。如果不愿假设某种结构化相关矩阵，那么在最大化(8.25)时，相关矩阵的良好初值至关重要。对于高斯和t-copula，可以通过下一节讨论的秩相关获得初值。</p>
+  <p>值\(\hat{F}_{Y_j}(Y_{i,j}), i=1,\ldots,n, j=1,\ldots,d\)称为均匀变换变量（uniform-transformed variables），因为它们应近似服从Uniform(0,1)分布。均匀变换变量的多元经验分布函数[见式(A.38)]称为经验copula（empirical copula），是copula函数的非参数估计。经验copula可用于检验参数化copula模型的拟合优度；参见例8.1。</p>
+  <h3>8.7.3 校准元高斯分布和元t分布</h3>
+  <h4>高斯Copula</h4>
+  <p>秩相关可用于估计copula的参数。假设\(Y_{1:n}=\{(Y_{i,1},\ldots,Y_{i,d}): i=1,\ldots,n\}\)是来自元高斯分布的i.i.d.样本。那么其copula是\(C_{\text{Gauss}}(\cdot\mid\Omega)\)，其中\(\Omega\)为某个相关矩阵。为了估计\(Y\)的分布，我们需要估计</p>
+</section>
+<section class="book-page" data-pdf-page="225">
+<h2>8.7 校准Copulas</h2>
+<p>单变量边际分布和\(\Omega\)。边际分布可以通过第5章讨论的方法进行估计。以下定理中的结果(8.28)表明，\(\Omega\)可以由样本Spearman相关矩阵估计。</p>
+<div class="result">
+<p><strong>结果8.1</strong> 设\(\mathbf{Y} = (Y_1, \ldots, Y_d)\)具有元高斯分布，其边际分布连续且copula为\(C_{\text{Gauss}}(\cdot | \Omega)\)，并设\(\Omega_{ij} = [\Omega]_{ij}\)。则</p>
+\[ \rho_\tau(Y_i, Y_j) = \frac{2}{\pi} \arcsin(\Omega_{ij}), \quad \text{且} \tag{8.27} \]
+\[ \rho_S(Y_i, Y_j) = \frac{6}{\pi} \arcsin(\Omega_{ij}/2) \approx \Omega_{ij}. \tag{8.28} \]
+<p>相反，假设\(\mathbf{Y}\)具有元t分布，其边际分布连续且copula为\(C_t(\cdot | \Omega, \nu)\)。则(8.27)仍然成立，但(8.28)不成立。</p>
+</div>
+<p>(8.28)中的近似使用了结果</p>
+\[ \frac{6}{\pi} \arcsin(x/2) \approx x \quad \text{对于} |x| \le 1. \tag{8.29} \]
+<p>(8.29)的左右两边在\(x = -1, 0, 1\)时相等，且在区间\(-1 \le x \le 1\)上的最大差异为0.018。然而，相对误差\(\left\{ \frac{6}{\pi} \arcsin(x/2) - x \right\} / \frac{6}{\pi} \arcsin(x/2)\)可能更大，最大可达0.047，并且在\(x=0\)附近最大。</p>
+<p>根据(8.28)，样本Spearman秩相关矩阵\(\hat{\Omega}(\mathbf{Y}_{1:n})\)可作为与\(C_{\text{Gauss}}(\cdot|\Omega)\)相关的相关矩阵\(\Omega\)的估计。该估计可以是最终估计，也可以作为数值极大似然或伪极大似然估计的初始值。</p>
+<h3>t-Copulas</h3>
+<p>如果\(\mathbf{Y}_{1:n} = \{(Y_{i,1}, \ldots, Y_{i,d}): i = 1, \ldots, n\}\)是来自具有t-copula \(C_t(\cdot|\Omega, \nu)\)的分布的样本，则我们可以使用(8.27)和样本Kendall tau相关来估计\(\Omega\)。设\(\hat{\Omega}_{\tau, jk}\)是\(\{Y_{1,j}, \ldots, Y_{n,j}\}\)和\(\{Y_{1,k}, \ldots, Y_{n,k}\}\)（第\(j\)个和第\(k\)个分量）的样本Kendall tau相关，并定义\(\tilde{\Omega}^{**}\)使得\([\tilde{\Omega}^{**}]_{jk} = \sin\left(\frac{\pi}{2} \hat{\Omega}_{\tau, jk}\right)\)。则\(\tilde{\Omega}^{**}\)将具有相关矩阵的三个性质中的两个：对称且所有对角线元素为1。然而，它可能不是正定的，甚至不是半正定的，因为某些特征值可能为负。</p>
+<p>如果\(\tilde{\Omega}^{**}\)的所有特征值都为正，则我们使用\(\tilde{\Omega}^{**}\)来估计\(\Omega\)。否则，我们对\(\tilde{\Omega}^{**}\)稍作修改以使其正定。根据(A.50)，</p>
+</section>
+<section class="book-page" data-pdf-page="226">
+<p><span class="page-number">202</span> <span class="chapter-name">第8章 Copula</span></p>
+
+<p>经过
+\[
+\tilde{\Omega}^{**} = O \operatorname{diag}(\lambda_i) O^T,
+\]
+其中 \(O\) 是一个正交矩阵，其列是 \(\tilde{\Omega}^{**}\) 的特征向量，\(\lambda_1,\ldots,\lambda_d\) 是对应特征值。然后定义
+\[
+\tilde{\Omega}^{*} = O \operatorname{diag}\{\max(\epsilon, \lambda_i)\} O^T,
+\]
+其中 \(\epsilon\) 是一个小的正常数，例如 \(\epsilon = 0.001\)。现在，\(\tilde{\Omega}^{*}\) 对称且正定，但其对角元素 \(\tilde{\Omega}^{*}_{ii}\)，\(i = 1,\ldots,d\)，可能不等于1。这个问题很容易解决：将 \(\tilde{\Omega}^{*}\) 的第 \(i\) 行和第 \(i\) 列乘以 \((\tilde{\Omega}^{*}_{ii})^{-1/2}\)，\(i = 1,\ldots,d\)。最终结果记为 \(\tilde{\Omega}\)，是一个真正的相关矩阵；即对称、正定且所有对角元素为1。</p>
+
+<p>在通过 \(\tilde{\Omega}\) 估计 \(\Omega\) 后，仍然需要尾部指数 \(\nu\) 的估计。可以通过将 \(\tilde{\Omega}\) 代入对数似然 (8.25) 然后关于 \(\nu\) 最大化来获得。</p>
+
+<h3>例8.1 管道中的流量</h3>
+
+<p>在这个例子中，我们将继续分析例4.2中介绍的管道流量数据。仅使用前两个管道的流量。</p>
+
+<p>在完全参数伪似然分析中，对流量1和2使用单变量偏态t模型。设 \(\hat{U}_{1,j},\ldots,\hat{U}_{n,j}\) 是管道 \(j\)（\(j = 1,2\)）的流量，通过其估计的偏态t CDF变换。我们称 \(\hat{U}_{i,j}\) 为“均匀变换流量”。定义 \(\hat{Z}_{i,j} = \Phi^{-1}(\hat{U}_{i,j})\)，其中 \(\Phi^{-1}\) 是标准正态分位数函数。\(\hat{Z}_{i,j}\) 应近似服从 \(N(0,1)\) 分布，我们称它们为“正态变换流量”。</p>
+
+<pre><code class="R">64 library(copula)
+65 library(sn)
+66 dat = read.csv("FlowData.csv")
+67 dat = dat/10000
+68 n = nrow(dat)
+69 x1 = dat$Flow1
+70 fit1 = st.mple(matrix(1,n,1), y=x1, dp=c(mean(x1), sd(x1), 0, 10))
+71 est1 = fit1$dp
+72 u1 = pst(x1, dp=est1)
+73 x2 = dat$Flow2
+74 fit2 = st.mple(matrix(1,n,1), y=x2, dp=c(mean(x2), sd(x2), 0, 10))
+75 est2 = fit2$dp
+76 u2 = pst(x2, dp=est2)
+77 U.hat = cbind(u1, u2)
+78 z1 = qnorm(u1)
+79 z2 = qnorm(u2)
+80 Z.hat = cbind(z1, z2)</code></pre>
+
+<div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">64 library(copula)
+65 library(sn)
+66 dat = read.csv(&quot;FlowData.csv&quot;)
+67 dat = dat/10000
+68 n = nrow(dat)
+69 x1 = dat$Flow1
+70 fit1 = st.mple(matrix(1,n,1), y=x1, dp=c(mean(x1), sd(x1), 0, 10))
+71 est1 = fit1$dp
+72 u1 = pst(x1, dp=est1)
+73 x2 = dat$Flow2
+74 fit2 = st.mple(matrix(1,n,1), y=x2, dp=c(mean(x2), sd(x2), 0, 10))
+75 est2 = fit2$dp
+76 u2 = pst(x2, dp=est2)
+77 U.hat = cbind(u1, u2)
+78 z1 = qnorm(u1)
+79 z2 = qnorm(u2)
+80 Z.hat = cbind(z1, z2)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import pandas as pd
+import numpy as np
+from scipy.stats import skewnorm, norm
+
+dat = pd.read_csv(&quot;FlowData.csv&quot;)
+dat = dat / 10000
+n = len(dat)
+
+x1 = dat[&quot;Flow1&quot;]
+# 使用偏态正态分布近似（R中的偏态t分布未在标准生态中提供）
+fit1 = skewnorm.fit(x1)  # 返回 (a, loc, scale)
+params1 = fit1
+u1 = skewnorm.cdf(x1, *params1)
+
+x2 = dat[&quot;Flow2&quot;]
+fit2 = skewnorm.fit(x2)
+params2 = fit2
+u2 = skewnorm.cdf(x2, *params2)
+
+U_hat = np.column_stack((u1, u2))
+
+z1 = norm.ppf(u1)
+z2 = norm.ppf(u2)
+Z_hat = np.column_stack((z1, z2))</code></pre>
+  </div>
+</div>
+</section>
+<section class="book-page" data-pdf-page="227">
+<p><strong>8.7 校准Copula</strong> 203</p>
+<p>两套均匀变换后的流量均应近似服从均匀分布Uniform(0,1)。图8.7展示了两个样本的密度直方图、散点图以及二维核密度估计等高线。直方图显示与均匀分布存在一定偏离，表明偏态t模型可能拟合得不够充分，可以尝试半参数伪极大似然方法——下文将对此进行讨论。然而，这些偏离可能源于随机波动。</p>
+<div class="code-tabs" data-code-tabs id="code-8-7">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-8-7-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-8-7-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-8-7-r" role="tabpanel">
+    <pre><code class="language-r">81 library(ks)
+82 fhatU = kde(x=U.hat, H=Hscv(x=U.hat))
+83 par(mfrow=c(2,2), cex.axis=1.2, cex.lab=1.2, cex.main=1.2)
+84 hist(u1, main=&quot;(a)&quot;, xlab=expression(hat(U)[1]), freq = FALSE)
+85 hist(u2, main=&quot;(b)&quot;, xlab=expression(hat(U)[2]), freq = FALSE)
+86 plot(u1, u2, main=&quot;(c)&quot;, xlab = expression(hat(U)[1]),
+87 ylab = expression(hat(U)[2]), mgp = c(2.5, 1, 0))
+88 plot(fhatU, drawpoints=FALSE, drawlabels=FALSE,
+89 cont=seq(10, 80, 10), main=&quot;(d)&quot;, xlab=expression(hat(U)[1]),
+90 ylab=expression(hat(U)[2]), mgp = c(2.5, 1, 0))</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-8-7-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from scipy import stats
+
+# 假设 u1, u2, U.hat 已定义（U.hat 是二维数组，u1=U.hat[:,0], u2=U.hat[:,1]）
+kde = stats.gaussian_kde(U.hat.T)  # 注意：scipy 的带宽选择为 Scott 规则，与 R 的 Hscv 不同
+# 生成网格
+xmin, ymin = U.hat.min(axis=0)
+xmax, ymax = U.hat.max(axis=0)
+xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+positions = np.vstack([xx.ravel(), yy.ravel()])
+fhat = np.reshape(kde(positions).T, xx.shape)
+
+fig, axes = plt.subplots(2, 2, figsize=(8,8))
+axes[0,0].hist(u1, density=True, bins=20)
+axes[0,0].set_title(&#x27;(a)&#x27;)
+axes[0,0].set_xlabel(r&#x27;$\\hat{U}_1$&#x27;)
+axes[0,1].hist(u2, density=True, bins=20)
+axes[0,1].set_title(&#x27;(b)&#x27;)
+axes[0,1].set_xlabel(r&#x27;$\\hat{U}_2$&#x27;)
+axes[1,0].scatter(u1, u2)
+axes[1,0].set_title(&#x27;(c)&#x27;)
+axes[1,0].set_xlabel(r&#x27;$\\hat{U}_1$&#x27;)
+axes[1,0].set_ylabel(r&#x27;$\\hat{U}_2$&#x27;)
+axes[1,1].contour(xx, yy, fhat, levels=np.arange(10,90,10))
+axes[1,1].set_title(&#x27;(d)&#x27;)
+axes[1,1].set_xlabel(r&#x27;$\\hat{U}_1$&#x27;)
+axes[1,1].set_ylabel(r&#x27;$\\hat{U}_2$&#x27;)
+plt.tight_layout()
+plt.show()</code></pre>
+  </div>
+</div>
+<figure class="book-figure" id="fig-8.7"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-e5cd45c7bc9e.png" alt="图8.7 管道数据密度直方图、散点图与经验Copula等高线">
+  <figcaption>图8.7 管道数据。(a)和(b)密度直方图，(c)均匀变换后流量的散点图。经验copula \(\hat{C}\) 是(c)中数据的经验CDF。(d)来自(c)的二维KDE估计的copula密度 \(\hat{c}\) 的等高线。</figcaption>
+</figure>
+</section>
+<section class="book-page" data-pdf-page="228">
+<h1>第8章 Copula</h1>
+<p>图8.7中的散点图显示出一些负向关联，数据点略微沿从左上到右下的对角线集中。因此，无法处理负相关的Gumbel copula和Joe copula是不合适的。同样，Clayton copula也可能拟合不佳，因为散点图显示在\(\hat{U}_1\)和\(\hat{U}_2\)均取值较小的区域有数据点，而具有负相关的Clayton copula会排除该区域。我们很快会看到，AIC与这些图形分析的结论一致，因为Clayton模型的AIC值比Gaussian、t和Frank copula模型更高（更差）。</p>
+<p>图8.8显示，经正态变换后的流量具有近似线性的正态分位数图，这符合估计的单变量边际CDF拟合良好的预期。它们的散点图和KDE密度等高线再次显示负向关联。</p>
+<pre><code><div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">91 fhatZ = kde(x=Z.hat, H=Hscv(x=Z.hat))
+92 par(mfrow=c(2,2), cex.axis=1.2, cex.lab=1.2, cex.main=1.2)
+93 qqnorm(z1, datax=T, main=&quot;(a)&quot;) ; qqline(z1)
+94 qqnorm(z2, datax=T, main=&quot;(b)&quot;) ; qqline(z2)
+95 plot(z1, z2, main=&quot;(c)&quot;, xlab = expression(hat(Z)[1]),
+96 ylab = expression(hat(Z)[2]), mgp = c(2.5, 1, 0))
+97 plot(fhatZ, drawpoints=FALSE, drawlabels=FALSE,)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import gaussian_kde, probplot
+
+# Assuming z1, z2, Z.hat are defined earlier
+# Compute kernel density estimate with bandwidth selection
+kde = gaussian_kde(Z.hat.T)
+
+# Set up 2x2 subplots
+fig, axes = plt.subplots(2, 2, figsize=(10, 8))
+plt.rcParams.update({&#x27;axes.labelsize&#x27;: 12, &#x27;axes.titlesize&#x27;: 12, &#x27;xtick.labelsize&#x27;: 12, &#x27;ytick.labelsize&#x27;: 12})
+
+# (a) Normal Q-Q plot for z1
+ax = axes[0,0]
+probplot(z1, plot=ax)
+ax.set_title(&#x27;(a)&#x27;)
+
+# (b) Normal Q-Q plot for z2
+ax = axes[0,1]
+probplot(z2, plot=ax)
+ax.set_title(&#x27;(b)&#x27;)
+
+# (c) Scatterplot
+ax = axes[1,0]
+ax.scatter(z1, z2, alpha=0.5)
+ax.set_xlabel(r&#x27;$\\hat{Z}_1$&#x27;)
+ax.set_ylabel(r&#x27;$\\hat{Z}_2$&#x27;)
+ax.set_title(&#x27;(c)&#x27;)
+
+# (d) KDE density contours
+ax = axes[1,1]
+# Create grid
+xmin, xmax = z1.min() - 1, z1.max() + 1
+ymin, ymax = z2.min() - 1, z2.max() + 1
+xx, yy = np.meshgrid(np.linspace(xmin, xmax, 100), np.linspace(ymin, ymax, 100))
+positions = np.vstack([xx.ravel(), yy.ravel()])
+density = kde(positions).reshape(xx.shape)
+ax.contour(xx, yy, density, levels=10)
+ax.set_xlabel(r&#x27;$\\hat{Z}_1$&#x27;)
+ax.set_ylabel(r&#x27;$\\hat{Z}_2$&#x27;)
+ax.set_title(&#x27;(d)&#x27;)
+
+plt.tight_layout()
+plt.show()</code></pre>
+  </div>
+</div></code></pre>
+<p></p>
+<figure class="book-figure" id="fig-8.8"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-e94629dfd160.png" alt="图8.8：管道数据。经正态变换后的流量的正态分位数图(a)和(b)、散点图(c)以及KDE密度等高线。" />
+<figcaption>图8.8：管道数据。经正态变换后的流量的正态分位数图(a)和(b)、散点图(c)以及KDE密度等高线。</figcaption>
+</figure>
+</section>
+<section class="book-page" data-pdf-page="229">
+  <p>8.7 校准Copula</p>
+  <p>暂时假设两个流量具有元高斯分布。有三种方法估计它们高斯Copula中的相关性。第一种，Spearman秩相关系数，估计值为−0.357。第二种，使用公式(8.27)：\(\hat{\rho} = \sin(\hat{\rho}_\tau \pi / 2)\)，其中\(\hat{\rho}_\tau\)是样本Kendall秩相关系数；其值为−0.371。第三种，正态变换流量的Pearson相关系数为−0.335。这三个值相当接近，特别是相对于它们的不确定性而言；例如，正态变换流量的Pearson相关系数的近似95%置信区间为(−0.426,−0.238)，另外两个估计值都在该区间内。</p>
+  <pre><code><div class="code-tabs" data-code-tabs id="1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="1-r" role="tabpanel">
+    <pre><code class="language-r">98 cont=seq(10, 90, 10), main=&quot;(d)&quot;, xlab=expression(hat(Z)[1]),
+99 ylab=expression(hat(Z)[2]), mgp = c(2.5, 1, 0))</code></pre>
+  </div>
+  <div class="code-tab-panel" id="1-python" role="tabpanel" hidden>
+    <pre><code class="language-python"># 假设已有密度估计的网格X,Y,Z
+import numpy as np
+import matplotlib.pyplot as plt
+cont = np.arange(10, 100, 10)
+plt.contour(X, Y, Z, levels=cont)
+plt.title(&#x27;(d)&#x27;)
+plt.xlabel(r&#x27;$\\hat{Z}_1$&#x27;)
+plt.ylabel(r&#x27;$\\hat{Z}_2$&#x27;)
+plt.margins(0,0,0)  # 近似mgp效果
+plt.subplots_adjust(left=0.15)  # 调整边距</code></pre>
+  </div>
+</div></code></pre>
+  <p>Pearson's product-moment correlation</p>
+  <pre>data: z1 and z2
+t = -6.56, df = 340, p-value = 2.003e-10
+alternative hypothesis: true correlation is not equal to 0
+95 percent confidence interval:
+-0.426 -0.238
+sample estimates:
+cor
+-0.335</pre>
+  <p>对均匀变换后的流量拟合了四种参数Copula：t、高斯、Frank和Clayton。可使用R的copula包中的fitCopula()函数来估计本章讨论的Copula分布。由于Gumbel和Joe Copula只允许正依赖，而数据呈现负依赖，因此不考虑它们；尝试拟合这些模型会导致数值失败。由于我们使用参数估计来变换流量，因此采用参数伪极大似然估计来拟合Copula。</p>
+  <pre><code><div class="code-tabs" data-code-tabs id="3">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="3-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="3-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="3-r" role="tabpanel">
+    <pre><code class="language-r">105 omega = -0.371
+106 Ct = fitCopula(copula=tCopula(dim = 2), data=U.hat,
+107 method=&quot;ml&quot;, start=c(omega, 10))
+108 Ct@estimate
+109 loglikCopula(param=Ct@estimate, x=U.hat, copula=tCopula(dim = 2))
+110 -2*.Last.value + 2*length(Ct@estimate)
+111 #
+112 Cgauss = fitCopula(copula=normalCopula(dim = 2), data=U.hat,
+113 method=&quot;ml&quot;, start=c(omega))
+114 Cgauss@estimate</code></pre>
+  </div>
+  <div class="code-tab-panel" id="3-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+# 使用copula库（需安装: pip install copula）
+from copula import TCopula, GaussianCopula, FrankCopula, ClaytonCopula
+omega = -0.371
+# t copula
+t_cop = TCopula(dim=2, df_fixed=False)
+t_cop.fit(U.hat, method=&#x27;ml&#x27;, start=[omega, 10])
+print(t_cop.params)
+loglik_t = t_cop.log_likelihood(U.hat)
+aic_t = -2*loglik_t + 2*len(t_cop.params)
+print(aic_t)
+# Gaussian copula
+gauss_cop = GaussianCopula(dim=2)
+gauss_cop.fit(U.hat, method=&#x27;ml&#x27;, start=[omega])
+print(gauss_cop.params)</code></pre>
+  </div>
+</div></code></pre>
+</section>
+<section class="book-page" data-pdf-page="230">
+  <h1>第8章 Copula</h1>
+  <p>结果汇总在表8.1中。观察最大化的对数似然值，我们看到Frank Copula拟合最好，因为它最小化了AIC，但t-Copula和高斯Copula也拟合得相当好。图8.9展示了均匀变换后的流量散点图和五种Copula分布函数的等高线：独立Copula和四个估计的参数Copula；并叠加了经验Copula等高线以作比较。由于\(\hat{\nu}=22.247\)很大，t-Copula与高斯Copula相似。Frank Copula拟合最好，其等高线最接近经验Copula的等高线。这与AIC值一致。</p>
+  <table>
+    <caption>表8.1 使用均匀变换后的管道流量数据得到的Copula参数估计、最大对数似然值和AIC</caption>
+    <thead>
+      <tr>
+        <th>Copula系列</th>
+        <th>估计值</th>
+        <th>最大对数似然</th>
+        <th>AIC</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>t</td>
+        <td>\(\hat{\rho}=-0.340\), \(\hat{\nu}=22.247\)</td>
+        <td>20.98</td>
+        <td>-37.96</td>
+      </tr>
+      <tr>
+        <td>Gaussian</td>
+        <td>\(\hat{\rho}=-0.331\)</td>
+        <td>20.36</td>
+        <td>-38.71</td>
+      </tr>
+      <tr>
+        <td>Frank</td>
+        <td>\(\hat{\theta}=-2.249\)</td>
+        <td>23.07</td>
+        <td>-44.13</td>
+      </tr>
+      <tr>
+        <td>Clayton</td>
+        <td>\(\hat{\theta}=-0.166\)</td>
+        <td>9.86</td>
+        <td>-17.72</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">loglikCopula(param=Cgauss@estimate, x=U.hat,
+             copula=normalCopula(dim = 2))
+-2*.Last.value + 2*length(Cgauss@estimate)
+#
+Cfr = fitCopula(copula=frankCopula(1, dim=2), data=U.hat,
+                method=&quot;ml&quot;)
+Cfr@estimate
+loglikCopula(param=Cfr@estimate, x=U.hat,
+             copula=frankCopula(dim = 2))
+-2*.Last.value + 2*length(Cfr@estimate)
+#
+Ccl = fitCopula(copula=claytonCopula(1, dim=2), data=U.hat,
+                method=&quot;ml&quot;)
+Ccl@estimate
+loglikCopula(param=Ccl@estimate, x=U.hat,
+             copula=claytonCopula(dim = 2))
+-2*.Last.value + 2*length(Ccl@estimate)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+from pycopula.copula import FrankCopula, ClaytonCopula, NormalCopula, StudentCopula
+
+# 假设 U.hat 是形状为 (n,2) 的 numpy 数组，已经通过均匀变换得到
+# 拟合 Gaussian copula
+# 注意：以下代码假设 Cgauss 已经拟合，此处仅计算对数似然和AIC
+loglik_gauss = Cgauss.log_likelihood(U.hat)
+aic_gauss = -2*loglik_gauss + 2*len(Cgauss.params)
+print(loglik_gauss, aic_gauss)
+
+# 拟合 Frank copula
+frank_cop = FrankCopula()
+frank_cop.fit(U.hat, method=&#x27;ml&#x27;)
+loglik_frank = frank_cop.log_likelihood(U.hat)
+aic_frank = -2*loglik_frank + 2*len(frank_cop.params)
+print(loglik_frank, aic_frank)
+
+# 拟合 Clayton copula
+clayton_cop = ClaytonCopula()
+clayton_cop.fit(U.hat, method=&#x27;ml&#x27;)
+loglik_clayton = clayton_cop.log_likelihood(U.hat)
+aic_clayton = -2*loglik_clayton + 2*len(clayton_cop.params)
+print(loglik_clayton, aic_clayton)</code></pre>
+  </div>
+</div>
+  <div class="code-tabs" data-code-tabs id="code-2">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-2-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-2-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-2-r" role="tabpanel">
+    <pre><code class="language-r">par(mfrow=c(2,3), mgp = c(2.5, 1, 0))
+plot(u1, u2, main=&quot;Uniform-Transformed Data&quot;,
+     xlab = expression(hat(U)[1]), ylab = expression(hat(U)[2]))
+Udex = (1:n)/(n+1)
+Cn = C.n(u = cbind(rep(Udex, n), rep(Udex, each=n) ), U= U.hat,
+         offset=0, method=&quot;C&quot;)
+EmpCop = expression(contour(Udex,Udex,matrix(Cn,n,n), col=2, add=T))</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-2-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from pycopula.empirical import EmpiricalCopula
+
+# 假设 u1, u2 是边际均匀变换后的数据，U.hat = np.column_stack((u1, u2))
+fig, axes = plt.subplots(2, 3, figsize=(10, 6))
+axes[0,0].scatter(u1, u2)
+axes[0,0].set_title(&#x27;Uniform-Transformed Data&#x27;)
+axes[0,0].set_xlabel(r&#x27;$\\hat{U}_1$&#x27;)
+axes[0,0].set_ylabel(r&#x27;$\\hat{U}_2$&#x27;)
+
+n = len(u1)
+Udex = np.arange(1, n+1) / (n+1)
+U1_grid, U2_grid = np.meshgrid(Udex, Udex, indexing=&#x27;ij&#x27;)
+
+# 使用 pycopula 的经验 Copula
+emp_cop = EmpiricalCopula()
+emp_cop.fit(U.hat)
+C_values = np.zeros_like(U1_grid)
+for i in range(len(Udex)):
+    for j in range(len(Udex)):
+        C_values[i,j] = emp_cop.cdf([Udex[i], Udex[j]])
+
+plt.contour(U1_grid, U2_grid, C_values, colors=&#x27;red&#x27;)
+plt.show()</code></pre>
+  </div>
+</div>
+</section>
+<section class="book-page" data-pdf-page="231">
+<h2 id="section-8-8">8.8 参考文献注释</h2>
+<div class="code-tabs" data-code-tabs id="copula-contour-8-8">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="copula-contour-8-8-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="copula-contour-8-8-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="copula-contour-8-8-r" role="tabpanel">
+    <pre><code class="language-r">contour(normalCopula(param=0,dim=2), pCopula, main=expression(C[0]),
+        xlab = expression(hat(U)[1]), ylab = expression(hat(U)[2]))
+eval(EmpCop)
+#
+contour(tCopula(param=Ct@estimate[1], dim=2,
+                df=round(Ct@estimate[2])),
+        pCopula, main = expression(hat(C)[t]),
+        xlab = expression(hat(U)[1]), ylab = expression(hat(U)[2]))
+eval(EmpCop)
+#
+contour(normalCopula(param=Cgauss@estimate[1], dim = 2),
+        pCopula, main = expression(hat(C)[Gauss]),
+        xlab = expression(hat(U)[1]), ylab = expression(hat(U)[2]))
+eval(EmpCop)
+#
+contour(frankCopula(param=Cfr@estimate[1], dim = 2),
+        pCopula, main = expression(hat(C)[Fr]),
+        xlab = expression(hat(U)[1]), ylab = expression(hat(U)[2]))
+eval(EmpCop)
+#
+contour(claytonCopula(param=Ccl@estimate[1], dim = 2),
+        pCopula, main = expression(hat(C)[Cl]),
+        xlab = expression(hat(U)[1]), ylab = expression(hat(U)[2]))
+eval(EmpCop)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="copula-contour-8-8-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from copulalib.copulalib import Copula
+
+# 生成随机数据（假设已经过经验分布变换）
+np.random.seed(123)
+U = np.random.uniform(0, 1, (200, 2))
+
+# 拟合各个copula
+gauss_cop = Copula(family=&#x27;normal&#x27;, dim=2)
+gauss_cop.fit(U)
+t_cop = Copula(family=&#x27;student&#x27;, dim=2)
+t_cop.fit(U)
+frank_cop = Copula(family=&#x27;frank&#x27;, dim=2)
+frank_cop.fit(U)
+clay_cop = Copula(family=&#x27;clayton&#x27;, dim=2)
+clay_cop.fit(U)
+
+# 定义网格
+u1 = np.linspace(0.01, 0.99, 50)
+u2 = np.linspace(0.01, 0.99, 50)
+uu1, uu2 = np.meshgrid(u1, u2)
+grid = np.column_stack([uu1.ravel(), uu2.ravel()])
+
+# 经验copula函数
+def emp_copula(u1, u2, U):
+    n = U.shape[0]
+    cop = np.zeros_like(u1)
+    for i in range(u1.shape[0]):
+        for j in range(u2.shape[0]):
+            cop[i,j] = np.mean((U[:,0] &lt;= u1[i,j]) &amp; (U[:,1] &lt;= u2[i,j]))
+    return cop
+
+cdf_emp = emp_copula(uu1, uu2, U)
+
+# 创建图形
+fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+axes = axes.flatten()
+axes[5].axis(&#x27;off&#x27;)
+
+cops = [
+    (&#x27;Independent&#x27;, Copula(family=&#x27;normal&#x27;, param=0)),
+    (&#x27;t&#x27;, t_cop),
+    (&#x27;Gaussian&#x27;, gauss_cop),
+    (&#x27;Frank&#x27;, frank_cop),
+    (&#x27;Clayton&#x27;, clay_cop)
+]
+
+for i, (name, cop) in enumerate(cops):
+    ax = axes[i]
+    cdf_theor = cop.cdf(grid).reshape(uu1.shape)
+    ax.contour(uu1, uu2, cdf_theor, levels=10, colors=&#x27;blue&#x27;)
+    ax.contour(uu1, uu2, cdf_emp, levels=10, colors=&#x27;red&#x27;, linestyles=&#x27;dashed&#x27;)
+    ax.set_xlabel(r&#x27;$\\hat{U}_1$&#x27;)
+    ax.set_ylabel(r&#x27;$\\hat{U}_2$&#x27;)
+    ax.set_title(r&#x27;$\\hat{C}_{&#x27; + name + &#x27;}$&#x27;)
+plt.tight_layout()
+plt.show()</code></pre>
+  </div>
+</div>
+<p>前一段中的分析使用经经验CDF变换后的flows重复进行。由此得到了半参数伪极大似然估计。由于结果与参数伪极大似然估计非常相似，此处不再展示。□</p>
+<p>关于非严格生成元的阿基米德copula的讨论，参见McNeil, Frey和Embrechts (2005)。这些作者对若干其他主题的讨论比本书更为详细。他们讨论了定义不可交换的阿基米德copula的方法。高斯和t copula的尾部相依系数在其第5.2节中推导。第8.7.3节中的定理和校正方法在其第5.5节中讨论。</p>
+<p>Cherubini等人(2004)讨论了copula在金融中的应用。Joe (1997)和Nelsen (2007)是copula的标准参考文献。Mari和Kotz (2001)的第4章讨论了其他copula族。</p>
+<p>Li (2000)提出了一个知名但有争议的信用风险模型，该模型使用指数分布的违约时间和高斯copula。《连线》杂志的一篇文章称Li的高斯copula模型是“一个快速——</p>
+</section>
+<section class="book-page" data-pdf-page="232">
+<p>“存在致命缺陷——评估风险的方法”（Salmon, 2009）；特别是，该模型不包含尾部依赖。Duffie和Singleton（2003，第10.4节）也讨论了基于copula的建模相关违约时间的方法。</p>
+<figure class="book-figure" id="fig-8.9"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-8ea20d4ec250.png" alt="图8.9 管道数据的均匀变换流" style="max-width:100%;height:auto;">
+<figcaption>图8.9 管道数据的均匀变换流。散点图；独立性copula等高线和四个通过参数模型拟合的copula等高线，与经验copula等高线对比。</figcaption>
+</figure>
+<h2 id="section-8-9">8.9 R实验</h2>
+<h3>8.9.1 从Copula模型模拟</h3>
+<p>运行下面的R代码来生成copula的数据。第1行加载copula包。第2-3行定义一个copula对象。此时，没有对copula对象做任何操作——只是定义它。然而，第5行使用该copula对象从指定的copula模型生成随机样本。剩下的行创建样本的散点图矩阵并打印样本的Pearson相关矩阵。</p>
+<div class="code-tabs" data-code-tabs id="code-copula-lab-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-copula-lab-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-copula-lab-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-copula-lab-1-r" role="tabpanel">
+    <pre><code class="language-r">library(copula)
+cop_t_dim3 &lt;- tCopula(dim = 3, param = c(-0.6,0.75,0), dispstr = &quot;un&quot;, df = 1)
+set.seed(5640)
+u &lt;- rCopula(1000, cop_t_dim3)
+pairs(u)
+cor(u)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-copula-lab-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy.stats import t, chi2
+
+np.random.seed(5640)
+dim = 3
+nu = 1
+corr = np.array([[1.0, -0.6, 0.75],
+                 [-0.6, 1.0, 0.0],
+                 [0.75, 0.0, 1.0]])
+mean = np.zeros(dim)
+N = 1000
+Z = np.random.multivariate_normal(mean, corr, N)
+W = chi2.rvs(nu, size=N)
+X = Z / np.sqrt(W[:, np.newaxis] / nu)
+U = t.cdf(X, df=nu)
+pd.plotting.scatter_matrix(pd.DataFrame(U, columns=[&#x27;U1&#x27;,&#x27;U2&#x27;,&#x27;U3&#x27;]))
+plt.show()
+print(np.corrcoef(U.T))</code></pre>
+  </div>
+</div>
+</section>
+<section class="book-page" data-pdf-page="233">
+<h3>8.9 R实验</h3>
+
+<pre><code><div class="code-tabs" data-code-tabs id="code1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code1-r" role="tabpanel">
+    <pre><code class="language-r">5 rand_t_cop = rCopula(n = 500, copula = cop_t_dim3)
+6 pairs(rand_t_cop)
+7 cor(rand_t_cop)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy.stats import t, multivariate_t
+
+# 假设 cop_t_dim3 为自由度 df=4, 相关矩阵如下
+df = 4
+corr_matrix = np.array([[1.0, 0.2, 0.75],
+                        [0.2, 1.0, 0.0],
+                        [0.75, 0.0, 1.0]])
+n_dim = 3
+np.random.seed(123)  # 仅用于可重复性
+
+# 从多元 t 分布采样
+multivariate_t_dist = multivariate_t(shape=corr_matrix, df=df)
+samples = multivariate_t_dist.rvs(size=500)
+# 转换为 copula 样本 (概率积分变换)
+rand_t_cop = t.cdf(samples, df=df)
+
+# 散点图矩阵
+pd.plotting.scatter_matrix(pd.DataFrame(rand_t_cop, columns=[&#x27;V1&#x27;,&#x27;V2&#x27;,&#x27;V3&#x27;]))
+plt.show()
+
+# 相关矩阵
+print(np.corrcoef(rand_t_cop, rowvar=False))</code></pre>
+  </div>
+</div></code></pre>
+
+<p>你可以使用R的帮助功能进一步了解<code>tCopula()</code>和<code>rCopula()</code>函数。</p>
+
+<p><strong>问题1</strong> 考虑以上R代码。</p>
+<ol type="a">
+<li>采样的copula模型属于什么类型？给出copula族、相关矩阵以及指定该copula的任何其他参数。</li>
+<li>样本量是多少？</li>
+</ol>
+
+<p><strong>问题2</strong> 检查散点图矩阵（由第6行生成）并回答以下问题。请将散点图矩阵附在答案中。</p>
+<ol type="a">
+<li>成分2和3不相关。它们看起来独立吗？为什么或为什么不？</li>
+<li>你是否看到尾部依赖的迹象？如果有，出现在哪里？</li>
+<li>依赖关系对图形有什么影响？</li>
+<li>copula中的非零相关与对应的样本相关值并不相同。你认为这仅仅是随机变异，还是有其他原因？如果除了随机变异之外还有其他原因，可能是什么？为了帮助回答这个问题，你可以获得Pearson相关的置信区间：例如，</li>
+</ol>
+
+<pre><code><div class="code-tabs" data-code-tabs id="code2">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code2-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code2-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code2-r" role="tabpanel">
+    <pre><code class="language-r">8 cor.test(rand_t_cop[,1],rand_t_cop[,3])</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code2-python" role="tabpanel" hidden>
+    <pre><code class="language-python">from scipy.stats import pearsonr, norm
+import numpy as np
+
+# 计算相关系数和置信区间
+r, p_value = pearsonr(rand_t_cop[:,0], rand_t_cop[:,2])
+n = len(rand_t_cop)
+# Fisher z 变换
+z = np.arctanh(r)
+se = 1 / np.sqrt(n - 3)
+alpha = 0.05
+z_crit = norm.ppf(1 - alpha/2)
+ci_low = np.tanh(z - z_crit * se)
+ci_high = np.tanh(z + z_crit * se)
+print(f&quot;Pearson correlation: {r:.4f}&quot;)
+print(f&quot;95% confidence interval: [{ci_low:.4f}, {ci_high:.4f}]&quot;)</code></pre>
+  </div>
+</div></code></pre>
+
+<p>将给出成分1和3之间相关的置信区间（默认95%）。这个置信区间是否包含0.75？</p>
+
+<p>以下R代码的第9–10行定义了一个正态（高斯）copula。第11–13行通过指定其copula和边际分布来定义一个多元分布——copula就是刚刚定义的那个。第15行从该分布生成一个大小为1,000的随机样本，该分布有三个成分。其余行创建散点图矩阵以及每个成分边际密度的核估计。</p>
+
+<pre><code><div class="code-tabs" data-code-tabs id="code3">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code3-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code3-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code3-r" role="tabpanel">
+    <pre><code class="language-r">9 cop_normal_dim3 = normalCopula(dim = 3, param = c(-0.6,0.75,0),
+10                          dispstr = &quot;un&quot;)
+11 mvdc_normal = mvdc(copula = cop_normal_dim3, margins = rep(&quot;exp&quot;,3),
+12                    paramMargins = list(list(rate=2), list(rate=3),
+13                                        list(rate=4)))
+14 set.seed(5640)
+15 rand_mvdc = rMvdc(n = 1000, mvdc = mvdc_normal)
+16 pairs(rand_mvdc)
+17 par(mfrow = c(2,2))
+18 for(i in 1:3) plot(density(rand_mvdc[,i]))</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code3-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from scipy.stats import multivariate_normal, expon
+
+np.random.seed(5640)
+
+# 定义正态 copula 相关矩阵 (非结构化)
+corr_matrix = np.array([[1.0, -0.6, 0.75],
+                        [-0.6, 1.0, 0.0],
+                        [0.75, 0.0, 1.0]])
+# 从多元正态分布采样
+mean = np.zeros(3)
+cov = corr_matrix  # 相关矩阵即为协方差矩阵 (方差为1)
+rand_norm = multivariate_normal.rvs(mean=mean, cov=cov, size=1000)
+# 转化为 copula 样本 (概率积分变换)
+norm_copula = norm.cdf(rand_norm)
+# 边际分布: 指数分布, 参数 rate=2,3,4
+rates = [2, 3, 4]
+rand_mvdc = np.empty_like(norm_copula)
+for i in range(3):
+    rand_mvdc[:, i] = expon.ppf(norm_copula[:, i], scale=1/rates[i])
+
+# 散点图矩阵
+pd.plotting.scatter_matrix(pd.DataFrame(rand_mvdc, columns=[&#x27;X1&#x27;,&#x27;X2&#x27;,&#x27;X3&#x27;]))
+plt.show()
+
+# 边际密度图
+fig, axes = plt.subplots(2, 2, figsize=(8,6))
+axes = axes.flatten()
+for i in range(3):
+    axes[i].hist(rand_mvdc[:, i], density=True, bins=30, alpha=0.6, color=&#x27;steelblue&#x27;)
+    axes[i].set_title(f&#x27;Component {i+1}&#x27;)
+axes[3].axis(&#x27;off&#x27;)
+plt.tight_layout()
+plt.show()</code></pre>
+  </div>
+</div></code></pre>
+</section>
+<section class="book-page" data-pdf-page="234">
+  <h3>8.9.2 对双变量收益率数据拟合Copula模型</h3>
+  <p>在本节中，我们将对IBM股票和S&P 500指数的日收益率双变量数据集拟合copula模型。</p>
+  <p>首先，我们将拟合一个具有单变量t分布边缘和t-copula的模型。该模型有三个自由度（尾部指数）参数，两个单变量模型各一个，第三个用于copula。这意味着单变量分布可以有不同的尾部指数，且它们的尾部指数与copula的尾部相依性无关。</p>
+  <p>运行以下R代码加载数据和必要的库，为两个分量拟合单变量t分布，并将估计的尺度参数转换为估计的标准差：</p>
+  <div class="code-tabs" data-code-tabs id="code1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code1-r" role="tabpanel">
+    <pre><code class="language-r">1 library(MASS) # for fitdistr() and kde2d() functions
+2 library(copula) # for copula functions
+3 library(fGarch) # for standardized t density
+4 netRtns = read.csv(&quot;IBM_SP500_04_14_daily_netRtns.csv&quot;, header = T)
+5 ibm = netRtns[,2]
+6 sp500 = netRtns[,3]
+7 est.ibm = as.numeric( fitdistr(ibm,&quot;t&quot;)$estimate )
+8 est.sp500 = as.numeric( fitdistr(sp500,&quot;t&quot;)$estimate )
+9 est.ibm[2] = est.ibm[2] * sqrt( est.ibm[3] / (est.ibm[3]-2) )
+10 est.sp500[2] = est.sp500[2] * sqrt(est.sp500[3] / (est.sp500[3]-2) )</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import pandas as pd
+import numpy as np
+from scipy.stats import t as t_dist
+
+netRtns = pd.read_csv(&quot;IBM_SP500_04_14_daily_netRtns.csv&quot;)
+ibm = netRtns.iloc[:, 1].values
+sp500 = netRtns.iloc[:, 2].values
+# Fit t distribution (MLE fitting as in fitdistr)
+params_ibm = t_dist.fit(ibm)  # returns (loc, scale, df)
+params_sp500 = t_dist.fit(sp500)
+est_ibm = np.array([params_ibm[0], params_ibm[1], params_ibm[2]])
+est_sp500 = np.array([params_sp500[0], params_sp500[1], params_sp500[2]])
+# Convert scale to standard deviation: sd = scale * sqrt(df/(df-2))
+est_ibm[1] = est_ibm[1] * np.sqrt(est_ibm[2] / (est_ibm[2] - 2))
+est_sp500[1] = est_sp500[1] * np.sqrt(est_sp500[2] / (est_sp500[2] - 2))</code></pre>
+  </div>
+</div>
+  <p>单变量估计值将作为meta-t分布通过极大似然拟合时的初始值。还需要t-copula中相关系数的估计。这可以通过Kendall's tau获得。运行以下代码，并完成第12行，使omega成为基于Kendall's tau的Pearson相关系数估计。</p>
+  <div class="code-tabs" data-code-tabs id="code2">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code2-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code2-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code2-r" role="tabpanel">
+    <pre><code class="language-r">11 cor_tau = cor(ibm, sp500, method = &quot;kendall&quot;)
+12 omega =</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code2-python" role="tabpanel" hidden>
+    <pre><code class="language-python">from scipy.stats import kendalltau
+import numpy as np
+
+cor_tau, _ = kendalltau(ibm, sp500)
+omega = None  # 待根据Kendall&#x27;s tau计算Pearson相关系数</code></pre>
+  </div>
+</div>
+  <h4>问题3</h4>
+  <p>运行上述R代码生成随机样本。</p>
+  <p>(a) <code>rand mvdc</code>的三个分量的边际分布是什么？它们的期望值是多少？</p>
+  <p>(b) 第二个和第三个分量是否独立？为什么？</p>
+  <h4>问题4</h4>
+  <p>你是如何完成代码的第12行的？<code>omega</code>的计算值是多少？</p>
+  <p>接下来，定义t-copula，使用<code>omega</code>作为相关系数参数，4作为自由度（尾部指数）参数。</p>
+</section>
+<section class="book-page" data-pdf-page="235">
+<h3>8.9 R实验</h3>
+<pre><code class="language-R">13 cop_t_dim2 = tCopula(omega, dim = 2, dispstr = "un", df = 4)
+14 data1 = cbind(pstd(ibm, est.ibm[1], est.ibm[2], est.ibm[3]),
+15 pstd(sp500, est.sp500[1], est.sp500[2], est.sp500[3]))
+16 n = nrow(netRtns) ; n
+17 data2 = cbind(rank(ibm)/(n+1), rank(sp500)/(n+1))
+18 ft1 = fitCopula(cop_t_dim2, data1, method="ml", start=c(omega,4) )
+19 ft2 = fitCopula(cop_t_dim2, data2, method="ml", start=c(omega,4) )</code></pre>
+<p><strong>问题5</strong></p>
+<p>(a) 解释用于获得两个估计量 <code>ft1</code> 和 <code>ft2</code> 的方法之间的差异。</p>
+<p>(b) 这两个估计量在实际意义下是否存在显著差异？</p>
+<p>下一步通过指定 t-copula 及其单变量边际分布来定义 meta-t 分布。同时指定了单变量边际分布中参数的值。copula 参数的值已在之前步骤中定义。</p>
+<pre><code class="language-R">20 mvdc_t_t = mvdc( cop_t_dim2, c("std","std"), list(
+21 list(mean=est.ibm[1],sd=est.ibm[2],nu=est.ibm[3]),
+22 list(mean=est.sp500[1],sd=est.sp500[2],nu=est.sp500[3])))
+23 start = c(est.ibm, est.sp500, ft1@estimate)
+24 objFn = function(param) -loglikMvdc(param,cbind(ibm,sp500),mvdc_t_t)
+25 tic = proc.time()
+26 ft = optim(start, objFn, method="L-BFGS-B",
+27 lower = c(-.1,0.001,2.2, -0.1,0.001,2.2, 0.2,2.5),
+28 upper = c( .1, 10, 15, 0.1, 10, 15, 0.9, 15) )
+29 toc = proc.time()
+30 total_time = toc - tic ; total_time[3]/60</code></pre>
+<p>下界和上界用于约束算法保持在对数似然定义且有限的区域内。<code>copula</code> 包中的 <code>fitMvdc()</code> 函数不允许设置上下界，并且在此问题上未能收敛。</p>
+<p><strong>问题6</strong></p>
+<p>(a) <code>ft</code> 中 copula 参数估计值是多少？</p>
+<p>(b) 单变量边际分布中的参数估计值是多少？</p>
+</section>
+<section class="book-page" data-pdf-page="236">
+<h3>212 第8章 Copula</h3>
+<p>(c) 估计方法是极大似然、半参数伪极大似然还是参数伪极大似然？</p>
+<p>(d) 估计该copula的下尾相关系数。</p>
+<p>现在对数据拟合正态（高斯）、Frank、Clayton、Gumbel和Joe copula。</p>
+<pre><code class="language-r"><div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">ft = fitCopula(copula = tCopula(dim = 2), data = data1, method = &quot;ml&quot;)
+fnorm = fitCopula(copula = normalCopula(dim = 2), data = data1, method = &quot;ml&quot;)
+ffrank = fitCopula(copula = frankCopula(3, dim = 2), data = data1, method = &quot;ml&quot;)
+fclayton = fitCopula(copula = claytonCopula(1, dim = 2), data = data1, method = &quot;ml&quot;)
+fgumbel = fitCopula(copula = gumbelCopula(3, dim = 2), data = data1, method = &quot;ml&quot;)
+fjoe = fitCopula(copula = joeCopula(2, dim = 2), data = data1, method = &quot;ml&quot;)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+from copulae import (
+    StudentCopula, NormalCopula, FrankCopula,
+    ClaytonCopula, GumbelCopula, JoeCopula
+)
+# Assume data1 is a 2D numpy array with n rows
+
+t_cop = StudentCopula(dim=2)
+t_cop.fit(data1, method=&#x27;ml&#x27;)
+
+norm_cop = NormalCopula(dim=2)
+norm_cop.fit(data1, method=&#x27;ml&#x27;)
+
+frank_cop = FrankCopula(dim=2)
+frank_cop.fit(data1, method=&#x27;ml&#x27;)
+
+clayton_cop = ClaytonCopula(dim=2)
+clayton_cop.fit(data1, method=&#x27;ml&#x27;)
+
+gumbel_cop = GumbelCopula(dim=2)
+gumbel_cop.fit(data1, method=&#x27;ml&#x27;)
+
+joe_cop = JoeCopula(dim=2)
+joe_cop.fit(data1, method=&#x27;ml&#x27;)</code></pre>
+  </div>
+</div></code></pre>
+<p>估计的copula（CDF）将与经验copula进行比较。</p>
+<pre><code class="language-r"><div class="code-tabs" data-code-tabs id="code-2">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-2-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-2-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-2-r" role="tabpanel">
+    <pre><code class="language-r">Udex = (1:n)/(n+1)
+Cn = C.n(u=cbind(rep(Udex,n),rep(Udex,each=n)), U=data1, method=&quot;C&quot;)
+EmpCop = expression(contour(Udex, Udex, matrix(Cn, n, n), col = 2, add = TRUE))
+par(mfrow=c(2,3), mgp = c(2.5,1,0))
+contour(tCopula(param=ft$par[7],dim=2,df=round(ft$par[8])), pCopula, main = expression(hat(C)[t]), xlab = expression(hat(U)[1]), ylab = expression(hat(U)[2]) )
+eval(EmpCop)
+contour(normalCopula(param=fnorm@estimate[1], dim = 2), pCopula, main = expression(hat(C)[Gauss]), xlab = expression(hat(U)[1]), ylab = expression(hat(U)[2]) )
+eval(EmpCop)
+contour(frankCopula(param=ffrank@estimate[1], dim = 2), pCopula, main = expression(hat(C)[Fr]), xlab = expression(hat(U)[1]), ylab = expression(hat(U)[2]) )
+eval(EmpCop)
+contour(claytonCopula(param=fclayton@estimate[1], dim = 2), pCopula, main = expression(hat(C)[Cl]), xlab = expression(hat(U)[1]), ylab = expression(hat(U)[2]) )
+eval(EmpCop)
+contour(gumbelCopula(param=fgumbel@estimate[1], dim = 2), pCopula, main = expression(hat(C)[Gu]), xlab = expression(hat(U)[1]), ylab = expression(hat(U)[2]) )
+eval(EmpCop)
+contour(joeCopula(param=fjoe@estimate[1], dim = 2), pCopula, main = expression(hat(C)[Joe]), xlab = expression(hat(U)[1]), ylab = expression(hat(U)[2]) )
+eval(EmpCop)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-2-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+
+n = data1.shape[0]
+Udex = np.arange(1, n+1) / (n+1)
+
+# Empirical copula (C_n)
+def emp_copula(u, v, data):
+    return np.mean((data[:, 0] &lt;= u) &amp; (data[:, 1] &lt;= v))
+
+# Vectorized for grid
+U1, U2 = np.meshgrid(Udex, Udex)
+Cn = np.array([[emp_copula(u, v, data1) for u, v in zip(row_u, row_v)]
+               for row_u, row_v in zip(U1, U2)])
+
+fig, axes = plt.subplots(2, 3, figsize=(12, 8))
+
+# Helper to plot contour
+copulas = [
+    (t_cop, r&#x27;$\hat{C}_{t}$&#x27;),
+    (norm_cop, r&#x27;$\hat{C}_{Gauss}$&#x27;),
+    (frank_cop, r&#x27;$\hat{C}_{Fr}$&#x27;),
+    (clayton_cop, r&#x27;$\hat{C}_{Cl}$&#x27;),
+    (gumbel_cop, r&#x27;$\hat{C}_{Gu}$&#x27;),
+    (joe_cop, r&#x27;$\hat{C}_{Joe}$&#x27;)
+]
+
+for ax, (cop, title) in zip(axes.flat, copulas):
+    # Points as (u, v) pairs
+    pts = np.column_stack([U1.ravel(), U2.ravel()])
+    cdf = cop.cdf(pts).reshape(n, n)
+    ax.contour(U1, U2, cdf, levels=10, colors=&#x27;blue&#x27;)
+    ax.contour(U1, U2, Cn, levels=10, colors=&#x27;red&#x27;, linestyles=&#x27;dashed&#x27;)
+    ax.set_title(title, fontsize=12)
+    ax.set_xlabel(r&#x27;$\hat{U}_1$&#x27;)
+    ax.set_ylabel(r&#x27;$\hat{U}_2$&#x27;)
+
+plt.tight_layout()
+plt.show()</code></pre>
+  </div>
+</div></code></pre>
+</section>
+<span class="section-anchor" id="section-8-10"></span>
+<section class="book-page" data-pdf-page="237">
+<h3>8.10 练习题</h3>
+
+<p><strong>问题7</strong> 你是否看到copula的参数估计之间有任何差异？如果有，哪些看起来最接近经验copula？请将图附在作业中。</p>
+<p>将用copula密度的二维KDE与参数密度估计（PDF）进行比较。</p>
+
+<div class="code-tabs" data-code-tabs id="ch8-ex7-9-code">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="ch8-ex7-9-code-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="ch8-ex7-9-code-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="ch8-ex7-9-code-r" role="tabpanel">
+    <pre><code class="language-r">par(mfrow=c(2,3), mgp = c(2.5,1,0))
+contour(tCopula(param=ft$par[7],dim=2,df=round(ft$par[8])),
+dCopula, main = expression(hat(c)[t]),
+nlevels=25, xlab=expression(hat(U)[1]),ylab=expression(hat(U)[2]))
+contour(kde2d(data1[,1],data1[,2]), col = 2, add = TRUE)
+contour(normalCopula(param=fnorm@estimate[1], dim = 2),
+dCopula, main = expression(hat(c)[Gauss]),
+nlevels=25, xlab=expression(hat(U)[1]),ylab=expression(hat(U)[2]))
+contour(kde2d(data1[,1],data1[,2]), col = 2, add = TRUE)
+contour(frankCopula(param=ffrank@estimate[1], dim = 2),
+dCopula, main = expression(hat(c)[Fr]),
+nlevels=25, xlab=expression(hat(U)[1]),ylab=expression(hat(U)[2]))
+contour(kde2d(data1[,1],data1[,2]), col = 2, add = TRUE)
+contour(claytonCopula(param=fclayton@estimate[1], dim = 2),
+dCopula, main = expression(hat(c)[Cl]),
+nlevels=25, xlab=expression(hat(U)[1]),ylab=expression(hat(U)[2]))
+contour(kde2d(data1[,1],data1[,2]), col = 2, add = TRUE)
+contour(gumbelCopula(param=fgumbel@estimate[1], dim = 2),
+dCopula, main = expression(hat(c)[Gu]),
+nlevels=25, xlab=expression(hat(U)[1]),ylab=expression(hat(U)[2]))
+contour(kde2d(data1[,1],data1[,2]), col = 2, add = TRUE)
+contour(joeCopula(param=fjoe@estimate[1], dim = 2),
+dCopula, main = expression(hat(c)[Joe]),
+nlevels=25, xlab=expression(hat(U)[1]),ylab=expression(hat(U)[2]))
+contour(kde2d(data1[,1],data1[,2]), col = 2, add = TRUE)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="ch8-ex7-9-code-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+from scipy.stats import gaussian_kde
+from statsmodels.distributions.copula import CopulaDistribution
+
+# 假设 data1 是二维数组 (n, 2)，ft, fnorm, ffrank, fclayton, fgumbel, fjoe 是已拟合的 copula 对象
+# 这里仅展示绘图逻辑，实际使用时需预先拟合
+
+# 设置图形布局
+fig, axes = plt.subplots(2, 3, figsize=(12, 8))
+
+# 定义网格
+u = np.linspace(0.01, 0.99, 100)
+v = np.linspace(0.01, 0.99, 100)
+U, V = np.meshgrid(u, v)
+grid = np.column_stack([U.ravel(), V.ravel()])
+
+# 创建 copula 对象列表（注意 t copula 需要 df 参数）
+# 假设各拟合对象包含参数估计值
+t_cop = CopulaDistribution(&#x27;student&#x27;, [ft.par[7], round(ft.par[8])])
+norm_cop = CopulaDistribution(&#x27;gaussian&#x27;, [fnorm.estimate[0]])
+frank_cop = CopulaDistribution(&#x27;frank&#x27;, [ffrank.estimate[0]])
+clayton_cop = CopulaDistribution(&#x27;clayton&#x27;, [fclayton.estimate[0]])
+gumbel_cop = CopulaDistribution(&#x27;gumbel&#x27;, [fgumbel.estimate[0]])
+# Joe copula 在 statsmodels 中不可用，忽略
+
+# 绘制每个 copula 的等高线
+copulas_and_titles = [
+    (t_cop, r&#x27;$\\hat{c}_t$&#x27;),
+    (norm_cop, r&#x27;$\\hat{c}_{Gauss}$&#x27;),
+    (frank_cop, r&#x27;$\\hat{c}_{Fr}$&#x27;),
+    (clayton_cop, r&#x27;$\\hat{c}_{Cl}$&#x27;),
+    (gumbel_cop, r&#x27;$\\hat{c}_{Gu}$&#x27;)
+]
+for idx, (cop, title) in enumerate(copulas_and_titles):
+    ax = axes[idx // 3, idx % 3]
+    Z = cop.pdf(grid).reshape(U.shape)
+    ax.contour(U, V, Z, levels=25)
+    # KDE 叠加
+    kde = gaussian_kde(data1.T)
+    Z_kde = kde(grid.T).reshape(U.shape)
+    ax.contour(U, V, Z_kde, colors=&#x27;red&#x27;)
+    ax.set_title(title)
+    ax.set_xlabel(r&#x27;$\\hat{U}_1$&#x27;)
+    ax.set_ylabel(r&#x27;$\\hat{U}_2$&#x27;)
+plt.tight_layout()
+plt.show()</code></pre>
+  </div>
+</div>
+
+<p><strong>问题8</strong> 你是否看到copula密度的参数估计之间有任何差异？如果有，哪些看起来最接近KDE？请将图附在作业中。</p>
+
+<p><strong>问题9</strong> 找出t、Gaussian、Frank、Clayton、Gumbel和Joe copula的AIC。哪个copula模型根据AIC拟合最好？（提示：<code>fitCopula()</code>函数返回对数似然。）</p>
+
+<ol>
+<li>
+<p>X和Y之间的Kendall的\(\tau\)秩相关系数为0.55。X和Y均为正。X和1/Y之间的Kendall的\(\tau\)是多少？1/X和1/Y之间的Kendall的\(\tau\)是多少？</p>
+</li>
+</ol>
+</section>
+<section class="book-page" data-pdf-page="238">
+<h2 id="references-8">参考文献</h2>
+<ol start="2">
+<li>假设 \(X\) 服从 \(\text{Uniform}(0,1)\)，且 \(Y = X^2\)。则 \(X\) 与 \(Y\) 之间的 Spearman 秩相关系数和 Kendall 的 \(\tau\) 都等于 1，但 \(X\) 与 \(Y\) 之间的 Pearson 相关系数小于 1。请解释原因。</li>
+<li>证明生成函数为 \(\phi(u) = -\log(u)\) 的 Archimedean copula 等于独立 copula \(C_0\)。将自然对数换为常用对数，即 \(\phi(u) = -\log_{10}(u)\)，是否仍成立？</li>
+<li>共单调 copula \(C^+\) 不是 Archimedean copula；但在二维情形下，反单调 copula \(C^-(u_1, u_2) = \max(u_1 + u_2 - 1, 0)\) 是 Archimedean copula。其生成函数是什么？</li>
+<li>证明 Frank copula 的生成函数
+\[
+\phi_{\text{Fr}}(u|\theta) = -\log\left\{\frac{e^{-\theta u} - 1}{e^{-\theta} - 1}\right\}, \quad \theta \in (-\infty, 0) \cup (0, \infty)
+\]
+满足严格生成函数的前三条假设。</li>
+<li>证明当 \(\theta \to \infty\) 时，\(C_{\text{Fr}}(u_1, u_2|\theta) \to \min(u_1, u_2)\)，即共单调 copula \(C^+\)。</li>
+<li>设 \(\phi_1, \ldots, \phi_k\) 是 \(k\) 个严格生成函数，定义新生成函数 \(\phi\) 为这 \(k\) 个生成函数的凸组合，即
+\[
+\phi(u) = a_1 \phi_1(u) + \cdots + a_k \phi_k(u),
+\]
+其中 \(a_1, \ldots, a_k\) 为非负常数且和为 1。证明 \(\phi(u)\) 是严格生成函数。当 \(k=2\) 时，对应的 copula 函数是什么？</li>
+<li>设 \(\phi(u|\theta) = (1-u)^\theta\)，其中 \(\theta \ge 1\)，证明在二维情形下，该生成函数生成 copula
+\[
+C(u_1, u_2|\theta) = \max\left[0, 1 - \left\{(1-u_1)^\theta + (1-u_2)^\theta\right\}^{1/\theta}\right].
+\]
+进一步，证明当 \(\theta \to \infty\) 时，\(C(u_1, u_2|\theta) \to \min(u_1, u_2)\)，即共单调 copula \(C^+\)；当 \(\theta \to 1\) 时，\(C(u_1, u_2|\theta) \to \max(u_1 + u_2 - 1, 0)\)，即反单调 copula \(C^-\)。</li>
+<li>\(k\) 个联合 CDF 的凸组合本身是一个联合 CDF（有限混合），但 \(k\) 个 copula 函数的凸组合是否也是 copula 函数？</li>
+<li>设 \(Y = (Y_1, \ldots, Y_d)\) 具有 meta-Gaussian 分布，其边缘分布连续，copula 为 \(C_{\text{Gauss}}(\cdot|\Omega)\)。证明若 \(\rho_\tau(Y_i, Y_j) = 0\)，则 \(Y_i\) 与 \(Y_j\) 独立。</li>
+</ol>
+<h3>参考文献</h3>
+<p>Cherubini, U., Luciano, E., and Vecchiato, W. (2004) <em>Copula Methods in Finance</em>, John Wiley, New York.</p>
+</section>
+<section class="book-page" data-pdf-page="239"><h2>参考文献</h2><ol class="references"><li>Duffie, D. and Singleton, K. J. (2003) <em>Credit Risk</em>, Princeton University Press, Princeton and Oxford.</li><li>Joe, H. (1997) <em>Multivariate Models and Dependence Concepts</em>, Chapman &amp; Hall, London.</li><li>Li, D. (2000) On default correlation: A copula function approach, <em>Journal of Fixed Income</em>, 9, 43–54.</li><li>Mari, D. D. and Kotz, S. (2001) <em>Correlation and Dependence</em>, World Scientific, London.</li><li>McNeil, A., Frey, R., and Embrechts, P. (2005) <em>Quantitative Risk Management</em>, Princeton University Press, Princeton and Oxford.</li><li>Nelsen, R. B. (2007) <em>An Introduction to Copulas</em>, 2nd ed., Springer, New York.</li><li>Salmon, F. (2009) Recipe for Disaster: The Formula That Killed Wall Street, <em>Wired</em> <a href="http://www.wired.com/techbiz/it/magazine/17-03/wp_quant?currentPage=all">http://www.wired.com/techbiz/it/magazine/17-03/wp_quant?currentPage=all</a></li></ol></section>
+<nav class="chapter-nav"><a href="/statistics-data-analysis-financial-engineering-cn/chapter-7/">上一节：第7章 多元统计模型</a><a href="/statistics-data-analysis-financial-engineering-cn/chapter-9/">下一节：第9章 回归：基础</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=638ea974b0aa"></script>
+</body>
+</html>

@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="第2章 收益率 | 《金融工程统计与数据分析：R 示例》">
+  <title>第2章 收益率 | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=7670d9cf9549">
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <div class="sidebar-heading">
+    <h2>书籍目录</h2>
+    <div class="sidebar-actions" aria-label="二级目录控制">
+      <button type="button" data-sidebar-action="expand">全部展开</button>
+      <button type="button" data-sidebar-action="collapse">全部收起</button>
+    </div>
+  </div>
+  <nav class="sidebar-list"><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/">首页</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/preface/">前言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/preface-first-edition/">第一版前言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/notation/">符号说明</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-1/">第1章 引言</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-1" aria-label="展开第1章 引言二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-1" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-1/#section-1-1">1.1 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-1/#references">References</a></div></div><div class="sidebar-item is-current is-open"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/" aria-current="page">第2章 收益率</a><button class="sidebar-toggle" type="button" aria-expanded="true" aria-controls="sidebar-sections-chapter-2" aria-label="收起第2章 收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-2"><a class="section-link" href="#section-2-1">2.1 Introduction</a><a class="section-link" href="#section-2-2">2.2 The Random Walk Model</a><a class="section-link" href="#section-2-3">2.3 Bibliographic Notes</a><a class="section-link" href="#section-2-4">2.4 R Lab</a><a class="section-link" href="#section-2-5">2.5 Exercises</a><a class="section-link" href="#references-2">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/">第3章 固定收益证券</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-3" aria-label="展开第3章 固定收益证券二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-3" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-1">3.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-2">3.2 Zero-Coupon Bonds</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-3">3.3 Coupon Bonds</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-4">3.4 Yield to Maturity</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-5">3.5 Term Structure</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-6">3.6 Continuous Compounding</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-7">3.7 Continuous Forward Rates</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-8">3.8 Sensitivity of Price to Yield</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-9">3.9 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-10">3.10 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-11">3.11 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#references-3">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/">第4章 探索性数据分析</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-4" aria-label="展开第4章 探索性数据分析二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-4" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-1">4.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-2">4.2 Histograms and Kernel Density Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-3">4.3 Order Statistics, the Sample CDF, and Sample Quantiles</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-4">4.4 Tests of Normality</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-5">4.5 Boxplots</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-6">4.6 Data Transformation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-7">4.7 The Geometry of Transformations</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-8">4.8 Transformation Kernel Density Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-9">4.9 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-10">4.10 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-11">4.11 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#references-4">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/">第5章 单变量分布建模</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-5" aria-label="展开第5章 单变量分布建模二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-5" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-1">5.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-2">5.2 Parametric Models and Parsimony</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-3">5.3 Location, Scale, and Shape Parameters</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-4">5.4 Skewness, Kurtosis, and Moments</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-5">5.5 Heavy-Tailed Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-6">5.6 Generalized Error Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-7">5.7 Creating Skewed from Symmetric Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-8">5.8 Quantile-Based Location, Scale, and Shape Parameters</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-9">5.9 Maximum Likelihood Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-10">5.10 Fisher Information and the Central Limit Theoremfor the MLE</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-11">5.11 Likelihood Ratio Tests</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-12">5.12 AIC and BIC</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-13">5.13 Validation Data and Cross-Validation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-14">5.14 Fitting Distributions by Maximum Likelihood</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-15">5.15 Profile Likelihood</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-16">5.16 Robust Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-17">5.17 Transformation Kernel Density Estimation with a Parametric Transformation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-18">5.18 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-19">5.19 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-20">5.20 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#references-5">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/">第6章 重抽样</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-6" aria-label="展开第6章 重抽样二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-6" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-1">6.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-2">6.2 Bootstrap Estimates of Bias, Standard Deviation, and MSE</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-3">6.3 Bootstrap Confidence Intervals</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-4">6.4 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-5">6.5 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-6">6.6 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#references-6">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/">第7章 多元统计模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-7" aria-label="展开第7章 多元统计模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-7" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-1">7.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-2">7.2 Covariance and Correlation Matrices</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-3">7.3 Linear Functions of Random Variables</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-4">7.4 Scatterplot Matrices</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-5">7.5 The Multivariate Normal Distribution</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-6">7.6 The Multivariate t-Distribution</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-7">7.7 Fitting the Multivariate t-Distribution by MaximumLikelihood</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-8">7.8 Elliptically Contoured Densities</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-9">7.9 The Multivariate Skewed t-Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-10">7.10 The Fisher Information Matrix</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-11">7.11 Bootstrapping Multivariate Data</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-12">7.12 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-13">7.13 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-14">7.14 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#references-7">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/">第8章 Copula</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-8" aria-label="展开第8章 Copula二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-8" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-1">8.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-2">8.2 Special Copulas</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-3">8.3 Gaussian and t-Copulas</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-4">8.4 Archimedean Copulas</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-5">8.5 Rank Correlation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-6">8.6 Tail Dependence</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-7">8.7 Calibrating Copulas</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-8">8.8 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-9">8.9 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-10">8.10 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#references-8">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/">第9章 回归：基础</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-9" aria-label="展开第9章 回归：基础二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-9" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-1">9.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-2">9.2 Straight-Line Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-3">9.3 Multiple Linear Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-4">9.4 Analysis of Variance, Sums of Squares, and R2</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-5">9.5 Model Selection</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-6">9.6 Collinearity and Variance Inflation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-7">9.7 Partial Residual Plots</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-8">9.8 Centering the Predictors</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-9">9.9 Orthogonal Polynomials</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-10">9.10 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-11">9.11 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-12">9.12 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#references-9">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/">第10章 回归：问题诊断</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-10" aria-label="展开第10章 回归：问题诊断二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-10" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-1">10.1 Regression Diagnostics</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-2">10.2 Checking Model Assumptions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-3">10.3 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-4">10.4 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-5">10.5 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#references-10">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/">第11章 回归：高级专题</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-11" aria-label="展开第11章 回归：高级专题二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-11" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-1">11.1 The Theory Behind Linear Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-2">11.2 Nonlinear Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-3">11.3 Estimating Forward Rates from Zero-Coupon Bond Prices</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-4">11.4 Transform-Both-Sides Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-5">11.5 Transforming Only the Response</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-6">11.6 Binary Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-7">11.7 Linearizing a Nonlinear Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-8">11.8 Robust Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-9">11.9 Regression and Best Linear Prediction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-10">11.10 Regression Hedging</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-11">11.11 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-12">11.12 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-13">11.13 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#references-11">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/">第12章 时间序列模型：基础</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-12" aria-label="展开第12章 时间序列模型：基础二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-12" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-1">12.1 Time Series Data</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-2">12.2 Stationary Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-3">12.3 Estimating Parameters of a Stationary Process</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-4">12.4 AR(1) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-5">12.5 Estimation of AR(1) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-6">12.6 AR(p) Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-7">12.7 Moving Average (MA) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-8">12.8 ARMA Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-9">12.9 ARIMA Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-10">12.10 Unit Root Tests</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-11">12.11 Automatic Selection of an ARIMA Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-12">12.12 Forecasting</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-13">12.13 Partial Autocorrelation Coefficients</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-14">12.14 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-15">12.15 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-16">12.16 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#references-12">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/">第13章 时间序列模型：深入专题</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-13" aria-label="展开第13章 时间序列模型：深入专题二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-13" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-1">13.1 Seasonal ARIMA Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-2">13.2 Box-Cox Transformation for Time Series</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-3">13.3 Time Series and Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-4">13.4 Multivariate Time Series</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-5">13.5 Long-Memory Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-6">13.6 Bootstrapping Time Series</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-7">13.7 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-8">13.8 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-9">13.9 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#references-13">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/">第14章 GARCH模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-14" aria-label="展开第14章 GARCH模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-14" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-1">14.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-2">14.2 Estimating Conditional Means and Variances</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-3">14.3 ARCH(1) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-4">14.4 The AR(1)+ARCH(1) Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-5">14.5 ARCH(p) Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-6">14.6 ARIMA(pM,d,qM)+GARCH(pV, qV) Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-7">14.7 GARCH Processes Have Heavy Tails</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-8">14.8 Fitting ARMA+GARCH Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-9">14.9 GARCH Models as ARMA Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-10">14.10 GARCH(1,1) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-11">14.11 APARCH Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-12">14.12 Linear Regression with ARMA+GARCH Errors</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-13">14.13 Forecasting ARMA+GARCH Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-14">14.14 Multivariate GARCH Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-15">14.15 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-16">14.16 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-17">14.17 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#references-14">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/">第15章 协整</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-15" aria-label="展开第15章 协整二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-15" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-1">15.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-2">15.2 Vector Error Correction Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-3">15.3 Trading Strategies</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-4">15.4 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-5">15.5 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-6">15.6 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#references-15">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/">第16章 投资组合选择</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-16" aria-label="展开第16章 投资组合选择二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-16" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-1">16.1 Trading Off Expected Return and Risk</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-2">16.2 One Risky Asset and One Risk-Free Asset</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-3">16.3 Two Risky Assets</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-4">16.4 Combining Two Risky Assets with a Risk-Free Asset</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-5">16.5 Selling Short</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-6">16.6 Risk-Efficient Portfolios with N Risky Assets</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-7">16.7 Resampling and Efficient Portfolios</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-8">16.8 Utility</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-9">16.9 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-10">16.10 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-11">16.11 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#references-16">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/">第17章 资本资产定价模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-17" aria-label="展开第17章 资本资产定价模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-17" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-1">17.1 Introduction to the CAPM</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-2">17.2 The Capital Market Line (CML)</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-3">17.3 Betas and the Security Market Line</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-4">17.4 The Security Characteristic Line</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-5">17.5 Some More Portfolio Theory</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-6">17.6 Estimation of Beta and Testing the CAPM</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-7">17.7 Using the CAPM in Portfolio Analysis</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-8">17.8 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-9">17.9 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-10">17.10 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#references-17">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/">第18章 因子模型与主成分</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-18" aria-label="展开第18章 因子模型与主成分二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-18" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-1">18.1 Dimension Reduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-2">18.2 Principal Components Analysis</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-3">18.3 Factor Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-4">18.4 Fitting Factor Models by Time Series Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-5">18.5 Cross-Sectional Factor Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-6">18.6 Statistical Factor Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-7">18.7 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-8">18.8 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-9">18.9 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#references-18">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/">第19章 风险管理</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-19" aria-label="展开第19章 风险管理二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-19" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-1">19.1 The Need for Risk Management</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-2">19.2 Estimating VaR and ES with One Asset</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-3">19.3 Bootstrap Confidence Intervals for VaR and ES</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-4">19.4 Estimating VaR and ES Using ARMA+GARCH Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-5">19.5 Estimating VaR and ES for a Portfolio of Assets</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-6">19.6 Estimation of VaR Assuming Polynomial Tails</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-7">19.7 Pareto Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-8">19.8 Choosing the Horizon and Confidence Level</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-9">19.9 VaR and Diversification</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-10">19.10 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-11">19.11 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-12">19.12 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#references-19">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/">第20章 贝叶斯数据分析与MCMC</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-20" aria-label="展开第20章 贝叶斯数据分析与MCMC二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-20" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-1">20.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-2">20.2 Bayes&#x27;s Theorem</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-3">20.3 Prior and Posterior Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-4">20.4 Conjugate Priors</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-5">20.5 Central Limit Theorem for the Posterior</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-6">20.6 Posterior Intervals</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-7">20.7 Markov Chain Monte Carlo</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-8">20.8 Hierarchical Priors</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-9">20.9 Bayesian Estimation of a Covariance Matrix</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-10">20.10 Stochastic Volatility Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-11">20.11 Fitting GARCH Models with MCMC</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-12">20.12 Fitting a Factor Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-13">20.13 Sampling a Stationary Process</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-14">20.14 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-15">20.15 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#section-20-16">20.16 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/#references-20">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/">第21章 非参数回归与样条</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-21" aria-label="展开第21章 非参数回归与样条二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-21" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-1">21.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-2">21.2 Local Polynomial Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-3">21.3 Linear Smoothers</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-4">21.4 Polynomial Splines</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-5">21.5 Penalized Splines</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-6">21.6 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-7">21.7 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-8">21.8 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#references-21">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/">附录A 概率、统计与代数基础知识</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-appendix-a" aria-label="展开附录A 概率、统计与代数基础知识二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-appendix-a" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-1-introduction">A.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-2-probability-distributions">A.2 Probability Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-3-when-do-expected-values-and-variances-exist">A.3 When Do Expected Values and Variances Exist?</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-4-monotonic-functions">A.4 Monotonic Functions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-5-the-minimum-maximum-infinum-and-supremum-of-a-set">A.5 The Minimum, Maximum, Infinum, and Supremum of a Set</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-6-functions-of-random-variables">A.6 Functions of Random Variables</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-7-random-samples">A.7 Random Samples</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-8-the-binomial-distribution">A.8 The Binomial Distribution</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-9-some-common-continuous-distributions">A.9 Some Common Continuous Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-10-sampling-a-normal-distribution">A.10 Sampling a Normal Distribution</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-11-law-of-large-numbers-and-the-central-limit-theoremfor-the-sample-mean">A.11 Law of Large Numbers and the Central Limit Theoremfor the Sample Mean</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-12-bivariate-distributions">A.12 Bivariate Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-13-correlation-and-covariance">A.13 Correlation and Covariance</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-14-multivariate-distributions">A.14 Multivariate Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-15-stochastic-processes">A.15 Stochastic Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-16-estimation">A.16 Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-17-confidence-intervals">A.17 Confidence Intervals</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-18-hypothesis-testing">A.18 Hypothesis Testing</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-19-prediction">A.19 Prediction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-20-facts-about-vectors-and-matrices">A.20 Facts About Vectors and Matrices</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-21-roots-of-polynomials-and-complex-numbers">A.21 Roots of Polynomials and Complex Numbers</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-22-bibliographic-notes">A.22 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#references-22">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/index/">索引</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <h1>第2章 收益率</h1>
+<section class="book-page" data-pdf-page="32">
+  <h1 id="chapter-2">第2章 收益率</h1>
+  <h2 id="section-2-1">2.1 引言</h2>
+  <p>投资的目的是为了获得收益。投资的收益（或负收益情况下的亏损）取决于价格变动和所持有资产的数量。投资者关心的是相对于初始投资规模较高的收益。收益率正是衡量这一点，因为资产的收益率（例如股票、债券、股票和债券的组合）是价格变动相对于初始价格的分数形式。</p>
+  <h3>2.1.1 净收益率</h3>
+  <p>设 \(P_t\) 为资产在时间 \(t\) 的价格。假设无股息，则从时间 \(t-1\) 到时间 \(t\) 的持有期净收益率为</p>
+  \[ R_t = \frac{P_t}{P_{t-1}} - 1 = \frac{P_t - P_{t-1}}{P_{t-1}}. \]
+  <p>分子 \(P_t - P_{t-1}\) 是持有期内的收益或利润，负利润表示亏损。分母 \(P_{t-1}\) 是持有期开始时的初始投资。因此，净收益率可视为相对收益或利润率。</p>
+  <p>持有资产所获得的收益为</p>
+  \[ \text{收益} = \text{初始投资} \times \text{净收益率}. \]
+  <p>例如，初始投资 10,000 美元，净收益率为 6%，则获得收益 600 美元。由于 \(P_t \geq 0\)，</p>
+</section>
+<section class="book-page" data-pdf-page="33">
+<h1>2 收益率</h1>
+<p>\[R_t \ge -1, \qquad (2.1)\]</p>
+<p>因此最差的可能收益率为-1，即100%的损失，当资产变得一文不值时发生。</p>
+<h2>2.1.2 总收益率</h2>
+<p>简单的总收益率定义为
+\[\frac{P_t}{P_{t-1}} = 1 + R_t.\]
+例如，若 \(P_t = 2\) 且 \(P_{t+1} = 2.1\)，则 \(1 + R_{t+1} = 1.05\)，即105%，而 \(R_{t+1} = 0.05\)，即5%。个体在时刻 \(t\) 的最终财富等于其在时刻 \(t-1\) 的初始财富乘以总收益率。换言之，若 \(X_0\) 是时刻 \(t-1\) 的初始财富，则 \(X_0(1 + R_t)\) 是时刻 \(t\) 的财富。</p>
+<p>收益率是无量纲的（scale-free），意味着它们不依赖于单位（美元、美分等）。收益率并非没有单位。其单位是时间；它们依赖于 \(t\) 的单位（小时、日等）。在本例中，若 \(t\) 以年为单位，则更精确地说，净收益率为每年5%。</p>
+<p>最近 \(k\) 个时期的总收益率是 \(k\) 个单期总收益率的乘积（从时刻 \(t-k\) 到时刻 \(t\)）：
+\[1 + R_t(k) = \frac{P_t}{P_{t-k}} = \left(\frac{P_t}{P_{t-1}}\right)\left(\frac{P_{t-1}}{P_{t-2}}\right) \cdots \left(\frac{P_{t-k+1}}{P_{t-k}}\right) = (1+R_t) \cdots (1+R_{t-k+1}).\]
+\(k\) 期净收益率为 \(R_t(k)\)。</p>
+<h2>2.1.3 对数收益率</h2>
+<p>对数收益率（log returns），也称为连续复利收益率（continuously compounded returns），用 \(r_t\) 表示，定义为
+\[r_t = \log(1+R_t) = \log\left(\frac{P_t}{P_{t-1}}\right) = p_t - p_{t-1},\]
+其中 \(p_t = \log(P_t)\) 称为对数价格（log price）。</p>
+<p>对数收益率近似等于收益率，因为若 \(x\) 很小，则 \(\log(1+x) \approx x\)，如图2.1所示，图中绘制了 \(\log(1+x)\)。注意图中，若 \(|x| < 0.1\)，例如收益率小于10%，则 \(\log(1+x)\) 非常接近 \(x\)。</p>
+<p>例如，5%的收益率等于4.88%的对数收益率，因为 \(\log(1+0.05) = 0.0488\)。同样地，-5%的收益率等于-5.13%的对数收益率，因为 \(\log(1-0.05) = -0.0513\)。两种情形下，\(r_t = \log(1+R_t) \approx R_t\)。此外，\(\log(1+0.01) = 0.00995\)，\(\log(1-0.01) = -0.01005\)，因此±1%的对数收益率非常接近</p>
+</section>
+<section class="book-page" data-pdf-page="34"><h2>2.1 引言</h2><p>对应的净收益率。由于收益率在较短周期内幅度较小，我们可以预期日收益率与日对数收益率相近，年收益率则不太相近，而对于更长的周期（如10年）则不一定相似。</p><figure class="book-figure" id="fig-2.1"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-4635e4e11571.png" alt="图2.1 函数log(1+x)与x的比较" style="max-width:100%;height:auto;"><figcaption>图2.1 函数log(1+x)与x的比较</figcaption></figure><p>收益率和对数收益率具有相同的符号。当两者均为正（负）时，对数收益率的绝对值小于（大于）收益率。两者之间的差异在均为很大的负值时最为显著。接近下限-1的收益率（即完全损失）对应接近负无穷的对数收益率。</p><p>使用对数收益率的一个优点是简化了多期收益率。k期对数收益率就是单期对数收益率的和，而不是像总收益率那样是乘积。要理解这一点，注意到k期对数收益率为：</p>\[\begin{aligned} r_t(k) &= \log\{1+R_t(k)\} \\ &= \log\{(1+R_t)\cdots(1+R_{t-k+1})\} \\ &= \log(1+R_t)+\cdots+\log(1+R_{t-k+1}) \\ &= r_t + r_{t-1} + \cdots + r_{t-k+1}. \end{aligned}\]<h3>2.1.4 股息调整</h3><p>许多股票，尤其是成熟公司的股票，会支付股息，在计算收益率时必须考虑。类似地，债券会支付利息。如果一个</p></section>
+<section class="book-page" data-pdf-page="35">
+  <p>股息（或利息）\(D_t\) 在时间 \(t\) 之前支付，则时间 \(t\) 的总收益率定义为</p>
+  \[1+R_t = \frac{P_t + D_t}{P_{t-1}}, \tag{2.2}\]
+  <p>因此净收益率为 \(R_t = (P_t + D_t)/P_{t-1} - 1\)，对数收益率为</p>
+  \[r_t = \log(1+R_t) = \log(P_t + D_t) - \log(P_{t-1}).\]
+  <p>多期总收益率为单期总收益率的乘积，即</p>
+  \[1+R_t(k) = \left(\frac{P_t + D_t}{P_{t-1}}\right) \left(\frac{P_{t-1} + D_{t-1}}{P_{t-2}}\right) \cdots \left(\frac{P_{t-k+1} + D_{t-k+1}}{P_{t-k}}\right) = (1+R_t)(1+R_{t-1})\cdots (1+R_{t-k+1}), \tag{2.3}\]
+  <p>其中，对于任意时间，若 \(s-1\) 与 \(s\) 之间没有股息，则 \(D_s = 0\)。类似地，\(k\) 期对数收益率为</p>
+  \[r_t(k) = \log\{1+R_t(k)\} = \log(1+R_t) + \cdots + \log(1+R_{t-k+1}) = \log\left(\frac{P_t + D_t}{P_{t-1}}\right) + \cdots + \log\left(\frac{P_{t-k+1} + D_{t-k+1}}{P_{t-k}}\right).\]
+
+  <h2 id="section-2-2">2.2 随机游走模型</h2>
+  <p>随机游走假设表明，单期对数收益率 \(r_t = \log(1+R_t)\) 是独立的。因为</p>
+  \[1+R_t(k) = (1+R_t)\cdots (1+R_{t-k+1}) = \exp(r_t)\cdots \exp(r_{t-k+1}) = \exp(r_t + \cdots + r_{t-k+1}),\]
+  <p>我们有</p>
+  \[\log\{1+R_t(k)\} = r_t + \cdots + r_{t-k+1}. \tag{2.4}\]
+  <p>有时进一步假设对数收益率服从均值为 \(\mu\)、方差为 \(\sigma^2\) 的正态分布 \(N(\mu, \sigma^2)\)。由于正态随机变量之和仍是正态的，单期对数收益率的正态性意味着多期对数收益率的正态性。在此假设下，\(\log\{1+R_t(k)\}\) 服从 \(N(k\mu, k\sigma^2)\)。</p>
+
+  <h3>2.2.1 随机游走</h3>
+  <p>模型 (2.4) 是随机游走模型的一个例子。设 \(Z_1, Z_2, \ldots\) 为独立同分布（i.i.d.），均值为 \(\mu\)，标准差为 \(\sigma\)。设 \(S_0\) 为任意起点，且</p>
+  \[S_t = S_0 + Z_1 + \cdots + Z_t, \quad t \ge 1. \tag{2.5}\]
+</section>
+<section class="book-page" data-pdf-page="36">
+  <h3>2.2 随机游走模型</h3>
+  <p>由 (2.5) 可知，\(S_t\) 是从 \(S_0\) 出发的随机游走经过 \(t\) 步后的位置。过程 \(S_0, S_1, \ldots\) 称为<strong>随机游走</strong>，而 \(Z_1, Z_2, \ldots\) 为其步长。</p>
+  <p>若步长服从正态分布，则称该过程为<strong>正态随机游走</strong>。给定 \(S_0\) 时 \(S_t\) 的条件期望和方差分别为 \(\mathbb{E}(S_t | S_0) = S_0 + \mu t\) 和 \(\operatorname{Var}(S_t | S_0) = \sigma^2 t\)。参数 \(\mu\) 称为<strong>漂移</strong>，决定了随机游走的总体方向；参数 \(\sigma\) 称为<strong>波动率</strong>，决定了随机游走围绕条件均值 \(S_0 + \mu t\) 的波动程度。由于给定 \(S_0\) 时 \(S_t\) 的标准差为 \(\sigma \sqrt{t}\)，因此 \((S_0 + \mu t) \pm \sigma \sqrt{t}\) 给出了均值加减一个标准差的范围，对于正态随机游走，该范围包含 68% 的概率。这个范围的宽度随 \(\sqrt{t}\) 成比例增长，如图 2.2 所示，表明在时刻 \(t = 0\) 时，我们对随机游走遥远未来位置的了解远少于对近期位置的了解。</p>
+
+  <h4>2.2.1 几何随机游走</h4>
+  <p>回忆 \(\log\{1 + R_t(k)\} = r_t + \cdots + r_{t-k+1}\)。因此，</p>
+  \[
+  \frac{P_t}{P_{t-k}} = 1 + R_t(k) = \exp(r_t + \cdots + r_{t-k+1}), \tag{2.6}
+  \]
+  <p>取 \(k = t\)，我们有</p>
+  \[
+  P_t = P_0 \exp(r_t + r_{t-1} + \cdots + r_1). \tag{2.7}
+  \]
+  <p>我们将对数服从随机游走的过程称为<strong>几何随机游走</strong>或<strong>指数随机游走</strong>。若 \(r_1, r_2, \ldots\) 为 i.i.d. \(N(\mu, \sigma^2)\)，则 \(P_t\) 对所有 \(t\) 均服从对数正态分布，该过程称为参数为 \((\mu, \sigma^2)\) 的<strong>对数正态几何随机游走</strong>。如附录 A.9.4 所述，\(\mu\) 称为 \(\exp(r_t)\) 的对数正态分布的<strong>对数均值</strong>，\(\sigma\) 称为<strong>对数标准差</strong>。此外，\(\mu\) 有时也称为对数正态几何随机游走的<strong>对数漂移</strong>。</p>
+
+  <h4>2.2.2 对数价格是对数正态几何随机游走吗？</h4>
+  <p>金融数学中的大量工作假设价格服从对数正态几何随机游走或其连续时间对应形式——几何布朗运动。因此一个自然的问题是：这一假设通常成立吗？</p>
+  <p>快速回答是“否”。对数正态几何随机游走有两个假设：(1) 对数收益率服从正态分布；(2) 对数收益率相互独立。</p>
+  <p>在第 4 章和第 5 章中，我们将研究几组对数收益率序列的边缘分布。结论是：虽然收益率密度具有类似正态密度的钟形形状，但对数收益率分布的尾部通常比正态尾部重得多。通常，一个...</p>
+</section>
+<section class="book-page" data-pdf-page="37">
+  <figure class="book-figure" id="fig-2.2"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-b10c989d0a6a.png" alt="图2.2 随机游走的均值与边界">
+    <figcaption>图2.2 随机游走的均值与边界（均值加减一个标准差），其中\(S_0=0\)，\(\mu=0.5\)，\(\sigma=1\)。在任意给定时刻，若步长分布为正态，则位于边界（虚线曲线）之间的概率为68%。由于\(\mu>0\)，存在总体正趋势；若\(\mu\)为负，则该趋势将反转。</figcaption>
+  </figure>
+
+  <p>具有小自由度参数（例如4–6）的t分布比正态模型拟合得好得多。然而，对数收益率分布似乎是对称的，或至少近乎对称。</p>
+
+  <p>独立性假设也被违反。首先，收益率之间存在一些相关性。然而，相关性通常很小。更严重的是，收益率表现出波动率聚集，这意味着如果我们在当前收益率中看到高波动性，我们可以预期这种高波动性将持续，至少持续一段时间。波动率聚集可以通过检查平方收益率之间的相关性来检测。</p>
+
+  <p>在抛弃资产价格是对数正态几何随机游走的假设之前，值得记住Box的箴言：“所有模型都是错误的，但有些模型是有用的。”这种假设有时是有用的，例如用于推导著名的Black–Scholes公式。</p>
+
+  <h2 id="section-2-3">2.3 参考文献注释</h2>
+
+  <p>随机游走假说与所谓有效市场假说有关；参见Ruppert等人（2003）的讨论及进一步参考文献。Bodie等人（1999）和Sharpe等人（1995）是随机游走假说和市场有效性的良好入门。更高级的讨论见Campbell等人（1997）第2章以及Lo和MacKinlay（1999）。关于行为的大量经验证据</p>
+</section>
+<section class="book-page" data-pdf-page="38"><h2 id="section-2-4">2.4 R实验</h2><p>关于收益率，Fama (1965, 1970, 1991, 1998) 进行了综述。反对有效市场假说的证据可以在行为金融学领域找到，该领域利用对人类行为的研究来理解市场行为；参见 Shefrin (2000)、Shleifer (2000) 和 Thaler (1993)。市场无效的一个表现是市场价格过度波动；参见 Shiller (1992) 或 Shiller (2000) 的较少技术性讨论。</p><p>在后续内容中，我们将广泛使用 R。Dalgaard (2008) 和 Zuur 等人 (2009) 是学习 R 的入门好材料。</p><h3>2.4.1 数据分析</h3><p>从本书网站获取数据集 <code>Stock_bond.csv</code>，并将其放入你的工作目录。启动 R<sup><a href="#fn-p038-1" id="fnref-p038-1">1</a></sup>，你应该会看到一个控制台窗口打开。使用“文件”菜单中的“更改目录”切换到工作目录。用以下命令读取数据：</p><pre><code class="language-r">dat = read.csv("Stock_bond.csv", header = TRUE)</code></pre><p>数据集 <code>Stock_bond.csv</code> 包含从 1987-01-02 到 2006-09-01 的股票和标普500指数（列 B–W）的每日成交量与调整收盘价，以及债券收益率（列 X–AD）。</p><p>本书不提供关于 R 函数的详细信息，因为这些信息很容易从其他渠道获得。例如，你可以在 R 控制台中输入“?read.csv”然后按回车键，使用 R 的帮助系统获取关于 <code>read.csv()</code> 函数的更多信息。你还应该使用 R 帮助文件中提供的《An Introduction to R》手册，该手册也可在 CRAN 上找到。另一个学习 R 的入门资源是 Zuur 等人 (2009)。</p><p>除了在控制台中输入命令，另一种方法是从“文件”菜单开始一个新脚本，将代码放入编辑器，高亮显示这些行，然后按 Ctrl-R 运行高亮的代码<sup><a href="#fn-p038-2" id="fnref-p038-2">2</a></sup>。这种技术对于调试很有用。你可以保存脚本文件，然后重复使用或修改它。文件保存后，可以通过“source”运行整个文件。你可以在 R 中使用“文件”菜单来 source 一个文件，或者使用 <code>source()</code> 函数。如果文件在编辑器中，可以通过按 Ctrl-A 高亮整个文件，然后按 Ctrl-R 来运行。</p><p>接下来的代码行打印数据集中变量的名称，附加数据，并绘制通用汽车和福特汽车的调整收盘价。</p><!-- <div class="code-tabs" data-code-tabs id="lab-plot">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="lab-plot-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="lab-plot-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="lab-plot-r" role="tabpanel">
+    <pre><code class="language-r">names(dat)
+attach(dat)
+plot(GM, type=&quot;l&quot;, col=&quot;blue&quot;, ylim=c(0,100), ylab=&quot;Adjusted Closing Price&quot;)
+lines(Ford, col=&quot;red&quot;)
+legend(&quot;topleft&quot;, legend=c(&quot;GM&quot;,&quot;Ford&quot;), col=c(&quot;blue&quot;,&quot;red&quot;), lty=1)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="lab-plot-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import pandas as pd
+import matplotlib.pyplot as plt
+
+dat = pd.read_csv(&quot;Stock_bond.csv&quot;)
+plt.figure()
+plt.plot(dat[&#x27;GM&#x27;], label=&#x27;GM&#x27;, color=&#x27;blue&#x27;)
+plt.plot(dat[&#x27;Ford&#x27;], label=&#x27;Ford&#x27;, color=&#x27;red&#x27;)
+plt.ylim(0, 100)
+plt.ylabel(&#x27;Adjusted Closing Price&#x27;)
+plt.legend(loc=&#x27;upper left&#x27;)
+plt.show()</code></pre>
+  </div>
+</div> --><ol class="footnotes"><li id="fn-p038-1">你也可以在 Rstudio 中运行 R，事实上强烈推荐使用 Rstudio。在本书第二版编写过程中，作者从 R 切换到了 Rstudio。<a href="#fnref-p038-1">↩</a></li><li id="fn-p038-2">或者在 Rstudio 中点击“运行”按钮。<a href="#fnref-p038-2">↩</a></li></ol></section>
+<section class="book-page" data-pdf-page="39">
+<p>12 2 收益率</p>
+<div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">1 names(dat)
+2 attach(dat)
+3 par(mfrow = c(1, 2))
+4 plot(GM_AC)
+5 plot(F_AC)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import pandas as pd
+import matplotlib.pyplot as plt
+
+# Assuming dat is a DataFrame with columns &#x27;GM_AC&#x27; and &#x27;F_AC&#x27;
+print(dat.columns)  # Equivalent to names(dat)
+plt.figure(figsize=(10, 4))
+plt.subplot(1, 2, 1)
+plt.plot(dat[&#x27;GM_AC&#x27;], &#x27;o&#x27;)
+plt.subplot(1, 2, 2)
+plt.plot(dat[&#x27;F_AC&#x27;], &#x27;o&#x27;)
+plt.tight_layout()
+plt.show()</code></pre>
+  </div>
+</div>
+<p>在本书中，列出R代码时经常会添加行号，行号并非代码的一部分。</p>
+<p>默认情况下，如第4行和第5行所示，点是用字符“o”绘制的。若要绘制连线，可以使用例如 <code>plot(GM_AC, type = "l")</code>。类似地，<code>plot(GM_AC, type = "b")</code> 同时绘制点和线。</p>
+<p>R函数 <code>attach()</code> 将一个数据库放入R的搜索路径中。这意味着在计算变量时，R会搜索该数据库，因此只需给出变量名即可访问数据库中的对象。如果没有附加 <code>dat</code>，那么第4行需要替换为 <code>plot(dat$GM_AC)</code>，第5行类似。</p>
+<p>函数 <code>par()</code> 指定绘图参数，<code>mfrow=c(n1,n2)</code> 指定“创建图形，按行填充，n1行和n2列”。因此，前n1个图形填充第一行，依此类推。<code>mfcol(n1,n2)</code> 按列填充，因此前n2个图形放在第一列。如前所述，关于这些及其他R函数的更多信息可从R的在线帮助或手册《R入门》获取。</p>
+<p>运行以下代码以查找样本量（n），计算GM和福特收益率，并绘制GM净收益率与福特收益率的散点图。</p>
+<div class="code-tabs" data-code-tabs id="code-2">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-2-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-2-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-2-r" role="tabpanel">
+    <pre><code class="language-r">1 n = dim(dat)[1]
+2 GMReturn = GM_AC[-1] / GM_AC[-n] - 1
+3 FReturn = F_AC[-1] / F_AC[-n] - 1
+4 par(mfrow = c(1, 1))
+5 plot(GMReturn,FReturn)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-2-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+# Assuming dat is a DataFrame with columns &#x27;GM_AC&#x27; and &#x27;F_AC&#x27;
+n = len(dat)
+GM_AC = dat[&#x27;GM_AC&#x27;].values
+F_AC = dat[&#x27;F_AC&#x27;].values
+GMReturn = GM_AC[1:] / GM_AC[:-1] - 1
+FReturn = F_AC[1:] / F_AC[:-1] - 1
+plt.figure()
+plt.plot(GMReturn, FReturn, &#x27;o&#x27;)
+plt.xlabel(&#x27;GM Return&#x27;)
+plt.ylabel(&#x27;Ford Return&#x27;)
+plt.title(&#x27;GM vs Ford Net Returns&#x27;)
+plt.show()</code></pre>
+  </div>
+</div>
+<p>在第2行和第3行中，索引-1表示除第一个之外的所有索引，类似地，-n表示除最后一个之外的所有索引。</p>
+<p><strong>问题1</strong> GM和福特收益率是否呈现正相关？你是否注意到异常收益率？如果是，GM的异常收益率是否伴随福特的异常收益率？</p>
+<p><strong>问题2</strong> 计算GM的对数收益率，并绘制收益率与对数收益率的散点图。两种收益率的相关性有多高？（R函数 <code>cor()</code> 计算相关性。）</p>
+<p><strong>问题3</strong> 对微软（MSFT）和默克（MRK）重复问题1。</p>
+</section>
+<section class="book-page" data-pdf-page="40">
+  <h3>2.4 R实验 13</h3>
+  <p>当你退出R时，你可以“保存工作空间镜像”，这会在你的工作目录中创建一个R工作空间文件。之后，你可以重新启动R，并通过右键单击R工作空间文件将该工作空间镜像加载到内存中。R启动时，你的工作目录将是包含所打开R工作空间的文件夹。在新文件夹中开始项目时，一个有用的技巧是将一个空保存的工作空间放入此文件夹。双击工作空间将以该文件夹为工作目录启动R。</p>
+  <h4>2.4.2 模拟</h4>
+  <p>对冲基金可以通过使用杠杆获得高利润，但杠杆也带来高风险。本节中的模拟探讨了在简化环境下杠杆的影响。</p>
+  <p>假设一家对冲基金拥有$1,000,000美元股票，使用$50,000自有资本和$950,000借款购买。假设如果股票价值在任何交易日结束时低于$950,000，则该对冲基金将卖出所有股票并偿还贷款。这将使其$50,000投资化为乌有。该对冲基金被称为20:1杠杆，因为其头寸是自有资本投资额的20倍。</p>
+  <p>假设股票每日对数收益率的年化均值为0.05/年，年化标准差为0.23/年。这些值可分别除以253和√253转换为每个交易日的比率。</p>
+  <p><strong>问题4</strong> 在未来45个交易日中，至少有一个交易日收盘时股票价值低于$950,000的概率是多少？为回答此问题，运行以下代码。</p>
+  <div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">1 niter = 1e5 # number of iterations
+2 below = rep(0, niter) # set up storage
+3 set.seed(2009)
+4 for (i in 1:niter)
+5 {
+6 r = rnorm(45, mean = 0.05/253,
+7 sd = 0.23/sqrt(253)) # generate random numbers
+8 logPrice = log(1e6) + cumsum(r)
+9 minlogP = min(logPrice) # minimum price over next 45 days
+10 below[i] = as.numeric(minlogP &lt; log(950000))
+11 }
+12 mean(below)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+niter = 100000
+below = np.zeros(niter)
+np.random.seed(2009)
+for i in range(niter):
+    r = np.random.normal(loc=0.05/253, scale=0.23/np.sqrt(253), size=45)
+    logPrice = np.log(1e6) + np.cumsum(r)
+    minlogP = np.min(logPrice)
+    below[i] = 1.0 if minlogP &lt; np.log(950000) else 0.0
+mean_below = np.mean(below)</code></pre>
+  </div>
+</div>
+  <p>在第10行，如果第i次模拟中45天内的最低价格低于950,000，则below[i]等于1。因此，在第12行，<code>mean(below)</code>是最低价格低于950,000的模拟比例。</p>
+  <p>如果你对这里使用的任何R函数不熟悉，请使用R的帮助了解它们；例如，输入<code>?rnorm</code>了解<code>rnorm()</code>生成...</p>
+</section>
+<section class="book-page" data-pdf-page="41">
+<h2>2 收益率</h2>
+<p>正态分布的随机数。您应该研究每一行代码，理解其作用，并确信代码估计了所请求的概率。请注意，任何跟在井号后面的内容都是注释，仅用于注解代码。</p>
+<p>假设对冲基金将在前100个交易日结束时，如果股票价值至少上涨至1,100,000美元，则以至少100,000美元的利润卖出股票；如果在第一个100个交易日结束时价格跌至950,000美元以下，则亏损卖出；如果收盘价在950,000美元和1,100,000美元之间，则在100个交易日后卖出。</p>
+<p>可以通过类似于上述模拟来回答以下问题。在回答这些问题时，忽略交易成本和利息。</p>
+<p><strong>问题5</strong> 对冲基金获得至少100,000美元利润的概率是多少？</p>
+<p><strong>问题6</strong> 对冲基金遭受损失的概率是多少？</p>
+<p><strong>问题7</strong> 该交易策略的期望利润是多少？</p>
+<p><strong>问题8</strong> 期望收益率是多少？回答此问题时，请记住仅投资了50,000美元。另外，收益率的单位是时间，例如，可以将收益率表示为日收益率或周收益率。因此，必须记录对冲基金在卖出前持有头寸的时间长度。</p>
+<h3>2.4.3 模拟几何随机游走</h3>
+<p>在本节中，您将使用模拟来观察当对数收益率是独立同分布的正态分布时股票价格如何演化，这意味着价格序列是几何随机游走。</p>
+<p>运行以下R代码。<code>set.seed()</code>命令确保使用此代码的每个人都获得相同的随机数，并得到相同的价格序列。每年有253个交易日，因此您将模拟9次一年的日收益率。价格从120开始。</p>
+<p>第3行的代码<code>par(mfrow=c(3,3))</code>打开一个具有三行三列的图形窗口，第6行的<code>rnorm()</code>生成正态分布的随机数。</p>
+<pre><code class="r">1 set.seed(2012)
+2 n = 253
+3 par(mfrow=c(3,3))
+4 for (i in (1:9))
+5 {
+6 logr = rnorm(n, 0.05 / 253, 0.2 / sqrt(253))</code></pre>
+</section>
+<section class="book-page" data-pdf-page="42"><h3>2.4 R实验</h3><div class="code-tabs" data-code-tabs id="rlab-42-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="rlab-42-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="rlab-42-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="rlab-42-1-r" role="tabpanel">
+    <pre><code class="language-r">price = c(120, 120 * exp(cumsum(logr)))
+plot(price, type = &quot;b&quot;)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="rlab-42-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import matplotlib.pyplot as plt
+price = np.concatenate([[120], 120 * np.exp(np.cumsum(logr))])
+plt.plot(price, marker=&#x27;o&#x27;)</code></pre>
+  </div>
+</div><p><strong>问题9</strong> 在这次模拟中，1年内的对数收益率的均值和标准差是多少？</p><p><strong>问题10</strong> 讨论价格序列如何表现出动量。动量的表现是真实的还是幻觉？</p><p><strong>问题11</strong> 解释代码 <code>c(120, 120*exp(cumsum(logr)))</code> 的功能。</p><h4>2.4.4 查看麦当劳股票</h4><p>在本节中，我们将考察麦当劳股票在2010–2014年期间的日收益率。要开始实验，请运行以下命令获取该期间的每日调整价格：</p><div class="code-tabs" data-code-tabs id="rlab-42-2">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="rlab-42-2-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="rlab-42-2-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="rlab-42-2-r" role="tabpanel">
+    <pre><code class="language-r">data = read.csv(&#x27;MCD_PriceDaily.csv&#x27;)
+head(data)
+adjPrice = data[, 7]</code></pre>
+  </div>
+  <div class="code-tab-panel" id="rlab-42-2-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import pandas as pd
+data = pd.read_csv(&#x27;MCD_PriceDaily.csv&#x27;)
+data.head()
+adjPrice = data.iloc[:, 6]</code></pre>
+  </div>
+</div><p><strong>问题12</strong> 计算收益率和对数收益率，并绘制它们之间的散点图。如第2.1.3节所述，两种日收益率近似相等是否合理？</p><p><strong>问题13</strong> 计算收益率和对数收益率的均值和标准差。评论你观察到的这两个随机变量前两阶矩的相似性和差异。它们是否相同是否合理？</p><p><strong>问题14</strong> 执行t检验比较收益率和对数收益率的均值。评论你的发现。在5%显著性水平下，你是否拒绝它们均值相同的原假设？还是接受它？[提示：你应该使用独立样本t检验还是配对样本t检验？] t检验背后的假设是什么？你认为在这个例子中这些假设成立吗？如果t检验的假设不成立，这将如何影响你对检验结果的解释？</p><p><strong>问题15</strong> 在查看了麦当劳的收益率和对数收益率数据后，你是否确信对于小数值，对数收益率和收益率是可以互换的？</p></section>
+<section class="book-page" data-pdf-page="43">
+<h1 id="section-2-5">2.5 习题</h1>
+
+<p><strong>问题 16</strong> 假设麦当劳的对数收益率服从正态分布，其均值和标准差等于相应的估计值。朋友向你提出如下赌局：如果在接下来的20个交易日内，麦当劳的股价在任何时刻跌至85美元以下，你将获得100美元；否则，你需支付给他1美元。麦当劳的当前价格（样本数据期末）为93.07美元。你愿意接受这个赌局吗？（在模拟中使用10,000次迭代，并用命令 <code>set.seed(2015)</code> 确保结果与答案一致。）</p>
+
+<p><strong>问题 17</strong> 当你向朋友表示不愿接受赌局后，他问你是否有兴趣尝试一个略有不同的方案。这次的条件与之前相同，但如果股价曾跌至84.50美元以下，他将额外支付25美元。你仍然只需在输掉时支付他1美元。现在你愿意接受赌局吗？</p>
+
+<ol>
+  <li>
+    假设某股票的日对数收益率独立同分布，服从均值为0.001、标准差为0.015的正态分布。假设你买入价值1000美元的该股票。
+    <ol type="a">
+      <li>一个交易日后，你的投资价值低于990美元的概率是多少？（注：R函数<code>pnorm()</code>可计算正态分布的累积分布函数，例如，<code>pnorm(0.3, mean = 0.1, sd = 0.2)</code> 计算的是均值为0.1、标准差为0.2的正态分布在0.3处的累积分布函数值。）</li>
+      <li>五个交易日后，你的投资价值低于990美元的概率是多少？</li>
+    </ol>
+  </li>
+  <li>
+    某股票的年对数收益率服从均值为0.1、标准差为0.2的正态分布。当前股价为100美元。一年后股价达到110美元或以上的概率是多少？
+  </li>
+  <li>
+    某股票的年对数收益率服从均值为0.08、标准差为0.15的正态分布。当前股价为80美元。两年后股价达到90美元或以上的概率是多少？
+  </li>
+  <li>
+    假设某股票在时刻1、2、3的价格分别为 \(P_1 = 95\)、\(P_2 = 103\) 和 \(P_3 = 98\)。求 \(r_3(2)\)。
+  </li>
+  <li>
+    下表给出了某股票的价格和股息。
+    <ol type="a">
+      <li>求 \(R_2\)。</li>
+      <li>求 \(R_4(3)\)。</li>
+      <li>求 \(r_3\)。</li>
+    </ol>
+  </li>
+</ol>
+</section>
+<section class="book-page" data-pdf-page="44">
+<h2>2.5 习题</h2>
+
+<p><strong>6.</strong> 某股票的价格和股息如下表所示。</p>
+<table>
+<thead><tr><th>t</th><th>P<sub>t</sub></th><th>D<sub>t</sub></th></tr></thead>
+<tbody>
+<tr><td>1</td><td>52</td><td>0.2</td></tr>
+<tr><td>2</td><td>54</td><td>0.2</td></tr>
+<tr><td>3</td><td>53</td><td>0.2</td></tr>
+<tr><td>4</td><td>59</td><td>0.25</td></tr>
+</tbody>
+</table>
+<p>(a) 求 \(R_3(2)\)，<br>
+(b) 求 \(r_4(3)\)。</p>
+
+<table>
+<thead><tr><th>t</th><th>P<sub>t</sub></th><th>D<sub>t</sub></th></tr></thead>
+<tbody>
+<tr><td>1</td><td>82</td><td>0.1</td></tr>
+<tr><td>2</td><td>85</td><td>0.1</td></tr>
+<tr><td>3</td><td>83</td><td>0.1</td></tr>
+<tr><td>4</td><td>87</td><td>0.125</td></tr>
+</tbody>
+</table>
+
+<p><strong>7.</strong> 设 \(r_t\) 为对数收益率，且 \(r_1, r_2, \dots\) 独立同分布于 \(N(0.06, 0.47)\)。<br>
+(a) \(r_t(4) = r_t + r_{t-1} + r_{t-2} + r_{t-3}\) 的分布是什么？<br>
+(b) \(P\{r_1(4) < 2\}\) 是多少？<br>
+(c) \(r_2(1)\) 与 \(r_2(2)\) 之间的协方差是多少？<br>
+(d) 给定 \(r_{t-2} = 0.6\) 时，\(r_t(3)\) 的条件分布是什么？</p>
+
+<p><strong>8.</strong> 假设 \(X_1, X_2, \dots\) 是具有参数 \((\mu, \sigma^2)\) 的对数正态几何随机游走。具体地，设 \(X_k = X_0 \exp(r_1 + \cdots + r_k)\)，其中 \(X_0\) 为固定常数，\(r_1, r_2, \dots\) 独立同分布于 \(N(\mu, \sigma^2)\)。<br>
+(a) 求 \(P(X_2 > 1.3 X_0)\)。<br>
+(b) 利用公式 (A.4) 求 \(X_1\) 的密度。<br>
+(c) 对所有 \(k\)，给出 \(X_k\) 的 0.9 分位数的表达式。<br>
+(d) 任意 \(k\) 下 \(X_k^2\) 的期望值是多少？（给出期望值作为 \(k\) 的函数的表达式。）<br>
+(e) 求任意 \(k\) 下 \(X_k\) 的方差。</p>
+
+<p><strong>9.</strong> 假设 \(X_1, X_2, \dots\) 是具有参数 \(\mu = 0.1, \sigma = 0.2\) 的对数正态几何随机游走。<br>
+(a) 求 \(P(X_3 > 1.2 X_0)\)。<br>
+(b) 对任意 \(k\)，给定 \(X_0\) 时 \(X_k/k\) 的条件方差。<br>
+(c) 求使资金翻倍的概率至少为 0.9 的最小天数，即求最小的 \(t\) 使得 \(P(P_t/P_0 \geq 2) \geq 0.9\)。</p>
+
+<p><strong>10.</strong> 某股票的日对数收益率服从均值为 0.0002、标准差为 0.03 的正态分布。当前股价为 97 美元。20 个交易日后股价超过 100 美元的概率是多少？</p>
+
+<p><strong>11.</strong> 假设日对数收益率为 \(N(0.0005, 0.012)\)。求最小的 \(t\) 使得 \(P(P_t/P_0 \geq 2) \geq 0.9\)，即 \(t\) 天后价格翻倍的概率至少为 90%。</p>
+</section>
+<section class="book-page" data-pdf-page="45">
+<h2 id="references-2">参考文献</h2>
+<p>Bodie, Z., Kane, A., and Marcus, A. (1999) <em>Investments</em>, 4th ed., Irwin/McGraw-Hill, Boston.</p>
+<p>Campbell, J., Lo, A., and MacKinlay, A. (1997) <em>The Econometrics of Financial Markets</em>, Princeton University Press, Princeton, NJ.</p>
+<p>Dalgaard, P. (2008) <em>Introductory Statistics with R</em>, 2nd ed., Springer.</p>
+<p>Fama, E. (1965) The behavior of stock market prices. <em>Journal of Business</em>, 38, 34–105.</p>
+<p>Fama, E. (1970) Efficient capital markets: A review of theory and empirical work. <em>Journal of Finance</em>, 25, 383–417.</p>
+<p>Fama, E. (1991) Efficient Capital Markets: II. <em>Journal of Finance</em>, 46, 1575–1618.</p>
+<p>Fama, E. (1998) Market efficiency, long-term returns, and behavioral finance. <em>Journal of Financial Economics</em>, 49, 283–306.</p>
+<p>Lo, A. W., and MacKinlay, A. C. (1999) <em>A Non-Random Walk Down Wall Street</em>, Princeton University Press, Princeton and Oxford.</p>
+<p>Ruppert, D. (2003) <em>Statistics and Finance: An Introduction</em>, Springer, New York.</p>
+<p>Sharpe, W. F., Alexander, G. J., and Bailey, J. V. (1995) <em>Investments</em>, 6th ed., Simon and Schuster, Upper Saddle River, NJ.</p>
+<p>Shefrin, H. (2000) <em>Beyond Greed and Fear: Understanding Behavioral Finance and the Psychology of Investing</em>, Harvard Business School Press, Boston.</p>
+<p>Shiller, R. (1992) <em>Market Volatility</em>, Reprint ed., MIT Press, Cambridge, MA.</p>
+<p>Shiller, R. (2000) <em>Irrational Exuberance</em>, Broadway, New York.</p>
+<p>Shleifer, A. (2000) <em>Inefficient Markets: An Introduction to Behavioral Finance</em>, Oxford University Press, Oxford.</p>
+<p>Thaler, R. H. (1993) <em>Advances in Behavioral Finance</em>, Russell Sage Foundation, New York.</p>
+<p>Zuur, A., Ieno, E., Meesters, E., and Burg, D. (2009) <em>A Beginner's Guide to R</em>, Springer, New York.</p>
+</section>
+<nav class="chapter-nav"><a href="/statistics-data-analysis-financial-engineering-cn/chapter-1/">上一节：第1章 引言</a><a href="/statistics-data-analysis-financial-engineering-cn/chapter-3/">下一节：第3章 固定收益证券</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=638ea974b0aa"></script>
+</body>
+</html>

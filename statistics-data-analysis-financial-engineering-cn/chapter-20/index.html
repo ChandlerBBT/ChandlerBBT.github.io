@@ -1,0 +1,2482 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="第20章 贝叶斯数据分析与MCMC | 《金融工程统计与数据分析：R 示例》">
+  <title>第20章 贝叶斯数据分析与MCMC | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=7670d9cf9549">
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <div class="sidebar-heading">
+    <h2>书籍目录</h2>
+    <div class="sidebar-actions" aria-label="二级目录控制">
+      <button type="button" data-sidebar-action="expand">全部展开</button>
+      <button type="button" data-sidebar-action="collapse">全部收起</button>
+    </div>
+  </div>
+  <nav class="sidebar-list"><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/">首页</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/preface/">前言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/preface-first-edition/">第一版前言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/notation/">符号说明</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-1/">第1章 引言</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-1" aria-label="展开第1章 引言二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-1" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-1/#section-1-1">1.1 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-1/#references">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/">第2章 收益率</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-2" aria-label="展开第2章 收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-2" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#section-2-1">2.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#section-2-2">2.2 The Random Walk Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#section-2-3">2.3 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#section-2-4">2.4 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#section-2-5">2.5 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-2/#references-2">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/">第3章 固定收益证券</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-3" aria-label="展开第3章 固定收益证券二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-3" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-1">3.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-2">3.2 Zero-Coupon Bonds</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-3">3.3 Coupon Bonds</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-4">3.4 Yield to Maturity</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-5">3.5 Term Structure</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-6">3.6 Continuous Compounding</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-7">3.7 Continuous Forward Rates</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-8">3.8 Sensitivity of Price to Yield</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-9">3.9 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-10">3.10 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#section-3-11">3.11 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-3/#references-3">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/">第4章 探索性数据分析</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-4" aria-label="展开第4章 探索性数据分析二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-4" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-1">4.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-2">4.2 Histograms and Kernel Density Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-3">4.3 Order Statistics, the Sample CDF, and Sample Quantiles</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-4">4.4 Tests of Normality</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-5">4.5 Boxplots</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-6">4.6 Data Transformation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-7">4.7 The Geometry of Transformations</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-8">4.8 Transformation Kernel Density Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-9">4.9 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-10">4.10 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#section-4-11">4.11 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-4/#references-4">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/">第5章 单变量分布建模</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-5" aria-label="展开第5章 单变量分布建模二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-5" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-1">5.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-2">5.2 Parametric Models and Parsimony</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-3">5.3 Location, Scale, and Shape Parameters</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-4">5.4 Skewness, Kurtosis, and Moments</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-5">5.5 Heavy-Tailed Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-6">5.6 Generalized Error Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-7">5.7 Creating Skewed from Symmetric Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-8">5.8 Quantile-Based Location, Scale, and Shape Parameters</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-9">5.9 Maximum Likelihood Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-10">5.10 Fisher Information and the Central Limit Theoremfor the MLE</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-11">5.11 Likelihood Ratio Tests</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-12">5.12 AIC and BIC</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-13">5.13 Validation Data and Cross-Validation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-14">5.14 Fitting Distributions by Maximum Likelihood</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-15">5.15 Profile Likelihood</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-16">5.16 Robust Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-17">5.17 Transformation Kernel Density Estimation with a Parametric Transformation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-18">5.18 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-19">5.19 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#section-5-20">5.20 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-5/#references-5">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/">第6章 重抽样</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-6" aria-label="展开第6章 重抽样二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-6" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-1">6.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-2">6.2 Bootstrap Estimates of Bias, Standard Deviation, and MSE</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-3">6.3 Bootstrap Confidence Intervals</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-4">6.4 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-5">6.5 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#section-6-6">6.6 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-6/#references-6">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/">第7章 多元统计模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-7" aria-label="展开第7章 多元统计模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-7" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-1">7.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-2">7.2 Covariance and Correlation Matrices</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-3">7.3 Linear Functions of Random Variables</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-4">7.4 Scatterplot Matrices</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-5">7.5 The Multivariate Normal Distribution</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-6">7.6 The Multivariate t-Distribution</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-7">7.7 Fitting the Multivariate t-Distribution by MaximumLikelihood</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-8">7.8 Elliptically Contoured Densities</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-9">7.9 The Multivariate Skewed t-Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-10">7.10 The Fisher Information Matrix</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-11">7.11 Bootstrapping Multivariate Data</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-12">7.12 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-13">7.13 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#section-7-14">7.14 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-7/#references-7">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/">第8章 Copula</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-8" aria-label="展开第8章 Copula二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-8" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-1">8.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-2">8.2 Special Copulas</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-3">8.3 Gaussian and t-Copulas</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-4">8.4 Archimedean Copulas</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-5">8.5 Rank Correlation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-6">8.6 Tail Dependence</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-7">8.7 Calibrating Copulas</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-8">8.8 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-9">8.9 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#section-8-10">8.10 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-8/#references-8">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/">第9章 回归：基础</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-9" aria-label="展开第9章 回归：基础二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-9" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-1">9.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-2">9.2 Straight-Line Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-3">9.3 Multiple Linear Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-4">9.4 Analysis of Variance, Sums of Squares, and R2</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-5">9.5 Model Selection</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-6">9.6 Collinearity and Variance Inflation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-7">9.7 Partial Residual Plots</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-8">9.8 Centering the Predictors</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-9">9.9 Orthogonal Polynomials</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-10">9.10 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-11">9.11 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#section-9-12">9.12 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-9/#references-9">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/">第10章 回归：问题诊断</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-10" aria-label="展开第10章 回归：问题诊断二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-10" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-1">10.1 Regression Diagnostics</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-2">10.2 Checking Model Assumptions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-3">10.3 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-4">10.4 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#section-10-5">10.5 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-10/#references-10">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/">第11章 回归：高级专题</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-11" aria-label="展开第11章 回归：高级专题二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-11" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-1">11.1 The Theory Behind Linear Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-2">11.2 Nonlinear Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-3">11.3 Estimating Forward Rates from Zero-Coupon Bond Prices</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-4">11.4 Transform-Both-Sides Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-5">11.5 Transforming Only the Response</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-6">11.6 Binary Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-7">11.7 Linearizing a Nonlinear Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-8">11.8 Robust Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-9">11.9 Regression and Best Linear Prediction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-10">11.10 Regression Hedging</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-11">11.11 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-12">11.12 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#section-11-13">11.13 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-11/#references-11">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/">第12章 时间序列模型：基础</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-12" aria-label="展开第12章 时间序列模型：基础二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-12" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-1">12.1 Time Series Data</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-2">12.2 Stationary Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-3">12.3 Estimating Parameters of a Stationary Process</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-4">12.4 AR(1) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-5">12.5 Estimation of AR(1) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-6">12.6 AR(p) Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-7">12.7 Moving Average (MA) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-8">12.8 ARMA Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-9">12.9 ARIMA Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-10">12.10 Unit Root Tests</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-11">12.11 Automatic Selection of an ARIMA Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-12">12.12 Forecasting</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-13">12.13 Partial Autocorrelation Coefficients</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-14">12.14 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-15">12.15 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#section-12-16">12.16 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-12/#references-12">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/">第13章 时间序列模型：深入专题</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-13" aria-label="展开第13章 时间序列模型：深入专题二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-13" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-1">13.1 Seasonal ARIMA Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-2">13.2 Box-Cox Transformation for Time Series</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-3">13.3 Time Series and Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-4">13.4 Multivariate Time Series</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-5">13.5 Long-Memory Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-6">13.6 Bootstrapping Time Series</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-7">13.7 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-8">13.8 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#section-13-9">13.9 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-13/#references-13">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/">第14章 GARCH模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-14" aria-label="展开第14章 GARCH模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-14" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-1">14.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-2">14.2 Estimating Conditional Means and Variances</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-3">14.3 ARCH(1) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-4">14.4 The AR(1)+ARCH(1) Model</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-5">14.5 ARCH(p) Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-6">14.6 ARIMA(pM,d,qM)+GARCH(pV, qV) Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-7">14.7 GARCH Processes Have Heavy Tails</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-8">14.8 Fitting ARMA+GARCH Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-9">14.9 GARCH Models as ARMA Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-10">14.10 GARCH(1,1) Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-11">14.11 APARCH Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-12">14.12 Linear Regression with ARMA+GARCH Errors</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-13">14.13 Forecasting ARMA+GARCH Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-14">14.14 Multivariate GARCH Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-15">14.15 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-16">14.16 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#section-14-17">14.17 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-14/#references-14">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/">第15章 协整</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-15" aria-label="展开第15章 协整二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-15" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-1">15.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-2">15.2 Vector Error Correction Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-3">15.3 Trading Strategies</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-4">15.4 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-5">15.5 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#section-15-6">15.6 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-15/#references-15">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/">第16章 投资组合选择</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-16" aria-label="展开第16章 投资组合选择二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-16" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-1">16.1 Trading Off Expected Return and Risk</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-2">16.2 One Risky Asset and One Risk-Free Asset</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-3">16.3 Two Risky Assets</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-4">16.4 Combining Two Risky Assets with a Risk-Free Asset</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-5">16.5 Selling Short</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-6">16.6 Risk-Efficient Portfolios with N Risky Assets</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-7">16.7 Resampling and Efficient Portfolios</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-8">16.8 Utility</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-9">16.9 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-10">16.10 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#section-16-11">16.11 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-16/#references-16">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/">第17章 资本资产定价模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-17" aria-label="展开第17章 资本资产定价模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-17" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-1">17.1 Introduction to the CAPM</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-2">17.2 The Capital Market Line (CML)</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-3">17.3 Betas and the Security Market Line</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-4">17.4 The Security Characteristic Line</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-5">17.5 Some More Portfolio Theory</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-6">17.6 Estimation of Beta and Testing the CAPM</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-7">17.7 Using the CAPM in Portfolio Analysis</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-8">17.8 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-9">17.9 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#section-17-10">17.10 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-17/#references-17">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/">第18章 因子模型与主成分</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-18" aria-label="展开第18章 因子模型与主成分二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-18" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-1">18.1 Dimension Reduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-2">18.2 Principal Components Analysis</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-3">18.3 Factor Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-4">18.4 Fitting Factor Models by Time Series Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-5">18.5 Cross-Sectional Factor Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-6">18.6 Statistical Factor Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-7">18.7 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-8">18.8 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#section-18-9">18.9 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-18/#references-18">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/">第19章 风险管理</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-19" aria-label="展开第19章 风险管理二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-19" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-1">19.1 The Need for Risk Management</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-2">19.2 Estimating VaR and ES with One Asset</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-3">19.3 Bootstrap Confidence Intervals for VaR and ES</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-4">19.4 Estimating VaR and ES Using ARMA+GARCH Models</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-5">19.5 Estimating VaR and ES for a Portfolio of Assets</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-6">19.6 Estimation of VaR Assuming Polynomial Tails</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-7">19.7 Pareto Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-8">19.8 Choosing the Horizon and Confidence Level</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-9">19.9 VaR and Diversification</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-10">19.10 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-11">19.11 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#section-19-12">19.12 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-19/#references-19">References</a></div></div><div class="sidebar-item is-current is-open"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-20/" aria-current="page">第20章 贝叶斯数据分析与MCMC</a><button class="sidebar-toggle" type="button" aria-expanded="true" aria-controls="sidebar-sections-chapter-20" aria-label="收起第20章 贝叶斯数据分析与MCMC二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-20"><a class="section-link" href="#section-20-1">20.1 Introduction</a><a class="section-link" href="#section-20-2">20.2 Bayes&#x27;s Theorem</a><a class="section-link" href="#section-20-3">20.3 Prior and Posterior Distributions</a><a class="section-link" href="#section-20-4">20.4 Conjugate Priors</a><a class="section-link" href="#section-20-5">20.5 Central Limit Theorem for the Posterior</a><a class="section-link" href="#section-20-6">20.6 Posterior Intervals</a><a class="section-link" href="#section-20-7">20.7 Markov Chain Monte Carlo</a><a class="section-link" href="#section-20-8">20.8 Hierarchical Priors</a><a class="section-link" href="#section-20-9">20.9 Bayesian Estimation of a Covariance Matrix</a><a class="section-link" href="#section-20-10">20.10 Stochastic Volatility Models</a><a class="section-link" href="#section-20-11">20.11 Fitting GARCH Models with MCMC</a><a class="section-link" href="#section-20-12">20.12 Fitting a Factor Model</a><a class="section-link" href="#section-20-13">20.13 Sampling a Stationary Process</a><a class="section-link" href="#section-20-14">20.14 Bibliographic Notes</a><a class="section-link" href="#section-20-15">20.15 R Lab</a><a class="section-link" href="#section-20-16">20.16 Exercises</a><a class="section-link" href="#references-20">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/">第21章 非参数回归与样条</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-21" aria-label="展开第21章 非参数回归与样条二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-21" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-1">21.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-2">21.2 Local Polynomial Regression</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-3">21.3 Linear Smoothers</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-4">21.4 Polynomial Splines</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-5">21.5 Penalized Splines</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-6">21.6 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-7">21.7 R Lab</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#section-21-8">21.8 Exercises</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/chapter-21/#references-21">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/">附录A 概率、统计与代数基础知识</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-appendix-a" aria-label="展开附录A 概率、统计与代数基础知识二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-appendix-a" hidden><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-1-introduction">A.1 Introduction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-2-probability-distributions">A.2 Probability Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-3-when-do-expected-values-and-variances-exist">A.3 When Do Expected Values and Variances Exist?</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-4-monotonic-functions">A.4 Monotonic Functions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-5-the-minimum-maximum-infinum-and-supremum-of-a-set">A.5 The Minimum, Maximum, Infinum, and Supremum of a Set</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-6-functions-of-random-variables">A.6 Functions of Random Variables</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-7-random-samples">A.7 Random Samples</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-8-the-binomial-distribution">A.8 The Binomial Distribution</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-9-some-common-continuous-distributions">A.9 Some Common Continuous Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-10-sampling-a-normal-distribution">A.10 Sampling a Normal Distribution</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-11-law-of-large-numbers-and-the-central-limit-theoremfor-the-sample-mean">A.11 Law of Large Numbers and the Central Limit Theoremfor the Sample Mean</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-12-bivariate-distributions">A.12 Bivariate Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-13-correlation-and-covariance">A.13 Correlation and Covariance</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-14-multivariate-distributions">A.14 Multivariate Distributions</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-15-stochastic-processes">A.15 Stochastic Processes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-16-estimation">A.16 Estimation</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-17-confidence-intervals">A.17 Confidence Intervals</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-18-hypothesis-testing">A.18 Hypothesis Testing</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-19-prediction">A.19 Prediction</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-20-facts-about-vectors-and-matrices">A.20 Facts About Vectors and Matrices</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-21-roots-of-polynomials-and-complex-numbers">A.21 Roots of Polynomials and Complex Numbers</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#a-22-bibliographic-notes">A.22 Bibliographic Notes</a><a class="section-link" href="/statistics-data-analysis-financial-engineering-cn/appendix-a/#references-22">References</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/statistics-data-analysis-financial-engineering-cn/index/">索引</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <h1>第20章 贝叶斯数据分析与MCMC</h1>
+<section class="book-page" data-pdf-page="600"><h1 id="chapter-20">第20章 贝叶斯数据分析与MCMC</h1><h2 id="section-20-1">20.1 引言</h2><p>贝叶斯统计基于一种与其他统计推断方法不同的哲学。在贝叶斯统计中，所有未知量，特别是未知参数，都被视为随机变量，其概率分布表达了我们对其可能取值的信念。估计、模型选择和不确定性分析通过使用贝叶斯定理随着新数据的观测来更新我们的信念而实现。</p><p>非贝叶斯主义者区分两类未知量：参数和潜变量。对于非贝叶斯主义者而言，参数是没有概率分布的固定量，而潜变量是具有概率分布的随机未知量。例如，对于一个非贝叶斯主义者，MA(q)过程的均值μ、移动平均系数θ<sub>1</sub>, …, θ<sub>q</sub>和白噪声方差σ<sub>ϵ</sub><sup>2</sup>是固定参数，而观测不到的白噪声过程本身由潜变量组成。相反，对于贝叶斯主义者，参数和白噪声过程都是未知的随机量。由于本章采取贝叶斯视角，无需区分参数和潜变量，因为现在它们可以以相同方式处理。我们将用θ表示所有未知量的向量，并称之为“参数向量”。例如，在时间序列预测的背景下，θ可以包括未观测的白噪声以及被预测序列的未来值。</p><p>贝叶斯统计的一个标志是必须从指定参数的先验信念开始。许多统计学家不愿使用贝叶斯分析，因为从先验信念开始似乎过于主观。因此，贝叶斯与非贝叶斯统计学家之间曾就统计学的哲学基础展开激烈辩论。然而，现在主流统计思想大多支持更为实用的观点：我们应使用任何行之有效的方法。</p></section>
+<section class="book-page" data-pdf-page="601">
+<h2>20 贝叶斯数据分析与MCMC</h2>
+<p>如果研究者对某个参数所知甚少，这种缺乏知识的情况可以通过使用所谓的无信息先验来应对，该先验相对于数据提供的信息而言，只给出关于参数的极少量信息。在实践中，当贝叶斯分析仅使用弱先验信息时，贝叶斯与非贝叶斯分析通常得出相似结论，因为此时参数的知识主要来自数据。</p>
+<p>此外，在金融及许多其他应用领域，分析者通常拥有大量先验信息并愿意加以利用。在商业和金融中，并不像科学研究那样必须追求客观性。需要指定先验可以被视为贝叶斯统计观点的优势而非弱点，因为它迫使分析者仔细思考有多少以及哪种先验信息可用。</p>
+<p>过去几十年中，贝叶斯统计的使用急剧增加，因为贝叶斯哲学已被更广泛接受，且贝叶斯估计量变得更容易计算。事实上，对于复杂模型，贝叶斯技术通常是最令人满意的估计方法。我们曾听一位研究者说：“我不是贝叶斯学派，但我使用贝叶斯方法”，无疑其他人也会同意。</p>
+<p>本章概述：假设我们关注参数向量 \(\theta\)。贝叶斯分析从 \(\theta\) 的先验概率分布开始，该分布总结了关于 \(\theta\) 的所有先验知识；“先验”意味着在观测数据之前。似然函数在非贝叶斯分析中定义相同，但在贝叶斯统计中具有不同解释——似然是给定 \(\theta\) 下数据的条件分布。贝叶斯推断的关键步骤是利用贝叶斯定理将关于 \(\theta\) 的先验知识与数据中的信息结合起来。这通过计算给定数据下 \(\theta\) 的条件分布来实现，该分布称为后验分布。在许多（即便不是大多数）实际问题中，无法解析计算后验，因此使用数值方法。一类非常成功的数值贝叶斯方法是马尔可夫链蒙特卡洛（MCMC），它通过模拟一条马尔可夫链，使得该链的平稳分布等于参数的后验分布。从链中模拟的数据用于计算贝叶斯估计并进行不确定性分析。</p>
+<h2 id="section-20-2">20.2 贝叶斯定理</h2>
+<p>贝叶斯定理既适用于离散事件，也适用于连续分布的随机变量。我们先从离散事件的情况开始。连续情况将在第20.3节中介绍。</p>
+</section>
+<section class="book-page" data-pdf-page="602">
+  <h2 id="section-20-2">20.2 贝叶斯定理</h2>
+  <p>假设 \(B_1, \ldots, B_K\) 是样本空间 \(S\)（所有可能结果的集合）的一个划分。所谓“划分”是指当 \(i \neq j\) 时 \(B_i \cap B_j = \emptyset\)，且 \(B_1 \cup B_2 \cup \cdots \cup B_K = S\)。对于任意集合 \(A\)，我们有</p>
+  \[ A = (A \cap B_1) \cup \cdots \cup (A \cap B_K), \]
+  <p>因此，由于 \(B_1, \ldots, B_K\) 互不相交，</p>
+  \[ P(A) = P(A \cap B_1) + \cdots + P(A \cap B_K). \tag{20.1} \]
+  <p>由式 (20.1) 和条件概率的定义可得</p>
+  \[ P(B_j | A) = \frac{P(A | B_j) P(B_j)}{P(A)} = \frac{P(A | B_j) P(B_j)}{P(A | B_1) P(B_1) + \cdots + P(A | B_K) P(B_K)}. \tag{20.2} \]
+  <p>式 (20.2) 称为<strong>贝叶斯定理</strong>，也称为贝叶斯规则或贝叶斯定律。贝叶斯定理是一个简单、几乎平凡的数学结果，但其含义深远。贝叶斯定理的重要性在于它用于更新概率。下面是一个例子，虽然过于简单而不现实，但说明了如何应用贝叶斯定理。</p>
+
+  <h3>例 20.1 离散情况下的贝叶斯定理</h3>
+  <p>假设我们对某只股票的先前知识表明，在任何给定一天价格上涨的概率 \(\theta\) 为 0.4 或 0.6。根据过去的数据（例如来自类似股票的数据），我们相信 \(\theta\) 等于 0.4 或 0.6 的可能性相同。因此，我们有以下<strong>先验概率</strong></p>
+  \[ P(\theta = 0.4) = 0.5 \quad \text{且} \quad P(\theta = 0.6) = 0.5. \]
+  <p>我们连续观察该股票五天，其价格在这五天全部上涨。假设价格变化在日间是独立的，因此连续五天价格上涨的概率为 \(\theta^5\)。根据这一信息，我们可能怀疑 \(\theta\) 是 0.6 而非 0.4。因此，在连续五次价格上涨的条件下，\(\theta = 0.6\) 的概率应大于先验概率 0.5，但大多少呢？用记号表示，令 \(A\) 为连续五天价格上涨的事件。那么，利用贝叶斯定理，我们有</p>
+  \[\begin{aligned}
+    P(\theta = 0.6 | A) &= \frac{P(A | \theta = 0.6) P(\theta = 0.6)}{P(A | \theta = 0.6) P(\theta = 0.6) + P(A | \theta = 0.4) P(\theta = 0.4)} \\
+    &= \frac{(0.6)^5 (0.5)}{(0.6)^5 (0.5) + (0.4)^5 (0.5)} \\
+    &= \frac{(0.6)^5}{(0.6)^5 + (0.4)^5} = \frac{0.07776}{0.07776 + 0.01024} = 0.8836.
+  \end{aligned}\]
+</section>
+<section class="book-page" data-pdf-page="603"><h2 id="section-20-3">20.3 先验分布与后验分布</h2><p>因此，在观察到连续五次价格上涨之前，我们赋予\(\theta=0.6\)的概率为0.5，而在观察到这一事件之后，该概率更新为0.8836。观测数据之前的概率称为<b>先验概率</b>，而基于观测数据的条件概率称为<b>后验概率</b>。因此，\(\theta=0.6\)的先验概率为0.5，后验概率为0.8836。□</p><p>贝叶斯定理极其重要，因为它精确地告诉我们如何根据新信息更新我们的信念。在没有数学帮助的情况下，人类在收到新信息后修正信念的能力很差<sup><a href="#footnote-20-1" id="footnote-ref-20-1">1</a></sup>。人们往往对新信息重视不足或过度重视，而借助贝叶斯定理的指导可以缓解这一问题。</p><p>现在假设\(\theta\)是一个连续分布的参数向量。先验分布（密度为\(\pi(\theta)\)）表达了我们在观测数据之前关于\(\theta\)的信念。似然函数被解释为给定\(\theta\)下数据\(Y\)的条件密度，记为\(f(y|\theta)\)。利用式(A.19)，\(\theta\)和\(Y\)的联合密度是先验与似然的乘积，即</p>\[ f(y,\theta) = \pi(\theta) f(y|\theta). \tag{20.3} \]<p>\(Y\)的边缘密度通过对联合密度积分\(\theta\)得到：</p>\[ f(y) = \int \pi(\theta) f(y|\theta) \, d\theta, \tag{20.4} \]<p>而给定\(Y\)下\(\theta\)的条件密度为</p>\[ \pi(\theta|Y) = \frac{\pi(\theta) f(Y|\theta)}{f(Y)} = \frac{\pi(\theta) f(Y|\theta)}{\int \pi(\theta) f(Y|\theta) \, d\theta}. \tag{20.5} \]<p>式(20.5)是贝叶斯定理的另一种形式。式(20.5)左侧的密度称为<b>后验密度</b>，它给出了观测数据\(Y\)后\(\theta\)的概率分布。</p><p>请注意我们使用\(\pi\)表示\(\theta\)的密度，即\(\pi(\theta)\)是先验密度，\(\pi(\theta|Y)\)是后验密度。相比之下，\(f\)用于表示数据的密度，即\(f(y)\)是数据的边缘密度，\(f(y|\theta)\)是给定\(\theta\)的条件密度。</p><p>贝叶斯估计和不确定性分析基于后验分布。最常见的贝叶斯估计量是后验分布的众数和均值<sup><a href="#footnote-20-1" id="footnote-ref-20-1b">1</a></sup>。</p><ol class="footnotes"><li id="footnote-20-1">参见 Edwards (1982)。 <a href="#footnote-ref-20-1" class="footnote-back">↩</a></li></ol></section>
+<section class="book-page" data-pdf-page="604">
+<h2>20.3 先验分布与后验分布</h2>
+<p>后验密度的众数称为最大后验估计（MAP估计）。后验的均值为</p>
+\[E(\theta|Y) = \int \theta \,\pi(\theta|Y)\,d\theta = \frac{\int \theta \,\pi(\theta)\,f(Y|\theta)\,d\theta}{\int \pi(\theta)\,f(Y|\theta)\,d\theta} \tag{20.6}\]
+<p>也称为后验期望。</p>
+<p><strong>例20.2. 更新关于股票价格上涨概率的先验信念</strong></p>
+<p>我们继续例20.1，但将简单而不现实的先验（即假设\(\theta\)只能是0.4或0.6）改为更合理的先验，其中\(\theta\)可以是区间\([0,1]\)内的任意值，但靠近1/2的值更有可能。具体地，我们使用Beta(2,2)先验，因此</p>
+\[\pi(\theta) = 6\,\theta(1-\theta), \quad 0 < \theta < 1.\]
+<p>令\(Y\)为连续五个交易日中股票价格上涨的天数。那么\(Y\)服从二项分布\(\text{Binomial}(n, \theta)\)，\(Y\)的密度为</p>
+\[f(y|\theta) = \binom{5}{y} \theta^y (1-\theta)^{5-y}, \quad y = 0,1,\dots,5.\]
+<p>由于我们观测到\(Y=5\)，因此\(f(Y|\theta) = f(5|\theta) = \theta^5\)，后验密度为</p>
+\[\pi(\theta|5) = \frac{6\theta(1-\theta)\theta^5}{\int_0^1 6\theta(1-\theta)\theta^5\,d\theta} = 56\,\theta^6(1-\theta),\]
+<p>这是一个Beta(7,2)密度。</p>
+<p>先验和后验密度如图20.1所示。由于连续五天价格上涨，后验密度相对于先验向右移动。后验分布的0.05下分位数和0.05上分位数分别为0.529和0.953，并在图中标出。因此，\(\theta\)位于0.529和0.953之间的后验概率为90%。因此，区间\([0.529, 0.953]\)称为90%后验区间，提供了\(\theta\)的可能取值集合。后验区间是置信区间的贝叶斯对应物，将在20.6节进一步讨论。后验区间也称为可信区间。</p>
+<p>后验期望为</p>
+\[\int_0^1 \theta\,\pi(\theta|5)\,d\theta = \int_0^1 56\,\theta^7(1-\theta)\,d\theta = 56 \times \frac{1}{72} = 0.778. \tag{20.7}\]
+<p>MAP估计值为\(6/7 \approx 0.857\)，其位置如图20.1中垂直虚线所示。</p>
+</section>
+<section class="book-page" data-pdf-page="605">
+<p>0.0 0.2 0.4 0.6 0.8 1.0
+0.0 0.5 1.0 1.5 2.0 2.5 3.0
+\(\theta\)
+density(\(\theta\))
+prior
+posterior</p>
+<figure class="book-figure" id="fig-20.1"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-535a4ad46be8.png" alt="图20.1 例20.2中的先验和后验密度">
+  <figcaption>图20.1 例20.2中的先验和后验密度。虚线垂直线位于后验的下0.05分位数和上0.05分位数（即0.05和0.95分位数）处，因此它们标记了一个90%的等尾后验区间。点状垂直线显示后验众数的位置，即\(\theta = 6/7 \approx 0.857\)。</figcaption>
+</figure>
+<p>后验累积分布函数为</p>
+\[ \int_0^\theta \pi(x \mid 5)\,dx = \int_0^\theta 56 x^6 (1-x)\,dx = 56 \left( \frac{\theta^7}{7} - \frac{\theta^8}{8} \right), \quad 0 \le \theta \le 1. \]
+<p>□</p>
+<h2 id="section-20-4">20.4 共轭先验</h2>
+<p>在例20.2中，先验和后验都是beta分布。这是共轭先验族的一个例子。一个分布族被称为统计模型（或等价地，似然函数）的<strong>共轭先验族</strong>，如果当先验属于该族时，后验也属于该族。共轭族很方便，因为它们使得后验的计算变得直接。我们只需要更新先验中的参数。为了了解如何操作，我们将推广例20.2。</p>
+<p><strong>例20.3 计算股票价格上涨概率的后验密度——共轭先验的一般情形</strong></p>
+<p>现在假设\(\theta\)的先验为\(\operatorname{Beta}(\alpha, \beta)\)，因此先验密度为</p>
+\[ \pi(\theta) = K_1 \theta^{\alpha-1} (1-\theta)^{\beta-1}, \tag{20.8} \]
+<p>其中\(K_1\)是一个常数。我们将会看到，知道\(K_1\)的具体数值并不重要，但根据(A.14)我们知道\(K_1 = \frac{\Gamma(\alpha+\beta)}{\Gamma(\alpha)\Gamma(\beta)}\)。参数</p>
+</section>
+<section class="book-page" data-pdf-page="606">
+<p>20.4 共轭先验 587</p>
+<p>必须已知先验密度，因此这里的 \(\alpha\) 和 \(\beta\) 由数据分析者根据关于 \(\theta\) 的先验知识选择。这些参数的选择将在后面讨论。</p>
+<p>假设股票价格被观测了 \(n\) 天，其中有 \(Y\) 天上涨（\(n - Y\) 天未上涨）。则似然为</p>
+<p>\[ f(Y|\theta) = K_2 \theta^Y (1-\theta)^{n-Y}, \qquad (20.9) \]</p>
+<p>其中 \(K_2 = \binom{n}{Y}\) 是另一个常数。\(\theta\) 和 \(Y\) 的联合密度为</p>
+<p>\[ \pi(\theta) f(Y|\theta) = K_3 \theta^{\alpha + Y - 1} (1-\theta)^{\beta + n - Y - 1}, \qquad (20.10) \]</p>
+<p>其中 \(K_3 = K_1 K_2\)。于是，后验密度为</p>
+<p>\[ \pi(\theta|Y) = \frac{\pi(\theta) f(Y|\theta)}{\int_0^1 \pi(\theta) f(Y|\theta) d\theta} = K_4 \theta^{\alpha + Y - 1} (1-\theta)^{\beta + n - Y - 1}, \qquad (20.11) \]</p>
+<p>其中</p>
+<p>\[ K_4 = \frac{1}{\int_0^1 \theta^{\alpha + Y - 1} (1-\theta)^{\beta + n - Y - 1} d\theta}. \qquad (20.12) \]</p>
+<p>后验分布为 \(\text{Beta}(\alpha + Y, \beta + n - Y)\)。</p>
+<p>我们不需要跟踪 \(K_1, \dots, K_4\) 的值。由于 (20.11) 正比于 \(\text{Beta}(\alpha + Y, \beta + n - Y)\) 密度，且所有密度积分为1，可以推知比例常数为1，后验即为 \(\text{Beta}(\alpha + Y, \beta + n - Y)\)。由 (A.14) 可得</p>
+<p>\[ K_4 = \frac{\Gamma(\alpha + \beta + n)}{\Gamma(\alpha + Y) \Gamma(\beta + n - Y)}. \]</p>
+<p>值得注意的是后验的求解非常容易。只需分别将先验参数 \(\alpha\) 和 \(\beta\) 更新为 \(\alpha + Y\) 和 \(\beta + n - Y\)。利用附录 A.9.7 中关于 Beta 分布的均值和方差的结果，后验均值为</p>
+<p>\[ \mathrm{E}(\theta|Y) = \frac{\alpha + Y}{\alpha + \beta + n}, \qquad (20.13) \]</p>
+<p>后验方差为</p>
+<p>\[ \mathrm{var}(\theta|Y) = \frac{(\alpha + Y)(\beta + n - Y)}{(\alpha + \beta + n)^2 (\alpha + \beta + n + 1)} = \frac{\mathrm{E}(\theta|Y) \{1 - \mathrm{E}(\theta|Y)\}}{\alpha + \beta + n + 1}. \qquad (20.14) \]</p>
+<p>当 \(\alpha\) 和 \(\beta\) 相对于 \(Y\) 和 \(n\) 较小时，\(\mathrm{E}(\theta|Y)\) 近似等于 MLE，即 \(Y/n\)。如果我们几乎没有先验知识，</p>
+</section>
+<section class="book-page" data-pdf-page="607">
+<h3>588 第20章 贝叶斯数据分析与MCMC</h3>
+<figure class="book-figure" id="fig-20.2"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-6f5f4fc127c8.png" alt="β概率密度示例（α=β）" />
+<figcaption>图20.2 β概率密度示例（α=β）</figcaption>
+</figure>
+<p>对于 \(\theta\) 的先验，我们可能取 \(\alpha\) 和 \(\beta\) 都接近 0。然而，由于 \(\theta\) 是股票日收益率为正的概率，我们可能相当确信 \(\theta\) 接近 1/2。在这种情况下，选择 \(\alpha = \beta\) 且两者都较大（使得先验精度较大）是合理的。我们可以绘制几个 \(\alpha = \beta\) 的 Beta 密度，并决定哪些看起来是合理的先验选择。例如，图20.2展示了 \(\alpha = \beta = 3, 20\) 和 500 的 Beta 密度图。当 \(\alpha\) 和 \(\beta\) 的公共值为 500 时，先验非常集中在 1/2 附近。这个先验适合那些相当确信 \(\theta\) 接近 1/2 的人。不太确定的人可能更倾向于使用 \(\alpha = \beta = 20\)，其先验概率几乎全部落在 0.3 到 0.6 之间。选择 \(\alpha = \beta = 3\) 会导致一个非常模糊的先验，如果一个人对 \(\theta\) 几乎没有先验知识，并且希望“让数据自己说话”，则会选择这个先验。</p>
+<p>式 (20.13) 中的后验均值有一个有趣的解释。假设我们有一个来自先前样本的先验信息，该样本大小为 \(\alpha + \beta\)，且在该样本中股价上涨了 \(\alpha\) 次。如果我们合并这两个样本，那么总样本大小为 \(\alpha + \beta + n\)，股价上涨的天数为 \(\alpha + Y\)，则 \(\theta\) 的 MLE 为 \((\alpha + Y)/(\alpha + \beta + n)\)，即 (20.13) 给出的后验均值。我们可以将先验视为具有与大小为 \(\alpha + \beta\) 的先验样本相同的信息量，并且 \(\alpha/(\alpha + \beta)\) 可解释为来自该样本的 \(\theta\) 的 MLE。因此，图20.2中的三个先验可以看作具有与样本量 6、40 和 1000 相同的信息量。对于固定的 \(E(\theta|Y)\)，我们从 (20.14) 看到，随着 \(\alpha, \beta\) 或 \(n\) 的增加，\(\theta\) 的后验方差变小；这很有道理，因为 \(n\) 是样本量，而 \(\alpha + \beta\) 量化了先验中的信息量。</p>
+</section>
+<section class="book-page" data-pdf-page="608">
+  <h3>20.4 共轭先验</h3>
+  <p>由于没有必要跟踪常数，我们在之前的计算中可以省略它们，例如将 (20.8) 写为</p>
+  \[\pi(\theta) \propto \theta^{\alpha-1}(1-\theta)^{\beta-1}. \qquad (20.15)\]
+  <p>在以下示例中，我们将以这种方式省略常数。□</p>
+
+  <h4>例20.4 估计已知方差的正态总体均值时的后验分布</h4>
+  <p>假设 \(Y_1,\ldots,Y_n\) 独立同分布，服从 \(N(\mu,\sigma^2)\)，且 \(\sigma^2\) 已知。之所以做出 \(\sigma^2\) 已知这一不现实的假设，是为了从简单情形入手，稍后将去掉这一假设。</p>
+  <p>\(\mu\) 的共轭先验族是正态分布族。为说明这一点，假设 \(\mu\) 的先验分布为 \(N(\mu_0,\sigma_0^2)\)，其中 \(\mu_0\) 和 \(\sigma_0^2\) 已知。从例20.3 中我们了解到，没有必要跟踪那些不依赖于未知参数的项（但可能依赖于数据或已知参数），因此我们只跟踪依赖于 \(\mu\) 的项。简单的代数运算表明，似然函数为</p>
+  \[
+  f(Y_1,\ldots,Y_n|\mu) = \prod_{i=1}^n \left[ \frac{1}{\sqrt{2\pi}\sigma} \exp\left\{ -\frac{1}{2\sigma^2}(Y_i-\mu)^2 \right\} \right] \propto \exp\left\{ -\frac{1}{2\sigma^2}\left( -2n\bar{Y}\mu + n\mu^2 \right) \right\}. \qquad (20.16)
+  \]
+  <p>先验密度为</p>
+  \[
+  \pi(\mu) = \frac{1}{\sqrt{2\pi}\sigma_0} \exp\left\{ -\frac{1}{2\sigma_0^2}(\mu-\mu_0)^2 \right\} \propto \exp\left\{ -\frac{1}{2\sigma_0^2}(-2\mu\mu_0+\mu^2) \right\}. \qquad (20.17)
+  \]
+  <p>精度是方差的倒数，记 \(\tau = 1/\sigma^2\) 为总体精度。将 (20.16) 与 (20.17) 相乘，可以看出后验密度为</p>
+  \[
+  \pi(\mu|Y_1,\ldots,Y_n) \propto \exp\left\{ \left( \frac{n\bar{Y}}{\sigma^2} + \frac{\mu_0}{\sigma_0^2} \right) \mu - \left( \frac{n}{2\sigma^2} + \frac{1}{2\sigma_0^2} \right) \mu^2 \right\} = \exp\left\{ (\tau_Y \bar{Y} + \tau_0\mu_0)\mu - \frac{1}{2}(\tau_Y + \tau_0)\mu^2 \right\}, \qquad (20.18)
+  \]
+  <p>其中 \(\tau_Y = n\tau = n/\sigma^2\)，\(\tau_0 = 1/\sigma_0^2\)，因此 \(\tau_Y\) 是 \(\bar{Y}\) 的精度，\(\tau_0\) 是先验分布的精度。</p>
+  <p>可以看出 \(\log\{\pi(\mu|Y_1,\ldots,Y_n)\}\) 是 \(\mu\) 的二次函数，因此 \(\pi(\mu|Y_1,\ldots,Y_n)\) 是正态密度。因此，为了找到后验分布，我们只需要计算后验均值和方差。后验均值是使后验密度达到最大的 \(\mu\) 值，即后验众数。因此，为了计算后验均值，我们解</p>
+</section>
+<section class="book-page" data-pdf-page="609"><p>590 第20章 贝叶斯数据分析与MCMC</p><p>0 = \(\frac{\partial}{\partial \mu} \log\{\pi(\mu | Y_1, \ldots, Y_n)\}\) \(\qquad (20.19)\)</p><p>并得到均值为</p><p>\[ \mathrm{E}(\mu | Y_1, \ldots, Y_n) = \frac{\tau_Y \bar{Y} + \tau_0 \mu_0}{\tau_Y + \tau_0} = \frac{\frac{n \bar{Y}}{\sigma^2} + \frac{\mu_0}{\sigma_0^2}}{\frac{n}{\sigma^2} + \frac{1}{\sigma_0^2}}. \qquad (20.20)\]</p><p>由(A.10)可知，正态密度\(f(y)\)的精度等于\(-2\)乘以\(\log\{f(y)\}\)中\(y^2\)的系数。因此，后验精度为</p><p>\[ -2 \times \text{(20.18)中}\mu^2 \text{的系数} = \tau_Y + \tau_0 = \frac{n}{\sigma^2} + \frac{1}{\sigma_0^2}, \]</p><p>且后验方差为</p><p>\[ \mathrm{Var}(\mu | Y_1, \ldots, Y_n) = \frac{1}{\frac{n}{\sigma^2} + \frac{1}{\sigma_0^2}}. \qquad (20.21)\]</p><p>总结：后验分布为</p><p>\[ \mathrm{N}\left( \frac{\frac{n \bar{Y}}{\sigma^2} + \frac{\mu_0}{\sigma_0^2}}{\frac{n}{\sigma^2} + \frac{1}{\sigma_0^2}}, \frac{1}{\frac{n}{\sigma^2} + \frac{1}{\sigma_0^2}} \right) = \mathrm{N}\left( \frac{\tau_Y \bar{Y} + \tau_0 \mu_0}{\tau_Y + \tau_0}, \frac{1}{\tau_Y + \tau_0} \right). \qquad (20.22)\]</p><p>我们看到后验精度\((\tau_Y + \tau_0)\)是\(\bar{Y}\)的精度与先验精度之和；这是合理的，因为后验结合了数据中的信息和先验中的信息。</p><p>注意，当\(n \to \infty\)时，后验精度\(\tau_Y\)趋于无穷，后验分布近似为</p><p>\[ \mathrm{N}(\bar{Y}, \sigma^2 / n). \qquad (20.23)\]</p><p>这一结果告诉我们，随着数据量的增加，先验的影响变得可忽略。当\(\sigma_0 \to \infty\)（固定\(n\)）时，后验密度也收敛于(20.23)，即先验变得可忽略，因为先验精度降至零。</p><p>常见的贝叶斯估计量是后验均值，由(20.20)右边给出。许多统计学家既非坚定的贝叶斯派也非坚定的非贝叶斯派，他们倾向于从两个角度审视估计量。非贝叶斯派将通过检查后验均值的偏倚、方差和均方误差来分析它。我们将看到，通常贝叶斯估计量是有偏的，但其变异性小于\(\bar{Y}\)，且偏倚与方差之间的权衡由先验的选择控制。</p><p>为简化记号，令\(\hat{\mu}\)表示后验均值。则</p><p>\[ \hat{\mu} = \delta \bar{Y} + (1 - \delta) \mu_0, \qquad (20.24)\]</p><p>其中\(\delta = \tau_Y / (\tau_Y + \tau_0)\)，且\(\mathrm{E}(\hat{\mu} | \mu) = \delta \mu + (1 - \delta) \mu_0\)，所以\(\hat{\mu}\)的偏倚为</p><p>\[ \mathrm{E}(\hat{\mu} | \mu) - \mu = (\delta - 1)(\mu - \mu_0), \]</p><p>因此\(\hat{\mu}\)是有偏的，除非\(\delta = 1\)或\(\mu_0 = \mu\)。</p></section>
+<section class="book-page" data-pdf-page="610">
+<h3>20.4 共轭先验</h3>
+<p>只有当先验精度 \(\tau_0\) 收敛到 0 时，我们才有 \(\delta = 1\)。如果 \(\mu_0 = \mu\)，则意味着先验均值恰好等于真实参数，但显然这种有利情况无法安排，因为 \(\mu\) 未知。 \(\hat{\mu}\) 的方差为</p>
+\[ \operatorname{Var}(\hat{\mu}|\mu) = \frac{\delta^2 \sigma^2}{n}, \]
+<p>除了 \(\delta = 1\) 的极端情况外，该值小于 \(\operatorname{Var}(\bar{Y}) = \sigma^2/n\)。我们可以看到，\(\delta\) 越小，偏差越大，但方差越小。最佳的偏差-方差权衡是使 \(\hat{\mu}\) 的均方误差最小化，即</p>
+\[ \operatorname{MSE}(\hat{\mu}) = \operatorname{Bias}^2(\hat{\mu}) + \operatorname{Var}(\hat{\mu}) = (\delta - 1)^2 (\mu - \mu_0)^2 + \frac{\delta^2 \sigma^2}{n}. \tag{20.25} \]
+<p>当然，最好能让 \(\mu_0 = \mu\)，但由于 \(\mu\) 未知，这无法实现。已知的是 \(\delta = \tau_Y / (\tau_Y + \tau_0)\)，\(\delta\) 可以通过选择 \(\tau_0\) 来控制。图 20.3 显示了当 \(\sigma^2/n = 1/2\) 时，MSE 作为 \(\delta \in (0,1)\) 的函数，对应三个不同的 \(\mu - \mu_0\) 值，这个差值被称为“先验偏差”，因为它是参数真值与先验均值之差。对于两个较大的先验偏差，存在 \(\delta\) 的一个范围，在该范围内贝叶斯估计量的 MSE 小于 \(\bar{Y}\) 的 MSE，但如果 \(\delta\) 低于这个范围，则贝叶斯估计量的 MSE 大于 \(\bar{Y}\) 的 MSE，并且“良好”\(\delta\) 值的范围随着先验偏差的增大而缩小。如果先验偏差很大且 \(\delta\) 太小，则贝叶斯估计量的 MSE 可能相当大，因为当 \(\delta \to 0\) 时它收敛到先验偏差的平方；参见 (20.25) 或图 20.3。这一结果表明，要么需要对 \(\mu\) 有一个良好的先验猜测，要么保持先验精度较小以使 \(\delta\) 较大。然而，当 \(\delta\) 较大时，贝叶斯估计量相比 \(\bar{Y}\) 不会有太大改进，实际上当 \(\delta \to 1\) 时它收敛到 \(\bar{Y}\)。总之，选择一个能显著优于 \(\bar{Y}\) 的先验可能具有挑战性。一种方法是结合若干相关数据。</p>
+<figure class="book-figure" id="fig-20.3"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-e0f1cc2e6506.png" alt="图20.3：MSE与δ的关系" style="max-width:100%;">
+<figcaption>图20.3. 当 \(\sigma^2/n = 1/2\) 时，MSE 关于 \(\delta\) 的变化，对应三个不同的“先验偏差”值 \(\mu - \mu_0\)。水平线代表极大似然估计 (\bar{Y}) 的 MSE。</figcaption>
+</figure>
+
+<figure class="book-figure" id="fig-20.3.MSEversus"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-154cc2159919.png" alt="forthreevaluesof“priorbias”=μ-μ whenσ2/n=1/2. Fig.20.3.MSEversusδ 0 (Y). The horizontal line represents the MSE of the maximum likelihood estimator" loading="lazy"><figcaption>forthreevaluesof“priorbias”=μ-μ whenσ2/n=1/2. Fig.20.3.MSEversusδ 0 (Y). The horizontal line represents the MSE of the maximum likelihood estimator</figcaption></figure>
+</section>
+<section class="book-page" data-pdf-page="611">
+  <h1 id="chapter-20">第20章 贝叶斯数据分析与MCMC</h1>
+
+  <p>当无法结合相关问题，也没有其他途径获取关于\(\mu\)的信息时，谨慎的数据分析师将放弃改进MLE的尝试，而选择为先验精度\(\tau_0\)设定一个较小的值。□</p>
+  <div class="example">
+    <p><strong>例20.5 估计正态精度时的后验分布</strong></p>
+    <p>现在假设\(Y_1, \ldots, Y_n\)独立同分布，均值\(\mu\)已知，方差\(\sigma^2\)未知，精度\(\tau = 1 / \sigma^2\)。我们将证明\(\tau\)的共轭先验是伽马分布，并求出\(\tau\)的后验分布。定义\(s^2 = n^{-1} \sum_{i=1}^n (Y_i - \mu)^2\)，它是\(\sigma^2\)的MLE。简单的代数运算表明似然函数为</p>
+    <p>\[ f(Y_1, \ldots, Y_n | \tau) \propto \exp\left(-\frac{1}{2} n \tau s^2\right) \tau^{n/2}. \qquad (20.26) \]</p>
+    <p>设先验分布为伽马分布，形状参数为\(\alpha\)，尺度参数为\(b\)，其密度为</p>
+    <p>\[ \pi(\tau) = \frac{\tau^{\alpha-1}}{\Gamma(\alpha) b^\alpha} \exp(-\tau/b) \propto \tau^{\alpha-1} \exp(-\tau/b). \qquad (20.27) \]</p>
+    <p>将(20.26)与(20.27)相乘，可得\(\tau\)的后验密度为</p>
+    <p>\[ \pi(\tau | Y_1, \ldots, Y_n) \propto \tau^{n/2 + \alpha - 1} \exp\left\{-\left(ns^2/2 + b^{-1}\right) \tau\right\}, \qquad (20.28) \]</p>
+    <p>这表明后验分布是伽马分布，形状参数为\(n/2 + \alpha\)，尺度参数为\(\left(ns^2/2 + b^{-1}\right)^{-1}\)，即</p>
+    <p>\[ \pi(\tau | Y_1, \ldots, Y_n) = \text{Gamma}\left\{ n/2 + \alpha,\; \left(ns^2/2 + b^{-1}\right)^{-1} \right\}. \qquad (20.29) \]</p>
+    <p>我们已证明伽马分布是正态精度参数的共轭先验。</p>
+    <p>伽马分布的期望等于形状参数与尺度参数的乘积，因此\(\tau\)的后验均值为</p>
+    <p>\[ E(\tau | Y_1, \ldots, Y_n) = \frac{\frac{n}{2} + \alpha}{\frac{ns^2}{2} + b^{-1}}. \]</p>
+    <p>注意到当\(n \to \infty\)时，\(E(\tau | Y_1, \ldots, Y_n)\)收敛于\(s^{-2}\)，这并不意外，因为\(\sigma^2\)的MLE是\(s^2\)，所以\(\tau\)的MLE是\(s^{-2}\)。□</p>
+  </div>
+  <h2 id="section-20-5">20.5 后验的中心极限定理</h2>
+  <p>对于大样本量，后验分布满足一个中心极限定理，其大致表述如下：</p>
+</section>
+<section class="book-page" data-pdf-page="612">
+<h1 id="section-20-6">20.6 后验区间</h1>
+
+<p><strong>结果 20.6</strong> 在合适的假设下，且当样本量足够大时，\(\theta\) 的后验分布近似为正态分布，其均值等于 \(\theta\) 的真实值，方差等于 Fisher 信息量矩阵的逆。</p>
+
+<p>该结果也称为 <strong>Bernstein–von Mises 定理</strong>。关于该定理精确表述的参考文献，请参见 20.14 节。</p>
+
+<p>这个定理之所以重要，有以下几个原因。首先，与结果 5.1 的比较表明，贝叶斯估计量和 MLE 具有相同的大样本分布。特别地，我们看到对于大样本，先验的影响变得可以忽略，因为渐近分布不依赖于先验。此外，该定理揭示了置信区间与后验区间之间的联系，这一点将在下一节讨论。</p>
+
+<p>该定理的假设之一是，随着样本量的增加，先验保持不变，因此最终几乎所有的信息都来自数据。先验信息越丰富，后验分布接近其渐近极限所需的样本量就越大。</p>
+
+<h2>20.6 后验区间</h2>
+
+<p>在例 20.2 中已经提到了贝叶斯后验区间，现在我们将更深入地讨论。</p>
+
+<p>后验区间与置信区间具有不同的概率解释。置信区间理论将参数视为固定的，而区间视为随机的，因为它基于随机样本。因此，当我们说“置信区间包含真实参数的概率是……”时，所考虑的是区间的概率分布，而不是参数的。此外，该概率表达的是收集数据之前关于收集数据后会发生什么的可能性。例如，如果我们使用 95% 的置信度，那么得到其区间覆盖参数的样本的概率为 0.95。在收集数据并得知区间之后，非贝叶斯学派会说要么区间覆盖参数，要么不覆盖，因此区间覆盖参数的概率要么是 1，要么是 0，当然，我们不知道哪个是实际概率。</p>
+
+<p>在贝叶斯后验区间理论中，情况正好相反。样本被认为是固定的，因为我们使用后验概率，即给定数据下的条件概率。因此，后验区间被视为一个固定量。但在贝叶斯统计中，参数被视为随机的。因此，当贝叶斯学派说“后验区间包含真实参数的概率是……”时，所考虑的概率分布是参数的后验分布。随机量是参数，区间是固定的，并且概率是在收集数据之后计算的。</p>
+</section>
+<section class="book-page" data-pdf-page="613">
+  <p>尽管置信区间和后验区间之间存在这些本质的哲学差异，但在许多同时构造了置信区间和后验区间的例子中，我们会发现它们几乎相等。尤其当先验相对于数据而言较为无信息时，这种情况更为常见，例如在例20.3中，如果\(\alpha+\beta\)远小于\(n\)。</p>
+  <p>基于中心极限定理，有坚实的理论原因说明为何在大样本下置信区间和后验区间几乎相等。根据结论20.6（后验的中心极限定理），\(\theta\)的第\(i\)个分量的大样本后验区间为
+    \[E(\theta_i|Y) \pm z_{\alpha/2} \sqrt{\operatorname{var}(\theta_i|Y)}. \tag{20.30}\]
+    根据结论5.1和7.6（关于MLE的一元和多元中心极限定理），基于MLE的大样本置信区间(5.20)和大样本后验区间(20.30)会随着样本量的增加而相互接近。因此，注重实用的非贝叶斯数据分析师通常乐于使用后验区间，并将其解释为置信区间的大样本近似。除了简单问题外，所有置信区间都基于大样本近似。这适用于使用剖面似然、关于MLE和Fisher信息量的中心极限定理或自助法的置信区间，换句话说，适用于构造置信区间的所有主要方法。</p>
+  <p>后验区间主要有两种类型：最高概率区间和等尾区间。令\(\psi = \psi(\theta)\)为参数向量\(\theta\)的标量函数，\(\pi(\psi|Y)\)为\(\psi\)的后验密度。最高概率区间是形如\(\{\psi: \pi(\psi|Y) > k\}\)的集合，其中\(k\)为某个常数。随着\(k\)从0增加到\(\infty\)，该区间的后验概率从1递减到0，选择\(k\)使得概率为\(1-\alpha\)。如果\(\pi(\psi|Y)\)有多个众数，那么集合\(\{\psi: \pi(\psi|Y) > k\}\)可能不是一个区间，此时应称为后验集或后验区域而不是后验区间。无论如何，该区域被解释为具有\(1-\alpha\)后验概率的最小集合。当最高后验区域是一个区间时，可以通过计算所有从\(\pi(\psi|Y)\)的\(\alpha_1\)下分位数到\(\alpha_2\)上分位数（其中\(\alpha_1+\alpha_2=\alpha\)）的区间，然后选择其中最短的区间来得到。</p>
+  <p>等尾后验区间的下限和上限等于\(\pi(\psi|Y)\)的\(\alpha/2\)下分位数和\(\alpha/2\)上分位数。当\(\pi(\psi|Y)\)对称且单峰时，这两类区间重合，根据后验的中心极限定理，对于大样本至少近似成立。</p>
+  <p>使用蒙特卡洛方法时，两种类型的后验区间都很容易计算；参见第20.7.3节。</p>
+  <p><strong>例20.7.</strong> 方差已知时正态均值的后验区间</p>
+</section>
+<section class="book-page" data-pdf-page="614">
+  <h2 id="section-20-7">20.7 马尔可夫链蒙特卡洛</h2>
+  <p>本示例继续例20.4。由(20.20)和(20.21)，对于μ的(1−α)100%后验区间为
+    \[
+    \frac{\tau_Y \bar{Y} + \tau_0 \mu_0}{\tau_Y + \tau_0} \pm z_{\alpha/2} \sqrt{\frac{1}{\sigma^2/n} + \frac{1}{\sigma_0^2}}
+    \]
+    其中\(z_{\alpha/2}\)为标准正态分布的α/2上分位数。</p>
+  <p>如果\(n \to \infty\)或\(\sigma_0 \to \infty\)，则先验信息相对于数据信息变得可忽略，因为\(\tau_Y / \tau_0 \to \infty\)，后验区间收敛到
+    \[
+    \bar{Y} \pm z_{\alpha/2} \frac{\sigma}{\sqrt{n}},
+    \]
+    即通常的非贝叶斯置信区间。□</p>
+  <p>尽管前面几节简单例子中的贝叶斯计算很直接，但对于实际问题通常并非如此。后验密度(20.5)分母中的积分通常无法解析计算，后验均值(20.6)分子中的积分也是如此。由于计算困难，直到大约1990年，贝叶斯数据分析的使用远不如现在广泛。幸运的是，已经开发出用于近似后验密度和后验期望的蒙特卡洛模拟方法。这些方法取得了巨大进步，不仅使贝叶斯方法变得实用，还解决了许多以前无法处理的应用问题。</p>
+  <p>贝叶斯分析中最广泛适用的蒙特卡洛方法模拟一条马尔可夫链，其平稳分布即为后验分布。该链的样本用于贝叶斯推断。这种技术称为马尔可夫链蒙特卡洛（MCMC）。BUGS语言实现了MCMC。有三个广泛使用的BUGS版本：OpenBUGS、WinBUGS和JAGS。大多数BUGS程序可以在所有三个版本上运行，但也有例外。JAGS在某种程度上是三者中最通用的，因为它是唯一可以在MacOS下运行的版本。<sup><a href="#footnote-2" id="ref-footnote-2">2</a></sup></p>
+  <p>本节介绍MCMC和BUGS。首先讨论最简单的MCMC类型——Gibbs抽样。Gibbs抽样在适用时效果很好，但只适用于有限的问题。接下来讨论Metropolis-Hastings算法。Metropolis-Hastings几乎适用于所有类型的贝叶斯分析。BUGS是一个复杂的程序，能够为特定模型选择合适的MCMC算法。</p>
+  <ol class="footnotes">
+    <li id="footnote-2"><a href="#ref-footnote-2">↩</a> OpenBUGS可以在WINE下运行于Mac上。</li>
+  </ol>
+</section>
+<section class="book-page" data-pdf-page="615">
+  <p>596 20 贝叶斯数据分析与MCMC</p>
+  <h3>20.7.1 Gibbs抽样</h3>
+  <p>Gibbs抽样是最简单的MCMC方法。假设参数向量\(\theta\)可以划分为\(M\)个子向量，使得</p>
+  \[
+  \theta = \begin{pmatrix} \theta_1 \\ \ldots \\ \theta_M \end{pmatrix}.
+  \]
+  <p>令\([\theta_j | Y, \theta_k, k \neq j]\)为给定数据\(Y\)和其他子向量值条件下\(\theta_j\)的条件分布；\([\theta_j | Y, \theta_k, k \neq j]\)称为\(\theta_j\)的<strong>全条件分布</strong>。如果能够从每个全条件分布中抽样，那么Gibbs抽样是可行的。</p>
+  <p>Gibbs抽样通过重复抽样子向量\(\theta_1, \ldots, \theta_M\)来构造一条马尔可夫链，具体方式如下。链从参数向量\(\theta\)的任意起始值\(\theta^{(0)}\)开始。然后，子向量\(\theta_1^{(1)}\)从全条件分布\([\theta_1 | Y, \theta_k, k \neq 1]\)中抽取，其中其余子向量\(\theta_k, k \neq 1\)设定为其当前值\(\theta_k^{(0)}\)。接下来，\(\theta_2^{(1)}\)从\([\theta_2 | Y, \theta_k, k \neq 2]\)中抽取，其中\(\theta_k, k \neq 2\)设定为其当前值，即对于\(k=1\)为\(\theta_1^{(1)}\)，对于\(k \geq 2\)为\(\theta_k^{(0)}\)。如此继续，直到每个\(\theta_1, \ldots, \theta_M\)都得到更新，得到\(\theta^{(1)} = (\theta_1^{(1)}, \ldots, \theta_M^{(1)})^T\)。</p>
+  <p>然后，从\(\theta^{(1)}\)出发，以与从\(\theta^{(0)}\)获得\(\theta^{(1)}\)相同的方式得到\(\theta^{(2)}\)。如此继续，我们得到序列\(\theta^{(1)}, \ldots, \theta^{(N)}\)，这是一条马尔可夫链，其显著性质是其平稳分布就是\(\theta\)的后验分布。此外，无论起始值\(\theta^{(0)}\)如何，链都将收敛到平稳分布。在收敛到平稳分布后，马尔可夫链对后验分布进行抽样，MCMC样本用于计算后验期望、分位数以及后验分布的其他特征。</p>
+  <p>由于Gibbs样本并非从平稳分布开始，因此前\(N_0\)次迭代被丢弃作为<strong>burn-in期</strong>（预烧期），\(N_0\)的值需适当选择。我们假定已完成此步骤，\(\theta^{(1)}, \ldots, \theta^{(N)}\)是burn-in期之后的链样本。在第20.7.5节中，将讨论选择\(N_0\)的方法。</p>
+  <p><strong>例20.8. 正态均值与精度的Gibbs抽样</strong></p>
+  <p>在例20.7中，当精度已知时，我们求得了正态均值的后验；在例20.5中，当均值已知时，我们求得了正态精度的后验。这两个结果给出了两个全条件分布，使得我们可以应用Gibbs抽样来估计均值和精度均未知的正态分布。思路很简单。首先选择\(\tau\)的起始值\(\tau^{(0)}\)。例如，起始值可以是MLE。然而，使用多条具有随机起始值的链具有优势，这些起始值是<strong>过度分散</strong>的，即它们的概率分布比后验分布更加分散；参见第20.7.5节。</p>
+</section>
+<section class="book-page" data-pdf-page="616">
+<h3>20.7 马尔可夫链蒙特卡罗</h3>
+<p>然后，将 \(\tau\) 视为已知且等于 \(\tau^{(0)}\)，从 (20.22) 给出的高斯完全条件后验分布中随机抽取 \(\mu^{(1)}\)。注意：总体精度 \(\tau\) 的起始值 \(\tau^{(0)}\) 不应与 \(\mu\) 的先验中的精度 \(\tau_0\) 混淆；\(\tau^{(0)}\) 仅使用一次，用于启动 Gibbs 抽样算法；经过预热期后，Gibbs 样本将不依赖于 \(\tau^{(0)}\) 的实际值。相反，\(\tau_0\) 是固定的并且是后验的一部分，因此 Gibbs 样本应该且将会依赖于 \(\tau_0\)。</p>
+<p>在抽取了 \(\mu^{(1)}\) 之后，将 \(\mu\) 视为已知且等于 \(\mu^{(1)}\)，并从完全条件分布 (20.29) 中抽取 \(\tau^{(1)}\)。Gibbs 抽样以这种方式继续，交替地从 \(\mu\) 和 \(\tau\) 的完全条件分布中抽样。□</p>
+<h4>20.7.2 其他马尔可夫链蒙特卡罗抽样器</h4>
+<p>通常，从后验的完全条件分布中直接抽样是困难或不可能的，因此 Gibbs 抽样不可行。幸运的是，当无法使用 Gibbs 抽样时，还有大量其他抽样算法可供使用。“从头开始”编写蒙特卡罗算法超出了本书的范围，但在第 20.14 节的参考文献中有解释。第 20.7.4 节讨论的 BUGS 语言允许分析人员使用 MCMC，而无需经历耗时且容易出错的编程细节。</p>
+<h4>20.7.3 MCMC 输出的分析</h4>
+<p>MCMC 输出的分析通常检查参数向量 \(\boldsymbol{\theta}\) 的标量值函数。应对每个感兴趣的标量量进行分析。令 \(\psi = \psi(\boldsymbol{\theta})\) 为这样的一个函数。假设 \(\boldsymbol{\theta}_1, \ldots, \boldsymbol{\theta}_N\) 是从 \(\boldsymbol{\theta}\) 的后验分布中抽取的 MCMC 样本，可以是单个马尔可夫链或多个链的组合，并定义 \(\psi_i = \psi(\boldsymbol{\theta}_i)\)。我们假设预热期和链长度足够，使得 \(\psi_1, \ldots, \psi_N\) 是 \(\psi\) 的后验分布的一个代表性样本。用于诊断收敛性和蒙特卡罗样本量充分性的方法在第 20.7.5 节中解释。</p>
+<p>MCMC 样本均值 \(\bar{\psi} = N^{-1} \sum_{i=1}^N \psi_i\) 估计后验期望 \(E(\psi|Y)\)，这是最常见的贝叶斯估计量。MCMC 样本标准差 \(s_{\psi} = \{(N-1)^{-1} \sum_{i=1}^N (\psi_i - \bar{\psi})^2\}^{1/2}\) 估计 \(\psi\) 的后验标准差，并称为贝叶斯标准误。如果数据的样本量足够大，则根据结果20.6，后验分布近似正态，并且 \(\psi\) 的近似 \((1-\alpha)\) 后验区间为</p>
+\[
+\bar{\psi} \pm z_{\alpha/2} s_{\psi}. \tag{20.32}
+\]
+<p>区间 (20.32) 是 (20.30) 的 MCMC 近似。</p>
+</section>
+<section class="book-page" data-pdf-page="617">
+  <p>然而，我们无需使用这种正态近似来寻找后验区间。如果 \(L(\alpha_1)\) 是 \(\psi_1, \ldots, \psi_N\) 的 \(\alpha_1\) 下样本分位数，\(U(\alpha_2)\) 是 \(\alpha_2\) 上样本分位数，那么 \([L(\alpha_1), U(\alpha_2)]\) 是一个 \(1 - (\alpha_1 + \alpha_2)\) 后验区间。对于等尾后验区间，取 \(\alpha_1 = \alpha_2 = \alpha/2\)。对于最高后验密度区间，我们在一个精细网格上选择 \(\alpha_1\) 和 \(\alpha_2\)，使得 \(\alpha_1 + \alpha_2 = \alpha\) 且 \(U(\alpha_2) - L(\alpha_1)\) 最小化。应使用核密度估计检查 \(\psi\) 的后验密度是否为单峰。如果存在多个峰且它们之间的谷足够深，那么最高后验密度后验区域可能是若干区间的并集，而非单个区间。然而，即使在这种不太常见的情况下，\([L(\alpha_1), U(\alpha_2)]\) 仍可能被用作最短的 \(1-\alpha\) 后验区间。</p>
+  <p>核密度估计可用于可视化后验密度的形状。例如，参见前文示例20.9中讨论的图20.4。大多数核密度估计的自动带宽选择器基于独立样本的假设。当应用于MCMC输出时，它们可能会欠平滑。如果在R中使用 density() 函数，可以通过使用大于默认值1的 adjust 参数值来纠正这种欠平滑。然而，图20.4使用了默认值，平滑量似乎足够；这可能是由于蒙特卡罗样本量 \(N = 10,000\) 较大。</p>
+  <h3>20.7.4 JAGS</h3>
+  <p>JAGS 是BUGS（使用吉布斯抽样的贝叶斯分析）程序的一个实现，可在Windows、Mac OS或Linux上运行。JAGS可以作为独立程序使用，也可以通过 rjags 包从R内部调用。</p>
+  <h4>示例20.9 使用JAGS对收益率拟合t分布</h4>
+  <p>在本例中，将使用从R调用的JAGS对S&P 500收益率拟合t分布。下面的BUGS程序位于文件 univt.bug 中。该程序可在 OpenBUGS、WinBUGS 或 JAGS 下运行。在本例中，我们使用JAGS。</p>
+  <pre><code>1 model{
+2   for(i in 1:N)
+3   {
+4     r[i] ~ dt(mu, tau, k)
+5   }
+6   mu ~ dnorm(0.0, 1.0E-6)
+7   tau ~ dgamma(0.1, 0.01)
+8   k ~ dunif(2, 50)
+9   sigma2 &lt;- (k / (k - 2)) / tau
+10  sigma &lt;- sqrt(sigma2)
+11 }</code></pre>
+  <figure class="book-figure" id="fig-20.4"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-99a4bcb11642.png" alt="图20.4 使用默认平滑参数的核密度估计">
+    <figcaption>大于默认值1。然而，图20.4使用了默认值，平滑量似乎足够；这可能是由于蒙特卡罗样本量N=10,000较大。</figcaption>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="618">
+<h3>20.7 马尔可夫链蒙特卡洛</h3>
+<p>在BUGS中，dnorm(mu,tau) 表示均值为mu、精度为tau的正态分布。同样地，dt(mu, tau, k) 表示均值为mu、自由度为k、逆尺度参数为tau的平方根的t分布（因此tau与精度成比例而非相等，比例常数为 \(\sqrt{(k-2)/k}\)）。在BUGS程序中，“for循环”（第3-5行）指定了似然函数，第6-8行指定了mu, tau和k的先验分布。第9行通过tau计算方差，第10行计算标准差。</p>
+<p>R程序如下：</p>
+<div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">1 library(rjags)
+2 library(&quot;Ecdat&quot;)
+3 data(SP500)
+4 r = SP500$r500
+5 N = length(r)
+6 data = list(r = r ,N=N )
+7 inits = function() {list(mu = rnorm(1, mean = mean(r),
+8 sd = 2 * sd(r)), tau = runif(1, 0.2/var(r), 2/var(r)),
+9 k = runif(1, 2.5, 10)) }
+10 t1 = proc.time()
+11 univt.mcmc &lt;- jags.model(&quot;univt.bug&quot;, data = data, inits = inits,
+12 n.chains = 3, n.adapt = 1000, quiet = FALSE)
+13 nthin = 20
+14 univt.coda = coda.samples(univt.mcmc, c(&quot;mu&quot;, &quot;k&quot;, &quot;sigma&quot;),
+15 100*nthin, thin = nthin)
+16 summary(univt.coda, digits = 2)
+17 t2 = proc.time()
+18 (t2 - t1) / 60
+19 pdf(&quot;basic_plot.pdf&quot;, width = 4, height = 7) ## Figure 20.4
+20 par(mfrow = c(4, 2))
+21 plot(univt.coda, auto.layout = F) ## Figure 20.4
+22 graphics.off()
+23 gelman.diag(univt.coda)
+24 effectiveSize(univt.coda)
+25 pdf(&quot;gelman_plot.pdf&quot;, width = 6, height = 6) ## Figure 20.6
+26 gelman.plot(univt.coda)
+27 graphics.off()
+28 dic.samples(univt.mcmc, 100*nthin, thin = nthin, type = &quot;pD:)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import pandas as pd
+import pymc3 as pm
+import matplotlib.pyplot as plt
+import pandas_datareader as pdr
+from datetime import datetime
+
+# Load SP500 data (requires internet or replace with local data)
+start = datetime(1990, 1, 1)
+end = datetime(2020, 12, 31)
+sp500 = pdr.get_data_yahoo(&#x27;^GSPC&#x27;, start, end)
+r = sp500[&#x27;Adj Close&#x27;].pct_change().dropna().values
+N = len(r)
+
+# Build model
+with pm.Model() as model:
+    mu = pm.Normal(&#x27;mu&#x27;, mu=np.mean(r), sd=2*np.std(r))
+    sigma = pm.Uniform(&#x27;sigma&#x27;, lower=0.2*np.std(r), upper=2*np.std(r))  # corresponds to tau prior
+    k = pm.Uniform(&#x27;k&#x27;, lower=2.5, upper=10)
+    # Student&#x27;s t distribution: nu=k, mu=mu, sd=sigma
+    obs = pm.StudentT(&#x27;obs&#x27;, nu=k, mu=mu, sd=sigma, observed=r)
+
+# MCMC sampling
+with model:
+    trace = pm.sample(draws=2000, tune=1000, chains=3, cores=1,
+                     start={&#x27;mu&#x27;: np.mean(r), &#x27;sigma&#x27;: np.std(r)*0.5, &#x27;k&#x27;: 5},
+                     target_accept=0.9)
+
+# Summary
+print(pm.summary(trace, digits=2))
+
+# Diagnostics
+print(&#x27;Gelman-Rubin statistics:&#x27;)
+print(pm.gelman_rubin(trace))
+print(&#x27;Effective sample sizes:&#x27;)
+print(pm.effective_n(trace))
+
+# Trace plot
+pm.traceplot(trace)
+plt.savefig(&#x27;basic_plot.pdf&#x27;, bbox_inches=&#x27;tight&#x27;)
+
+# Note: pymc3 does not have direct gelman.plot or DIC; WAIC can be used for model comparison.</code></pre>
+  </div>
+</div>
+<p>第6行创建了一个数据列表，传递给JAGS；第7-9行创建了一个函数inits()，为每条链生成初始值。第11-12行的函数jags.model()创建了一个类为jags的对象univt.mcmc，其中包含文件univt.bug中指定模型的图形化模型描述。该对象是第14-15行coda.samples()的参数之一。函数coda.samples()产生一个类为mcmc.list的对象univt.coda，包含MCMC输出。该类对象可作为coda包中函数的输入，如gelman.diag(), effectiveSize(), gelman.plot()和summary()。第18行打印</p>
+</section>
+<section class="book-page" data-pdf-page="619">
+<h2>600 第20章 贝叶斯数据分析与MCMC</h2>
+<p>计算时间以分钟计。本例的计算时间约为6分钟，但这个数字当然依赖于硬件。</p>
+<p>第16行的输出为：</p>
+<pre><code>&gt; summary(univt.coda, digits = 2)
+
+Iterations = 3020:5000
+Thinning interval = 20
+Number of chains = 3
+Sample size per chain = 100
+
+1. Empirical mean and standard deviation for each variable,
+plus standard error of the mean:
+
+            Mean      SD Naive SE Time-series SE
+k      6.0451630 0.5443919 3.143e-02      3.137e-02
+mu     0.0005129 0.0001850 1.068e-05      1.071e-05
+sigma  0.0103017 0.0002078 1.200e-05      1.146e-05
+
+2. Quantiles for each variable:
+
+           2.5%       25%       50%       75%     97.5%
+k      5.1407126 5.6780998 6.0380664 6.4039149 7.1849194
+mu     0.0001289 0.0003821 0.0005046 0.0006191 0.0008763
+sigma  0.0099304 0.0101560 0.0102910 0.0104427 0.0107435
+</code></pre>
+<p>第21行生成的图20.4包含按字母顺序排列的 mu、k 和 sigma 的迹图与核密度估计。迹图就是三条链的时间序列图。迹图的解释在第20.7.5节讨论。第26行生成的Gelman图将在后面的图20.6中展示。</p>
+<p>此处简要讨论第23-28行的诊断结果，稍后将详细描述。第23行产生的Gelman诊断结果为：</p>
+<pre><code>&gt; gelman.diag(univt.coda)
+
+Potential scale reduction factors:
+
+        Point est. Upper C.I.
+k             1.00      1.01
+mu            1.00      1.01
+sigma         1.02      1.06
+
+Multivariate psrf
+1.02
+</code></pre>
+<p>第24行计算的有效样本量为：</p>
+<figure class="book-figure" id="fig-20.6"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-aeba390906dc.png" alt="图20.6：Gelman诊断输出" />
+  <figcaption>图20.6：此处简要讨论第23-28行的诊断结果，稍后将详细描述。第23行产生的Gelman诊断结果为：&gt; gelman.diag(univt.coda) Potential scale reduction factors: Point est. Upper C.I. k 1.00 1.01 mu 1.00 1.01 sigma 1.02 1.06 Multivariate psrf 1.02 第24行计算的有效样本量为：</figcaption>
+</figure>
+</section>
+<section class="book-page" data-pdf-page="620"><p>图20.4展示了例20.9中的迹图和核密度估计。</p><figure class="book-figure" id="fig-20.4"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-c9b812ad35fc.png" alt="例20.9中的迹图和核密度估计"/><figcaption>图20.4 例20.9中的迹图和核密度估计</figcaption></figure><pre><code class="r">&gt; effectiveSize(univt.coda)
+k      mu    sigma
+366.8874 300.0000 300.0000</code></pre><p>Gelman诊断和有效样本量将在第20.7.5节中讨论。</p><p>DIC和pD将在第20.7.6节中讨论，并在第28行生成，结果为DIC = -18,062，pD = 2.664：</p><pre><code class="r">&gt; dic.samples(univt.mcmc, 100*nthin, thin = nthin, type = "pD")
+|**************************************************| 100%
+Mean deviance: -18065
+penalty 2.664
+Penalized deviance: -18062</code></pre></section>
+<section class="book-page" data-pdf-page="621">
+<p>602 第20章 贝叶斯数据分析与MCMC</p>
+<p><strong>20.7.5 监控MCMC收敛和混合</strong></p>
+<p>燃烧期长度 \(N_0\) 必须足够大，以确保马尔可夫链在燃烧期结束时已收敛到平稳分布。燃烧期后链的长度 \(N\) 必须足够大，使得从MCMC样本计算的矩、分位数和其他量能够精确估计后验分布的对应特征。马尔可夫链是相关序列，MCMC中使用的链通常具有正自相关性。由于自相关，要达到精确估计，马尔可夫链样本必须比独立抽样所需的样本大得多，通常大得多。如果链在后验分布中移动缓慢，则称其混合不良。链的混合越慢，精确估计所需的样本量就越大。</p>
+<p>原则上，只需要一条长马尔可夫链就能对后验分布进行抽样。然而，如果生成多条链，则可以比较它们以判断燃烧期长度 \(N_0\) 和链长度 \(N\) 是否足够大。如果链均值的链间变异相对于链内变异较大，则链混合不良。因此，收敛和混合的诊断可以基于链间和链内变异。</p>
+<p>如果链的起始值相似，则链间变异性会人为地偏低。因此，建议起始值从比后验分布更分散的分布中随机抽样。例如，可以使用均值为MLE、协方差矩阵为Fisher信息逆矩阵的 \(k\) 倍（\(k>1\)，如 \(k=1.5\) 或 \(2\)）的高斯分布或 \(t\) 分布。</p>
+<p><strong>例20.10. 良好混合与不良混合</strong></p>
+<p>图20.5对比了良好混合与不良混合。该模型是具有两个预测变量和独立同分布高斯噪声的线性回归。有两个模拟数据集。在第一个数据集中，预测变量高度相关（样本相关系数 = 0.996）。该数据集的迹图显示在顶行。在第二个数据集中，预测变量独立，迹图显示在中间行。除了共线性程度不同外，两个数据集具有相同的分布。在两种情况下，都有三条链，每条链的燃烧期 \(N_0=100\) 次迭代，然后保留1000次迭代。在每一行中，显示了三个回归系数（截距和两个斜率）以及残差精度（方差的倒数）的迹图。</p>
+<p>在每种情况下，三条链都从随机选择的初始值开始。概率分布以最小二乘估计为中心，且相对于后验分布“过度分散”。具体地，回归系数的起始值分布为高斯分布，以最小二乘估计为中心，协方差矩阵为最小二乘估计协方差矩阵的1.5倍。噪声方差的起始分布则……</p>
+</section>
+<section class="book-page" data-pdf-page="622"><p>起始值在噪声方差的最小二乘估计（例如 (9.16) 中的 \(\hat{\sigma}^2_\epsilon\)）的0.25倍到4倍之间均匀分布。通过使用过度分散的初始值，可以观察链从起始值移动到平稳分布的速度。回归系数的链在中间一行移动得非常快，但在顶行移动缓慢。残差精度不受共线性影响，即使在高度共线性情况下也移动很快。</p><figure class="book-figure" id="fig-20.5"><figcaption id="caption-0217">图 20.5. 具有两个预测变量的线性回归模型的 MCMC 分析。模拟数据。三个链的回归系数和残差精度的迹图。预热期为 100，链长度为 1000。迹图显示的是预热期之后的 MCMC 输出。截距为 beta[1]，斜率为 beta[2] 和 beta[3]。<strong>顶行：</strong>两个预测变量高度相关，强共线性导致回归系数混合不良。注意，在抽样期开始时链尚未收敛到平稳分布，且链间变异较大。<strong>中间行：</strong>预热期为 100，链长度为 1000，与顶行相同。两个预测变量独立，由于不存在共线性，混合非常好。注意，在抽样期开始时链已收敛到平稳分布，且链间变异很小。<strong>底行：</strong>与顶行相同的数据集，但预热期为 5000，链长度为 30000。链已被稀疏化，每 10 次迭代保留一次。</figcaption></figure></section>
+<section class="book-page" data-pdf-page="623"><p>解决混合不良的一种方法是增加预烧期和链长。底行使用了与顶行相同的数据集，但预烧期更长（5000次迭代），链也更长（30,000次迭代）。链进行了稀释，仅保留每隔10次迭代的结果。稀释可以通过减少蒙特卡洛样本量来加速MCMC输出的分析，并改善踪迹图的外观——3条链各30,000次迭代的踪迹图几乎会被完全填满。到预烧期结束时，链似乎已收敛到平稳分布，并在30,000次迭代（稀释后为3,000次）中混合得相当好。</p><p>该模型的BUGS代码如下：</p><pre><code><div class="code-tabs" data-code-tabs id="code-bugs">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-bugs-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-bugs-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-bugs-r" role="tabpanel">
+    <pre><code class="language-r">1 model{
+2 for(i in 1:N) {
+3 y[i] ~ dnorm(mu[i],tau)
+4 mu[i] &lt;- x[i,1]*beta[1] + x[i,2]*beta[2] + x[i,3]*beta[3]
+5 }
+6 for(i in 1:3)beta[i] ~ dnorm(0,.00001)
+7 tau ~ dgamma(0.01,0.01)
+8 }</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-bugs-python" role="tabpanel" hidden>
+    <pre><code class="language-python"># 等价的PyMC模型定义
+import pymc3 as pm
+with pm.Model() as model:
+    beta = pm.Normal(&#x27;beta&#x27;, mu=0, sd=100, shape=3)
+    tau = pm.Gamma(&#x27;tau&#x27;, alpha=0.01, beta=0.01)
+    mu = pm.math.dot(X, beta)  # X为设计矩阵
+    y = pm.Normal(&#x27;y&#x27;, mu=mu, sd=1/pm.math.sqrt(tau), observed=y)</code></pre>
+  </div>
+</div></code></pre><p>R代码如下：</p><pre><code><div class="code-tabs" data-code-tabs id="code-r">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-r-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-r-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-r-r" role="tabpanel">
+    <pre><code class="language-r">1 library(rjags)
+2 library(coda)
+3 library(mvtnorm)
+4 set.seed(90201)
+5 N=50
+6 beta1 = 1
+7 beta2 = 2
+8 alpha = 1
+9 x1 = rnorm(N, mean = 3, sd = 2)
+10 x2 = x1 + rnorm(N, mean = 3, sd = 0.2)
+11 x = cbind(rep(1, N), x1, x2)
+12 y = alpha + beta1 * x1 + beta2 * x2 + rnorm(N, mean = 0, sd = 0.2)
+13 data = list(y = y ,x=x ,N=N )
+14 summ = summary(lm(y ~ x1 + x2))
+15 betahat = as.numeric(summ$coeff)[1:3]
+16 covbetahat = summ$sigma^2 * solve(t(x) %*% x)
+17 inits = function() {list(beta = as.numeric(rmvnorm(n = 1,
+18 mean = betahat, sigma=1.5 * covbetahat)),
+19 tau=runif(1, 1/(4 * summ$sigma^2), 4 / summ$sigma^2)) }
+20 regr &lt;- jags.model(&quot;lin_reg_vect.bug&quot;, data = data, inits = inits,
+21 n.chains = 3, n.adapt = 1000, quiet = FALSE)
+22 regr.coda = coda.samples(regr, c(&quot;beta&quot;, &quot;tau&quot;), 1000, thin = 1)
+23 regr.coda.largeN = coda.samples(regr, c(&quot;beta&quot;, &quot;tau&quot;),
+24 50000, thin = 100)
+25 ##### no collinearity #####
+26 set.seed(90201)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-r-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import pymc3 as pm
+import statsmodels.api as sm
+
+np.random.seed(90201)
+N = 50
+beta1 = 1
+beta2 = 2
+alpha = 1
+x1 = np.random.normal(3, 2, N)
+x2 = x1 + np.random.normal(3, 0.2, N)
+X = np.c_[np.ones(N), x1, x2]
+y = alpha + beta1 * x1 + beta2 * x2 + np.random.normal(0, 0.2, N)
+
+ols = sm.OLS(y, X).fit()
+betahat = ols.params
+covbetahat = ols.cov_params()
+sigma_sq = ols.scale
+
+def init_func():
+    beta = np.random.multivariate_normal(betahat, 1.5 * covbetahat)
+    tau = np.random.uniform(1.0 / (4 * sigma_sq), 4.0 / sigma_sq)
+    return {&#x27;beta&#x27;: beta, &#x27;tau&#x27;: tau}
+
+with pm.Model() as regr:
+    beta = pm.Normal(&#x27;beta&#x27;, mu=0, sd=10000, shape=3)
+    tau = pm.Gamma(&#x27;tau&#x27;, alpha=0.01, beta=0.01)
+    mu = pm.math.dot(X, beta)
+    y_obs = pm.Normal(&#x27;y_obs&#x27;, mu=mu, sd=1 / pm.math.sqrt(tau), observed=y)
+    trace = pm.sample(1000, chains=3, start=[init_func() for _ in range(3)],
+                      tune=1000, progressbar=False)
+    trace_largeN = pm.sample(50000, chains=3, start=[init_func() for _ in range(3)],
+                             tune=1000, thin=100, progressbar=False)
+
+##### no collinearity #####
+np.random.seed(90201)</code></pre>
+  </div>
+</div></code></pre></section>
+<section class="book-page" data-pdf-page="624">
+<h3>20.7 马尔可夫链蒙特卡洛</h3>
+<div class="code-tabs" data-code-tabs id="code1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code1-r" role="tabpanel">
+    <pre><code class="language-r">x1 = rnorm(N, mean = 3, sd = 2)
+x2 = rnorm(N,mean = 3, sd = 2) + rnorm(N, mean = 3, sd = 0.2)
+x = cbind(rep(1, N), x1, x2)
+y = alpha + beta1 * x1 + beta2 * x2 + rnorm(N, mean = 0, sd = 0.2)
+data = list(y = y ,x=x ,N=N )
+summ = summary(lm(y ~ x1 + x2))
+betahat = as.numeric( summ$coeff )[1:3]
+covbetahat = summ$sigma^2 * solve(t(x) %*% x)
+inits=function(){list(beta = as.numeric(rmvnorm(n = 1,
+ mean = betahat, sigma = 1.5 * covbetahat)) ,
+ tau=runif(1, 1 / (4 * summ$sigma^2), 4 / summ$sigma^2)) }
+regr.noco &lt;- jags.model(&quot;lin_reg_vect.bug&quot;, data = data,
+ inits = inits, n.chains = 3, n.adapt = 1000, quiet = FALSE)
+regr.coda.noco = coda.samples(regr.noco, c(&quot;beta&quot;, &quot;tau&quot;),
+ 1000, thin = 1)
+pdf(&quot;linRegMCMC.pdf&quot;, width = 7, height = 6)
+par(mfrow=c(3,4))
+traceplot(regr.coda)
+traceplot(regr.coda.noco)
+traceplot(regr.coda.largeN)
+graphics.off()</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import pymc3 as pm
+import matplotlib.pyplot as plt
+import arviz as az
+
+# 生成模拟数据
+np.random.seed(42)
+N = 100
+alpha = 1.0
+beta1 = 0.5
+beta2 = -0.2
+x1 = np.random.normal(3, 2, N)
+x2 = np.random.normal(3, 2, N) + np.random.normal(3, 0.2, N)
+X = np.column_stack((np.ones(N), x1, x2))
+y = alpha + beta1 * x1 + beta2 * x2 + np.random.normal(0, 0.2, N)
+
+# 使用普通最小二乘法获取先验
+import statsmodels.api as sm
+ols = sm.OLS(y, X).fit()
+betahat = ols.params
+covbetahat = ols.cov_params()
+sigma2_hat = ols.scale  # MSE
+
+# MCMC采样
+with pm.Model() as model:
+    # 先验
+    beta = pm.MvNormal(&#x27;beta&#x27;, mu=betahat, cov=1.5*covbetahat, shape=3)
+    tau = pm.Uniform(&#x27;tau&#x27;, lower=1/(4*sigma2_hat), upper=4/sigma2_hat)
+    sigma = pm.Deterministic(&#x27;sigma&#x27;, 1/np.sqrt(tau))
+    # 似然
+    mu = pm.math.dot(X, beta)
+    y_obs = pm.Normal(&#x27;y_obs&#x27;, mu=mu, sigma=sigma, observed=y)
+    # 采样
+    trace = pm.sample(1000, chains=3, tune=1000, return_inferencedata=False)
+
+# 绘图
+fig, axes = plt.subplots(3, 4, figsize=(7,6))
+az.plot_trace(trace, axes=axes)
+plt.tight_layout()
+plt.savefig(&#x27;linRegMCMC.pdf&#x27;)
+plt.show()</code></pre>
+  </div>
+</div>
+<p>□</p>
+<p>我们现在介绍两个广泛使用的诊断指标：<em>Rhat</em> 和 <em>n.eff</em>。假设我们抽取了 \(M\) 条链，每条链在 burn-in 后长度为 \(N\)。令 \(\theta_{i,j}\) 为第 \(j\) 条链的第 \(i\) 次迭代，并令 \(\psi_{i,j} = \psi(\theta_{i,j})\)，其中 \(\psi\) 是某个标量值函数。例如，要提取第 \(k\) 个参数，可使用 \(\psi(x)= x_k\)，或者 \(\psi\) 可能从精度计算标准差或方差。我们还用 \(\psi\) 表示估计量 \(\psi(\theta)\)。</p>
+<p>令
+\[
+\bar{\psi}_{\cdot,j} = N^{-1} \sum_{i=1}^N \psi_{i,j} \qquad (20.33)
+\]
+为第 \(j\) 条链的均值，并令
+\[
+\bar{\psi}_{\cdot,\cdot} = M^{-1} \sum_{j=1}^M \bar{\psi}_{\cdot,j}. \qquad (20.34)
+\]
+\(\bar{\psi}_{\cdot,\cdot}\) 是所有链均值的平均值，并且是 \(E(\psi|Y)\) 的蒙特卡洛近似。然后定义
+\[
+B = \frac{N}{M-1} \sum_{j=1}^M \left( \bar{\psi}_{\cdot,j} - \bar{\psi}_{\cdot,\cdot} \right)^2. \qquad (20.35)
+\]
+\(B/N\) 是链均值的样本方差。定义</p>
+</section>
+<section class="book-page" data-pdf-page="625">
+  <p>设</p>
+  \[s^2_j = (N-1)^{-1} \sum_{i=1}^N (\psi_{i,j} - \bar{\psi}_{\cdot,j})^2, \qquad (20.36)\]
+  <p>为第 \(j\) 条链的方差，并定义</p>
+  \[W = M^{-1} \sum_{j=1}^M s^2_j. \qquad (20.37)\]
+  <p>\(W\) 是合并的链内方差。两个方差 \(B\) 和 \(W\) 组合成</p>
+  \[\widehat{\operatorname{var}}^+(\psi|Y) = \frac{N-1}{N} W + \frac{1}{N} B, \qquad (20.38)\]
+  <p>其中，如前所述，\(Y\) 是数据。</p>
+  <p>为了评估收敛性，可以使用</p>
+  \[\hat{R} = \sqrt{\frac{\widehat{\operatorname{var}}^+(\psi|Y)}{W}}. \qquad (20.39)\]
+  <p>在函数 <code>gelman.diag()</code> 的输出中，\(\hat{R}\) 被称为“潜在尺度缩减因子”（potential scale reduction factor）；见例20.9的输出。\(\hat{R}\) 也称为“收缩因子”或有时称为“Gelman收缩因子”。</p>
+  <p>当链尚未达到平稳分布时，根号内的分子 \(\widehat{\operatorname{var}}^+(\psi|Y)\) 是 \(\operatorname{var}(\psi|Y)\) 的有偏高估，分母 \(W\) 是该量的有偏低估。随着预热期和蒙特卡洛样本量的增加，两种偏倚都趋于0。因此，\(\hat{R}\) 的值越大，表明未收敛。如果 \(\hat{R}\) 近似等于1，例如最多1.1，则认为链已收敛到平稳分布，并且可以使用 \(\widehat{\operatorname{var}}^+(\psi|Y)\) 作为 \(\operatorname{var}(\psi|Y)\) 的估计。\(\hat{R}\) 的值较大表明需要更长的预热期。\(\hat{R}\) 的值较小是预热期充足的证据，但我们还需要另一个诊断量——有效样本量，以判断采样期是否足够长。</p>
+  <p>链的<em>有效样本量</em>为</p>
+  \[N_{\text{eff}} = M N \frac{\widehat{\operatorname{var}}^+(\psi|Y)}{B}. \qquad (20.40)\]
+  <p>\(N_{\text{eff}}\) 的解释是：马尔可夫链对 \(\psi\) 的后验期望的估计精度，大致相当于从后验分布中抽取一个大小为 \(N_{\text{eff}}\) 的独立样本所能达到的精度。（当然，通常不可能获得真正的独立样本，这正是使用MCMC的原因。）</p>
+  <p>\(N_{\text{eff}}\) 是通过比较马尔可夫链抽样下 \(\psi_{\cdot,\cdot}\) 的方差与假设独立抽样下 \(\psi_{\cdot,\cdot}\) 的方差推导得出的。由于</p>
+</section>
+<section class="book-page" data-pdf-page="626">
+<p>20.7 马尔可夫链蒙特卡洛 607</p>
+
+<p>\(\psi_{\cdot,\cdot}\) 是 \(M\) 条独立链均值的平均值，且由于 \(B/N\) 是这 \(M\) 条链均值的样本方差，</p>
+
+\[
+\frac{M-1}{N} B \tag{20.41}
+\]
+
+<p>估计了 \(\psi_{\cdot,\cdot}\) 的蒙特卡洛方差。假设不抽取 \(M\) 条长度为 \(N\) 的链，而是从后验中抽取一个大小为 \(N^*\) 的独立样本。该样本均值的蒙特卡洛方差为</p>
+
+\[
+\frac{\operatorname{var}(\psi|Y)}{N^*},
+\]
+
+<p>可用下式估计：</p>
+
+\[
+\frac{\widehat{\operatorname{var}}_+(\psi|Y)}{N^*}. \tag{20.42}
+\]
+
+<p>根据定义，有效样本量 \(N_{\text{eff}}\) 是使 (20.41) 等于 (20.42) 的 \(N^*\) 值，因此 \(N^*\) 由 (20.40) 给出。由于 \(B/N\) 是 \(M\) 条链的样本方差，且 \(M\) 通常很小（常在 2 到 5 之间），\(B\) 具有相当大的蒙特卡洛变异性。因此，\(N_{\text{eff}}\) 仅是有效样本量的一个粗略估计。</p>
+
+<p>\(\hat{R}\) 和 \(N_{\text{eff}}\) 由 coda 包中的函数 <code>gelman.diag()</code> 和 <code>effectiveSize()</code> 计算。该包中的函数 <code>gelman.plot()</code> 绘制了模拟过程中不同时刻的 \(\hat{R}\) 值。该函数的文档指出：“<code>gelman.diag</code> 的一个潜在问题是，如果收缩因子恰好接近 1，它可能误判收敛。通过计算多个时间点的收缩因子，<code>gelman.plot</code> 可以显示收缩因子是否真正收敛，还是仍在波动。” 图 20.6 显示了例 20.9 的 Gelman 图。红色虚线是 97.5% 的上置信限。尽管 \(\hat{R}\) 在模拟过程中变化，但到模拟结束时似乎已收敛到接近 1 的值。</p>
+
+<p>\(N_{\text{eff}}\) 应该多大？当然，越大意味着蒙特卡洛精度越高，但较大的 \(N_{\text{eff}}\) 需要更多或更长的链，因此我们不希望 \(N_{\text{eff}}\) 不必要地大。\(N_{\text{eff}}\) 对估计误差的影响可以通过将估计误差 \(\psi - \psi_{\cdot,\cdot}\) 分解为两部分（称为 \(E_1\) 和 \(E_2\)）来看出：</p>
+
+\[
+\psi - \psi_{\cdot,\cdot} = \{\psi - \operatorname{E}(\psi|Y)\} + \{\operatorname{E}(\psi|Y) - \psi_{\cdot,\cdot}\} = E_1 + E_2. \tag{20.43}
+\]
+
+<p>如果 \(\operatorname{E}\{\psi|Y\}\) 可以精确计算，从而用它而不是 \(\psi_{\cdot,\cdot}\) 作为 \(\psi\) 的估计量，那么 \(E_1\) 将是唯一的误差。\(E_2\) 是由于用 \(\psi_{\cdot,\cdot}\) 近似 \(\operatorname{E}\{\psi|Y\}\) 而引入的误差。两个误差 \(E_1\) 和 \(E_2\) 不相关，因此</p>
+
+\[
+\operatorname{var}\{(\psi - \psi_{\cdot,\cdot})|Y\} = \operatorname{var}(E_1|Y) + \operatorname{var}(E_2|Y).
+\]
+</section>
+<section class="book-page" data-pdf-page="627">
+<h1>第20章 贝叶斯数据分析与MCMC</h1>
+
+
+
+<p>
+由 var(ψ|Y) 和 N<sub>eff</sub> 的定义并利用近似 ˆvar<sub>+</sub>(ψ|Y) ≈ var(ψ|Y)，我们有
+</p>
+
+<p>
+var{(ψ − ψ̄<sub>··</sub>)|Y} = var(ψ|Y) + var(ψ|Y)/N<sub>eff</sub> = var(ψ|Y) (1 + 1/N<sub>eff</sub>).
+</p>
+
+<p>
+利用泰勒级数近似 √(1 + δ) ≈ 1 + δ/2 对于小 δ，我们看到
+</p>
+
+<p>
+√{var{(ψ − ψ̄<sub>··</sub>)|Y}} ≈ √{var(ψ|Y)} (1 + 1/(2 N<sub>eff</sub>)).   (20.44)
+</p>
+
+<p>
+回忆 √{var{(ψ − ψ̄<sub>··</sub>)|Y}} 是“贝叶斯标准误”。若 N<sub>eff</sub> ≥ 50，则由 (20.44) 可知，标准误因蒙特卡洛误差而膨胀的程度最多为 1%。因此，可采用经验法则，即 N<sub>eff</sub> 应至少为 50。但请记住，由于链的数量很少，N<sub>eff</sub> 的估计只是粗略的。因此，我们可能希望 N<sub>eff</sub> 至少达到 100，以便为 N<sub>eff</sub> 的估计误差留出一些余地。
+</p>
+
+<p>
+N<sub>eff</sub> 的数值可能因 ψ 的选择而异。回忆例20.9 中 N<sub>eff</sub> 的值：
+</p>
+
+<pre><code class="language-r">&gt; effectiveSize(univt.coda)
+       k       mu    sigma
+366.8874 300.0000 300.0000</code></pre>
+
+<p>
+在此例中，μ 和 σ 的 N<sub>eff</sub> 为 300，而 k 的略大（366.9）。（在更复杂的模型中，N<sub>eff</sub> 的变动通常要大得多。）此例中，300 是蒙特卡洛样本量，因为有 3 条链，每条链在燃烧期和稀释后长度为 100。<sup><a href="#fn-p627-3" id="fnref-p627-3">3</a></sup> 因此，在这个简单例子中，MCMC 抽样与独立抽样同样有效；这并非典型情况。
+</p>
+
+<p>
+为方便起见，再次列出例20.9 中 ˆR 的值：
+</p>
+
+<pre><code class="language-r">&gt; gelman.diag(univt.coda)
+Potential scale reduction factors:
+
+Point est. Upper C.I.
+k       1.00       1.01
+mu      1.00       1.01
+sigma   1.02       1.06
+
+Multivariate psrf
+1.02</code></pre>
+
+<ol class="footnotes">
+<li id="fn-p627-3">如果存在负相关，有效样本量可能大于实际样本量，但负相关不太可能。更可能是由于随机变异（即估计误差），某些有效样本量超过了实际样本量。<a href="#fnref-p627-3">↩</a></li>
+</ol>
+</section>
+<section class="book-page" data-pdf-page="628"><h3>20.7 马尔可夫链蒙特卡洛</h3><p>可以看到，所有被监测参数的 \(\hat{R}\) 值最多为 1.02，这再次表明 MCMC 抽样量是足够的。即使是 95% 的上置信限也令人满意，最多为 1.06。</p><figure class="book-figure" id="fig-20.6"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-3b550f8fb485.png" alt="图20.6 例20.9中的Gelman图。" /><figcaption>图20.6 例20.9中的Gelman图。</figcaption></figure><h4>20.7.6 DIC与pD用于模型比较</h4><p>在本节中，我们介绍两种广泛使用的统计量 DIC 和 pD。DIC 用于比较同一数据集上的多个模型，是 AIC 的贝叶斯类比。pD 是模型中参数数量的贝叶斯类比。</p><p>回顾第5.12节，偏差（现在用 \(D(Y,\theta)\) 表示）是负两倍的对数似然，而 AIC 由 (5.29) 定义为 \[ AIC = D(Y,\hat{\theta}_{ML}) + 2p, \qquad (20.45) \] 其中 \(\hat{\theta}_{ML}\) 是 MLE，\(p\) 是 \(\theta\) 的维度。MLE 的贝叶斯类比是后验均值，即常用的贝叶斯估计量，可以通过 MCMC 估计。</p></section>
+<section class="book-page" data-pdf-page="629">
+<p>第20章 贝叶斯数据分析与MCMC</p>
+<p>我们需要一个参数个数\(p\)的贝叶斯类比量。初看似乎奇怪，我们为什么不直接像非贝叶斯分析那样使用\(p\)本身？毕竟，仅仅因为我们有先验并使用贝叶斯估计，参数个数并没有改变。然而，贝叶斯分析中使用的先验信息在一定程度上约束了估计的参数，使得有效参数数目小于\(p\)。为了理解为什么如此，考虑一个例子：有\(d\)只股票的收益率被认为是相似的。假设收益率服从多元正态分布。我们关注\(d\)个预期收益率，记为\(\mu_1, \ldots, \mu_d\)。对于非贝叶斯而言，有两种方式对\(\mu_1, \ldots, \mu_d\)建模。第一种是假设它们均相等，设为\(\mu\)，那么只有一个参数来建模均值。另一种可能性是假设预期收益率不相等，从而有\(d\)个参数。</p>
+<p>贝叶斯可以通过指定一个使\(\mu_1, \ldots, \mu_d\)相似但不相同的先验来实现这两种极端之间的折衷。例如，我们可以假设它们是独立同分布的\(N(\mu, \sigma_\mu^2)\)，其中\(\sigma_\mu^2\)将指定相似程度。认识到\(\sigma_\mu^2\)可以从数据中估计是重要的，也就是说，不需要事先指定均值之间的相似程度。使用这种先验信息的结果是，指定\(\mu_1, \ldots, \mu_d\)的有效参数数目大于1但小于\(d\)。</p>
+<p>有效参数数目定义为</p>
+\[ p_D = \bar{D}_{\mathrm{avg}} - D(Y, \bar{\theta}), \tag{20.46} \]
+<p>其中</p>
+\[ \bar{\theta} = (NM)^{-1} \sum_{j=1}^{M} \sum_{i=1}^{N} \theta_{i,j} \]
+<p>是\(\theta_{i,j}\)的MCMC样本的平均值，并估计\(\theta\)的后验期望，而</p>
+\[ \bar{D}_{\mathrm{avg}} = (NM)^{-1} \sum_{j=1}^{M} \sum_{i=1}^{N} D(Y, \theta_{i,j}) \]
+<p>是\(D_{\mathrm{avg}}\)的MCMC估计，</p>
+\[ D_{\mathrm{avg}} = E\{D(Y, \theta) | Y\}. \tag{20.47} \]
+<p>与(20.45)类似，DIC定义为</p>
+\[ \text{DIC} = D(Y, \bar{\theta}) + 2 p_D. \]
+<p>由(20.46)，也可得</p>
+\[ \text{DIC} = \bar{D}_{\mathrm{avg}} + p_D. \]
+</section>
+<section class="book-page" data-pdf-page="630">
+<h3>20.7 马尔可夫链蒙特卡罗</h3>
+<p>函数 <code>dic.samples()</code>（在 <code>rjags</code> 包中）将 \(\hat{D}_{\text{avg}}\) 报告为“平均偏差”，\(p_D\) 报告为“惩罚”，DIC 报告为“惩罚偏差”。见例20.9的输出。</p>
+<p>如下例所示，\(p_D\) 主要度量 \(\theta\) 的后验变异性，该变异性随 \(p\) 增加或关于 \(\theta\) 的先验信息相对于样本中信息量的减少而增加。</p>
+<h4>例20.11 当用已知精度估计正态均值时的 \(p_D\)</h4>
+<p>假设 \(Y = (Y_1, \ldots, Y_n)\) 独立同分布于 \(N(\mu, 1)\)，因此本例中 \(\theta = \mu\)。那么对数似然为</p>
+\[
+\log L(\mu) = -\frac{1}{2} \sum_{i=1}^n (Y_i - \mu)^2 - \frac{n}{2} \log(2\pi)
+= -\frac{1}{2} \left\{ \sum_{i=1}^n (Y_i - \bar{Y})^2 + n(\bar{Y} - \mu)^2 \right\} - \frac{n}{2} \log(2\pi),
+\]
+因此
+\[
+D(Y, \mu) = \sum_{i=1}^n (Y_i - \bar{Y})^2 + n(\bar{Y} - \mu)^2 + n \log(2\pi). \tag{20.48}
+\]
+当计算 \(p_D\) 时，与 \(\mu\) 无关的量会在 (20.46) 的减法中抵消。因此，为计算 \(p_D\)，我们可以使用
+\[
+D(Y, \mu) = n(\bar{Y} - \mu)^2. \tag{20.49}
+\]
+那么
+\[
+D\{Y, E(\mu|Y)\} = n\{\bar{Y} - E(\mu|Y)\}^2, \tag{20.50}
+\]
+且
+\[
+\begin{aligned}
+D_{\text{avg}} &= n E\{(\bar{Y} - \mu)^2 | Y\} \\
+&= n \left( \{\bar{Y} - E(\mu|Y)\}^2 + E[ \{E(\mu|Y) - \mu\}^2 | Y] \right) \\
+&= n \left[ \{\bar{Y} - E(\mu|Y)\}^2 + \operatorname{Var}(\mu|Y) \right] \\
+&= D\{Y, E(\mu|Y)\} + n \operatorname{Var}(\mu|Y), \tag{20.51}
+\end{aligned}
+\]
+因为给定 \(Y\) 时，\(\{\bar{Y} - E(\mu|Y)\}\) 与 \(\{E(\mu|Y) - \mu\}\) 条件不相关。因此，
+\[
+p_D = \hat{D}_{\text{avg}} - D\{Y, E(\mu|Y)\} \approx D_{\text{avg}} - D\{Y, E(\mu|Y)\} = n \operatorname{Var}(\mu|Y) = \frac{n}{n + \tau_0}. \tag{20.52}
+\]
+</section>
+<section class="book-page" data-pdf-page="631">
+  <h3 id="section-20-8">20.8 分层先验</h3>
+  <p>最后一步用到了（20.21），其中 \(\tau_0\) 是 \(\mu\) 的先验精度。（20.52）中的近似（“≈”）在蒙特卡洛样本量 \(N\) 增至无穷时成为等式。</p>
+  <p>当 \(\tau_0 \to 0\) 时，先验信息量可忽略，（20.52）右侧收敛于 \(p=1\)。相反，当 \(\tau_0 \to \infty\) 时，先验信息量无界增长，（20.52）右侧收敛于 0。这是一个普遍现象的例子——先验信息越多，有效参数越少。□</p>
+  <p>一般而言，当 \(p\) 较小且先验信息较少时，\(p_D \approx p\)。在其他情况下，例如当 \(d\) 个均值被建模为来自同一个正态分布时，\(p_D\) 可能远小于 \(p\)——见例 20.12。</p>
+  <p>使用 DIC 比较模型时，值越小越好，但与 AIC 和 BIC 一样，不应盲目使用 DIC。通常，领域知识或模型简洁性会导致分析者选择并非最小化 DIC 的模型。</p>
+  <p>函数 <code>dic.sample()</code> 返回 DIC 和 \(p_D\)，如例 20.9 的输出所示：</p>
+  <pre><code><div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">&gt; dic.samples(univt.mcmc, 100*nthin, thin = nthin, type = &quot;pD&quot;)
+|**************************************************| 100%
+Mean deviance: -18065
+penalty 2.664
+Penalized deviance: -18062</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python"># Python equivalent not directly available; no direct pymc3 DIC function.
+# This would be computed manually using MCMC samples.
+# The R code uses rjags dic.samples; no direct Python equivalent.</code></pre>
+  </div>
+</div></code></pre>
+  <p>分层先验的常见情形是存在多个参数，它们被认为具有相似但不完全相同的值。例如，几种股票的期望收益率可能被认为是相似的。在这种情况下，汇集有关参数的信息以改进先验的设定是有用的，因为良好的先验信息会提高估计的精度。一种有效的汇集信息的方法是使用所谓的“分层先验”进行贝叶斯分析，它允许我们将估计值向彼此或向其他目标收缩。后者的一个例子是将收益率的样本协方差矩阵向 CAPM 或其他因子模型的估计值收缩。这种收缩可以在样本协方差矩阵的高变异性与因子模型（当因子模型不完全拟合时）的协方差矩阵估计量的潜在偏差之间取得权衡。</p>
+  <p>与之前一样，令似然为 \(f(y|\theta)\)。似然是层次结构中的第一层（或阶段）。到目前为止，在本章中，第二层即 \(\theta\) 的先验密度为 \(\pi(\theta|\gamma)\)，其中先验中的参数向量 \(\gamma\) 具有已知值，比如 \(\gamma_0\)。例如，在例 20.3 中，先验是参数固定的 Beta 分布。</p>
+</section>
+<section class="book-page" data-pdf-page="632">
+<h2>20.8 分层先验</h2>
+<p>在分层或多阶段先验中，\(\gamma\)是未知的，并拥有自己的先验\(\pi(\gamma|\delta)\)（第三层）。通常，\(\delta\)的值是已知的，尽管可以通过让\(\delta\)未知并赋予其自身的先验来增加更多的层次，以此类推。</p>
+<p>通过示例可能最容易理解分层先验。</p>
+<h3>示例20.12. 估计中盘股的期望收益率</h3>
+<p>此示例使用midcapD.ts数据集。该数据集包含20只中盘股和市场的500个日收益率，曾在示例5.2中使用过。</p>
+<p>该数据集将分为“训练数据”，包含前100天的收益率，以及“检验数据”，包含后400天的收益率。仅使用训练数据进行估计。检验数据将用于比较从训练数据得到的估计值。有意选择较大的检验数据样本量，以便我们可以将检验数据的平均收益率视为20只股票的“真实”期望收益率，尽管这当然只是一个近似。我们将使用训练数据来估计“真实”期望收益率。</p>
+<p>我们将比较三种可能的真实期望收益率估计量：</p>
+<ol>
+<li>样本均值（前100天中盘股的20个平均收益率）；</li>
+<li>合并估计（完全收缩，每个期望收益率都有相同的估计值）；</li>
+<li>使用分层先验的贝叶斯估计（收缩）。</li>
+</ol>
+<p>方法(a)是“常规”的非贝叶斯估计量，其中每个期望收益率由该股票的样本均值估计。在方法(b)中，每个期望收益率都有相同的估计值，即“均值的均值”，也就是从(a)得到的20个均值的平均值。贝叶斯收缩（将在本例中解释）使用分层先验将20个个体均值向均值的均值收缩。贝叶斯收缩是(a)和(b)之间的折中。示例16.10中也使用了收缩，但在该示例中，收缩量是任意选择的，因为尚未介绍贝叶斯方法。</p>
+<p>令\(R_{i,t}\)为第\(i\)只股票第\(t\)日的收益率，以百分比表示。对于贝叶斯收缩，第一层将是简单模型：</p>
+\[R_{i,t} = \mu_i + \varepsilon_{i,t},\]
+<p>其中\(\varepsilon_{i,t}\)独立同分布\(N(0, \sigma^2_\varepsilon)\)。</p>
+<p>该模型有几个不现实的方面：(a) 假设\(\varepsilon_{i,t}\)的标准差不依赖于\(i\)；(b) 假设\(\varepsilon_{i,t}\)和\(\varepsilon_{i',t}\)独立（我们知道存在截面相关性）；(c) 假设不存在GARCH效应；(d) 假设\(\varepsilon_{i,t}\)服从正态分布，而不是</p>
+</section>
+<section class="book-page" data-pdf-page="633">
+<p>614 第20章 贝叶斯数据分析与MCMC</p>
+<p>具有厚尾。尽管如此，出于估计期望收益率的目的，这个模型应该是足够的。记住，“所有模型都是错的，但有些是有用的”，当然，“有用”取决于分析的目标。</p>
+<p>层次先验的第二层为：</p>
+\[
+\mu_i \stackrel{i.i.d.}{\sim} N(\alpha, \sigma_\mu^2).
+\]
+<p>这里的假设是，这20只中盘股票的期望收益率是从一个大的期望收益率总体中抽样得到的，该总体可能包含所有中盘股，甚至更大的范围。该总体的均值为\(\alpha\)，标准差为\(\sigma_\mu\)。</p>
+<p>如果我们使用非层次先验，那么就需要指定\(\alpha\)和\(\sigma_\mu\)的值。这正是例20.4中所做的，只不过在那个例子中\(\sigma_\epsilon^2\)也是已知的。我们可能对\(\alpha\)和\(\sigma_\mu\)的值有粗略了解，但不太可能掌握精确信息。从例20.4中我们看到，需要相当精确的先验指定才能使贝叶斯估计优于样本均值。事实上，如果先验选择不当，贝叶斯估计很容易劣于样本均值。</p>
+<p>第三层将是\(\alpha\)和\(\sigma_\mu\)的先验，这将允许我们利用数据来估计这些参数。理解为什么在这个例子中我们可以估计\(\alpha\)和\(\sigma_\mu\)，而在例20.4中却无法做到这一点，非常重要。原因在于现在我们有了20个期望收益率（\(\mu_i\)），它们服从相同的均值\(\alpha\)和标准差\(\sigma_\mu\)。相比之下，例20.4中只有一个\(\mu\)，因此无法估计该\(\mu\)所来自的总体的均值和方差。</p>
+<p>由于现在数据中包含关于\(\alpha\)、\(\sigma_\epsilon^2\)和\(\sigma_\mu^2\)的大量信息，我们可以对它们使用相当无信息的先验，以“让数据自己说话”。</p>
+<p>该例的BUGS程序如下：</p>
+
+<div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">1 model{
+2   for (i in 1:n)
+3   {
+4     for (j in 1:m)
+5     {
+6       x1[i,j] ~ dnorm(mu[j], tau_eps)
+7     }
+8   }
+9   for (j in 1:m)
+10  {
+11    mu[j] ~ dnorm(alpha, tau_mu)
+12  }
+13  alpha ~ dnorm(0.0, 1.0E-3)
+14  tau_eps ~ dgamma(0.1, 0.01)
+15  tau_mu ~ dgamma(0.1, 0.01)
+16}</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import pymc as pm
+import numpy as np
+
+# Example data: n = number of observations, m = number of stocks
+n, m = 10, 20
+x1 = np.random.randn(n, m)
+
+with pm.Model() as model:
+    # Precision of observation noise
+    tau_eps = pm.Gamma(&#x27;tau_eps&#x27;, alpha=0.1, beta=0.01)
+    # Precision of stock means
+    tau_mu = pm.Gamma(&#x27;tau_mu&#x27;, alpha=0.1, beta=0.01)
+    # Overall mean (vague prior: precision 1e-3 =&gt; sigma ~ 31.6)
+    alpha = pm.Normal(&#x27;alpha&#x27;, mu=0.0, sigma=1/np.sqrt(1e-3))
+    # Hierarchical stock-specific means
+    mu = pm.Normal(&#x27;mu&#x27;, mu=alpha, sigma=1/np.sqrt(tau_mu), shape=m)
+    # Likelihood
+    obs = pm.Normal(&#x27;obs&#x27;, mu=mu, sigma=1/np.sqrt(tau_eps), observed=x1)</code></pre>
+  </div>
+</div>
+
+</section>
+<section class="book-page" data-pdf-page="634">
+  <h3>20.8 分层先验 615</h3>
+  <p>下面给出该例的R代码：</p>
+  <pre><code class="r"><div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">sigma_eps &lt;- 1 / sqrt(tau_eps)
+sigma_mu &lt;- 1 / sqrt(tau_mu)
+}</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+sigma_eps = 1 / np.sqrt(tau_eps)
+sigma_mu = 1 / np.sqrt(tau_mu)</code></pre>
+  </div>
+</div></code></pre>
+  <p>下面给出该例的R代码：</p>
+  <pre><code class="r"><div class="code-tabs" data-code-tabs id="code-2">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-2-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-2-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-2-r" role="tabpanel">
+    <pre><code class="language-r">library(rjags)
+dat = read.csv(&quot;midcapD.ts.csv&quot;)
+market = 100 * as.matrix(dat[, 22])
+x = 100 * as.matrix(dat[, -c(1, 22)])
+m = 20
+k = 100
+x1 = x[1:k, ]
+x2 = x[(k+1):500, ]
+mu1 = apply(x1, 2, mean)
+mu2 = apply(x2, 2, mean)
+means = apply(x1, 2, mean)
+sd2 = apply(x1, 2, sd)
+tau_mu = 1 / mean(sd2^2)
+tau_eps = 1 / sd(means)^2
+n = k
+data = list(x1 = x1, n = n, m = m)
+inits.midCap = function() {list(alpha = 0.001, mu = means, tau_eps = tau_eps, tau_mu = tau_mu)}
+midCap &lt;- jags.model(&quot;midCap.bug&quot;, data = data, inits = inits.midCap, n.chains = 3, n.adapt = 1000, quiet = FALSE)
+nthin = 20
+midCap.coda = coda.samples(midCap, c(&quot;mu&quot;, &quot;tau_mu&quot;, &quot;tau_eps&quot;, &quot;alpha&quot;, &quot;sigma_mu&quot;, &quot;sigma_eps&quot;), 500 * nthin, thin = nthin)
+summ.midCap = summary(midCap.coda)
+summ.midCap
+post.means = summ.midCap[[1]][2:21, 1]
+pdf(&quot;midcap.pdf&quot;, width = 6, height = 3.75)
+par(mfrow = c(1, 2))
+plot(c(rep(1, m), rep(2, m)), c(mu1, mu2), xlab = &quot;estimate target&quot;, ylab = &quot;mean&quot;, main = &quot;sample means&quot;, ylim = c(-0.3, 0.7), axes = FALSE)
+axis(2)
+axis(1, labels = FALSE, tick = TRUE, lwd.tick = 0)
+for (i in 1:m) {lines(1:2, c(mu1[i], mu2[i]), col = i)}
+plot(c(rep(1, m), rep(2, m)), c(post.means, mu2), xlab = &quot;estimate target&quot;, ylab = &quot;mean&quot;, main = &quot;Bayes&quot;, ylim = c(-0.3, 0.7), axes = FALSE)
+axis(2)
+axis(1, labels = FALSE, tick = TRUE, lwd.tick = 0)
+for (i in 1:m) {lines(1:2, c(post.means[i], mu2[i]), col = i)}
+graphics.off()
+options(digits = 2)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-2-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import pymc3 as pm
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+dat = pd.read_csv(&quot;midcapD.ts.csv&quot;)
+market = 100 * dat.iloc[:, 22].values
+x = 100 * dat.iloc[:, np.r_[1:22]].values
+m = 20
+k = 100
+x1 = x[:k, :]
+x2 = x[k:500, :]
+mu1 = np.mean(x1, axis=1)
+mu2 = np.mean(x2, axis=1)
+means = np.mean(x1, axis=1)
+sd2 = np.std(x1, axis=1, ddof=1)
+tau_mu = 1 / np.mean(sd2**2)
+tau_eps = 1 / np.std(means, ddof=1)**2
+n = k
+
+with pm.Model() as model:
+    alpha = pm.Normal(&#x27;alpha&#x27;, mu=0, sigma=10)
+    mu = pm.Normal(&#x27;mu&#x27;, mu=0, sigma=1/np.sqrt(tau_mu), shape=m)
+    tau_eps_var = pm.Gamma(&#x27;tau_eps&#x27;, alpha=0.01, beta=0.01)
+    sigma_eps = pm.Deterministic(&#x27;sigma_eps&#x27;, 1/np.sqrt(tau_eps_var))
+    sigma_mu = pm.Deterministic(&#x27;sigma_mu&#x27;, 1/np.sqrt(tau_mu))
+    likelihood = pm.Normal(&#x27;x1&#x27;, mu=mu, sigma=sigma_eps, observed=x1.T)
+    trace = pm.sample(500, tune=1000, chains=3, random_seed=123)
+
+summary = pm.summary(trace, var_names=[&#x27;mu&#x27;, &#x27;tau_eps&#x27;, &#x27;sigma_mu&#x27;, &#x27;sigma_eps&#x27;])
+print(summary)
+
+post_means = trace[&#x27;mu&#x27;].mean(axis=0)
+
+fig, axes = plt.subplots(1, 2, figsize=(6, 3.75))
+axes[0].plot([1]*m + [2]*m, np.hstack([mu1, mu2]), &#x27;o&#x27;)
+axes[0].set(xlabel=&#x27;estimate target&#x27;, ylabel=&#x27;mean&#x27;, title=&#x27;sample means&#x27;, ylim=(-0.3, 0.7))
+for i in range(m):
+    axes[0].plot([1, 2], [mu1[i], mu2[i]], color=f&#x27;C{i}&#x27;)
+axes[1].plot([1]*m + [2]*m, np.hstack([post_means, mu2]), &#x27;o&#x27;)
+axes[1].set(xlabel=&#x27;estimate target&#x27;, ylabel=&#x27;mean&#x27;, title=&#x27;Bayes&#x27;, ylim=(-0.3, 0.7))
+for i in range(m):
+    axes[1].plot([1, 2], [post_means[i], mu2[i]], color=f&#x27;C{i}&#x27;)
+plt.tight_layout()
+plt.savefig(&#x27;midcap.pdf&#x27;)
+plt.show()</code></pre>
+  </div>
+</div></code></pre>
+</section>
+<section class="book-page" data-pdf-page="635">
+<h2>616 第20章 贝叶斯数据分析与MCMC</h2>
+<pre><code>45 sum((mu1 - mu2)^2 )
+46 sum((post.means - mu2)^2)
+47 sum((mean(mu1) - mu2)^2)</code></pre>
+<p>输出如下。</p>
+<pre><code>&gt; summ.midCap
+Iterations = 20:10000
+Thinning interval = 20
+Number of chains = 3
+Sample size per chain = 500
+
+1. 每个变量的经验均值和标准差，以及均值的标准误：
+
+      均值       标准差   朴素标准误  时间序列标准误
+alpha   0.08730 0.102433 2.645e-03 3.101e-03
+mu[1]  0.11121 0.171456 4.427e-03 4.546e-03
+mu[2]  0.12128 0.169230 4.369e-03 4.892e-03
+mu[3]  0.07871 0.170849 4.411e-03 4.702e-03
+（为节省空间已编辑）
+mu[19] 0.05082 0.175466 4.531e-03 4.422e-03
+mu[20] 0.03997 0.184614 4.767e-03 4.873e-03
+sigma_eps 4.30691 0.067810 1.751e-03 1.629e-03
+sigma_mu 0.14970 0.067054 1.731e-03 1.671e-03
+tau_eps 0.05395 0.001699 4.386e-05 4.074e-05
+tau_mu 75.70128 68.715669 1.774e+00 1.738e+00
+
+2. 每个变量的分位数：
+           2.5%     25%     50%     75%    97.5%
+alpha   -0.11465 0.017800 0.08600 0.15560 0.29111
+mu[1]   -0.21768 -0.001040 0.10910 0.21864 0.43408
+mu[2]   -0.21107 0.018025 0.11704 0.22382 0.47727
+mu[3]   -0.27262 -0.032547 0.08392 0.19634 0.40900
+（为节省空间已编辑）
+mu[19]  -0.30441 -0.059642 0.05612 0.16521 0.38525
+mu[20]  -0.34436 -0.069959 0.04462 0.16479 0.37048
+sigma_eps 4.17808 4.261352 4.30714 4.35226 4.43733
+sigma_mu 0.06155 0.100600 0.13853 0.18225 0.31293
+tau_eps 0.05079 0.052792 0.05390 0.05507 0.05729
+tau_mu 10.21311 30.107752 52.10738 98.81013 263.94725</code></pre>
+<p>\(\sigma_\mu\) 和 \(\sigma_\epsilon\) 的后验均值分别为 0.150% 和 4.31%（收益率以百分比计）。如果我们考察精度而非标准差</p>
+</section>
+<section class="book-page" data-pdf-page="636">
+<h3>20.8 层次先验</h3>
+<p>然后我们发现\(\tau_\mu\)和\(\tau_\epsilon\)的后验均值分别为75.7和0.0540。使用(20.24)的记号，在本例中，\(\tau_Y = 100\tau_\epsilon = 5.4\)，\(\tau_0 = \tau_\mu = 75.7\)。因此，(20.24)中的\(\delta = 5.4 / (5.4 + 75.7) = 0.067\)。回忆：\(\delta\)接近0（远离1）会导致大幅收缩，因此\(\delta = 0.064\)使得样本均值向均值的均值产生大幅收缩，如图20.7所示。</p>
+<figure class="book-figure" id="fig-20.7"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-b7244e89a729.png" alt="图20.7 对20只中盘股平均收益率的估计。">
+  <figcaption>图20.7 对20只中盘股平均收益率的估计。“目标”是被估计的量，具体来说是400天测试数据的平均收益率。“估计”是基于前100天训练数据的估计。左侧，估计值是20个单独的样本均值。右侧，估计值是向均值收缩后的样本均值。在每个面板中，每只股票的估计值和目标值之间用线连接。左侧，训练数据的样本均值变异性很大，以至于训练数据中均值较小（较大）的股票往往在测试数据中有较大（较小）的均值。右侧的贝叶斯估计更接近目标。</figcaption>
+</figure>
+<p>为了比较这些估计量，我们使用平方误差和（SSE），定义为
+\[
+\text{SSE} = \sum_{i=1}^{20} (\hat{\mu}_i - \mu_i)^2,
+\]
+其中\(\mu_i\)是来自测试数据的第\(i\)个“真实”均值，而\(\hat{\mu}_i\)是基于训练数据的估计。SSE的值列于表20.1。样本均值的SSE大约是贝叶斯估计的11倍（1.9/0.18）。显然，收缩在这个例子中非常成功。</p>
+<p>有趣的是，完全收缩到合并均值甚至比贝叶斯收缩更好。贝叶斯收缩试图估计最优的收缩量，但显然无法完美做到。虽然在这个例子中完全收缩优于贝叶斯收缩，但一般来说完全收缩是危险的，因为如果真实均值之间的差异比本例中更大，它会产生很大的SSE。如果先验强烈认为真实均值非常相似，那么应该使用这种</p>
+</section>
+<section class="book-page" data-pdf-page="637">
+<p>在指定\( \sigma_\mu \)的先验时，信念。与本例中使用的无信息先验不同，人们会使用一个更集中在0附近的先验。□</p>
+<table>
+  <caption>表20.1 三个估计量对20只中盘股期望收益率的平方误差和（SSE）</caption>
+  <thead>
+    <tr><th>估计量</th><th>SSE</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>(a) 样本均值</td><td>1.9</td></tr>
+    <tr><td>(b) 合并均值</td><td>0.12</td></tr>
+    <tr><td>(c) 贝叶斯</td><td>0.18</td></tr>
+  </tbody>
+</table>
+<h3 id="section-20-9">20.9 协方差矩阵的贝叶斯估计</h3>
+<p>在本节中，我们假设\(Y_1,\ldots,Y_n\)是来自\(d\)维\(N(\mu,\Sigma)\)分布或\(d\)维\(t_\nu(\mu,\Lambda)\)分布的i.i.d.样本。我们将专注于多元正态分布的协方差矩阵\(\Sigma\)或多元\(t\)分布的尺度矩阵\(\Lambda\)的估计。精度矩阵定义为高斯分布和\(t\)分布中的\(\Sigma^{-1}\)或\(\Lambda^{-1}\)。这个定义类似于一元情况，其中精度定义为方差或平方尺度参数的倒数。我们将从高斯分布开始。</p>
+<h4>20.9.1 估计多元高斯协方差矩阵</h4>
+<p>在多元高斯情况下，精度矩阵\(\Sigma^{-1}\)的共轭先验是Wishart分布。Wishart分布，记为\(\text{Wishart}(\nu,A)\)，有一个一元参数\(\nu\)称为自由度，以及一个矩阵参数\(A\)，可以是任意非奇异协方差矩阵。当\(\nu\)为整数时，\(\text{Wishart}(\nu,A)\)分布有一个简单定义。令\(Z_i,\ldots,Z_n\)为i.i.d. \(N(\mu,A)\)。在这种情况下，\(\sum_{i=1}^n (Z_i-\mu)(Z_i-\mu)^T\)的分布是\(\text{Wishart}(n,A)\)。此外，\(\sum_{i=1}^n (Z_i-\bar{Z})(Z_i-\bar{Z})^T\) (20.53)的分布是\(\text{Wishart}(n-1,A)\)。由于(20.53)中的和是\(n-1\)倍的样本协方差矩阵，因此Wishart分布对于高斯分布协方差矩阵的推断很重要。</p>
+</section>
+<section class="book-page" data-pdf-page="638">
+<h3>20.9 协方差矩阵的贝叶斯估计</h3>
+
+<p>对于任意正值 \(\nu\)，Wishart\((\nu, \mathbf{A})\) 分布的密度为
+\[
+f(\mathbf{W}) = C(\nu, d) |\mathbf{A}|^{-\nu/2} |\mathbf{W}|^{(\nu-d-1)/2} \exp\left\{ -\frac{1}{2} \operatorname{tr}(\mathbf{A}^{-1}\mathbf{W}) \right\} \tag{20.54}
+\]
+其中归一化常数为
+\[
+C(\nu, d) = \left\{ 2^{\nu d/2} \pi^{d(d-1)/4} \prod_{i=1}^{d} \Gamma\left( \frac{\nu+1-i}{2} \right) \right\}^{-1}.
+\]
+参数 \(\mathbf{W}\) 是一个非奇异协方差矩阵。期望值为 \(\mathbb{E}(\mathbf{W}) = \nu \mathbf{A}\)。在一元情形 \((d=1)\) 下，Wishart 分布退化为 Gamma 分布。</p>
+
+<p>如果 \(\mathbf{W}\) 服从 Wishart\((\nu, \mathbf{A})\) 分布，则 \(\mathbf{W}^{-1}\) 的分布称为逆 Wishart 分布，参数为 \(\nu\) 和 \(\mathbf{A}^{-1}\)，记为 Inv-Wishart\((\nu, \mathbf{A}^{-1})\)。</p>
+
+<p>令 \(\mathbf{Y} = (\mathbf{Y}_1, \ldots, \mathbf{Y}_n)\) 表示数据。为了导出精度矩阵 \(\boldsymbol{\Sigma}^{-1}\) 的完全条件分布，我们假设 \(\boldsymbol{\mu}\) 已知。由 (7.15) 可知，似然函数为
+\[
+f(\mathbf{Y} | \boldsymbol{\Sigma}^{-1}) = \prod_{i=1}^{n} \left[ \frac{1}{(2\pi)^{d/2} |\boldsymbol{\Sigma}|^{1/2}} \exp\left\{ -\frac{1}{2} (\mathbf{Y}_i - \boldsymbol{\mu})^\top \boldsymbol{\Sigma}^{-1} (\mathbf{Y}_i - \boldsymbol{\mu}) \right\} \right].
+\]
+经过一些简化，得到
+\[
+f(\mathbf{Y} | \boldsymbol{\Sigma}^{-1}) \propto |\boldsymbol{\Sigma}^{-1}|^{n/2} \exp\left\{ -\frac{1}{2} \sum_{i=1}^{n} (\mathbf{Y}_i - \boldsymbol{\mu})^\top \boldsymbol{\Sigma}^{-1} (\mathbf{Y}_i - \boldsymbol{\mu}) \right\}.
+\]
+定义
+\[
+\mathbf{S} = \sum_{i=1}^{n} (\mathbf{Y}_i - \boldsymbol{\mu})(\mathbf{Y}_i - \boldsymbol{\mu})^\top.
+\]
+接下来
+\[
+\sum_{i=1}^{n} (\mathbf{Y}_i - \boldsymbol{\mu})^\top \boldsymbol{\Sigma}^{-1} (\mathbf{Y}_i - \boldsymbol{\mu}) = \operatorname{tr}\left\{ \sum_{i=1}^{n} (\mathbf{Y}_i - \boldsymbol{\mu})^\top \boldsymbol{\Sigma}^{-1} (\mathbf{Y}_i - \boldsymbol{\mu}) \right\} = \operatorname{tr}(\boldsymbol{\Sigma}^{-1} \mathbf{S}). \tag{20.55}
+\]
+(20.55) 中的第一个等式是平凡的：标量也是 \(1\times 1\) 矩阵，并等于其迹。第二个等式利用了对于任意矩阵 \(\mathbf{B}\) 和 \(\mathbf{A}\)，若乘积 \(\mathbf{B}\mathbf{A}\) 和 \(\mathbf{A}\mathbf{B}\) 有意义，则 \(\operatorname{tr}(\mathbf{A}\mathbf{B}) = \operatorname{tr}(\mathbf{B}\mathbf{A})\) 这一结果。由此可得
+\[
+f(\mathbf{Y} | \boldsymbol{\Sigma}^{-1}) \propto |\boldsymbol{\Sigma}^{-1}|^{n/2} \exp\left\{ -\frac{1}{2} \operatorname{tr}(\boldsymbol{\Sigma}^{-1} \mathbf{S}) \right\}. \tag{20.56}
+\]
+</p>
+
+<p>假设精度矩阵 \(\boldsymbol{\Sigma}^{-1}\) 的先验为 Wishart\((\nu_0, \boldsymbol{\Sigma}_0^{-1})\)。那么先验密度为</p>
+</section>
+<section class="book-page" data-pdf-page="639">
+<h3>20 贝叶斯数据分析与 MCMC</h3>
+
+\[
+\pi(\Sigma^{-1}) \propto |\Sigma^{-1}|^{(\nu_0-d-1)/2} \exp\left\{ -\frac{1}{2} \operatorname{tr}(\Sigma^{-1}\Sigma_0) \right\}. \tag{20.57}
+\]
+
+<p>由于后验密度正比于先验密度与似然函数的乘积，由 (20.56) 和 (20.57) 可得，后验密度为</p>
+
+\[
+\pi(\Sigma^{-1} \mid Y) \propto |\Sigma^{-1}|^{(n+\nu_0-d-1)/2} \exp\left[ -\frac{1}{2} \operatorname{tr}\left\{ \Sigma^{-1}(S+\Sigma_0) \right\} \right]. \tag{20.58}
+\]
+
+<p>因此，\(\Sigma^{-1}\) 的后验分布为 Wishart \(\{ n+\nu_0,\, (S+\Sigma_0)^{-1} \}\)。</p>
+
+<p>后验期望为</p>
+
+\[
+\mathbb{E}(\Sigma^{-1} \mid Y) = (n+\nu_0) \left\{ (S+\Sigma_0)^{-1} \right\}. \tag{20.59}
+\]
+
+<p>若 \(\nu_0\) 和 \(\Sigma_0\) 均较小，则</p>
+
+\[
+\mathbb{E}(\Sigma^{-1} \mid Y) \approx n S^{-1}. \tag{20.60}
+\]
+
+<p>\(\Sigma\) 的 MLE 为 \(n^{-1}S\)，因此 \(\Sigma^{-1}\) 的 MLE 为 \(n S^{-1}\)。所以，对于较小的 \(\nu_0\) 和 \(\Sigma_0\)，\(\Sigma^{-1}\) 的贝叶斯估计量接近 MLE。</p>
+
+<p>\(\Sigma^{-1}\) 的全条件分布可以与 \(\mu\) 的模型相结合，以估计两个参数。对于资产收益率的应用，可能会使用如例 20.12 中的 \(\mu\) 的层次先验。无论哪种情况，MCMC 分析都将直接进行。</p>
+
+<h4>20.9.2 估计多元 t 分布的尺度矩阵</h4>
+
+<p>Wishart 分布不是多元 t 分布尺度矩阵的共轭先验，但它仍然可以用作先验，因为 MCMC 不需要使用共轭先验。</p>
+
+<h5>例 20.13 估计 CRSPday 数据的相关矩阵</h5>
+
+<p>在例 7.4 中，CRSPday 收益率数据的相关矩阵通过最大似然估计得到。本例中，将比较 MLE 与贝叶斯估计，结果发现两者非常相似。</p>
+
+<p>本例使用的 BUGS 程序为</p>
+
+<pre><code>model{
+for(i in 1:N)
+{
+y[i,1:m] ~ dmt(mu[], tau[,], df_likelihood)
+}
+mu[1:m] ~ dmt(mu0[], Prec_mu[,], df_prior)
+tau[1:m,1:m] ~ dwish(Prec_tau[,], df_wishart)
+lambda[1:m,1:m] &lt;- inverse(tau[,])
+}
+</code></pre>
+</section>
+<section class="book-page" data-pdf-page="640">
+  <h3 id="section-20-9">20.9 协方差矩阵的贝叶斯估计</h3>
+  <p>在BUGS程序中，mu是均值向量，tau是精度矩阵，lambda是收益率的尺度矩阵。此外，dmt代表多元t分布，dwish代表Wishart分布。</p>
+  <p>在撰写本文时（2014年12月），JAGS没有提供能够从该模型后验抽样的采样器。因此，将使用WinBUGS，并通过R2WinBUGS包中的<code>bugs()</code>函数调用。R代码如下：</p>
+  <div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">library(R2WinBUGS)
+library(MASS) # need to mvrnorm
+library(MCMCpack) # need for rwish
+library(mnormt)
+data(CRSPday, package = &quot;Ecdat&quot;)
+y = CRSPday[,4:7]
+N = dim(y)[1]
+m = dim(y)[2]
+mu0 = rep(0,m)
+Prec_mu = diag(rep(1, m)) / 10000
+Prec_tau = diag(rep(1, m)) / 10000
+df_wishart = 6
+df_likelihood = 6
+df_prior = 6
+data = list(y = y ,N=N , Prec_mu = Prec_mu,
+Prec_tau = Prec_tau,
+m u 0=m u 0 ,m=m , df_likelihood = df_likelihood,
+df_prior = df_prior, df_wishart = df_wishart)
+inits_t_CRSP = function() {list(mu = mvrnorm(1, mu0,
+diag(rep(1, m) / 100)),
+tau = rwish(6, diag(rep(1, m)) / 100)) }
+library(R2WinBUGS)
+multi_t.sim = bugs(data, inits_t_CRSP ,
+model.file = &quot;mult_t_CRSP.bug&quot;,
+parameters = c(&quot;mu&quot;, &quot;tau&quot;), n.chains = 3,
+n.iter = 2200, n.burnin = 200, n.thin = 2,
+program = &quot;WinBUGS&quot;, bugs.seed = 13, codaPkg = FALSE)
+print(multi_t.sim, digits = 2)
+tauhat = multi_t.sim$mean$tau
+lambdahat = solve(tauhat)
+sdinv = diag(1/sqrt(diag(lambdahat)))
+cor = sdinv %*% lambdahat %*% sdinv
+print(cor,digits=4)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+from scipy.stats import multivariate_t, wishart
+# Note: Python replacement for WinBUGS is not straightforward.
+# The following code approximates the Bayesian estimation using MCMC via PyMC or similar.
+# Here we provide a placeholder for the iterative part.
+# The data loading and prior setup are shown.
+import pandas as pd
+# from pymc import *  # hypothetical
+# For reproducibility, we outline the steps but cannot run natively.
+# Equivalent Python code would require PyMC or similar library.
+# We&#x27;ll provide a skeleton.
+
+# Load data
+# CRSPday not directly available; assume y is a DataFrame or numpy array
+# y = CRSPday.iloc[:, 3:7]  # if using pandas
+# N, m = y.shape
+# mu0 = np.zeros(m)
+# Prec_mu = np.eye(m) / 10000
+# Prec_tau = np.eye(m) / 10000
+# df_wishart = 6
+# df_likelihood = 6
+# df_prior = 6
+# # MCMC sampling would be done with PyMC
+# # For brevity, we omit the full sampling code.</code></pre>
+  </div>
+</div>
+  <p>输入到BUGS程序的数据列表包含：y（收益率矩阵），df_likelihood（似然中t分布的自由度），mu0（mu的先验均值），df_prior（mu的t先验自由度），以及df_wishart（tau的Wishart先验自由度）。</p>
+  <p>理想情况下，df_likelihood应该是一个未知参数，但WinBUGS不允许估计该参数。因此，我们将其固定在MLE处。</p>
+</section>
+<section class="book-page" data-pdf-page="641">
+  <h2>622 20 贝叶斯数据分析与MCMC</h2>
+  <p>（保留6位小数）在例7.4中计算得到。将此参数固定在MLE处是由于WinBUGS的限制，并且可以通过在R或其他语言中编写MCMC程序而不是使用WinBUGS来绕过这一限制，尽管这需要相当大的努力。</p>
+  <p>注意，在调用<code>bugs()</code>时指定了<code>codaPkg = FALSE</code>；这不是必须的，因为它是默认值。当<code>codaPkg = FALSE</code>时，<code>bugs()</code>返回一个<code>bugs</code>类的对象，该对象不能被<code>coda</code>包中的函数直接使用，因为这些函数需要<code>mcmc.list</code>类的对象。然而，<code>as.mcmc.list()</code>函数可以将<code>bugs</code>对象转换为<code>mcmc.list</code>对象。</p>
+  <p>有三个链，每个链在经过200次的预热期后进行间隔为2的稀疏采样，最终长度为2000。因此，稀疏后的总样本量为3000。收敛到平稳分布和混合速度都相当快。有效样本量Neff至少有1500，且所有参数的$\hat{R}$基本为1，这表明预热期和链长足够。</p>
+  <pre><code class="r"><div class="code-tabs" data-code-tabs id="ch20-code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="ch20-code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="ch20-code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="ch20-code-1-r" role="tabpanel">
+    <pre><code class="language-r">print(multi_t.sim, digits = 2)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="ch20-code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">print(multi_t_sim)  # Python equivalent, assuming multi_t_sim is a trace object</code></pre>
+  </div>
+</div>
+> print(multi_t.sim, digits = 2)
+Inference for Bugs model at "mult_t_CRSP.bug", fit using WinBUGS,
+3 chains, each with 2200 iterations (first 200 discarded), n.thin = 2
+n.sims = 3000 iterations saved
+mean sd 2.5% 25% 50% 75% 97.5% Rhat n.eff
+mu[1] 0 0 0 0 0 0 0 1 3000
+mu[2] 0 0 0 0 0 0 0 1 3000
+mu[3] 0 0 0 0 0 0 0 1 3000
+mu[4] 0 0 0 0 0 0 0 1 1800
+tau[1,1] 14706 473 13780 14390 14690 15020 15630 1 3000
+(edited to save space)
+tau[4,4] 65197 2102 61180 63738 65190 66600 69360 1 3000
+deviance -69858 61 -69980 -69900 -69860 -69820 -69730 1 3000
+For each parameter, n.eff is a crude measure of effective sample size,
+and Rhat is the potential scale reduction factor (at convergence, Rhat=1).
+DIC info (using the rule, pD = Dbar-Dhat)
+pD = 13.8 and DIC = -69843.9
+DIC is an estimate of expected predictive error (lower deviance is better).</code></pre>
+  <p>由于$\mu$接近零，需要以更多小数位重新打印<code>multi_t.sim</code>：</p>
+  <pre><code class="output">mean sd 2.5% 25% 50% 75% 97.5% Rhat n.eff
+mu[1] 9.4e-04 2.4e-04 4.6e-04 7.7e-04 9.4e-04 1.1e-03 1.4e-03 1 3000
+mu[2] 4.4e-04 2.9e-04 -1.3e-04 2.4e-04 4.6e-04 6.4e-04 1.0e-03 1 3000
+mu[3] 6.9e-04 2.3e-04 2.3e-04 5.3e-04 6.9e-04 8.4e-04 1.1e-03 1 3000
+mu[4] 7.7e-04 1.3e-04 5.1e-04 6.8e-04 7.7e-04 8.6e-04 1.0e-03 1 1800</code></pre>
+  <p>精度矩阵的贝叶斯估计在第29–33行的R程序中转换为相关矩阵。估计的相关矩阵如下：</p>
+  <pre><code class="output">[,1] [,2] [,3] [,4]
+[1,] 1.0000 0.3191 0.2841 0.6756
+[2,] 0.3191 1.0000 0.1586 0.4696
+[3,] 0.2841 0.1586 1.0000 0.4300
+[4,] 0.6756 0.4696 0.4300 1.0000</code></pre>
+</section>
+<section class="book-page" data-pdf-page="642">
+<h3 id="section-20-10">20.10 随机波动率模型</h3>
+<p>在例7.4中，相关矩阵的MLE为</p>
+<pre><code>$cor
+     [,1]   [,2]   [,3]   [,4]
+[1,] 1.0000 0.3192 0.2845 0.6765
+[2,] 0.3192 1.0000 0.1584 0.4698
+[3,] 0.2845 0.1584 1.0000 0.4301
+[4,] 0.6765 0.4698 0.4301 1.0000</code></pre>
+<p>注意贝叶斯估计与MLE之间的相似性。□</p>
+<h4>20.9.3 协变量矩阵的非Wishart先验</h4>
+<p>我们在例20.13中看到，采用非信息性先验参数的Wishart先验基本上重复了极大似然估计。然而，通常我们希望将协方差矩阵向某个目标收缩，也许是来自因子模型的估计。参见例20.16。</p>
+<h4>20.10 随机波动率模型</h4>
+<p>随机波动率模型是GARCH模型的一种替代，用于对条件异方差性进行建模。在第14章的ARIMA/GARCH模型中，存在一个单一的白噪声过程驱动条件均值和条件方差。相比之下，随机波动率模型使用一个白噪声过程驱动条件期望，另一个驱动条件方差。因此，随机波动率模型的拟合更具挑战性，因为未观测的波动率过程由其自身的白噪声过程驱动，而该过程当然也是未观测的；参见下面的(20.63)。贝叶斯分析特别善于处理未观测变量，并且似乎是拟合随机波动率模型的最佳方法。</p>
+<p>我们将通过以下模型来说明随机波动率模型：</p>
+\[Y_t = \mu + \sum_{j=1}^{k} \beta_j X_{j,t} + a_t, \qquad (20.61)\]
+<p>其中\(Y_t\)是观测到的过程，例如某项资产的收益率，\(X_{j,t}, j=1,\ldots,k\)是时刻\(t\)的第\(j\)个协变量，可以是\(Y_t\)的滞后值。此外，\(a_t\)是具有条件异方差性的弱白噪声过程。具体地，</p>
+\[a_t = \sqrt{h_t} \epsilon_t \qquad (20.62)\]
+<p>其中\(\log(h_t)\)服从ARMA(\(p,q\))过程：</p>
+\[\log(h_t) = \beta_0 + \sum_{j=1}^{p} \phi_j \log(h_{t-j}) + \sum_{j=1}^{q} \theta_j v_{t-j} + v_t, \qquad (20.63)\]
+</section>
+<section class="book-page" data-pdf-page="643">
+  <h2>20 贝叶斯数据分析与MCMC</h2>
+  <p>ϵt 和 vt 是相互独立的独立同分布白噪声，且 Var(ϵt)=1。注意，由 (20.62) 可知，\(\sqrt{h_t}\) 是 Yt 的条件标准差。如前所述，(20.63) 中的变量均不可观测。</p>
+  <p><strong>例20.14</strong> 将ARMA(1,1)随机波动率模型拟合到S&P 500股票收益率</p>
+  <p>作为示例，我们将模型 (20.61)–(20.63) 拟合到2011年1月至2014年10月期间的日度S&P 500对数收益率。使用不含协变量的模型 (20.61)，使得 \(Y_t = \mu + a_t\)。采用 ARMA(1,1) 随机波动率模型，使得 \(\log(h_t) = \beta_0 + \phi \log(h_{t-1}) + \theta v_{t-1} + v_t\)。在 (20.62) 中，ϵt 服从 t 分布。</p>
+  <p>以下是拟合该随机波动率模型的BUGS程序：</p>
+  <pre><code>1 model
+2 {
+3 for (i in 1:N)
+4 {
+5 y[i] ~ dt(mu, tau[i], nu)
+6 }
+7 logh[1] ~ dnorm(0, 1.0E-6)
+8 for(i in 2:N)
+9 {
+10 logh[i] ~ dnorm(beta0 + phi * logh[i-1] + theta * v[i-1], tau_v)
+11 v[i] &lt;- logh[i] - beta0 + phi * logh[i-1] + theta * v[i-1]
+12 }
+13 for (i in 1:N)
+14 {
+15 tau[i] &lt;- exp(-logh[i])
+16 h[i] &lt;- 1/tau[i]
+17 }
+18 mu ~ dnorm(0.0, 1)
+19 beta0 ~ dnorm(0, 0.0001)
+20 phi ~ dnorm(0.4, 0.0001)
+21 theta ~ dnorm(0, 0.0001)
+22 tau_v ~ dgamma(0.01, 0.01)
+23 v[1] ~ dnorm(0, 0.001)
+24 nu ~ dunif(1,30)
+25 sigma_v &lt;- 1 / sqrt(tau_v)
+26 }</code></pre>
+  <p>第5行指定了依赖于 ht 的似然。第7行给出了 h1 的先验。第8–12行指定了从 t=2 开始、p=q=1 的模型 (20.63)；第23行给出了 v1 的非信息先验以启动这一递归过程。第18–25行指定了 μ, β0, φ, θ 和 σv 的扩散先验。</p>
+  <p>2011年1月3日至2014年10月31日的S&P 500价格数据保存在文件S&P500_new.csv中。自2011年1月4日开始共有964个对数收益率。以下R代码计算对数收益率并将随机波动率模型拟合到这些对数收益率。MCMC运行时间约为10分钟。</p>
+</section>
+<section class="book-page" data-pdf-page="644">
+  <h3>20.10 随机波动率模型 625</h3>
+  <p>第8–12行通过使用 \(Y_t^2\) 近似 \(h_t\)，并将 \(\log(Y_t^2)\) 对 \(\log(Y_{t-1}^2)\) 进行回归，计算了 \(\beta_0, \phi\) 和 \(\sigma_v\) 的粗略初值。</p>
+  <p>由于监测了近1000个变量，我们并不想查看所有变量的输出。相反，MCMC输出仅对 \(\beta_0, \mu, \phi, \theta, \tau_v\) 以及前几个和最后几个 \(h_i\) 进行了汇总。</p>
+  <div class="code-tabs" data-code-tabs id="code1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code1-r" role="tabpanel">
+    <pre><code class="language-r">library(rjags)
+dat = read.csv(&quot;S&amp;P500_new.csv&quot;)
+prices = dat$Adj.Close
+y = diff(log(prices))
+##### get initial estimates #####
+N = length(y)
+logy2 = log(y^2)
+fitar = lm(logy2[2:N] ~ logy2[1:(N - 1)])
+beta0Init = as.numeric(fitar$coef[1])
+phiInit = as.numeric(fitar$coef[2])
+sfitar = summary(fitar)
+tauInit = 1/sfitar$sigma^2
+##### Set up for MCMC #####
+N = length(y)
+data = list(y = y ,N=N )
+inits_stochVol_ARMA11 = function() {list(mu = rnorm(1, mean = mean(y),
+sd = sd(y) / sqrt(N)), logh = log(y^2),
+beta0 = runif(1, beta0Init * 1.5, beta0Init/1.5),
+phi = runif(1,phiInit / 1.5, phiInit * 1.5),
+tau_v = runif(1, tauInit / 1.5, tauInit * 1.5),
+theta = runif(1, -0.5, 0.5)) }
+stochVol_ARMA11 &lt;- jags.model(&quot;stochVol_ARMA11.bug&quot;, data = data,
+inits = inits_stochVol_ARMA11,
+n.chains = 3, n.adapt = 1000, quiet = FALSE)
+nthin = 20
+stochVol_ARMA.coda = coda.samples(stochVol_ARMA11, c(&quot;mu&quot;, &quot;beta0&quot;,
+&quot;phi&quot;, &quot;theta&quot;, &quot;tau_v&quot;, &quot;nu&quot;, &quot;tau&quot;), 100 * nthin, thin = nthin)
+summ_stochVol_ARMA11 = summary(stochVol_ARMA.coda)
+head(summ_stochVol_ARMA11[[1]], 8)
+tail(summ_stochVol_ARMA11[[1]], 8)
+dic.stochVol_ARMA11 = dic.samples(stochVol_ARMA11, 100 * nthin,
+thin = nthin, type = &quot;pD&quot;)
+dic.stochVol_ARMA11</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import pandas as pd
+import pymc as pm
+
+# Load data
+df = pd.read_csv(&quot;S&amp;P500_new.csv&quot;)
+prices = df[&#x27;Adj.Close&#x27;].values
+y = np.diff(np.log(prices))
+
+# Initial estimates
+N = len(y)
+logy2 = np.log(y**2)
+X = np.column_stack([np.ones(N-1), logy2[:-1]])
+Y = logy2[1:]
+beta = np.linalg.lstsq(X, Y, rcond=None)[0]
+beta0_init = beta[0]
+phi_init = beta[1]
+residuals = Y - X @ beta
+tau_init = 1 / np.var(residuals)
+
+# MCMC with PyMC
+with pm.Model() as model:
+    mu = pm.Normal(&#x27;mu&#x27;, mu=np.mean(y), sigma=np.std(y)/np.sqrt(N))
+    beta0 = pm.Uniform(&#x27;beta0&#x27;, lower=beta0_init/1.5, upper=beta0_init*1.5)
+    phi = pm.Uniform(&#x27;phi&#x27;, lower=phi_init/1.5, upper=phi_init*1.5)
+    theta = pm.Uniform(&#x27;theta&#x27;, lower=-0.5, upper=0.5)
+    tau_v = pm.Uniform(&#x27;tau_v&#x27;, lower=tau_init/1.5, upper=tau_init*1.5)
+    # ARMA(1,1) representation requires state-space; simplified here
+    # For demonstration, we use a simple AR(1) on log variance
+    h = pm.AR(&#x27;h&#x27;, rho=phi, sigma=np.sqrt(1/tau_v), shape=N)
+    # Likelihood: y_t = mu + exp(h_t/2) * epsilon_t
+    # epsilon_t with studentT or normal
+    nu = pm.Exponential(&#x27;nu&#x27;, lam=1/10)  # degrees of freedom
+    # Note: PyMC doesn&#x27;t directly support ARMA, so this is approximate
+    pm.StudentT(&#x27;obs&#x27;, nu=nu, mu=mu, sigma=pm.math.exp(h/2), observed=y)
+    step = pm.NUTS()
+    trace = pm.sample(2000, tune=1000, chains=3, random_seed=1)
+
+# Summarize (approximate)
+summary = pm.summary(trace, var_names=[&#x27;mu&#x27;,&#x27;beta0&#x27;,&#x27;phi&#x27;,&#x27;theta&#x27;,&#x27;tau_v&#x27;,&#x27;nu&#x27;])
+print(summary.head(8))</code></pre>
+  </div>
+</div>
+  <pre><code>> head(summ_stochVol_ARMA11[[1]], 8)
+              Mean       SD    Naive SE Time-series SE
+beta0 -1.327118e+01 6.986557e+00 4.033691e-01 2.956974e+00
+mu     8.977085e-04 2.290611e-04 1.322485e-05 1.197846e-05
+nu     2.116160e+01 5.785812e+00 3.340440e-01 3.884508e-01
+phi    3.651321e-05 2.254858e-02 1.301843e-03 8.364831e-03
+tau[1] 2.379568e+05 4.180067e+05 2.413363e+04 2.413332e+04
+tau[2] 6.815322e+04 5.764209e+04 3.327968e+03 3.933972e+03
+tau[3] 6.472217e+04 5.089951e+04 2.938685e+03 3.247533e+03
+&gt; tail(summ_stochVol_ARMA11[[1]], 8)
+（此处省略，实际输出有更多行，但原文本未提供完整）</code></pre>
+</section>
+<section class="book-page" data-pdf-page="645"><h2 id="section-20-11">20.11 使用MCMC拟合GARCH模型</h2><p>与随机波动率模型类似，GARCH模型也可以通过MCMC轻松拟合。使用BUGS拟合GARCH模型的一个原因是，该模型随后可以使用DIC与同样使用BUGS拟合的随机波动率模型进行比较。</p><p>以下BUGS程序拟合了具有t分布噪声的GARCH(1,1)模型。该程序可在JAGS下运行，但在OpenBUGS和WinBUGS下会崩溃且不提供有用的错误信息。模型为：</p>\[ y_t = \mu + a_t \]\[ a_t = \sqrt{h_t}\,\epsilon_t \]\[ h_t = \alpha_0 + \alpha_1 a_{t-1}^2 + \beta_1 h_{t-1} \]\[ \epsilon_t \sim t_\nu(0,1) \]<pre><code class="language-bugs">1 model{
+2 for (t in 1:N)
+3 {
+4 y[t] ~ dt(mu, tau[t], nu)
+5 a[t] &lt;- y[t] - mu
+6 tau[t] &lt;- 1/h[t]
+7 }
+8 for (t in 2:N)
+9 {
+10 h[t] &lt;- alpha0 + alpha1 * pow(a[t-1], 2) + beta1 * h[t-1]</code></pre><div class="code-tabs" data-code-tabs id="code-01">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-01-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-01-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-01-r" role="tabpanel">
+    <pre><code class="language-r">&gt; tail(summ_stochVol_ARMA11[[1]], 8)
+Mean SD Naive SE Time-series SE
+tau[959] 1.328635e+04 7.236487e+03 4.177988e+02 4.432135e+02
+tau[960] 1.468882e+04 8.124815e+03 4.690864e+02 5.062925e+02
+tau[961] 1.318162e+04 7.091475e+03 4.094265e+02 3.959164e+02
+tau[962] 1.514622e+04 8.918848e+03 5.149299e+02 5.163099e+02
+tau[963] 1.574039e+04 1.065051e+04 6.149072e+02 6.165450e+02
+tau[964] 1.403511e+04 8.598674e+03 4.964447e+02 5.021540e+02
+tau_v 5.161879e+00 1.409690e+00 8.138847e-02 1.765265e-01
+theta 4.819691e-01 1.219201e-02 7.039058e-04 3.262414e-03
+&gt; dic.stochVol_ARMA11
+Mean deviance: -6653
+penalty 119.6
+Penalized deviance: -6533</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-01-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import pandas as pd
+# 假设 summ_stochVol_ARMA11 是一个字典，键为变量名，值为包含后验样本的 DataFrame
+tail_df = pd.DataFrame(summ_stochVol_ARMA11[1]).tail(8)
+print(tail_df)
+
+# 假设 dic_stochVol_ARMA11 是一个包含 DIC 结果的字典或简单对象
+print(&quot;Mean deviance:&quot;, dic_stochVol_ARMA11[&#x27;mean_deviance&#x27;])
+print(&quot;penalty:&quot;, dic_stochVol_ARMA11[&#x27;penalty&#x27;])
+print(&quot;Penalized deviance:&quot;, dic_stochVol_ARMA11[&#x27;penalized_deviance&#x27;])</code></pre>
+  </div>
+</div></section>
+<section class="book-page" data-pdf-page="646">
+<h2>20.11 使用MCMC拟合GARCH模型</h2>
+
+<h3>例20.15. 对S&P 500股票收益率拟合GARCH(1,1)模型</h3>
+
+<p>以下R代码对例20.14中的数据拟合GARCH(1,1)模型。</p>
+
+<div class="code-tabs" data-code-tabs id="garch11-bug">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="garch11-bug-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="garch11-bug-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="garch11-bug-r" role="tabpanel">
+    <pre><code class="language-r">11 }
+12 mu ~ dnorm(0, 0.001)
+13 h[1] ~ dunif(0, 0.0012)
+14 alpha0 ~ dunif(0, 0.2)
+15 alpha1 ~ dunif(0.00001, 0.8)
+16 beta0 ~ dunif(0.00001, 0.8)
+17 nu ~ dunif(1,30)
+18 }</code></pre>
+  </div>
+  <div class="code-tab-panel" id="garch11-bug-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import pymc3 as pm
+
+with pm.Model() as garch11:
+    mu = pm.Normal(&#x27;mu&#x27;, mu=0, sigma=1000)
+    h1 = pm.Uniform(&#x27;h[1]&#x27;, lower=0, upper=0.0012)
+    alpha0 = pm.Uniform(&#x27;alpha0&#x27;, lower=0, upper=0.2)
+    alpha1 = pm.Uniform(&#x27;alpha1&#x27;, lower=0.00001, upper=0.8)
+    beta0 = pm.Uniform(&#x27;beta0&#x27;, lower=0.00001, upper=0.8)
+    nu = pm.Uniform(&#x27;nu&#x27;, lower=1, upper=30)
+    # Additional stochastic nodes and likelihood would be defined here.</code></pre>
+  </div>
+</div>
+
+<div class="code-tabs" data-code-tabs id="garch11-fit">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="garch11-fit-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="garch11-fit-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="garch11-fit-r" role="tabpanel">
+    <pre><code class="language-r">library(rjags)
+dat = read.csv(&quot;S&amp;P500_new.csv&quot;)
+prices = dat$Adj.Close
+y = diff(log(prices))
+N = length(y)
+data = list(y = y ,N=N )
+inits_garch11 = function() {list(alpha0 = runif(1, 0.001, 0.25),
+beta1 = runif(1, 0.001, 0.25), mu = runif(1, 0.001, 0.25),
+alpha1 = runif(1, 0.001, 0.25), nu = runif(1, 2, 10)) }
+garch11 &lt;- jags.model(&quot;garch11.bug&quot;, data=data,
+inits = inits_garch11,
+n.chains = 3, n.adapt = 1000, quiet = FALSE)
+nthin = 20
+garch11.coda = coda.samples(garch11,c(&quot;mu&quot;, &quot;beta1&quot;, &quot;alpha0&quot;,
+&quot;alpha1&quot;, &quot;nu&quot;, &quot;tau&quot;), 100*nthin, thin = nthin)
+dic.garch11 = dic.samples(garch11, 100*nthin, thin = nthin)
+dic.garch11
+diffdic(dic.garch11, dic.stochVol_ARMA11)
+summ_garch11 = summary(garch11.coda)
+head(summ_garch11[[1]])
+tail(summ_garch11[[1]])</code></pre>
+  </div>
+  <div class="code-tab-panel" id="garch11-fit-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import pandas as pd
+import pymc3 as pm
+import arviz as az
+
+dat = pd.read_csv(&quot;S&amp;P500_new.csv&quot;)
+prices = dat[&#x27;Adj.Close&#x27;]
+y = np.diff(np.log(prices))
+N = len(y)
+
+# Define model (using the same garch11 model)
+with pm.Model() as garch11:
+    mu = pm.Normal(&#x27;mu&#x27;, mu=0, sigma=1000)
+    alpha0 = pm.Uniform(&#x27;alpha0&#x27;, lower=0, upper=0.2)
+    alpha1 = pm.Uniform(&#x27;alpha1&#x27;, lower=0.00001, upper=0.8)
+    beta1 = pm.Uniform(&#x27;beta1&#x27;, lower=0.00001, upper=0.8)
+    nu = pm.Uniform(&#x27;nu&#x27;, lower=1, upper=30)
+    h = pm.Uniform(&#x27;h&#x27;, lower=0, upper=0.0012, shape=N)
+    # Likelihood (simplified; actual GARCH requires recursive definition)
+    # This is only to demonstrate structure; a proper implementation would need a custom distribution.
+
+# Sample
+trace = pm.sample(1000, chains=3, tune=1000, return_inferencedata=True)
+print(az.summary(trace, var_names=[&#x27;mu&#x27;,&#x27;alpha0&#x27;,&#x27;alpha1&#x27;,&#x27;beta1&#x27;,&#x27;nu&#x27;]))</code></pre>
+  </div>
+</div>
+
+<p>输出如下：</p>
+
+<pre class="output">
+> dic.garch11
+Mean deviance: -6508
+penalty 5.737
+Penalized deviance: -6502
+> diffdic(dic.garch11, dic.stochVol_ARMA11)
+Difference: 30.90573
+Sample standard error: 15.12843
+> head(summ_garch11[[1]])
+Mean SD Naive SE Time-series SE
+alpha0 3.875413e-06 9.405668e-07 5.430365e-08 6.060383e-08
+alpha1 1.287614e-01 2.170856e-02 1.253344e-03 1.465383e-03
+beta1 7.677071e-01 2.621658e-02 1.513615e-03 1.870831e-03
+mu 8.663882e-04 2.290809e-04 1.322599e-05 1.247927e-05
+</pre>
+</section>
+<section class="book-page" data-pdf-page="647">
+<h2>20 贝叶斯数据分析与MCMC</h2>
+<figure class="book-figure" id="fig-20.8"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-8324a3435f10.png" alt="图20.8 由例20.14中的随机波动模型和GARCH(1,1)模型估计的对数收益率条件标准差" />
+<figcaption>图20.8. 由例20.14中的随机波动模型和GARCH(1,1)模型估计的对数收益率条件标准差。</figcaption>
+</figure>
+<pre><code>nu 7.570399e+00 1.990408e+00 1.149163e-01 1.077795e-01
+ tau[1] 7.432585e+04 1.242142e+05 7.171511e+03 7.376238e+03
+ > tail(summ_garch11[[1]])
+            Mean       SD  Naive SE Time-series SE
+ tau[959] 10765.65 1050.613  60.65714       56.26545
+ tau[960] 12495.45 1207.416  69.71019       64.84224
+ tau[961] 15145.85 1500.491  86.63091       81.57595
+ tau[962] 14266.32 1339.490  77.33549       72.44932
+ tau[963] 17144.03 1653.541  95.46724       90.31518
+ tau[964] 19112.62 1869.545 107.93821      107.54300</code></pre>
+<p>第18行R代码使用<span class="pkg">rjags</span>包中的<code>diffdic()</code>函数，通过DIC比较随机波动模型和GARCH模型。在<code>diffdic()</code>的输出中，我们看到GARCH模型的DIC大于随机波动模型；两个DIC值的差为30.9，但标准误为15.1。图20.8比较了两种模型估计的对数收益率条件标准差。图20.9比较了来自两个模型的平方标准化残差<sup><a id="fnref-p647-4" href="#fn-p647-4">4</a></sup>的自相关函数（ACF），并假设对数收益率是独立同分布的。尽管DIC差异很大，但两个模型在建模条件异方差性方面大致同样成功。</p>
+<ol class="footnotes">
+<li id="fn-p647-4">残差通过除以条件标准差进行标准化。 <a href="#fnref-p647-4">↩</a></li>
+</ol>
+</section>
+<section class="book-page" data-pdf-page="648">
+  <h2 id="section-20-12">20.12 拟合因子模型</h2>
+  <figure class="book-figure" id="fig-20.9"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-f1cabac931c9.png" alt="图20.9 平方标准化残差的自相关函数" />
+    <figcaption>图20.9 平方标准化残差的自相关函数。(a) 假设条件标准差恒定。模型为 \(R_t = \mu + \epsilon_t\)，其中 \(\epsilon_t\) 是独立白噪声。(b) 假设 ARMA(1,1) 随机波动率模型。(c) 假设 GARCH(1,1) 模型。</figcaption>
+  </figure>
+  <p>因子模型可使用 JAGS 方便地拟合。对因子模型进行贝叶斯分析的一个优点是，可以使用分层模型将贝塔系数彼此收缩。</p>
+  <p><strong>例20.16. 对股票收益率拟合单因子模型</strong></p>
+  <p>在此例中，因子是 S&P 500 的收益率，因此这是 CAPM 的贝叶斯版本。所使用的模型为：</p>
+  \[ R_{j,t} = \beta_j R_{M,t} + \epsilon_{j,t}. \]
+  <p>其中，如第17章，\(R_{j,t}\) 是第 \(j\) 只股票在时间 \(t\) 的收益率，\(j = 1,\ldots,10\)，而 \(R_{M,t}\) 是 S&P 500 在时间 \(t\) 的收益率。假设对于 \(j = 1,\ldots,10\)，\(\{\epsilon_{j,t}, t=1,\ldots\}\) 是相互独立同分布的白噪声过程，且 \(\mathrm{var}(\epsilon_{j,t}) = \sigma^2_{\epsilon,j}\)。为简单起见，我们假设所有 \(\alpha\) 为零。</p>
+  <p>我们将对 \(\beta_1,\ldots,\beta_{10}\) 施加分层先验，具体为：</p>
+  \[ \beta_j \sim N(\mu_\beta, \sigma^2_\beta), \]
+  <p>且对 \(\mu_\beta\) 和 \(\sigma^2_\beta\) 使用无信息先验。</p>
+  <p>下面的 BUGS 程序给出了模型。在第11行，\(\mu_\beta\) 称为 meanbeta，\(\sigma^{-2}_\beta\) 称为 taubeta。此外，第6行的 tauepsilon 是 \(\sigma^{-2}_\epsilon\)。</p>
+  <pre><code class="language-r">1 model{
+2 for (t in 1:N)
+3 {
+4 for (j in 1:m)</code></pre>
+  <div class="code-tabs" data-code-tabs id="code-20-12-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-20-12-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-20-12-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-20-12-1-r" role="tabpanel">
+    <pre><code class="language-r">1 model{
+2 for (t in 1:N)
+3 {
+4 for (j in 1:m)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-20-12-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import pymc3 as pm
+import numpy as np
+
+# Assume data: R (m x N), RM (N,)
+m = 10  # number of stocks
+N = 100  # number of time points
+
+with pm.Model() as factor_model:
+    # hyperpriors
+    mu_beta = pm.Normal(&#x27;mu_beta&#x27;, mu=0, sigma=10)
+    sigma_beta = pm.HalfNormal(&#x27;sigma_beta&#x27;, sigma=5)
+    # hierarchical betas
+    beta = pm.Normal(&#x27;beta&#x27;, mu=mu_beta, sigma=sigma_beta, shape=m)
+    # precision for error per stock
+    tau_epsilon = pm.Gamma(&#x27;tau_epsilon&#x27;, alpha=1, beta=1, shape=m)
+    sigma_epsilon = pm.Deterministic(&#x27;sigma_epsilon&#x27;, 1 / pm.math.sqrt(tau_epsilon))
+    # likelihood: R_j,t = beta_j * RM_t + epsilon_j,t
+    mu = pm.math.outer(beta, RM)  # (m, N) matrix
+    likelihood = pm.Normal(&#x27;likelihood&#x27;, mu=mu, sigma=sigma_epsilon[:, None], observed=R)</code></pre>
+  </div>
+</div>
+</section>
+<section class="book-page" data-pdf-page="649"><p>630 第20章 贝叶斯数据分析与MCMC</p><div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">5 {
+6 R[t,j] ~ dnorm(beta[j]*mkt[t], tauepsilon[j])
+7 }
+8 }
+9 for (j in 1:m)
+10 {
+11 beta[j] ~ dnorm(meanbeta, taubeta)
+12 tauy[j] ~ dgamma(0.1, 0.001)
+13 }
+14 meanbeta ~ dnorm(1, 0.000001)
+15 taubeta ~ dunif(1, 100)
+16 }</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">with pm.Model() as capm_model:
+    meanbeta = pm.Normal(&#x27;meanbeta&#x27;, mu=1, sigma=1000)
+    taubeta = pm.Uniform(&#x27;taubeta&#x27;, lower=1, upper=100)
+    beta = pm.Normal(&#x27;beta&#x27;, mu=meanbeta, sigma=1/pm.math.sqrt(taubeta), shape=m)
+    tauepsilon = pm.Gamma(&#x27;tauepsilon&#x27;, alpha=0.1, beta=0.001, shape=m)
+    mu = beta * mkt[:, None]
+    R_obs = pm.Normal(&#x27;R_obs&#x27;, mu=mu, sigma=1/pm.math.sqrt(tauepsilon), observed=R)</code></pre>
+  </div>
+</div><p>这个示例是示例16.11的延续，使用了文件Stock_Bond.csv中的股票价格数据。由于有接近5000天的收益率，我们可以创建20个收益率块，每个块250天，除了最后一个块可能不足250天。每个块可用于训练（参数估计），下一个块用于测试。下面的R程序仅使用前两个块演示这一策略，第一个块作为训练数据，第二个块作为测试数据。在训练过程中，估计最优配置向量w。这里的“最优”指使用效用函数最大化收益率的期望效用：\(U(R;\lambda)=1-\exp\{-\lambda(1+R)\}\) (20.64)。λ的值在R代码第38行设定为3。λ在2到8范围内是合理的，因为这是日收益率，通常落在±0.05范围内。同时，在(20.64)中我们隐式假设初始财富等于1，因为初始财富未显式包含在内。</p><p>R程序的第一部分拟合因子模型：</p><div class="code-tabs" data-code-tabs id="code-2">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-2-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-2-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-2-r" role="tabpanel">
+    <pre><code class="language-r">1 library(rjags)
+2 dat = read.csv(&quot;Stock_Bond.csv&quot;)
+3 y = dat[, c(3, 5, 7, 9, 11, 13, 15, 17, 19, 21, 22)]
+4 n = dim(y)[1]
+5 m = dim(y)[2] - 1
+6 r = y[-1, ] / y[-n ,]-1
+7 k1 = 250
+8 k2 = k1 + 250
+9 rtrain = r[1:k1, 1:m]
+10 mkt_train = r[1:k1, 11]
+11 rtest = r[(k1+1):k2, 1:m]
+12 data = list(R = rtrain , N = k1, mkt = mkt_train ,m=m )
+13 inits.Capm = function() {list(beta = rep(1,m)) }
+14 Capm.jags &lt;- jags.model(&quot;BayesCapm.bug.R&quot;, data = data,
+15 inits = inits.Capm, n.chains = 1, n.adapt = 1000, quiet = FALSE)
+16 nthin = 10
+17 N = 500
+18 Capm.coda = coda.samples(Capm.jags,</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-2-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import pandas as pd
+import numpy as np
+import pymc3 as pm
+
+dat = pd.read_csv(&quot;Stock_Bond.csv&quot;)
+y = dat.iloc[:, [2,4,6,8,10,12,14,16,18,20,21]]
+n = y.shape[0]
+m = y.shape[1] - 1
+r = y.iloc[1:, :].values / y.iloc[:-1, :].values - 1
+k1 = 250
+k2 = k1 + 250
+rtrain = r[:k1, :m]
+mkt_train = r[:k1, 10]
+rtest = r[k1:k2, :m]
+
+with pm.Model() as capm_model:
+    meanbeta = pm.Normal(&#x27;meanbeta&#x27;, mu=1, sigma=1000)
+    taubeta = pm.Uniform(&#x27;taubeta&#x27;, lower=1, upper=100)
+    beta = pm.Normal(&#x27;beta&#x27;, mu=meanbeta, sigma=1/pm.math.sqrt(taubeta), shape=m)
+    tauepsilon = pm.Gamma(&#x27;tauepsilon&#x27;, alpha=0.1, beta=0.001, shape=m)
+    mu = beta * mkt_train[:, None]
+    R_obs = pm.Normal(&#x27;R_obs&#x27;, mu=mu, sigma=1/pm.math.sqrt(tauepsilon), observed=rtrain)
+    trace = pm.sample(draws=500, tune=1000, chains=1, thin=10, start={&#x27;beta&#x27;: np.ones(m)})</code></pre>
+  </div>
+</div></section>
+<section class="book-page" data-pdf-page="650">
+<h3>20.12 拟合因子模型</h3>
+<p>接下来的R代码定义了效用函数，并通过二次规划找到最优分配向量 \(\mathbf{w}\)，如示例16.11所示。向量 \(\mathbf{w}\) 被计算了两次：一次使用训练样本收益率的样本均值向量和协方差矩阵来估计式(16.20)中的 \(\mu\) 和 \(\Sigma\)（无模型）；另一次使用因子模型来估计 \(\mu\) 和 \(\Sigma\)（CAPM）。</p>
+<div class="code-tabs" data-code-tabs id="code-factor-model-part1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-factor-model-part1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-factor-model-part1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-factor-model-part1-r" role="tabpanel">
+    <pre><code class="language-r">c(&quot;beta&quot;, &quot;tauepsilon&quot;, &quot;taubeta&quot;),
+N * nthin, thin = nthin)
+MCMC_out = Capm.coda[[1]]
+summ = as.matrix(summary(Capm.coda)[[1]][,1])
+beta = summ[1:10]
+taubeta = summ[11]
+tauy = summ[12:21]
+sigmaepsilon = tauepsilon^(-.5)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-factor-model-part1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+
+# 模拟 MCMC 样本（实际应用中需从前面的 MCMC 结果获取）
+np.random.seed(42)
+N = 1000
+nparams = 21
+samples = np.random.randn(N, nparams)
+# 假定参数名顺序为：10个 beta, tauepsilon, taubeta, 10个 tauy
+param_names = [&#x27;beta_&#x27; + str(i) for i in range(10)] + [&#x27;tauepsilon&#x27;, &#x27;taubeta&#x27;] + [&#x27;tauy_&#x27; + str(i) for i in range(10)]
+# 模拟 Capm.coda 对象（第一个链）
+Capm_coda = {name: samples[:, i] for i, name in enumerate(param_names)}
+MCMC_out = samples  # 简化：假设每个链的样本矩阵
+# 计算后验均值
+summ = np.mean(MCMC_out, axis=0)
+beta = summ[0:10]
+taubeta = summ[11]
+tauy = summ[12:22]  # 索引12到21
+tauepsilon = summ[10]  # 原代码中 tauepsilon 未明确定义，这里假设为第10个参数
+sigmaepsilon = tauepsilon ** (-0.5)</code></pre>
+  </div>
+</div>
+<p>接下来，使用无模型和基于CAPM的最优组合估计，在测试数据上对组合收益率的效用进行平均。同时计算测试数据上组合收益率的均值和标准差。</p>
+<div class="code-tabs" data-code-tabs id="code-factor-model-part2">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-factor-model-part2-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-factor-model-part2-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-factor-model-part2-r" role="tabpanel">
+    <pre><code class="language-r">ExUtil = function(w)
+{
+-1 + exp(-lambda * (1 + t(w) %*% mu) +
+lambda^2 * t(w) %*% Omega %*% w/2)
+}
+
+mu_model_free = colMeans(rtrain)
+Omega_model_free = cov(rtrain)
+mu_Capm = beta * mean(mkt)
+Omega_Capm = beta %o% beta * var(mkt_train) + diag(sigmaepsilon^2)
+
+lambda = 3
+library(quadprog)
+mu = mu_model_free
+Omega = Omega_model_free
+opt1 = solve.QP(Dmat = as.matrix(lambda^2 * Omega),
+dvec = lambda * mu, Amat = as.matrix(rep(1,10)),
+bvec = 1, meq = 1)
+w_model_free = opt1$solution
+
+mu = mu_Capm
+Omega = Omega_Capm
+opt2 = solve.QP(Dmat = as.matrix(lambda^2 * Omega),
+dvec = lambda * mu, Amat = as.matrix(rep(1,10)),
+bvec = 1, meq = 1)
+w_Capm = opt2$solution
+
+return_model_free = as.matrix(rtest) %*% w_model_free
+ExUt_model_free = mean(1 - exp(-lambda * return_model_free))</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-factor-model-part2-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+from cvxopt import matrix, solvers
+
+# 假设 rtrain, rtest, mkt_train, mkt 已定义
+# 模拟数据（实际使用时替换）
+np.random.seed(42)
+T_train = 100
+T_test = 50
+n_assets = 10
+rtrain = np.random.randn(T_train, n_assets)
+rtest = np.random.randn(T_test, n_assets)
+mkt_train = np.random.randn(T_train)
+mkt = np.random.randn(T_train)  # 实际可能与训练集相同
+
+# 从之前结果中获取的 beta 和 sigmaepsilon
+beta = np.array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0])  # 示例
+sigmaepsilon = 0.1 * np.ones(n_assets)
+
+# 定义期望效用函数（未直接使用，仅用于对比）
+def ExUtil(w, mu, Omega, lambda_):
+    return -1 + np.exp(-lambda_ * (1 + w @ mu) + lambda_**2 * w @ Omega @ w / 2)
+
+# 计算无模型参数
+mu_model_free = np.mean(rtrain, axis=0)
+Omega_model_free = np.cov(rtrain, rowvar=False)
+# 计算 CAPM 参数
+mu_Capm = beta * np.mean(mkt)
+Omega_Capm = np.outer(beta, beta) * np.var(mkt_train) + np.diag(sigmaepsilon**2)
+
+lambda_ = 3
+
+# 二次规划求解：最小化 0.5 * w^T D w - d^T w, 约束 sum(w)=1
+# 对应 D = lambda^2 * Omega, d = lambda_ * mu
+D = lambda_**2 * Omega_model_free
+d = lambda_ * mu_model_free
+# cvxopt 要求矩阵为 column-major
+P = matrix(D, tc=&#x27;d&#x27;)
+q = matrix(-d, tc=&#x27;d&#x27;)  # 注意 cvxopt 求解 min 0.5 x^T P x + q^T x，所以 q = -d
+A = matrix(1.0, (1, n_assets))
+b = matrix(1.0)
+sol = solvers.qp(P, q, A=A, b=b)
+w_model_free = np.array(sol[&#x27;x&#x27;]).flatten()
+
+# CAPM 版本
+D_Capm = lambda_**2 * Omega_Capm
+d_Capm = lambda_ * mu_Capm
+P_Capm = matrix(D_Capm, tc=&#x27;d&#x27;)
+q_Capm = matrix(-d_Capm, tc=&#x27;d&#x27;)
+sol_Capm = solvers.qp(P_Capm, q_Capm, A=A, b=b)
+w_Capm = np.array(sol_Capm[&#x27;x&#x27;]).flatten()
+
+# 测试数据上的表现
+return_model_free = rtest @ w_model_free
+ExUt_model_free = np.mean(1 - np.exp(-lambda_ * return_model_free))</code></pre>
+  </div>
+</div>
+</section>
+<section class="book-page" data-pdf-page="651">
+<div class="code-tabs" data-code-tabs id="code-20-13-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-20-13-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-20-13-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-20-13-1-r" role="tabpanel">
+    <pre><code class="language-r">return_Capm = as.matrix(rtest) %*% w_Capm
+ExUt_Capm = mean(1 - exp(-lambda * return_Capm))
+print(c(ExUt_model_free, ExUt_Capm), digits = 2)
+print(c(mean(return_model_free), mean(return_Capm)), digits = 2)
+print(c(sd(return_model_free), sd(return_Capm)), digits = 2)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-20-13-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+return_Capm = np.asarray(rtest) @ w_Capm
+ExUt_Capm = np.mean(1 - np.exp(-lambda_ * return_Capm))
+print(np.round([ExUt_model_free, ExUt_Capm], 2))
+print(np.round([np.mean(return_model_free), np.mean(return_Capm)], 2))
+print(np.round([np.std(return_model_free, ddof=1), np.std(return_Capm, ddof=1)], 2))</code></pre>
+  </div>
+</div>
+<pre>62 > print(c(ExUt_model_free, ExUt_Capm), digits = 2)
+63 [1] -0.0179 0.0023
+64 > print(c(mean(return_model_free), mean(return_Capm)), digits = 2)
+65 [1] 0.00060 0.00099
+66 > print(c(sd(return_model_free), sd(return_Capm)), digits = 2)
+67 [1] 0.067 0.012</pre>
+<p>我们看到，使用CAPM估计选择的投资组合优于基于样本均值向量和协方差矩阵的投资组合。有趣的是，CAPM选择的投资组合不仅具有更高的平均效用，而且与无模型估计相比，其收益的均值更高、标准差更低。通常较高的预期收益伴随着较高的风险（较大的标准差），但更好的估计可以实现更高的收益而不增加风险。<p>
+<p>这些结果仅基于一个训练数据块和一个测试数据块，本身并不能令人信服地证明CAPM估计的优越性。可以使用全部二十个数据块继续分析，见练习4。</p>
+<p>图20.10 绘制了使用无模型和基于CAPM的估计器的分配向量\(w\)。无模型的\(w\)波动很大，且存在大量卖空。相比之下，基于CAPM的\(w\)更接近于对10只股票分配相等的权重，且卖空最小。</p>
+<p>另一个问题是CAPM的层次贝叶斯估计与普通最小二乘估计的比较。图20.11 绘制了\(\beta\)的最小二乘估计与贝叶斯估计。除最大的\(\beta\)外，贝叶斯估计仅略微收缩在一起，与最小二乘估计相似。这表明，在此例中，贝叶斯估计充其量只能比最小二乘估计有适度改进。大部分改进归因于使用CAPM估计预期收益。\(\square\)</p>
+<h3 id="section-20-13">20.13 平稳过程的抽样</h3>
+<p>本节提供了用于监控MCMC收敛和混合的统计量\(B\)、\(W\)和\(\hat{\text{var}}^{+}(\psi|Y)\)背后的理论（参见第20.7.5节）。</p>
+<p>假设\(Y_1, Y_2, \ldots, Y_n\)是来自平稳过程的样本，其均值为\(\mu\)，自协方差函数为\(\gamma(h)\)。令\(\bar{Y} = n^{-1} \sum_{i=1}^n Y_i\)为样本均值。则...</p>
+</section>
+<section class="book-page" data-pdf-page="652">
+    <h3>20.13 对平稳过程抽样 633</h3>
+    <pre>2468 1 0
+−2 −1 0 1 2
+λ =  3
+Index
+w * * *
+*
+*
+* * * * *
+*
+model−free
+CAPM</pre>
+    <figure class="book-figure" id="fig-20.10"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-fb0b1fc630da.png" alt="图20.10 使用样本均值向量和协方差矩阵（无模型）以及基于CAPM的估计所得到的分配（或权重）向量。">
+        <figcaption>图20.10 使用样本均值向量和协方差矩阵（无模型）以及基于CAPM的估计所得到的分配（或权重）向量。</figcaption>
+    </figure>
+    <pre>0.8 1.0 1.2 1.4
+0.8 1.0 1.2 1.4
+β − least squares
+β − Bayes</pre>
+    <figure class="book-figure" id="fig-20.11"><img src="/assets/img/statistics-data-analysis-financial-engineering-cn/figure-90ca92d6c995.png" alt="图20.11 β的贝叶斯估计量与最小二乘估计量的对比图。">
+        <figcaption>图20.11 β的贝叶斯估计量与最小二乘估计量的对比图。</figcaption>
+    </figure>
+</section>
+<section class="book-page" data-pdf-page="653"><p>634 20 贝叶斯数据分析与MCMC</p><p>\[\mathrm{var}(\bar{Y}) = n^{-2} \sum_{i=1}^n \sum_{j=1}^n \mathrm{Cov}(Y_i, Y_j) = n^{-2} \sum_{i=1}^n \sum_{j=1}^n \gamma(i-j) = n^{-2} \left\{ n\gamma(0) + 2 \sum_{h=1}^{n-1} \gamma(h)(n-h) \right\} = \frac{\gamma(0)}{n} R_n,\]</p><p>其中</p><p>\[R_n = 1 + 2 \sum_{h=1}^{n-1} \rho(h) \left(1 - \frac{h}{n}\right).\]</p><p>如果 \(Y_1, Y_2, \dots, Y_n\) 是一个不相关过程（白噪声），则 \(R_n = 1\)，且 (20.65) 与 (7.13) 一致。</p><p>大多数由 MCMC 生成的平稳过程对所有 \(h\) 有 \(\rho(h) \ge 0\)，因此自相关会使 \(R_n\) 膨胀。这种膨胀可能非常严重。考虑平稳 AR(1) 过程 \(Y_n = \phi Y_{n-1} + \epsilon_i\) 的情况。AR(1) 过程通常能相当好地近似 MCMC 过程。对于 AR(1) 过程，我们可以近似 \(R_n\)：</p><p>\[R_n \approx 1 + 2 \sum_{h=1}^\infty \rho(h) = \left( \sum_{h=0}^\infty \phi^h - 1 \right) = \left( \frac{2}{1-\phi} - 1 \right) = 1 + \frac{\phi}{1-\phi},\]</p><p>其中我们使用了几何级数求和公式 (3.4)（\(T=\infty\)）。注意当 \(\phi \to 1\) 时，(20.66) 的右侧无界增大。</p><p>由恒等式 \(\sum_{i=1}^n (Y_i - \mu)^2 = \sum_{i=1}^n (Y_i - \bar{Y})^2 + n(\bar{Y} - \mu)^2\)，我们得到</p><p>\[E\left\{ \sum_{i=1}^n (Y_i - \bar{Y})^2 \right\} = \gamma(0)(n - R_n)\]</p><p>因为 \(\gamma(0) = E\{ (Y_i - \mu)^2 \}\) 且由定义 \(\gamma(0)R_n = E\{ n(\bar{Y} - \mu)^2 \}\)。因此，过程方差 \(\gamma(0)\) 的一个无偏估计是</p><p>\[\hat{\gamma}(0) = \frac{\sum_{i=1}^n (Y_i - \bar{Y})^2}{n - R_n}.\]</p><p>当过程不相关时 \(R_n = 1\)，(20.68) 的右侧就是样本方差 (A.7)。对于正自相关过程，\(R_n > 1\)，样本方差（使用 1 代替 \(R_n\)）会低估。要获得 \(\gamma(0)\) 的无偏估计，可以使用</p><p>\[\frac{\sum_{i=1}^n (Y_i - \bar{Y})^2 + \hat{\gamma}(0) R_n}{n},\]</p></section>
+<section class="book-page" data-pdf-page="654">
+<h3 id="section-20-14">20.14 参考文献注释</h3>
+<p>其中 \(\hat{\gamma}^{(0)}R_n\) 是 \(\gamma^{(0)}R_n\) 的无偏估计量。估计 \(\gamma^{(0)}R_n\) 有若干方法，最简单的是使用过程的多个独立实现。设 \(Y_1,\ldots,Y_M\) 为 \(M\) 个独立过程实现的均值，并设 \(\bar{Y} = M^{-1}\sum_{j=1}^M Y_j\)。则</p>
+\[
+\hat{\gamma}^{(0)}R_n = \frac{\sum_{j=1}^M (Y_j - \bar{Y})^2}{M-1} \tag{20.70}
+\]
+<p>是 \(\gamma^{(0)}R_n\) 的无偏估计量。第20.7.5节用于MCMC监测的统计量 \(\hat{\text{var}}^+(\psi|Y)\) 是 (20.68) 和 (20.70) 的一个特例。</p>
+
+<p>关于贝叶斯统计的优秀著作很多。Gelman, Carlin, Stern, Dunson, Vehtari 和 Rubin (2013) 以及 Carlin 和 Louis (2008) 是贝叶斯统计的入门书，数学水平与本书大致相当。Box 和 Tiao (1973) 是贝叶斯统计的经典之作，含有大量实例，尽管年代久远仍值得阅读。Berger (1985) 是贝叶斯分析和决策理论的标准参考书。Bernardo 和 Smith (1994) 以及 Robert (2007) 是更近期的贝叶斯理论著作。Rachev, Hsu, Bagasheva 和 Fabozzi (2008) 涵盖了贝叶斯统计在金融中的许多应用。</p>
+
+<p>Albert (2007) 是 \(\text{R}\) 中贝叶斯计算的优秀入门书。Chib 和 Greenberg (1995) 解释了 Metropolis–Hastings 算法的工作原理及其平稳分布为什么是后验分布。Congdon (2001, 2003) 覆盖了贝叶斯计算的最新进展，重点介绍 OpenBUGS 软件。除了 MCMC，还有其他的贝叶斯蒙特卡洛抽样方法，例如重要性抽样。Robert 和 Casella (2005) 讨论了这些方法以及 MCMC。Gelman 等人 (2013) 在附录中给出了 \(\text{R}\) 和 OpenBUGS 中的贝叶斯计算示例。Lunn, Thomas, Best 和 Spiegelhalter (2000) 描述了 OpenBUGS 的设计。Lunn, Jackson, Best 和 Spiegelhalter (2013) 是 BUGS 的全面介绍。</p>
+
+<p>诊断量 \(\hat{R}\) 和 \(N_{\text{eff}}\) 归功于 Gelman 和 Rubin (1992)，尽管第20.7.5节使用了 Gelman 等人 (2013) 中略有不同的记号。Spiegelhalter, Best, Carlin 和 van der Linde (2002) 提出了 DIC 和 \(p_D\)。Gelman 图由 Brooks 和 Gelman (1998) 提出。Kass 等人 (1998) 讨论了他们在 MCMC 中的实践经验。</p>
+
+<p>收益率曲线模型的贝叶斯建模由 Chib 和 Ergashev (2009) 讨论。贝叶斯时间序列由 Albert 和 Chib (1993)、Chib 和 Greenberg (1994) 以及 Kim, Shephard 和 Chib (1998) 讨论；前两篇论文涵盖 ARMA 过程，后一篇涵盖 ARCH 和随机波动率模型。关于非共轭先验下协方差矩阵的贝叶斯估计这一重要而困难的问题，有大量文献。Daniels 和 Kass (1999) 在给出自己建议的同时，回顾了部分文献。</p>
+</section>
+<section class="book-page" data-pdf-page="655">
+<p>我们尚未讨论经验贝叶斯推断，但Carlin和Louis (2000) 可供参考以了解该文献的引介。经验贝叶斯推断使用层次先验，但以非贝叶斯方式估计低层参数，然后视这些参数为已知固定值，进行贝叶斯分析。其结果是一种收缩估计，与贝叶斯分析所得类似。经验贝叶斯分析的优点是比完全贝叶斯分析稍微简单。缺点是由于将先验中的估计参数视为已知，低估了不确定性。有些收缩估计量并不完全是贝叶斯方法，甚至不是经验贝叶斯方法。Ledoit和Wolf (2003) 提出了股票收益协方差矩阵的收缩估计量。他们的收缩目标来自因子模型，例如CAPM。收缩估计至少可追溯到Stein (1956)，通常被称为Stein估计。</p>
+<p>后验的中心极限定理由Gelman等人 (2013)、Lehmann (1983) 和van der Vaart (1998) 按照技术难度递增的顺序进行讨论。</p>
+<p>关于通过贝叶斯方法进行投资组合选择的更多信息，请参见Greyserman, Jones和Strawderman (2006)。</p>
+
+<h2 id="section-20-15">20.15 R实验</h2>
+
+<h3>20.15.1 通过MCMC拟合t分布</h3>
+
+<p>在本实验部分，你将使用JAGS通过MCMC抽样来拟合t分布到IBM的月度收益率，以估计后验分布。</p>
+
+<p>运行以下R代码以加载rjags包、输入数据，并准备数据供JAGS使用。</p>
+
+<div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">library(rjags)
+data(CRSPmon, package = &quot;Ecdat&quot;)
+ibm = CRSPmon[ , 2]
+r = ibm
+N = length(r)
+ibm_data = list(r = r, N = N)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import pymc3 as pm
+
+# 模拟数据（实际应用中替换为真实数据）
+np.random.seed(123)
+N = 100
+r = np.random.standard_t(df=5, size=N)  # 模拟t分布数据
+data = {&#x27;r&#x27;: r, &#x27;N&#x27;: N}</code></pre>
+  </div>
+</div>
+
+<p>接下来，将以下BUGS代码放入一个文本文件中。我们假设你将该文件命名为univt.bug，不过如果你在后续的R代码中做适当更改，也可以使用其他名称。BUGS代码与R代码有些相似但并不相同。例如，在R中“dt”是t分布的密度，但在BUGS中它是t分布。</p>
+
+<pre><code class="language-bugs">model{
+for (t in 1:N)
+{
+</code></pre>
+
+</section>
+<section class="book-page" data-pdf-page="656">
+<h2 id="r-lab-20">20.15 R实验</h2>
+
+<p>BUGS程序难以调试，因此请仔细核对代码，确保与所示完全一致。该代码已通过测试并按原样运行，但任何错误都可能导致问题。我们的经验是，JAGS在提供错误信息方面优于WinBUGS和OpenBUGS，且更易于调试。</p>
+
+<p>上述BUGS代码描述了统计模型并指定了先验分布。模型假定数据独立同分布于t分布。符号~为随机变量分配分布，因此 <code>y[i] ~ dt(mu, tau, k)</code> 给出了数据的似然。其中，<em>mu</em>、<em>tau</em> 和 <em>k</em> 分别为t分布的均值、精度和自由度。对于t分布，精度 \(\tau = 1/\lambda^2\)，其中 \(\lambda\) 是尺度参数。此外，<code>mu ~ dnorm(0.0, 1.0E-6)</code> 指定均值 <em>mu</em> 的先验为正态分布，均值为0，精度为1.0E-6。正态分布的精度是方差的倒数，因此这里 <em>μ</em> 的先验方差为1.0E6。</p>
+
+<p>符号 <code><-</code> 用于为变量赋值（而非分配分布）。因此，<code>sigma <- 1/sqrt(tau)</code> 使得 <em>sigma</em> 成为数据t分布的尺度参数。在R中，<code>=</code> 可代替 <code><-</code> 用于赋值，但在BUGS中并非如此。参数 <em>sigma</em> 并非必需，但通过在BUGS程序中定义该变量，我们可以从其后验分布中生成样本。</p>
+
+<p>接下来，运行以下R代码，该代码定义了函数 <code>inits()</code>，用于生成链的随机初始值。</p>
+
+<div class="code-tabs" data-code-tabs id="code1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code1-r" role="tabpanel">
+    <pre><code class="language-r">inits = function(){list(mu = rnorm(1, 0, 0.3),
+tau = runif(1, 1, 10), k = runif(1, 1, 30))}</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+def inits():
+    return {&#x27;mu&#x27;: np.random.normal(0, 0.3),
+            &#x27;tau&#x27;: np.random.uniform(1, 10),
+            &#x27;k&#x27;: np.random.uniform(1, 30)}</code></pre>
+  </div>
+</div>
+
+<p>然后，后续代码使用了rjags包中的 <code>jags.model()</code> 和 <code>coda.samples()</code> 函数。注意参数指定了数据、生成链初始值的函数、包含BUGS程序的文件、需要监测并返回的参数、链数、每条链的迭代次数、作为预烧期丢弃的迭代次数以及稀疏化程度。</p>
+
+<div class="code-tabs" data-code-tabs id="code2">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code2-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code2-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code2-r" role="tabpanel">
+    <pre><code class="language-r">univ_t &lt;- jags.model(&quot;univt.bug&quot;, data = ibm_data,
+inits = inits, n.chains = 3, n.adapt = 1000, quiet = FALSE)
+nthin = 2
+univ_t.coda = coda.samples(univ_t, c(&quot;mu&quot;, &quot;tau&quot;, &quot;k&quot;,
+&quot;sigma&quot;), n.iter = 500 * nthin, thin = nthin)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code2-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import pymc3 as pm
+import numpy as np
+
+with pm.Model() as univ_t:
+    mu = pm.Normal(&#x27;mu&#x27;, mu=0, sigma=1e3)
+    tau = pm.Gamma(&#x27;tau&#x27;, alpha=0.1, beta=0.01)
+    k = pm.Uniform(&#x27;k&#x27;, lower=2, upper=50)
+    sigma = pm.Deterministic(&#x27;sigma&#x27;, np.sqrt((k/(k-2))/tau))
+    # 注意：此处简化，实际需要将数据加入
+    # 假设ibm_data为numpy数组
+    y = pm.StudentT(&#x27;y&#x27;, mu=mu, lam=tau, nu=k, observed=ibm_data)
+    trace = pm.sample(draws=500*2, chains=3, tune=1000, thin=2)</code></pre>
+  </div>
+</div>
+</section>
+<section class="book-page" data-pdf-page="657">
+  <p>20 贝叶斯数据分析与MCMC</p>
+  <p>接下来，打印并绘制结果。</p>
+  <div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">summary(univ_t.coda)
+effectiveSize(univ_t.coda)
+gelman.diag(univ_t.coda)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import arviz as az
+
+# 假设 univ_t_trace 是一个 arviz InferenceData 对象
+summary = az.summary(univ_t_trace)
+ess = az.ess(univ_t_trace)
+rhat = az.rhat(univ_t_trace)
+print(summary)
+print(ess)
+print(rhat)</code></pre>
+  </div>
+</div>
+  <p><strong>问题1</strong></p>
+  <p>(a) 根据\(N_{\text{eff}}\)输出，哪个参数混合效果最好？</p>
+  <p>(b) 根据\(N_{\text{eff}}\)输出，哪个参数混合效果最差？</p>
+  <p>(c) 给出自由度参数的95%后验区间。</p>
+  <p>接下来，使用Gelman图和轨迹图检查结果是否收敛到平稳分布（后验分布）。</p>
+  <div class="code-tabs" data-code-tabs id="code-2">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-2-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-2-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-2-r" role="tabpanel">
+    <pre><code class="language-r">gelman.plot(univ_t.coda)
+par(mfrow = c(2, 2))
+traceplot(univ_t.coda)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-2-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import arviz as az
+
+az.plot_rhat(univ_t_trace)
+az.plot_trace(univ_t_trace)</code></pre>
+  </div>
+</div>
+  <p>绘制ACF可以深入了解链的混合情况。自相关越小越好。函数<code>autocorr.plot()</code>分别绘制每个链的ACF。</p>
+  <div class="code-tabs" data-code-tabs id="code-3">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-3-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-3-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-3-r" role="tabpanel">
+    <pre><code class="language-r">par(mfrow = c(2, 2))
+autocorr.plot(univ_t.coda, auto.layout = FALSE)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-3-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import arviz as az
+
+az.plot_autocorr(univ_t_trace, combined=False)</code></pre>
+  </div>
+</div>
+  <p><strong>问题2</strong></p>
+  <p>(a) 根据ACF图，哪个参数混合最好，哪个混合最差？解释你的答案。</p>
+  <p>(b) 求自由度参数的后验偏度和峰度。</p>
+  <p>函数<code>densityplot()</code>给出每个链的核密度估计。</p>
+  <div class="code-tabs" data-code-tabs id="code-4">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-4-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-4-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-4-r" role="tabpanel">
+    <pre><code class="language-r">library(lattice)
+densityplot(univ_t.coda)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-4-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import arviz as az
+
+az.plot_density(univ_t_trace)</code></pre>
+  </div>
+</div>
+  <p><strong>问题3</strong> 哪些后验密度最偏斜？</p>
+  <p>t分布的峰度为\(3(\nu-2)/(\nu-4)\)如果\(\nu>4\)，且为\(+\infty\)如果\(\nu \leq 4\)。R中的变量可以有无穷值：<code>Inf</code>表示+∞，<code>-Inf</code>表示-∞，因此R可以处理可能出现的无穷峰度值。</p>
+</section>
+<section class="book-page" data-pdf-page="658">
+  <h3>20.15 R实验 639</h3>
+  <h4>问题4</h4>
+  <p>编写R代码，计算峰度的1500个MCMC值。</p>
+  <p>(1500 = 3×2000/2；有3条链，每条链在燃烧期后长度为2000，并每隔一次迭代进行稀疏化。)</p>
+  <ol type="a">
+    <li>找出IBM收益率峰度后验分布的0.01、0.05、0.25、0.5、0.75、0.95和0.99分位数。</li>
+    <li>估计IBM收益率分布峰度为有限值的后验概率。</li>
+    <li>计算IBM样本峰度的自助分布中0.01、0.05、0.25、0.5、0.75、0.95和0.99分位数。分别使用无模型自助法和基于模型的自助法取1000个重样本。将两组自助分位数与(a)中的后验分位数进行比较。</li>
+    <li>比较峰度的90%自助基本百分位置信区间与90%后验区间。哪个区间最短？为什么它可能最短？</li>
+  </ol>
+  <h4>20.15.2 AR模型</h4>
+  <p>在本实验部分，你将给对数GDP的差分拟合一个AR(1)模型。首先，运行以下代码来处理数据。注意，对数GDP时间序列在拟合前已差分。</p>
+  <div class="code-tabs" data-code-tabs id="lab-ar-data">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="lab-ar-data-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="lab-ar-data-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="lab-ar-data-r" role="tabpanel">
+    <pre><code class="language-r">library(rjags)
+data(Tbrate, package = &quot;Ecdat&quot;)
+# r = the 91-day treasury bill rate
+# y = the log of real GDP
+# pi = the inflation rate
+del_dat = diff(Tbrate)
+y = del_dat[,2]
+N = length(y)
+GDP_data=list(y = y ,N=N )</code></pre>
+  </div>
+  <div class="code-tab-panel" id="lab-ar-data-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import pandas as pd
+import statsmodels.api as sm
+# 加载宏观数据集
+macro = sm.datasets.macrodata.load_pandas().data
+macro.index = pd.date_range(start=&#x27;1959-01-01&#x27;, periods=len(macro), freq=&#x27;Q&#x27;)
+# 构建与Tbrate类似的数据框
+Tbrate = pd.DataFrame({
+    &#x27;r&#x27;: macro[&#x27;tbilrate&#x27;],   # 3个月国库券利率
+    &#x27;y&#x27;: np.log(macro[&#x27;realgdp&#x27;]),  # 对数实际GDP
+    &#x27;pi&#x27;: macro[&#x27;infl&#x27;]       # 通胀率
+})
+# 差分
+del_dat = Tbrate.diff().dropna()
+y = del_dat[&#x27;y&#x27;]
+N = len(y)
+GDP_data = {&#x27;y&#x27;: y.values, &#x27;N&#x27;: N}</code></pre>
+  </div>
+</div>
+  <p>接着，创建一个名为 <code>ar1.bug</code> 的文件，其中包含以下WinBUGS代码。</p>
+  <pre><code class="language-winbugs">model{
+ for(i in 2:N) {
+ y[i] ~ dnorm(mu + phi * (y[i-1] - mu), tau)
+ }
+ mu ~ dnorm(0, 0.00001)
+ phi ~ dnorm(0, 0.00001)
+ tau ~ dgamma(0.1, 0.0001)
+ sigma <- 1/sqrt(tau)
+}</code></pre>
+  <p>最后，运行以下代码，使用JAGS拟合AR(1)模型，并使用R的 <code>arima()</code> 函数计算MLE，将其与贝叶斯估计进行比较。</p>
+</section>
+<section class="book-page" data-pdf-page="659"><p>640 第20章 贝叶斯数据分析与MCMC</p><div class="code-tabs" data-code-tabs id="c1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="c1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="c1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="c1-r" role="tabpanel">
+    <pre><code class="language-r">1 inits = function() {list(mu = rnorm(1, 0, 2 * sd(y) / sqrt(N)),
+2 phi = rnorm(1, 0, 0.3), tau = runif(1, 1, 10)) }
+3 ar1 &lt;- jags.model(&quot;ar1.bug&quot;, data = GDP_data, inits = inits,
+4 n.chains = 3, n.adapt = 1000, quiet = FALSE)
+5 nthin = 20
+6 ar1.coda = coda.samples(ar1, c(&quot;mu&quot;, &quot;phi&quot;, &quot;sigma&quot;),
+7 n.iter = 500 * nthin, thin = nthin)
+8 summary(ar1.coda, digits = 3)
+9 arima(y, order = c(1, 0, 0))</code></pre>
+  </div>
+  <div class="code-tab-panel" id="c1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import pymc as pm
+import arviz as az
+
+# Assuming y is defined
+N = len(y)
+
+# Define initial values
+inits = {&#x27;mu&#x27;: np.random.normal(0, 2*np.std(y)/np.sqrt(N)),
+         &#x27;phi&#x27;: np.random.normal(0, 0.3),
+         &#x27;tau&#x27;: np.random.uniform(1, 10)}
+
+# Build model
+with pm.Model() as ar1_model:
+    mu = pm.Normal(&#x27;mu&#x27;, mu=0, sigma=2*np.std(y)/np.sqrt(N))
+    phi = pm.Normal(&#x27;phi&#x27;, mu=0, sigma=0.3)
+    sigma = pm.Uniform(&#x27;sigma&#x27;, lower=1, upper=10)
+    # AR1 likelihood
+    likelihood = pm.AR(&#x27;y&#x27;, rho=phi, sigma=sigma, constant=mu, observed=y, order=1)
+
+# Sample
+with ar1_model:
+    trace = pm.sample(draws=500*20, tune=1000, chains=3, init=&#x27;adapt_diag&#x27;, random_seed=1)
+
+# Summary
+summary = az.summary(trace, var_names=[&#x27;mu&#x27;, &#x27;phi&#x27;, &#x27;sigma&#x27;])
+print(summary)
+
+# MLE comparison
+from statsmodels.tsa.arima.model import ARIMA
+mle = ARIMA(y, order=(1,0,0)).fit()
+print(mle.summary())</code></pre>
+  </div>
+</div><p><strong>问题5</strong> 绘制参数 \(\phi\) 和 \(\sigma\) 的时间序列图和ACF图。</p><p>(a) 你认为MCMC样本量是否足够？为什么？burn-in迭代是否足够？为什么？如果你认为迭代次数或burn-in期长度不足，则用更大的burn-in期和/或MCMC样本量重新运行。</p><p>(b) 使用 <code>arima()</code> 计算该模型的MLE。贝叶斯估计与MLE的吻合程度如何？你能解释任何可能的不一致吗？</p><p>(c) BUGS程序中的模型并未假定时间序列处于其平稳分布。实际上，该模型甚至不假定存在平稳分布。解释原因。</p><p>(d) 修改BUGS程序，利用 \(y_1\) 的边际分布，假设过程从平稳分布开始。</p><h3>20.15.3 MA模型</h3><p>接下来，你将用模拟数据拟合MA(1)模型。函数 <code>arima.sim()</code> 用于生成数据。</p><div class="code-tabs" data-code-tabs id="c2">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="c2-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="c2-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="c2-r" role="tabpanel">
+    <pre><code class="language-r">1 library(rjags)
+2 set.seed(5640)
+3 N = 600
+4 y = arima.sim(n = N, list(ma = -0.5), sd = 0.4)
+5 y = as.numeric(y) + 3
+6 q=5
+7 ma.sim_data = list(y = y ,N=N ,q=q )
+8 inits.ma = function() {list(mu = rnorm(1, mean(y), 2*sd(y)/sqrt(N)),
+9 theta = rnorm(1, -0.05, 0.1), tau = runif(1, 5, 8)) }</code></pre>
+  </div>
+  <div class="code-tab-panel" id="c2-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import numpy as np
+import statsmodels.api as sm
+
+np.random.seed(5640)
+N = 600
+# generate MA(1) process
+y = sm.tsa.arma_generate_sample(ar=[], ma=[-0.5], nsample=N, scale=0.4)
+y = y + 3
+q = 5
+
+# data list
+ma_sim_data = {&#x27;y&#x27;: y, &#x27;N&#x27;: N, &#x27;q&#x27;: q}
+
+# initial values function
+def inits_ma():
+    return {&#x27;mu&#x27;: np.random.normal(np.mean(y), 2*np.std(y)/np.sqrt(N)),
+            &#x27;theta&#x27;: np.random.normal(-0.05, 0.1),
+            &#x27;tau&#x27;: np.random.uniform(5, 8)}</code></pre>
+  </div>
+</div><p>将以下BUGS程序放入文件 <code>ma1.bug</code>。该程序不仅拟合MA(1)模型，还预测未来 \(q\) 步；\(q\) 是由用户选择的输入参数，从BUGS的角度看，\(q\) 是数据的一部分，在上面的代码中设置为5。预测值将包含在输出中，称为 <code>ypred</code>。</p></section>
+<section class="book-page" data-pdf-page="660">
+
+<h3>20.15 R实验</h3>
+
+<p>模型代码如下：</p>
+
+<pre><code>1 model{
+2 for (i in 2:N)
+3 {
+4 w[i] <- y[i] - mu - theta * w[i-1]
+5 }
+6 w[1] ~ dnorm(0, 0.01)
+7 for (i in 2:N)
+8 {
+9 y[i] ~ dnorm(mu + theta * w[i-1], tau)
+10 }
+11 mu ~ dnorm(0, 0.0001)
+12 theta ~ dnorm(0, 0.0001)
+13 tau ~ dgamma(0.01, 0.0001)
+14 sigma <- 1/sqrt(tau)
+15 for (i in 1:q)
+16 {
+17 ypred[i] ~ dnorm(theta * w[ N+i-1 ] , tau)
+18 w[i + N] <- ypred[i] - theta * w[N +i-1 ]
+19 }
+20 }</code></pre>
+
+<p>现在运行以下R代码：</p>
+
+<div class="code-tabs" data-code-tabs id="code-1">
+  <div class="code-tab-list" role="tablist" aria-label="Code language">
+    <button type="button" class="code-tab is-active" role="tab" aria-selected="true" aria-controls="code-1-r">R</button>
+    <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="code-1-python">Python</button>
+  </div>
+  <div class="code-tab-panel is-active" id="code-1-r" role="tabpanel">
+    <pre><code class="language-r">ma1 &lt;- jags.model(&quot;ma1.bug&quot;, data = ma.sim_data, inits = inits.ma,
+ n.chains = 3, n.adapt = 1000, quiet = FALSE)
+nthin = 5
+ma1.coda = coda.samples(ma1, c(&quot;mu&quot;, &quot;theta&quot;, &quot;sigma&quot;, &quot;ypred&quot;),
+ n.iter = 500 * nthin, thin = nthin)
+summary(ma1.coda)</code></pre>
+  </div>
+  <div class="code-tab-panel" id="code-1-python" role="tabpanel" hidden>
+    <pre><code class="language-python">import pymc3 as pm
+import numpy as np
+
+# 假设 ma.sim_data 已定义，inits.ma 已定义
+with pm.Model() as ma1_model:
+    mu = pm.Normal(&#x27;mu&#x27;, mu=0, sigma=100)
+    theta = pm.Normal(&#x27;theta&#x27;, mu=0, sigma=100)
+    tau = pm.Gamma(&#x27;tau&#x27;, alpha=0.01, beta=0.0001, transform=&#x27;no&#x27;)  # 注意：PyMC3使用指数变换
+    sigma = pm.Deterministic(&#x27;sigma&#x27;, 1/np.sqrt(tau))
+
+    w = [pm.Normal(&#x27;w_0&#x27;, mu=0, tau=0.01)]
+    for i in range(1, N):
+        w_i = pm.Deterministic(f&#x27;w_{i}&#x27;, y[i-1] - mu - theta * w[i-1])
+        w.append(w_i)
+    for i in range(1, N):
+        pm.Normal(f&#x27;y_{i}&#x27;, mu=mu + theta * w[i-1], tau=tau, observed=y[i])
+
+    # 预测
+    ypred = [pm.Normal(f&#x27;ypred_{i}&#x27;, mu=theta * w[N+i-2], tau=tau) for i in range(q)]
+    # 注意：此处简化，实际需要定义 w[N+i-1] 等
+
+with ma1_model:
+    trace = pm.sample(draws=500*5, chains=3, tune=1000, discard_tuned_samples=False)
+    summary = pm.summary(trace)
+print(summary)</code></pre>
+  </div>
+</div>
+
+<p><strong>问题6</strong></p>
+
+<p>(a) 你认为MCMC样本量足够吗？为什么？如果觉得不够，请用更大的MCMC样本量重新运行JAGS。燃烧期长度是否足够？</p>
+
+<p>(b) 绘制参数theta, sigma, ypred[1]和ypred[2]的时间序列图和ACF图。这些图告诉我们关于MCMC混合和收敛的什么信息？</p>
+
+<p>(c) 找到观测数据后下一个观测值的90%后验区间。</p>
+
+<h4>20.15.4 ARMA模型</h4>
+
+<p>用以下R代码从一个ARMA(1,1)过程生成一个模拟样本：</p>
+
+<pre><code>set.seed(5640)
+N = 600</code></pre>
+
+</section>
+<section class="book-page" data-pdf-page="661">
+<h2 id="section-20-16">20.16 练习题</h2>
+<pre><code class="language-r">y = arima.sim(n = N, list(ar = 0.9, ma = -0.5), sd = 0.4)
+y = as.numeric(y)</code></pre>
+<p><strong>问题7</strong> 创建BUGS和R代码以拟合模拟数据的ARMA(1,1)模型。监控结果以确保MCMC样本量足够大。</p>
+<p>(a) 讨论链的混合情况以及蒙特卡洛样本量是否足够。</p>
+<p>(b) 求AR和MA参数的99%后验区间。</p>
+<ol>
+<li>在例20.2中证明MAP估计量为6/7。</li>
+<li>验证(20.26)。</li>
+<li>在(20.51)的推导中，曾指出“\\(Y - E(\mu|Y)\\)与\\(E(\mu|Y) - \mu\\)在给定\\(Y\\)条件下不相关。”请验证此论断。</li>
+<li>继续例20.16中的分析。将数据分成20个块，每块250天，最后一块仅有212天。使用前19个块作为训练数据，后续块作为测试数据。基于CAPM的投资组合选择与无模型估计在19对训练和测试数据集上平均比较结果如何？</li>
+<li>使用MCMC通过BUGS拟合模型的优势之一是可以拟合非常广泛的模型。本例中，使用带有MA(1)误差的回归模型。数据使用数据集<code>Stock_Bond.csv</code>中GM和S&P 500指数的前1500个收益率<sup id="fn-ref-5"><a href="#fn-5">5</a></sup>。拟合模型：\[R_t = \beta R_{M,t} + \epsilon_t + \theta \epsilon_{t-1}.\]其中\\(R_t\\)是GM的t时刻收益率，\\(R_{M,t}\\)是S&P 500的t时刻收益率，\\(\epsilon_1,\dots,\epsilon_{1500}\\)独立同分布于\(N(0,\sigma_\epsilon^2)\)。对\\(\beta, \theta\\)和\\(\sigma_\epsilon^2\\)使用无信息先验。</li>
+<li>将问题5的模型扩展，使\(\epsilon_1,\dots\)为GARCH(1,1)过程。修改问题5的BUGS和R代码以拟合此扩展模型。</li>
+<li>目前为止，我们在考虑投资组合风险时将样本均值向量和协方差矩阵视为固定的，即忽略了估计风险。Greyserman, Jones和Strawderman (2006)提出了一种考虑估计误差风险的方法。假设收益率向量R服从\(N(\mu,\Sigma)\)分布。令\((\mu^{(k)},\Sigma^{(k)}), k=1,\dots,K\)为从\((\mu,\Sigma)\)后验分布中抽取的MCMC样本。对每个k，令\(R^{(k)}\)服从\(N(\mu^{(k)},\Sigma^{(k)})\)分布。然后<sup id="fn-ref-5-b"><a href="#fn-5">5</a></sup>JAGS在使用完整数据集时出现问题，可能是因为有近5000个潜在变量。此问题可能依赖于硬件。</li>
+</ol>
+<ol class="footnotes">
+<li id="fn-5">JAGS在使用完整数据集时出现问题，可能是因为有近5000个潜在变量。此问题可能依赖于硬件。 <a href="#fn-ref-5">↩</a></li>
+</ol>
+</section>
+<section class="book-page" data-pdf-page="662">
+<p>令 \(R^{(1)}, \dots, R^{(K)}\) 来自 \(R\) 的后验预测分布的样本，考虑关于 \(\mu\) 和 \(\Sigma\) 的不确定性，并且</p>
+\[K^{-1} \sum_{k=1}^K U\{X_0(1 + w^T R^{(k)})\}\]
+<p>估计当分配向量为 \(w\) 时的期望效用。这里，如第16.8节所述，\(X_0\) 是初始财富，\(U\) 是效用函数。使用CAPM模型继续例20.16的分析，并最大化式(20.71)。最大化(20.71)是一个非线性优化问题，因此一个好的起始值至关重要。作为起始值，使用例20.16中忽略估计误差而得到的 \(w\)。</p>
+<h2 id="references-20">参考文献</h2>
+<p>Albert, J. (2007) <em>Bayesian Computation with R</em>, Springer, New York.</p>
+<p>Albert, J. H. and Chib, S. (1993) Bayes inference via Gibbs sampling of autoregressive time series subject to Markov mean and variance shifts, <em>Journal of Business & Economic Statistics</em>, 11, 1–15.</p>
+<p>Berger, J. O. (1985) <em>Statistical Decision Theory and Bayesian Analysis</em> 2nd ed., Springer-Verlag, Berlin.</p>
+<p>Bernardo, J. M., and Smith, A. F. M. (1994) <em>Bayesian Theory</em>, Wiley, Chichester.</p>
+<p>Box, G. E. P., and Tiao, G. C. (1973) <em>Bayesian Inference in Statistical Analysis</em>, Addison-Wesley, Reading, MA.</p>
+<p>Brooks, S. P. and Gelman, A. (1998) General Methods for Monitoring Convergence of Iterative Simulations. <em>Journal of Computational and Graphical Statistics</em>, 7, 434–455.</p>
+<p>Carlin, B. P., and Louis, T. A. (2000) Empirical Bayes: Past, present and future. <em>Journal of the American Statistical Association</em>, 95, 1286–1289.</p>
+<p>Carlin, B. , and Louis, T. A. (2008) <em>Bayesian Methods for Data Analysis</em>, 3rd ed., Chapman & Hall, New York.</p>
+<p>Chib, S., and Ergashev, B. (2009) Analysis of multifactor affine yield curve models. <em>Journal of the American Statistical Association</em>, 104, 1324–1337.</p>
+<p>Chib, S., and Greenberg, E. (1994) Bayes inference in regression models with ARMA(p,q) errors. <em>Journal of Econometrics</em>, 64, 183–206.</p>
+<p>Chib, S., and Greenberg, E. (1995) Understanding the Metropolis–Hastings algorithm. <em>American Statistician</em>, 49, 327–335.</p>
+<p>Congdon, P. (2001) <em>Bayesian Statistical Modelling</em>, Wiley, Chichester.</p>
+<p>Congdon, P. (2003) <em>Applied Bayesian Modelling</em>, Wiley, Chichester.</p>
+<p>Daniels, M. J., and Kass, R. E. (1999) Nonconjugate Bayesian estimation of covariance matrices and its use in hierarchical models. <em>Journal of the American Statistical Association</em>, 94, 1254–1263.</p>
+</section>
+<section class="book-page" data-pdf-page="663">
+<ul>
+<li>Edwards, W. (1982) Conservatism in human information processing. 载于 <i>Judgement Under Uncertainty: Heuristics and Biases</i>, D. Kahneman, P. Slovic, 和 A. Tversky 编, Cambridge University Press, New York.</li>
+<li>Gelman, A., 和 Rubin, D. B. (1992) Inference from iterative simulation using multiple sequence (with discussion). <i>Statistical Science</i>, 7, 457–511.</li>
+<li>Gelman, A., Carlin, J. B., Stern, H. S., Dunson, D. B., Vehtari, A., 和 Rubin, D. B. (2013) <i>Bayesian Data Analysis</i>, 第3版, Chapman & Hall, London.</li>
+<li>Greyserman, A., Jones, D. H., 和 Strawderman, W. E. (2006) Portfolio selection using hierarchical Bayesian analysis and MCMC methods. <i>Journal of Banking and Finance</i>, 30, 669–678.</li>
+<li>Kass, R. E., Carlin, B. P., Gelman, A., 和 Neal, R. (1998) Markov chain Monte Carlo in practice: A roundtable discussion. <i>American Statistician</i>, 52, 93–100.</li>
+<li>Kim, S., Shephard, N., 和 Chib, S. (1998) Stochastic volatility: likelihood inference and comparison with ARCH models. <i>Review of Economic Studies</i>, 65, 361–393.</li>
+<li>Ledoit, O., 和 Wolf, M. (2003) Improved estimation of the covariance matrix of stock returns with an application to portfolio selection. <i>Journal of Empirical Finance</i>, 10, 603–621.</li>
+<li>Lehmann, E. L. (1983) <i>Theory of Point Estimation</i>, Wiley, New York.</li>
+<li>Lunn, D., Jackson, C., Best, N., Thomas, A., 和 Spiegelhalter, D. (2013) <i>The BUGS Book</i>, Chapman & Hall.</li>
+<li>Lunn, D. J., Thomas, A., Best, N., 和 Spiegelhalter, D. (2000) OpenBUGS—A Bayesian modelling framework: Concepts, structure, and extensibility. <i>Statistics and Computing</i>, 10, 325–337.</li>
+<li>Rachev, S. T., Hsu, J. S. J., Bagasheva, B. S., 和 Fabozzi, F. J. (2008) <i>Bayesian Methods in Finance</i>, Wiley, Hoboken, NJ.</li>
+<li>Robert, C. P. (2007) <i>The Bayesian Choice: From Decision-Theoretic Foundations to Computational Implementation</i>, 第2版, Springer, New York.</li>
+<li>Robert, C. P., 和 Casella, G. (2005) <i>Monte Carlo Statistical Methods</i>, 第2版, Springer, New York.</li>
+<li>Spiegelhalter, D. J., Best, N. G., Carlin, B. P., 和 van der Linde, A. (2002) Bayesian measures of model complexity and fit. <i>Journal of the Royal Statistical Society, Series B, Methodological</i>, 64, 583–616.</li>
+<li>Stein, C. (1956) Inadmissibility of the usual estimator for the mean of a multivariate normal distribution. 载于 <i>Proceedings of the Third Berkeley Symposium on Mathematical and Statistical Probability</i>, J. Neyman 编, University of California, Berkeley, 第1卷, 第197–206页.</li>
+<li>van der Vaart, A. W. (1998) <i>Asymptotic Statistics</i>, Cambridge University Press, Cambridge.</li>
+</ul>
+</section>
+<nav class="chapter-nav"><a href="/statistics-data-analysis-financial-engineering-cn/chapter-19/">上一节：第19章 风险管理</a><a href="/statistics-data-analysis-financial-engineering-cn/chapter-21/">下一节：第21章 非参数回归与样条</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=638ea974b0aa"></script>
+</body>
+</html>

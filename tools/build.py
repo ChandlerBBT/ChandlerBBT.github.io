@@ -517,6 +517,7 @@ def render_sitemap(posts: list[dict], tags: list[str]) -> str:
         "bayes-rules-python-cn",
         "investing-with-volume-analysis-cn",
         "financial-reporting-statement-analysis-valuation-cn",
+        "statistics-data-analysis-financial-engineering-cn",
     ]
     for tutorial_slug in tutorial_slugs:
         tutorial_root = ROOT / tutorial_slug

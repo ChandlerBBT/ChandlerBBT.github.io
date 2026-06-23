@@ -6,6 +6,13 @@
     <description>记录我在工作与学习中，围绕 AI 提升效率的探索、实践与复盘。</description>
 
     <item>
+      <title>《金融工程统计与数据分析：R 示例》简体中文教程</title>
+      <link>https://chandlerbbt.github.io/posts/statistics-data-analysis-financial-engineering-cn/</link>
+      <guid>https://chandlerbbt.github.io/posts/statistics-data-analysis-financial-engineering-cn/</guid>
+      <pubDate>Wed, 24 Jun 2026 00:00:00 +0800</pubDate>
+      <description>《Statistics and Data Analysis for Financial Engineering: with R examples》的简体中文教程入口，覆盖金融工程、统计学习、时间序列、风险管理与 R/Python 双语代码示例。</description>
+    </item>
+    <item>
       <title>《财务报告、财务报表分析与估值》中文译稿</title>
       <link>https://chandlerbbt.github.io/posts/financial-reporting-statement-analysis-valuation-cn/</link>
       <guid>https://chandlerbbt.github.io/posts/financial-reporting-statement-analysis-valuation-cn/</guid>
