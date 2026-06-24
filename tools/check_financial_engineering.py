@@ -14,6 +14,7 @@ from urllib.parse import unquote, urlparse
 from pypdf import PdfReader
 
 from financial_engineering_common import CACHE_NAME, SLUG, extract_page_text, is_omittable_pdf_page, read_json, write_json
+import translate_financial_engineering as translator
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -191,6 +192,42 @@ def running_header_artifacts(raw: str) -> list[str]:
     return hits
 
 
+def section_running_header_artifacts(
+    raw: str,
+    sections: list[dict],
+    title_map: dict[str, str],
+    source_pages: dict[int, str] | None = None,
+) -> list[str]:
+    hits: list[str] = []
+    for match in re.finditer(r"<section\b([^>]*)>([\s\S]*?)</section>", raw, flags=re.IGNORECASE):
+        attrs, body = match.groups()
+        if "book-page" not in attrs:
+            continue
+        page_match = re.search(r'\bdata-pdf-page\s*=\s*["\'](\d+)["\']', attrs)
+        if not page_match:
+            continue
+        page_number = int(page_match.group(1))
+        leading = re.match(r"\s*<(h[1-6]|p)\b[^>]*>([\s\S]*?)</\1>", body, flags=re.IGNORECASE)
+        if not leading:
+            continue
+        text = translator.visible_node_text(leading.group(2))
+        section = translator.matching_section_for_heading(text, sections, title_map)
+        if not section:
+            continue
+        try:
+            section_page = int(section.get("pdf_page"))
+        except Exception:
+            continue
+        misplaced_same_page = (
+            source_pages is not None
+            and section_page == page_number
+            and not translator.source_section_title_is_near_top(source_pages.get(page_number, ""), section)
+        )
+        if section_page < page_number or misplaced_same_page:
+            hits.append(f"p{page_number}: {text}")
+    return hits
+
+
 def expected_pages(manifest: dict) -> list[int]:
     pages: list[int] = []
     reader = PdfReader(str(Path(manifest["book"]["source_pdf"])))
@@ -208,6 +245,11 @@ def main() -> int:
 
     manifest = read_json(CACHE_DIR / "manifest.json")
     image_map = read_json(CACHE_DIR / "image_caption_map.json")
+    guide_path = CACHE_DIR / "book_guide.md"
+    book_guide = guide_path.read_text(encoding="utf-8") if guide_path.exists() else "{}"
+    title_map = translator.augment_title_map(translator.extract_title_map(book_guide))
+    sections_by_slug = {str(unit.get("slug")): list(unit.get("sections", [])) for unit in manifest["units"]}
+    reader = PdfReader(str(Path(manifest["book"]["source_pdf"])))
     pages_expected = expected_pages(manifest)
     page_dir = CACHE_DIR / "page_translations"
     missing_translated_pages = [
@@ -232,9 +274,20 @@ def main() -> int:
     python_parse_errors: list[tuple[Path, str]] = []
     nested_code_tabs: list[tuple[Path, str]] = []
     running_headers: list[tuple[Path, str]] = []
+    section_running_headers: list[tuple[Path, str]] = []
 
     for audit in audits:
         raw = audit.path.read_text(encoding="utf-8", errors="replace")
+        try:
+            relative = audit.path.relative_to(TUTORIAL_DIR)
+            unit_slug = relative.parts[0] if len(relative.parts) >= 2 else ""
+        except ValueError:
+            unit_slug = ""
+        unit_sections = sections_by_slug.get(unit_slug, [])
+        source_pages = {
+            int(page): extract_page_text(reader, int(page))
+            for page in set(re.findall(r'\bdata-pdf-page\s*=\s*["\'](\d+)["\']', raw))
+        }
         text = visible_text(raw)
         for pattern in BAD_VISIBLE_PATTERNS:
             if pattern in text:
@@ -253,6 +306,8 @@ def main() -> int:
             nested_code_tabs.append((audit.path, error))
         for header in running_header_artifacts(raw):
             running_headers.append((audit.path, header))
+        for header in section_running_header_artifacts(raw, unit_sections, title_map, source_pages):
+            section_running_headers.append((audit.path, header))
         for href in audit.links:
             target = local_target(audit.path, href)
             if target is None:
@@ -283,6 +338,7 @@ def main() -> int:
         "python_syntax_errors": len(python_parse_errors),
         "nested_code_tab_wrappers": len(nested_code_tabs),
         "running_header_artifacts": len(running_headers),
+        "section_running_header_artifacts": len(section_running_headers),
         "missing_local_links": len(missing_links),
         "missing_local_anchors": len(missing_anchors),
         "missing_local_images": len(missing_images),
@@ -303,6 +359,7 @@ def main() -> int:
             python_parse_errors,
             nested_code_tabs,
             running_headers,
+            section_running_headers,
         ]
     )
     if hard_fail:
@@ -323,6 +380,7 @@ def main() -> int:
         ("Python syntax error", python_parse_errors[:10]),
         ("Nested code tabs", nested_code_tabs[:10]),
         ("Running header artifact", running_headers[:10]),
+        ("Section running header artifact", section_running_headers[:10]),
     ]:
         for path, value in items:
             print(f"  {label}: {path.relative_to(ROOT).as_posix()} -> {value}")

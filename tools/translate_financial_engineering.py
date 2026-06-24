@@ -266,6 +266,10 @@ def strip_source_boilerplate(text: str) -> str:
 def is_source_running_header(line: str) -> bool:
     if not line:
         return False
+    if re.fullmatch(r"\d{1,4}\s+\d{1,2}(?:\.\d+)+\s+[A-Z][A-Za-z0-9 ,:;'\-()]+", line):
+        return True
+    if re.fullmatch(r"\d{1,2}(?:\.\d+)+\s+[A-Z][A-Za-z0-9 ,:;'\-()]+\s+\d{1,4}", line):
+        return True
     if re.fullmatch(r"\d{1,4}\s+\d{1,2}\s+[A-Z][A-Za-z0-9 ,:;'\-()]+", line):
         return True
     if re.fullmatch(r"\d{1,2}\s+[A-Z][A-Za-z0-9 ,:;'\-()]+\s+\d{1,4}", line):
@@ -378,6 +382,220 @@ def strip_running_header_artifacts(fragment: str) -> str:
         return match.group(0)
 
     return re.sub(r"<(h[1-6]|p)\b([^>]*)>([\s\S]*?)</\1>", replace, fragment, flags=re.IGNORECASE)
+
+
+def visible_node_text(fragment: str) -> str:
+    text = html.unescape(re.sub(r"<[^>]+>", " ", fragment))
+    return " ".join(text.split())
+
+
+def strip_trailing_page_number(text: str) -> str:
+    return re.sub(r"\s+\d{1,4}$", "", text).strip()
+
+
+def canonical_heading_text(text: str) -> str:
+    text = strip_trailing_page_number(visible_node_text(text))
+    text = re.sub(r"(?i)copulas", "copula", text)
+    text = text.lower()
+    return re.sub(r"[^\w\u4e00-\u9fff]+", "", text)
+
+
+def section_number_prefix(section: dict[str, Any]) -> str:
+    title_en = str(section.get("title_en", ""))
+    match = re.match(r"^([A-Z]?\d+(?:\.\d+)+|[A-Z]\.\d+)\b", title_en)
+    if match:
+        return match.group(1)
+    slug = str(section.get("slug", ""))
+    numeric = re.match(r"^section-(\d+)-(\d+)", slug)
+    if numeric:
+        return f"{numeric.group(1)}.{numeric.group(2)}"
+    appendix = re.match(r"^section-([a-z])-(\d+)", slug, flags=re.IGNORECASE)
+    if appendix:
+        return f"{appendix.group(1).upper()}.{appendix.group(2)}"
+    return ""
+
+
+def section_title_has_expected_prefix(title: str, section: dict[str, Any]) -> bool:
+    prefix = section_number_prefix(section)
+    if not prefix:
+        return True
+    return strip_trailing_page_number(visible_node_text(title)).startswith(prefix)
+
+
+def heading_matches_section_title(text: str, section: dict[str, Any], title_map: dict[str, str]) -> bool:
+    canonical = canonical_heading_text(text)
+    if not canonical:
+        return False
+    candidates = {
+        str(section.get("title_en", "")),
+        title_for_section(section, title_map),
+    }
+    mapped = title_map.get(str(section.get("slug", "")))
+    if mapped and section_title_has_expected_prefix(mapped, section):
+        candidates.add(mapped)
+    for candidate in candidates:
+        if candidate and canonical == canonical_heading_text(candidate):
+            return True
+    return False
+
+
+def matching_section_for_heading(text: str, sections: list[dict[str, Any]], title_map: dict[str, str]) -> dict[str, Any] | None:
+    for section in sections:
+        if heading_matches_section_title(text, section, title_map):
+            return section
+    return None
+
+
+def source_section_title_line_index(source_page_text: str, section: dict[str, Any]) -> int | None:
+    target = canonical_heading_text(str(section.get("title_en", "")))
+    if not target:
+        return None
+    lines = cleaned_source_lines(source_page_text)
+    for index, line in enumerate(lines):
+        if canonical_heading_text(line) == target:
+            return index
+    return None
+
+
+def cleaned_source_lines(source_page_text: str) -> list[str]:
+    return [
+        " ".join(line.split())
+        for line in strip_source_boilerplate(source_page_text).splitlines()
+        if " ".join(line.split())
+    ]
+
+
+def is_source_chapter_opening_line(line: str) -> bool:
+    line = " ".join(line.split())
+    if re.fullmatch(r"\d{1,2}|[A-Z]", line):
+        return True
+    if not re.search(r"[A-Za-z]", line):
+        return False
+    if len(line) > 80:
+        return False
+    if re.search(r"[=(){}\[\];.,]", line):
+        return False
+    return True
+
+
+def source_section_title_is_near_top(source_page_text: str, section: dict[str, Any]) -> bool:
+    index = source_section_title_line_index(source_page_text, section)
+    if index is None or index == 0:
+        return True
+    if 1 <= index <= 3:
+        return all(is_source_chapter_opening_line(line) for line in cleaned_source_lines(source_page_text)[:index])
+    return False
+
+
+def source_text_before_section_title(source_page_text: str, section: dict[str, Any]) -> str:
+    target = canonical_heading_text(str(section.get("title_en", "")))
+    if not target:
+        return ""
+    lines = strip_source_boilerplate(source_page_text).splitlines()
+    prefix: list[str] = []
+    for line in lines:
+        if canonical_heading_text(line) == target:
+            break
+        prefix.append(line)
+    return "\n".join(prefix)
+
+
+def is_source_prose_line(line: str) -> bool:
+    line = " ".join(line.split())
+    if not line or is_source_running_header(line):
+        return False
+    if re.match(r"^(Fig\.|Figure|Table)\s+\d", line):
+        return False
+    if re.match(r"^\d+\s+[A-Za-z_][A-Za-z0-9_.]*\s*(=|<-|\(|,)", line):
+        return False
+    letters = re.findall(r"[A-Za-z]", line)
+    if len(letters) < 12:
+        return False
+    return len(letters) / max(len(line), 1) > 0.35
+
+
+def count_source_prose_blocks(text: str) -> int:
+    count = 0
+    in_block = False
+    for line in text.splitlines():
+        if is_source_prose_line(line):
+            if not in_block:
+                count += 1
+                in_block = True
+        else:
+            in_block = False
+    return count
+
+
+def section_heading_html(section: dict[str, Any], title_map: dict[str, str]) -> str:
+    try:
+        level = min(6, max(2, int(section.get("level", 1)) + 1))
+    except Exception:
+        level = 2
+    slug = html.escape(str(section.get("slug", "")), quote=True)
+    title = html.escape(title_for_section(section, title_map))
+    return f'<h{level} id="{slug}">{title}</h{level}>'
+
+
+def source_prefix_has_figure_or_table(text: str) -> bool:
+    return bool(re.search(r"\b(Fig\.|Figure|Table)\s+\d", text))
+
+
+def insert_heading_after_source_prefix(
+    fragment: str,
+    heading_html: str,
+    prose_blocks_before_title: int,
+    source_prefix: str = "",
+) -> str:
+    if prose_blocks_before_title == 0 and source_prefix_has_figure_or_table(source_prefix):
+        figures = list(re.finditer(r"</figure>", fragment, flags=re.IGNORECASE))
+        if figures:
+            insert_at = figures[-1].end()
+            return fragment[:insert_at] + "\n" + heading_html + fragment[insert_at:]
+    paragraph_starts = list(re.finditer(r"<p\b[^>]*>", fragment, flags=re.IGNORECASE))
+    if prose_blocks_before_title < len(paragraph_starts):
+        insert_at = paragraph_starts[prose_blocks_before_title].start()
+        return fragment[:insert_at] + heading_html + "\n" + fragment[insert_at:]
+    closing = re.search(r"</section>\s*$", fragment, flags=re.IGNORECASE)
+    if closing:
+        return fragment[: closing.start()] + "\n" + heading_html + "\n" + fragment[closing.start() :]
+    return fragment + "\n" + heading_html
+
+
+def fix_page_section_headers(
+    fragment: str,
+    page_number: int,
+    sections: list[dict[str, Any]],
+    title_map: dict[str, str],
+    source_page_text: str,
+) -> str:
+    leading = re.match(
+        r"(?is)(<section\b[^>]*>\s*)(<(h[1-6]|p)\b[^>]*>([\s\S]*?)</\3>)",
+        fragment,
+    )
+    if not leading:
+        return fragment
+    opening, element, _tag, body = leading.groups()
+    text = visible_node_text(body)
+    section = matching_section_for_heading(text, sections, title_map)
+    if not section:
+        return fragment
+    try:
+        section_page = int(section.get("pdf_page"))
+    except Exception:
+        return fragment
+    if section_page > page_number:
+        return fragment
+
+    without_leading = opening + fragment[leading.end(2) :]
+    if section_page < page_number:
+        return without_leading
+    if source_section_title_is_near_top(source_page_text, section):
+        return fragment
+
+    prefix = source_text_before_section_title(source_page_text, section)
+    prose_blocks = count_source_prose_blocks(prefix)
+    return insert_heading_after_source_prefix(without_leading, section_heading_html(section, title_map), prose_blocks, prefix)
 
 
 def is_rendered_running_header(text: str) -> bool:
@@ -733,6 +951,8 @@ def title_for_section(section: dict[str, Any], title_map: dict[str, str]) -> str
     fallback = COMMON_SECTION_TITLE_MAP.get(body.strip().lower())
     if slug in title_map:
         title = title_map[slug]
+        if not section_title_has_expected_prefix(title, section):
+            title = prefix + fallback if fallback else title_en
         if fallback and not re.search(r"[\u4e00-\u9fff]", title):
             title = prefix + fallback
         return normalize_sidebar_title(title)
@@ -982,6 +1202,7 @@ def render_book(manifest: dict[str, Any], image_map: dict[str, Any], book_guide:
                 if allow_partial:
                     continue
                 continue
+            fragment = fix_page_section_headers(fragment, page, unit.get("sections", []), title_map, extract_page_text(reader, page))
             page_images = [image for image in image_map.get("images", []) if int(image.get("pdf_page", -1)) == page]
             fragment = with_figure_anchors(fragment, page_images)
             parts.append(with_section_anchors(fragment, unit_sections_by_page.get(page, [])))

@@ -115,6 +115,20 @@ class FinancialEngineeringCheckerTests(unittest.TestCase):
 
         self.assertEqual(checker.running_header_artifacts(raw), ["4 探索性数据分析"])
 
+    def test_section_running_header_artifacts_are_reported(self) -> None:
+        raw = (
+            '<section class="book-page" data-pdf-page="223">'
+            '<p><strong>8.7 校准Copulas</strong> 203</p>'
+            '<p>这是小节续文。</p>'
+            '</section>'
+        )
+        sections = [{"slug": "section-8-7", "title_en": "8.7 Calibrating Copulas", "pdf_page": 222}]
+
+        self.assertEqual(
+            checker.section_running_header_artifacts(raw, sections, {"section-8-7": "8.7 校准Copula"}),
+            ["p223: 8.7 校准Copulas 203"],
+        )
+
 
 class FinancialEngineeringTranslatorPostprocessTests(unittest.TestCase):
     def test_strip_source_boilerplate_removes_springer_footer(self) -> None:
@@ -171,6 +185,86 @@ class FinancialEngineeringTranslatorPostprocessTests(unittest.TestCase):
         self.assertNotIn("64 第4章", html)
         self.assertNotIn("4 探索性数据分析", html)
         self.assertIn("4.6 数据变换", html)
+
+    def test_fix_page_section_headers_removes_repeated_section_title_on_later_page(self) -> None:
+        raw = (
+            '<section class="book-page" data-pdf-page="221">'
+            '<h3 id="section-8-6">8.6 尾部相关性</h3>'
+            '<p>这是上一页已经开始的小节的续文。</p>'
+            '</section>'
+        )
+        sections = [{"slug": "section-8-6", "title_en": "8.6 Tail Dependence", "pdf_page": 220}]
+
+        html = translator.fix_page_section_headers(raw, 221, sections, {"section-8-6": "8.6 尾部相关性"}, "8.6 Tail Dependence 197\ncontinuation")
+
+        self.assertNotIn("8.6 尾部相关性</h3>", html)
+        self.assertNotIn('id="section-8-6"', html)
+        self.assertIn("这是上一页已经开始的小节的续文。", html)
+
+    def test_fix_page_section_headers_moves_mid_page_section_title_from_page_head(self) -> None:
+        raw = (
+            '<section class="book-page" data-pdf-page="222">'
+            '<h2 id="section-8-7">8.7 校准Copula</h2>'
+            '<pre><code class="language-r">58 ylab=expression(lambda[l]==lambda[u]))</code></pre>'
+            '<figure class="book-figure"><img src="/figure-8-6.png"><figcaption>图8.6 尾部相关系数</figcaption></figure>'
+            '<p>了解是否存在尾部相关性对于风险管理至关重要。</p>'
+            '<p>假设我们有一个 i.i.d. 样本，并希望估计其 copula。</p>'
+            '</section>'
+        )
+        source = "\n".join(
+            [
+                "198 8 Copulas",
+                "58 ylab=expression(lambda[l]==lambda[u]))",
+                "Fig. 8.6. Coefficients of tail dependence.",
+                "Knowing whether or not there is tail dependence is important for risk management.",
+                "8.7 Calibrating Copulas",
+                "Assume that we have an i.i.d. sample and wish to estimate the copula.",
+            ]
+        )
+        sections = [{"slug": "section-8-7", "title_en": "8.7 Calibrating Copulas", "pdf_page": 222}]
+
+        html = translator.fix_page_section_headers(raw, 222, sections, {"section-8-7": "8.7 校准Copula"}, source)
+
+        self.assertNotRegex(html, r'<section[^>]*>\s*<h2[^>]*>8\.7 校准Copula</h2>')
+        self.assertLess(html.index("了解是否存在尾部相关性"), html.index('id="section-8-7"'))
+        self.assertLess(html.index('id="section-8-7"'), html.index("假设我们有一个"))
+
+    def test_fix_page_section_headers_moves_heading_after_prefix_figure(self) -> None:
+        raw = (
+            '<section class="book-page" data-pdf-page="495">'
+            '<h2 id="section-16-5">16.5 卖空</h2>'
+            '<p>图16.2 有效前沿和切点组合。</p>'
+            '<figure class="book-figure"><img src="/figure-16-2.png"><figcaption>图16.2 有效前沿和切点组合。</figcaption></figure>'
+            '<p><strong>卖空</strong>通常，有效组合中的某些权重为负。</p>'
+            '</section>'
+        )
+        source = "\n".join(
+            [
+                "16.5 Selling Short 473",
+                "Fig. 16.2. Efficient frontier and tangency portfolio.",
+                "16.5 Selling Short",
+                "Often some of the weights in an efficient portfolio are negative.",
+            ]
+        )
+        sections = [{"slug": "section-16-5", "title_en": "16.5 Selling Short", "pdf_page": 495}]
+
+        html = translator.fix_page_section_headers(raw, 495, sections, {"section-16-5": "16.5 卖空"}, source)
+
+        self.assertLess(html.index("</figure>"), html.index('id="section-16-5"'))
+        self.assertLess(html.index('id="section-16-5"'), html.index("<strong>卖空</strong>"))
+
+    def test_source_section_title_near_top_allows_chapter_opening_lines(self) -> None:
+        source = "\n".join(
+            [
+                "14",
+                "GARCH Models",
+                "14.1 Introduction",
+                "As seen in earlier chapters, financial market data often exhibits volatility clustering.",
+            ]
+        )
+        section = {"slug": "section-14-1", "title_en": "14.1 Introduction", "pdf_page": 428}
+
+        self.assertTrue(translator.source_section_title_is_near_top(source, section))
 
     def test_namespace_page_footnotes_rewrites_refs_and_backlinks(self) -> None:
         raw = '<sup><a href="#fn1" id="fnref1">1</a></sup><ol><li id="fn1"><a href="#fnref1">↩</a></li></ol>'
@@ -250,6 +344,15 @@ class FinancialEngineeringTranslatorPostprocessTests(unittest.TestCase):
         self.assertIn("参考文献", html)
         self.assertNotIn("Introduction", html)
         self.assertNotIn("Histograms and Kernel", html)
+
+    def test_title_for_section_ignores_false_chapter_heading_for_numbered_section(self) -> None:
+        self.assertEqual(
+            translator.title_for_section(
+                {"slug": "section-8-1", "title_en": "8.1 Introduction"},
+                {"section-8-1": "第8章 Copula"},
+            ),
+            "8.1 引言",
+        )
 
     def test_title_for_section_uses_chinese_fallback_for_english_headings(self) -> None:
         self.assertEqual(
