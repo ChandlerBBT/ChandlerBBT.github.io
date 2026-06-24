@@ -952,6 +952,28 @@ img {
   text-align: center;
 }
 
+.tutorial-content .book-figure {
+  margin: 24px auto;
+  text-align: center;
+}
+
+.tutorial-content .book-figure img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+}
+
+.tutorial-content .book-figure figcaption {
+  max-width: 760px;
+  margin: 10px auto 0;
+  color: var(--muted);
+  font-size: 0.94em;
+  line-height: 1.65;
+  text-align: center;
+}
+
 .tutorial-content table {
   width: auto;
   max-width: 100%;

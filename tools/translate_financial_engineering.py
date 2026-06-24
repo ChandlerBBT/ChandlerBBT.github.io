@@ -257,8 +257,22 @@ def strip_source_boilerplate(text: str) -> str:
             continue
         if re.fullmatch(r"\d{1,4}", line) and cleaned:
             continue
+        if is_source_running_header(line):
+            continue
         cleaned.append(raw)
     return "\n".join(cleaned)
+
+
+def is_source_running_header(line: str) -> bool:
+    if not line:
+        return False
+    if re.fullmatch(r"\d{1,4}\s+\d{1,2}\s+[A-Z][A-Za-z0-9 ,:;'\-()]+", line):
+        return True
+    if re.fullmatch(r"\d{1,2}\s+[A-Z][A-Za-z0-9 ,:;'\-()]+\s+\d{1,4}", line):
+        return True
+    if re.fullmatch(r"\d{1,4}\s+[A-Z]\s+[A-Z][A-Za-z0-9 ,:;'\-()]+", line):
+        return True
+    return False
 
 
 def page_translation_system_prompt(book_guide: str) -> str:
@@ -304,11 +318,84 @@ def unwrap_block_placeholders(fragment: str) -> str:
 
 
 def unwrap_embedded_code_tabs(fragment: str) -> str:
-    return re.sub(
-        r"<pre><code(?:\s+class=[\"'][^\"']*[\"'])?>\s*(<div class=\"code-tabs\"[\s\S]*?</div>)\s*</code></pre>",
-        r"\1",
-        fragment,
-    )
+    marker = '<div class="code-tabs"'
+    search_from = 0
+    while True:
+        start = fragment.find("<pre><code", search_from)
+        if start == -1:
+            return fragment
+        code_start = fragment.find("<code", start)
+        code_open_end = fragment.find(">", code_start)
+        if code_open_end == -1:
+            return fragment
+        content_start = code_open_end + 1
+        while content_start < len(fragment) and fragment[content_start].isspace():
+            content_start += 1
+        if not fragment.startswith(marker, content_start):
+            search_from = code_open_end + 1
+            continue
+        div_end = find_balanced_div_end(fragment, content_start)
+        if div_end == -1:
+            search_from = code_open_end + 1
+            continue
+        tail_match = re.match(r"\s*</code>\s*</pre>", fragment[div_end:], flags=re.IGNORECASE)
+        if not tail_match:
+            closing_match = re.search(r"\s*</code>\s*</pre>", fragment[div_end:], flags=re.IGNORECASE)
+            if not closing_match:
+                search_from = div_end
+                continue
+            tail_content = fragment[div_end : div_end + closing_match.start()].strip()
+            output_block = ""
+            if tail_content:
+                output_block = f'\n<pre><code class="language-text">{html.escape(tail_content)}</code></pre>'
+            fragment = fragment[:start] + fragment[content_start:div_end] + output_block + fragment[div_end + closing_match.end() :]
+            search_from = start + 1
+            continue
+        fragment = fragment[:start] + fragment[content_start:div_end] + fragment[div_end + tail_match.end() :]
+        search_from = start + 1
+
+
+def find_balanced_div_end(fragment: str, start: int) -> int:
+    depth = 0
+    for match in re.finditer(r"</?div\b[^>]*>", fragment[start:], flags=re.IGNORECASE):
+        tag = match.group(0)
+        if tag.startswith("</"):
+            depth -= 1
+            if depth == 0:
+                return start + match.end()
+        else:
+            depth += 1
+    return -1
+
+
+def strip_running_header_artifacts(fragment: str) -> str:
+    def replace(match: re.Match[str]) -> str:
+        body = match.group(3)
+        text = html.unescape(re.sub(r"<[^>]+>", " ", body))
+        text = " ".join(text.split())
+        if is_rendered_running_header(text):
+            return ""
+        return match.group(0)
+
+    return re.sub(r"<(h[1-6]|p)\b([^>]*)>([\s\S]*?)</\1>", replace, fragment, flags=re.IGNORECASE)
+
+
+def is_rendered_running_header(text: str) -> bool:
+    if not text:
+        return False
+    if re.fullmatch(r"\d{1,4}\s+第\s*\d{1,2}\s*章\s+.+", text):
+        return True
+    if re.fullmatch(r"\d{1,4}\s+第\d{1,2}章\s+.+", text):
+        return True
+    if re.fullmatch(r"\d{1,4}\s+附录\s+[A-Z]\s+.+", text):
+        return True
+    if re.fullmatch(r"\d{1,2}\s+[\u4e00-\u9fff][\u4e00-\u9fffA-Za-z\s：、]+", text):
+        return True
+    if re.fullmatch(r"\d{1,2}\s+[A-Z][A-Za-z0-9 ,:;'\-()]+", text):
+        return True
+    if is_source_running_header(text):
+        return True
+    return False
 
 
 def namespace_page_footnotes(fragment: str, page_number: int) -> str:
@@ -552,8 +639,110 @@ def extract_title_map(book_guide: str) -> dict[str, str]:
     return result
 
 
+COMMON_SECTION_TITLE_MAP = {
+    "introduction": "引言",
+    "bibliographic notes": "文献说明",
+    "references": "参考文献",
+    "r lab": "R 实验",
+    "exercises": "习题",
+    "the random walk model": "随机游走模型",
+    "zero-coupon bonds": "零息债券",
+    "coupon bonds": "附息债券",
+    "yield to maturity": "到期收益率",
+    "term structure": "期限结构",
+    "continuous compounding": "连续复利",
+    "continuous forward rates": "连续远期利率",
+    "sensitivity of price to yield": "价格对收益率的敏感性",
+    "histograms and kernel density estimation": "直方图与核密度估计",
+    "order statistics, the sample cdf, and sample quantiles": "顺序统计量、样本 CDF 与样本分位数",
+    "tests of normality": "正态性检验",
+    "boxplots": "箱线图",
+    "data transformation": "数据变换",
+    "the geometry of transformations": "变换的几何解释",
+    "transformation kernel density estimation": "变换核密度估计",
+    "multiple linear regression": "多元线性回归",
+    "bootstrap estimates of bias, standard deviation, and mse": "偏差、标准差和 MSE 的自助法估计",
+    "probability distributions": "概率分布",
+    "when do expected values and variances exist?": "期望值和方差何时存在？",
+    "monotonic functions": "单调函数",
+    "the minimum, maximum, infinum, and supremum of a set": "集合的最小值、最大值、下确界与上确界",
+    "functions of random variables": "随机变量的函数",
+    "random samples": "随机样本",
+    "the binomial distribution": "二项分布",
+    "some common continuous distributions": "一些常见连续分布",
+    "sampling a normal distribution": "正态分布抽样",
+    "law of large numbers and the central limit theoremfor the sample mean": "大数定律与样本均值的中心极限定理",
+    "law of large numbers and the central limit theorem for the sample mean": "大数定律与样本均值的中心极限定理",
+    "bivariate distributions": "二元分布",
+    "correlation and covariance": "相关与协方差",
+    "multivariate distributions": "多元分布",
+    "stochastic processes": "随机过程",
+    "estimation": "估计",
+    "confidence intervals": "置信区间",
+    "hypothesis testing": "假设检验",
+    "prediction": "预测",
+    "facts about vectors and matrices": "向量与矩阵知识",
+    "roots of polynomials and complex numbers": "多项式根与复数",
+}
+
+
+def extract_heading_title_map_from_cached_pages() -> dict[str, str]:
+    result: dict[str, str] = {}
+    page_dir = CACHE_DIR / "page_translations"
+    if not page_dir.exists():
+        return result
+    for path in sorted(page_dir.glob("page-*.json")):
+        try:
+            raw = str(read_json(path).get("html", ""))
+        except Exception:
+            continue
+        for match in re.finditer(r"<h[1-6]\b([^>]*)>([\s\S]*?)</h[1-6]>", raw, flags=re.IGNORECASE):
+            attrs, body = match.groups()
+            id_match = re.search(r'\bid\s*=\s*["\']([^"\']+)["\']', attrs)
+            if not id_match:
+                continue
+            anchor_id = html.unescape(id_match.group(1))
+            if not (anchor_id.startswith("section-") or anchor_id.startswith("references")):
+                continue
+            text = html.unescape(re.sub(r"<[^>]+>", " ", body))
+            text = " ".join(text.split())
+            if not re.search(r"[\u4e00-\u9fff]", text):
+                continue
+            if text and not is_rendered_running_header(text):
+                result.setdefault(anchor_id, text)
+    return result
+
+
+def augment_title_map(title_map: dict[str, str]) -> dict[str, str]:
+    merged = dict(title_map)
+    for key, value in extract_heading_title_map_from_cached_pages().items():
+        merged.setdefault(key, value)
+    return merged
+
+
 def title_for_unit(unit: dict[str, Any], title_map: dict[str, str]) -> str:
     return title_map.get(str(unit["slug"])) or title_map.get(str(unit["title_en"])) or FALLBACK_TITLE_MAP.get(str(unit["slug"])) or str(unit["title_en"])
+
+
+def title_for_section(section: dict[str, Any], title_map: dict[str, str]) -> str:
+    slug = str(section.get("slug", ""))
+    title_en = str(section.get("title_en", ""))
+    number_match = re.match(r"^([A-Z]?\d*(?:\.\d+)+|[A-Z]\.\d+)\s+(.+)$", title_en)
+    prefix = f"{number_match.group(1)} " if number_match else ""
+    body = number_match.group(2) if number_match else title_en
+    fallback = COMMON_SECTION_TITLE_MAP.get(body.strip().lower())
+    if slug in title_map:
+        title = title_map[slug]
+        if fallback and not re.search(r"[\u4e00-\u9fff]", title):
+            title = prefix + fallback
+        return normalize_sidebar_title(title)
+    if title_en in title_map:
+        return normalize_sidebar_title(title_map[title_en])
+    return normalize_sidebar_title(prefix + fallback if fallback else title_en)
+
+
+def normalize_sidebar_title(title: str) -> str:
+    return title.replace("Bootstrap ", "自助法").replace("Bootstrap", "自助法")
 
 
 def render_nav(active: str = "posts") -> str:
@@ -656,7 +845,7 @@ def render_sidebar(units: list[dict[str, Any]], title_map: dict[str, str], curre
                 '<span aria-hidden="true">›</span></button>'
             )
             section_links = "".join(
-                f'<a class="section-link" href="{("#" if current else unit_local_path(unit) + "#")}{html.escape(str(section["slug"]), quote=True)}">{html.escape(str(section["title_en"]))}</a>'
+                f'<a class="section-link" href="{("#" if current else unit_local_path(unit) + "#")}{html.escape(str(section["slug"]), quote=True)}">{html.escape(title_for_section(section, title_map))}</a>'
                 for section in sections
             )
             panel = f'<div class="sidebar-subsections" id="{panel_id}"{"" if current else " hidden"}>{section_links}</div>'
@@ -703,7 +892,10 @@ def load_page_html(page_number: int) -> str | None:
     path = CACHE_DIR / "page_translations" / f"page-{page_number:03d}.json"
     if not path.exists():
         return None
-    return sanitize_python_code_html(str(read_json(path).get("html", "")).strip())
+    fragment = str(read_json(path).get("html", "")).strip()
+    fragment = unwrap_embedded_code_tabs(fragment)
+    fragment = strip_running_header_artifacts(fragment)
+    return sanitize_python_code_html(fragment)
 
 
 def sanitize_python_code_text(code: str) -> str:
@@ -757,7 +949,7 @@ def with_figure_anchors(fragment: str, images: list[dict[str, Any]]) -> str:
 
 def render_book(manifest: dict[str, Any], image_map: dict[str, Any], book_guide: str, allow_partial: bool = False) -> dict[str, Any]:
     copy_images(image_map)
-    title_map = extract_title_map(book_guide)
+    title_map = augment_title_map(extract_title_map(book_guide))
     units = manifest["units"]
     reader = PdfReader(str(Path(manifest["book"]["source_pdf"])))
     book_dir = ROOT / SLUG

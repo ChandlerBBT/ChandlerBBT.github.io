@@ -279,6 +279,75 @@ def caption_line_records(lines: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return records
 
 
+def object_bbox(obj: dict[str, Any]) -> tuple[float, float, float, float]:
+    left = float(obj.get("x0") or 0)
+    right = float(obj.get("x1") or left)
+    top = float(obj.get("top") or 0)
+    bottom = float(obj.get("bottom") or top)
+    return left, top, right, bottom
+
+
+def cluster_graphic_objects(objects: list[dict[str, Any]], vertical_gap: float = 45.0) -> list[dict[str, float]]:
+    clusters: list[dict[str, float]] = []
+    for obj in sorted(objects, key=lambda item: (object_bbox(item)[1], object_bbox(item)[0])):
+        left, top, right, bottom = object_bbox(obj)
+        if not clusters or top > clusters[-1]["bottom"] + vertical_gap:
+            clusters.append({"left": left, "top": top, "right": right, "bottom": bottom, "count": 1})
+            continue
+        cluster = clusters[-1]
+        cluster["left"] = min(cluster["left"], left)
+        cluster["top"] = min(cluster["top"], top)
+        cluster["right"] = max(cluster["right"], right)
+        cluster["bottom"] = max(cluster["bottom"], bottom)
+        cluster["count"] += 1
+    return clusters
+
+
+def is_source_running_header(line: str) -> bool:
+    if not line:
+        return False
+    if re.fullmatch(r"\d{1,4}\s+\d{1,2}\s+[A-Z][A-Za-z0-9 ,:;'\-()]+", line):
+        return True
+    if re.fullmatch(r"\d{1,2}\s+[A-Z][A-Za-z0-9 ,:;'\-()]+\s+\d{1,4}", line):
+        return True
+    if re.fullmatch(r"\d{1,4}\s+[A-Z]\s+[A-Z][A-Za-z0-9 ,:;'\-()]+", line):
+        return True
+    return False
+
+
+def nearby_title_top(page: Any, selected: dict[str, float], previous_bottom: float) -> float | None:
+    if not hasattr(page, "extract_words"):
+        return None
+    try:
+        lines = group_words_into_lines(page.extract_words(use_text_flow=True, keep_blank_chars=False))
+    except Exception:
+        return None
+    graph_width = selected["right"] - selected["left"]
+    candidates: list[float] = []
+    for line in lines:
+        gap = selected["top"] - float(line["bottom"])
+        if gap < -2 or gap > 65:
+            continue
+        if float(line["top"]) <= max(35, previous_bottom + 2):
+            continue
+        overlap = min(float(line["x1"]), selected["right"]) - max(float(line["x0"]), selected["left"])
+        center = (float(line["x0"]) + float(line["x1"])) / 2
+        text = str(line.get("text") or "").strip()
+        if not text or len(text) > 90:
+            continue
+        if is_source_running_header(text):
+            continue
+        if len(text.split()) > 9 and "=" not in text:
+            continue
+        if "." in text and "=" not in text:
+            continue
+        if text.endswith(".") and "=" not in text:
+            continue
+        if overlap >= min(120.0, graph_width * 0.25) or selected["left"] <= center <= selected["right"]:
+            candidates.append(float(line["top"]))
+    return min(candidates) if candidates else None
+
+
 def crop_box_for_caption(page: Any, caption: dict[str, Any], previous_bottom: float) -> tuple[float, float, float, float] | None:
     objects: list[dict[str, Any]] = []
     for attr in ("lines", "curves", "rects"):
@@ -297,20 +366,29 @@ def crop_box_for_caption(page: Any, caption: dict[str, Any], previous_bottom: fl
         if width < 1 and height < 1:
             continue
         relevant.append(obj)
-    if not relevant:
+    clusters = cluster_graphic_objects(relevant)
+    candidates = [
+        cluster
+        for cluster in clusters
+        if cluster["right"] - cluster["left"] >= 80
+        and cluster["bottom"] - cluster["top"] >= 30
+        and cluster["count"] >= 2
+    ]
+    if not candidates:
         caption_top = float(caption["top"])
-        caption_bottom = float(caption["bottom"])
-        top = max(60, previous_bottom + 4, caption_top - 240)
-        bottom = min(float(page.height), caption_bottom + 10)
+        top = max(60, previous_bottom + 4, caption_top - 260)
+        bottom = min(float(page.height), caption_top - 6)
         left = 20.0
         right = float(page.width) - 20.0
         if bottom - top < 40:
             return None
         return left, top, right, bottom
-    left = max(0, min(float(obj.get("x0") or 0) for obj in relevant) - 60)
-    right = min(float(page.width), max(float(obj.get("x1") or page.width) for obj in relevant) + 60)
-    top = max(0, min(float(obj.get("top") or 0) for obj in relevant) - 80)
-    bottom = min(float(page.height), float(caption["bottom"]) + 10)
+    selected = max(candidates, key=lambda cluster: cluster["bottom"])
+    left = max(0, selected["left"] - 50)
+    right = min(float(page.width), selected["right"] + 35)
+    title_top = nearby_title_top(page, selected, previous_bottom)
+    top = max(0, (title_top - 8) if title_top is not None else selected["top"] - 25)
+    bottom = min(float(page.height), float(caption["top"]) - 6, selected["bottom"] + 50)
     if bottom - top < 40 or right - left < 80:
         return None
     return left, top, right, bottom
@@ -340,8 +418,8 @@ def extract_figure_crops(pdf_path: Path, image_dir: Path, slug: str = SLUG) -> t
                 previous_bottom = max(previous_bottom, float(caption["bottom"]))
                 if box is None:
                     continue
-                digest = sha1_text(f"{page_index + 1}-{caption['number']}-{box}")[:12]
-                filename = f"figure-{digest}.png"
+                number_slug = re.sub(r"[^0-9A-Za-z]+", "-", str(caption["number"])).strip("-") or str(len(records) + 1)
+                filename = f"figure-{number_slug}-p{page_index + 1:03d}.png"
                 output_path = image_dir / filename
                 if not output_path.exists():
                     render_page_crop(pdf_doc, page_index, box, output_path)

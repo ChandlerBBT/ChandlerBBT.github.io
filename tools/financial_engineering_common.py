@@ -241,6 +241,8 @@ def render_code_pair(code_id: str, r_code: str, python_code: str) -> str:
     safe_id = re.sub(r"[^A-Za-z0-9_-]+", "-", code_id).strip("-") or "code"
     r_panel = f"{safe_id}-r"
     py_panel = f"{safe_id}-python"
+    r_code = r_code.strip()
+    python_code = python_code.strip()
     return f"""
 <div class="code-tabs" data-code-tabs id="{html.escape(safe_id, quote=True)}">
   <div class="code-tab-list" role="tablist" aria-label="Code language">
@@ -248,10 +250,10 @@ def render_code_pair(code_id: str, r_code: str, python_code: str) -> str:
     <button type="button" class="code-tab" role="tab" aria-selected="false" aria-controls="{html.escape(py_panel, quote=True)}">Python</button>
   </div>
   <div class="code-tab-panel is-active" id="{html.escape(r_panel, quote=True)}" role="tabpanel">
-    <pre><code class="language-r">{html.escape(r_code.rstrip())}</code></pre>
+    <pre><code class="language-r">{html.escape(r_code)}</code></pre>
   </div>
   <div class="code-tab-panel" id="{html.escape(py_panel, quote=True)}" role="tabpanel" hidden>
-    <pre><code class="language-python">{html.escape(python_code.rstrip())}</code></pre>
+    <pre><code class="language-python">{html.escape(python_code)}</code></pre>
   </div>
 </div>""".strip()
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import html
 import io
 import re
 import tokenize
@@ -170,6 +171,26 @@ def python_syntax_errors(raw: str) -> list[str]:
     return errors
 
 
+def nested_code_tab_wrappers(raw: str) -> list[str]:
+    if re.search(r"<pre><code\b[^>]*>\s*<div\b[^>]*class=[\"'][^\"']*\bcode-tabs\b", raw, flags=re.IGNORECASE):
+        return ["pre-code-code-tabs"]
+    return []
+
+
+def running_header_artifacts(raw: str) -> list[str]:
+    hits: list[str] = []
+    for match in re.finditer(r"<(h[1-6]|p)\b[^>]*>([\s\S]*?)</\1>", raw, flags=re.IGNORECASE):
+        text = html.unescape(re.sub(r"<[^>]+>", " ", match.group(2)))
+        text = " ".join(text.split())
+        if re.fullmatch(r"\d{1,4}\s+第\s*\d{1,2}\s*章\s+.+", text):
+            hits.append(text)
+        elif re.fullmatch(r"\d{1,2}\s+[\u4e00-\u9fff][\u4e00-\u9fffA-Za-z\s：、]+", text):
+            hits.append(text)
+        elif re.fullmatch(r"\d{1,2}\s+[A-Z][A-Za-z0-9 ,:;'\-()]+", text):
+            hits.append(text)
+    return hits
+
+
 def expected_pages(manifest: dict) -> list[int]:
     pages: list[int] = []
     reader = PdfReader(str(Path(manifest["book"]["source_pdf"])))
@@ -209,6 +230,8 @@ def main() -> int:
     symbol_artifacts: list[tuple[Path, str]] = []
     python_r_residue: list[tuple[Path, str]] = []
     python_parse_errors: list[tuple[Path, str]] = []
+    nested_code_tabs: list[tuple[Path, str]] = []
+    running_headers: list[tuple[Path, str]] = []
 
     for audit in audits:
         raw = audit.path.read_text(encoding="utf-8", errors="replace")
@@ -226,6 +249,10 @@ def main() -> int:
             python_r_residue.append((audit.path, block))
         for error in python_syntax_errors(raw)[:5]:
             python_parse_errors.append((audit.path, error))
+        for error in nested_code_tab_wrappers(raw):
+            nested_code_tabs.append((audit.path, error))
+        for header in running_header_artifacts(raw):
+            running_headers.append((audit.path, header))
         for href in audit.links:
             target = local_target(audit.path, href)
             if target is None:
@@ -254,6 +281,8 @@ def main() -> int:
         "r_code_blocks": sum(raw.count("language-r") for raw in raw_pages),
         "python_r_residue_blocks": len(python_r_residue),
         "python_syntax_errors": len(python_parse_errors),
+        "nested_code_tab_wrappers": len(nested_code_tabs),
+        "running_header_artifacts": len(running_headers),
         "missing_local_links": len(missing_links),
         "missing_local_anchors": len(missing_anchors),
         "missing_local_images": len(missing_images),
@@ -272,6 +301,8 @@ def main() -> int:
             symbol_artifacts,
             python_r_residue,
             python_parse_errors,
+            nested_code_tabs,
+            running_headers,
         ]
     )
     if hard_fail:
@@ -290,6 +321,8 @@ def main() -> int:
         ("Symbol artifact", symbol_artifacts[:10]),
         ("Python tab R residue", python_r_residue[:10]),
         ("Python syntax error", python_parse_errors[:10]),
+        ("Nested code tabs", nested_code_tabs[:10]),
+        ("Running header artifact", running_headers[:10]),
     ]:
         for path, value in items:
             print(f"  {label}: {path.relative_to(ROOT).as_posix()} -> {value}")
