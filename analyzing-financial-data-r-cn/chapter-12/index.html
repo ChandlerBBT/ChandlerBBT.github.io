@@ -1,0 +1,1831 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="第12章 交易策略 | 《使用 R 分析金融数据并实现金融模型》">
+  <title>第12章 交易策略 | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=163efa3dc728">
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <div class="sidebar-heading">
+    <h2>书籍目录</h2>
+    <div class="sidebar-actions" aria-label="二级目录控制">
+      <button type="button" data-sidebar-action="expand">全部展开</button>
+      <button type="button" data-sidebar-action="collapse">全部收起</button>
+    </div>
+  </div>
+  <nav class="sidebar-list"><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/">首页</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/dedication/">献辞</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/preface/">前言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/acknowledgments/">致谢</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-1/">第1章 价格</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-1" aria-label="展开第1章 价格二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-1" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-1">1.1 价格与价值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-2">1.2 从 Yahoo Finance 导入价格数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-3">1.3 检查数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-4">1.4 基本数据处理技巧</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-5">1.5 比较不同证券之间的资本利得</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-6">1.6 简单移动平均线和指数移动平均线</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-7">1.7 成交量加权平均价格（VWAP）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-8">1.8 绘制K线图</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-9">1.9 双轴价格与成交量图</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-10">1.10 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#references">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-2/">第2章 单个证券收益率</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-2" aria-label="展开第2章 单个证券收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-2" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-1">2.1 价格收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-2">2.2 总收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-3">2.3 对数总收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-4">2.4 缩尾处理与截尾处理</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-5">2.5 累积多日收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-6">2.6 周收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-7">2.7 月度收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-8">2.8 比较多种证券的表现</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-3/">第3章 投资组合收益率</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-3" aria-label="展开第3章 投资组合收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-3" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-1">3.1 投资组合收益率：长方法</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-2">3.2 使用矩阵代数的投资组合收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-3">3.3 构建基准投资组合收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-4">3.4 时间加权收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-5">3.5 资金加权收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-6">3.6 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#reference">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-4/">第4章 风险</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-4" aria-label="展开第4章 风险二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-4" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-1">4.1 风险-收益权衡</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-2">4.2 单个证券风险</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-3">4.3 投资组合风险</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-4">4.4 风险价值 (Value-at-Risk)</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-5">4.5 期望损失</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-6">4.6 替代风险度量</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-7">4.7 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#references-2">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-5/">第5章 因子模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-5" aria-label="展开第5章 因子模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-5" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-1">5.1 资本资产定价模型（CAPM）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-2">5.2 市场模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-3">5.3 滚动窗口回归</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-4">5.4 不同参考日的Beta</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-5">5.5 Fama–French 三因子模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-6">5.6 异方差性检验</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-7">5.7 检验非正态性</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-8">5.8 自相关检验</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-9">5.9 事件研究</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-10">5.10 选择最佳回归变量</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-11">5.11 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#references-3">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-6/">第6章 风险调整后的投资组合绩效度量</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-6" aria-label="展开第6章 风险调整后的投资组合绩效度量二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-6" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-1">6.1 投资组合与基准数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-2">6.2 夏普比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-3">6.3 Roy 的安全第一比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-4">6.4 特雷诺比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-5">6.5 索提诺比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-6">6.6 信息比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-7">6.7 合并结果</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-8">6.8 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#references-4">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-7/">第7章 Markowitz均值-方差优化</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-7" aria-label="展开第7章 Markowitz均值-方差优化二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-7" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-1">7.1 两个资产：手动方法</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-2">7.2 使用二次规划的两个资产情况</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-3">7.3 使用二次规划的多资产优化</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-4">7.4 允许卖空的影响</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-5">7.5 扩展阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#references-5">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-8/">第8章 股票</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-8" aria-label="展开第8章 股票二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-8" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-1">8.1 公司财务</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-2">8.2 预测（Projections）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-3">8.3 股权风险溢价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-4">8.4 去杠杆化 Beta</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-5">8.5 敏感性分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-6">8.6 使用回归分析的相对估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-7">8.7 识别股票收益率的显著变化</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-8">8.8 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#references-6">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-9/">第9章 固定收益</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-9" aria-label="展开第9章 固定收益二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-9" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-1">9.1 经济分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-2">9.2 美国国债</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-3">9.3 主成分分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-4">9.4 投资级债券利差</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-5">9.5 债券估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-6">9.6 久期与凸性</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-7">9.7 短期利率模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-8">9.8 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#references-7">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-10/">第10章 期权</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-10" aria-label="展开第10章 期权二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-10" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-1">10.1 获取期权链数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-2">10.2 Black–Scholes–Merton 期权定价模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-3">10.3 隐含波动率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-4">10.4 Cox, Ross, and Rubinstein 二叉树期权定价模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-5">10.5 美式期权定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-6">10.6 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#references-8">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-11/">第11章 模拟</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-11" aria-label="展开第11章 模拟二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-11" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-1">11.1 使用几何布朗运动模拟股票价格</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-2">11.2 模拟含股息和不含股息的股票价格</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-3">11.3 模拟具有相关价格的股票</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-4">11.4 使用模拟计算风险价值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-5">11.5 欧式期权的蒙特卡洛定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-6">11.6 使用对偶变量法的蒙特卡洛期权定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-7">11.7 奇异期权估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-8">11.8 扩展阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#references-9">参考文献</a></div></div><div class="sidebar-item is-current is-open"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-12/" aria-current="page">第12章 交易策略</a><button class="sidebar-toggle" type="button" aria-expanded="true" aria-controls="sidebar-sections-chapter-12" aria-label="收起第12章 交易策略二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-12"><a class="section-link" href="#section-12-1">12.1 有效市场假说</a><a class="section-link" href="#section-12-2">12.2 技术分析</a><a class="section-link" href="#section-12-3">12.3 构建简单交易策略</a><a class="section-link" href="#section-12-4">12.4 机器学习技术</a><a class="section-link" href="#section-12-5">12.5 延伸阅读</a><a class="section-link" href="#references-10">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-a/">附录A R入门</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-appendix-a" aria-label="展开附录A R入门二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-appendix-a" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-1-installing-r">A.1 安装 R</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-2-the-r-working-directory">A.2 R 工作目录</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-3-r-console-output">A.3 R 控制台输出</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-4-r-editor">A.4 R 编辑器</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-5-packages">A.5 包</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-6-basic-commands">A.6 基本命令</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-7-the-r-workspace">A.7 R 工作空间</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-8-vectors">A.8 向量</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-9-combining-vectors">A.9 组合向量</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-10-matrices">A.10 矩阵</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-11-data-frame">A.11 data.frame</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-12-date-formats">A.12 日期格式</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-b/">附录B 预加载代码</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-c/">附录C 构建假设投资组合（月度收益率）</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-d/">附录D 构建假设投资组合（日收益率）</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/index/">索引</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <h1>第12章 交易策略</h1>
+<section class="book-page" data-pdf-page="403">
+  <h1 id="chapter-12">第12章 交易策略</h1>
+<p>本章的目标是讨论与交易策略相关的一些基本概念。交易策略和构建交易系统都是非常复杂和深奥的课题。整本书甚至多卷书都致力于这些主题。因此，我们不打算在单独一章中提供交易策略的全面讨论。此外，本章的讨论并非旨在通过示例或模型实施来赚钱。如果我知道这样一个有利可图的交易策略，我会在写这本书之前首先利用它，直到无法再从中获利。设定了这些期望之后，我们现在可以开始讨论交易策略。</p>
+<p>我们从第12.1节讨论有效市场假说（EMH）开始。这有助于理解许多主动投资者面临的障碍。EMH的基本含义是：开发一个能持续产生正风险调整利润的交易策略极其困难。我们最后讨论EMH的三个常见检验：自相关、方差比和游程检验。</p>
+<p>在第12.2节中，我们讨论技术指标。交易策略的盈利能力最终取决于能否把握买入和卖出的时机。一些投资者使用技术指标来指示何时应该买入或卖出证券。接下来，我们在第12.3节中展示如何利用简单移动平均信号构建基本交易策略。</p>
+<p>最后，我们在第12.4节中探讨一些基础机器学习技术。我们对机器学习进行高层次讨论，并具体展示三种技术的实施：k近邻、交叉验证回归和人工神经网络。</p>
+</section>
+<section class="book-page" data-pdf-page="404">
+<h2 id="section-12-1">12.1 有效市场假说</h2>
+<p>有效市场假说（EMH）的一个相关含义是，开发一种持续盈利的交易策略非常困难。EMH 认为市场价格充分反映了所有可用信息，价格应该是不可预测的。需要明确的是，EMH 并不意味着价格永远不可预测，或者我们无法开发出盈利的交易策略。EMH 的含义是，任何可预测性都会很快被交易者竞争消失，任何可操作的错误定价也会消失。术语“可操作的”表明，可能仍然存在一些错误定价，但消除这些错误定价的交易成本（例如，佣金和/或买卖价差）将超过利用错误定价所获得的利润。在实践中，几乎所有有利可图的错误定价机会都不会到达零售投资者（即个人投资者）手中，因为这种错误定价会被高频交易者和大型机构投资者迅速竞争消失。</p>
+<p>在学术文献中，EMH 通常以三种形式描述，其区别在于价格所反映的信息集包含哪些内容。首先，EMH 的弱式表明，历史价格的信息已充分反映在市场价格中。这意味着我们不应能够基于过去市场价格（例如，过去价格的模式）的交易策略持续获得风险调整后的利润。在第12.2节中，我们将讨论技术分析，即利用过去价格模式来获利的交易策略。因此，如果 EMH 的弱式成立，那么技术分析不应持续带来风险调整后的利润。</p>
+<p>其次，EMH 的半强式表明，公开信息（如历史价格、分析师报告、公司文件和新闻）已充分反映在市场价格中。这意味着，如果 EMH 的半强式成立，那么基于基本面（例如，低市盈率与高市盈率股票、低市净率与高市净率股票、利润表指标、资产负债表指标、贴现现金流等）的交易策略不应带来持续的风险调整后利润。</p>
+<p>最后，EMH 的强式表明，所有信息都已充分反映在市场价格中。这意味着我们不应能够基于私人和公开信息的交易策略持续获得风险调整后的利润。因此，如果 EMH 的强式成立，那么内部人（例如，公司董事和高管）不应能够利用他们对公司前景的私人知识获利。</p>
+<p>在像美国这样的发达金融市场中，实证证据通常与 EMH 的半强式一致。这意味着利用历史价格或公开可用信息持续获得风险调整后的利润非常困难。</p>
+<p>如果我们相信实证证据表明开发一种持续盈利的交易策略非常困难，我们可能会想知道我们在媒体上经常听到的某些投资者是如何战胜市场的。这样的结果似乎违反了 EMH。一种思考方式如下：首先，</p>
+</section>
+<section class="book-page" data-pdf-page="405">
+<h3 id="efficient-markets-hypothesis-12-1">12.1 有效市场假说</h3>
+<p>我们只有在这些成功的投资者进行了极其盈利的交易或连续多年盈利交易之后，才知道他们的身份。为了从这些投资者所创造的惊人收益中获益，我们必须在他们赚钱之前识别出他们。我们也很少听到另一方面，即那些损失巨额资金的投资者。</p>
+<p>其次，过去的成功并不代表未来的成功。因此，如果我们因为某只基金连续10年超越市场而投资它，我们并不能保证该基金在第11年也会超越市场。</p>
+<p>第三，尽管连续10年超越市场的情况很少见，但这种结果无法与仅仅是运气好区分开来。为了理解为什么如此，让我们通过一个简化版的无限猴子定理（infinite monkey theorem）进行说明。该定理指出，如果你给无限数量的猴子每人一台打字机，其中至少有一只猴子能够写出威廉·莎士比亚（William Shakespeare）的全部著作。在我们的简化版本中，我们假设市场中有10,000名基金经理，并模拟每位基金经理的10年年度收益率。我们使用<code>runif()</code>生成均匀随机变量来模拟年度收益率。R中的默认均匀随机数生成器生成介于0和1之间的数字，均值为0.5。我们还通过<code>mean()</code>验证了我们生成的所有100,000个随机数的均值。这些随机生成的每个数字将代表相对于市场收益率的标准化年度收益率，其中0.5等于市场收益率。</p>
+<div class="r-code-block" id="1">
+  <pre><code class="language-r">1 &gt; set.seed(1)
+2 &gt; mgr.ret&lt;− matrix(runif(100000),
+3 + nrow = 10000, ncol = 10, byrow = TRUE)
+4 &gt; options(digits = 2)
+5 &gt; head.tail(mgr.ret)
+6 [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]
+7 [1,] 0.27 0.37 0.57 0.91 0.20 0.90 0.945 0.66 0.63 0.062
+8 [2,] 0.21 0.18 0.69 0.38 0.77 0.50 0.718 0.99 0.38 0.777
+9 [3,] 0.93 0.21 0.65 0.13 0.27 0.39 0.013 0.38 0.87 0.340
+10 [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]
+11 [9998,] 0.236 0.99 0.33 0.44 0.14 0.035 0.017 0.75 0.333 0.69
+12 [9999,] 0.051 0.52 0.90 0.18 0.39 0.158 0.597 0.64 0.302 0.12
+13 [10000,] 0.443 0.76 0.14 0.40 0.39 0.031 0.225 0.98 0.092 0.12
+14 &gt; options(digits = 7)
+15 &gt; mean(mgr.ret)
+16 [1] 0.4996247</code></pre>
+</div>
+<p>现在，假设如果基金经理每年产生的数值大于0.5，则认为他们超越了市场。然后我们可以使用<code>ifelse()</code>来识别哪些数值大于0.5。我们将这些情况记为1，否则记为0。</p>
+<div class="r-code-block" id="2">
+  <pre><code class="language-r">1 &gt; beat &lt;− ifelse(mgr.ret &gt; 0.5, 1, 0)
+2 &gt; beat &lt;− data.frame(beat)
+3 &gt; head.tail(beat)
+4 X1 X2 X3 X4 X5 X6 X7 X8 X9 X10
+5 1001101111 0
+6 2001010110 1</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="406">
+<p>394 第12章 交易策略</p>
+<p>7 3101000001 0<br />8 X1 X2 X3 X4 X5 X6 X7 X8 X9 X10<br />9 9998 0 1 0 0 0 0 0 1 0 1<br />10 9999 0 1 1 0 0 0 1 1 0 0<br />11 10000 0 1 0 0 0 0 0 1 0 0</p>
+<p>这样我们就可以对每一行中的1进行求和。我们使用<code>rowSums()</code>来实现这一点。这让我们能够统计某位基金经理在多少年中战胜了市场。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">beat$tot &lt;- rowSums(beat)
+head.tail(beat)</code></pre>
+</div>
+<p>3 X1 X2 X3 X4 X5 X6 X7 X8 X9 X10 tot<br />4 1001 1 0 1 1 1 1 1 0 6<br />5 2001 0 1 0 1 1 0 1 1 0 5<br />6 3101 0 0 0 0 0 1 0 0 3<br />7 X1 X2 X3 X4 X5 X6 X7 X8 X9 X10 tot<br />8 9998 0 1 0 0 0 0 0 1 0 1 3<br />9 9999 0 1 1 0 0 0 1 1 0 0 4<br />10 10000 0 1 0 0 0 0 0 1 0 0 2</p>
+<p>接下来，我们统计列<code>tot</code>中出现10的次数。我们使用<code>sum()</code>来实现。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">sum(beat$tot == 10)</code></pre>
+</div>
+<div class="r-code-block" id="post-r-c7da711db235">
+  <pre><code class="language-r">[1] 9</code></pre>
+</div>
+<p>如上所示，仅凭随机运气，在10,000名基金经理中就有9名连续10年战胜了市场。这相当于0.09%，所以连续10年战胜市场的概率非常低，以至于当这一成就实现时，它就具有新闻价值。当然，我们的投资组合并不关心基金经理是因为技能还是运气而连续10年战胜市场。我们投资组合价值的增长仍然是真实的，并且出售基金投资获得的收益将产生我们可以实际使用的真金白银。</p>
+<p>尽管如此，市场反映了所有投资者的平均表现。这意味着有一半的投资者战胜了市场，而另一半则没有。此外，由于被动投资者投资于指数基金，这些基金的费用较低，他们的表现将与市场一致。这意味着，总体而言，所有主动投资者也必须表现得与市场一致。然而，由于主动投资较高的费用结构，主动投资的净收益率将低于市场收益率。这并不意味着应该只有被动投资者。如果每个投资者都相信市场价格是正确的，那么就不会有交易发生，那些错误定价将持续存在，并使市场价格变得不那么有效。因此，为了使市场有效，我们需要投资者将资金投入市场进行博弈，平均而言，一半赢，一半输。</p>
+<p>有几个测试表明或支持市场有效性。下面，我们进行三个测试，以帮助确定证券价格是否表现出收益率可预测性。</p>
+</section>
+<section class="book-page" data-pdf-page="407">
+<h2>12.1 有效市场假说</h2>
+<h3>12.1.1 自相关检验</h3>
+<p>如果在因子模型的残差中存在模式，则意味着我们或许能够通过识别这种模式来获利，从而有效市场假说不成立。形式上，回归误差项中的模式称为自相关。在下面的例子中，我们使用德宾-沃森检验，对AMZN在2015年至2019年间的市场模型残差进行自相关检验。</p>
+<p><strong>步骤1：导入数据</strong> 我们首先使用 <code>load.data()</code> 导入 AMZN 和 SPY 的价格数据。然后，使用 <code>ROC()</code> 基于调整收盘价计算对数收益率。<code>ROC()</code> 与 <code>diff(log())</code> 的结果相同。接着，我们通过剔除第一个观测值（2014年12月31日）来清理数据。最后，使用 <code>data.frame()</code> 创建一个包含这两个收益率的合并数据集。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; data.amzn&lt;− load.data(&quot;AMZN Yahoo.csv&quot;, &quot;AMZN&quot;)
+2 &gt; r.amzn&lt;− ROC(data.amzn$AMZN.Adjusted)
+3 &gt; r.amzn&lt;− r.amzn[−1, ]
+4 &gt; head.tail(r.amzn)
+5 AMZN.Adjusted
+6 2015−01−02 −0.005914077
+7 2015−01−05 −0.020730670
+8 2015−01−06 −0.023098010
+9 AMZN.Adjusted
+10 2019−12−27 0.0005510283
+11 2019−12−30−0.0123283480
+12 2019−12−31 0.0005142195
+13 &gt;
+14 &gt; data.spy&lt;− load.data(&quot;SPY Yahoo.csv&quot;, &quot;SPY&quot;)
+15 &gt; r.spy &lt;− ROC(data.spy$SPY.Adjusted)
+16 &gt; r.spy &lt;− r.spy[−1, ]
+17 &gt; head.tail(r.spy)
+18 SPY.Adjusted
+19 2015−01−02−0.0005354247
+20 2015−01−05−0.0182246098
+21 2015−01−06−0.0094636586
+22 SPY.Adjusted
+23 2019−12−27−0.0002478074
+24 2019−12−30−0.0055284735
+25 2019−12−31 0.0024263490
+26 &gt;
+27 &gt; returns&lt;− data.frame(r.amzn , r.spy)
+28 &gt; names(returns)&lt;− c(&quot;AMZN&quot;, &quot;MKT&quot;)
+29 &gt; head.tail(returns)
+30 AMZN MKT
+31 2015−01−02−0.005914077−0.0005354247
+32 2015−01−05−0.020730670−0.0182246098
+33 2015−01−06−0.023098010−0.0094636586
+34 AMZN MKT
+35 2019−12−27 0.0005510283−0.0002478074
+36 2019−12−30−0.0123283480−0.0055284735
+37 2019−12−31 0.0005142195 0.0024263490</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="408">
+  <p>396 第12章 交易策略</p>
+<h3>步骤2：运行Durbin–Watson检验</h3>
+<p>检验自相关常用Durbin–Watson（DW）检验。DW检验分析市场模型回归的残差，以判断残差是否存在序列相关。如果残差序列相关，则表明给定t−1期的残差，t期的残差存在某种可预测性。执行此检验时，我们使用<code>lmtest</code>包中的<code>dwtest()</code>函数。<code>alternative</code>参数设为<code>"two.sided"</code>告知R：原假设为自相关为零，备择假设为自相关为正或负。如本例输出所示，DW统计量为1.91，p值为9.2%（第8行）。若使用5%显著性水平，上述结果表明我们不能拒绝无自相关的原假设。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; library(lmtest)
+&gt; dwtest(AMZN~ MKT, data = returns ,
++ alternative = &quot;two.sided&quot;)
+
+Durbin−Watson test
+
+data: AMZN ~ MKT
+DW = 1.9051, p−value = 0.0921
+alternative hypothesis: true autocorrelation is not 0</code></pre>
+</div>
+<h3>12.1.2 方差比检验</h3>
+<p>EMH的另一个检验是收益率的方差比在不同样本间是否相同。若EMH成立，则两个时期的方差比应不显著异于1（即不显著异于1）。</p>
+<p>该检验的依据如下。假设股票价格P服从以下随机游走过程：</p>
+  \[\ln P_{t+1} = \mu + \ln P_t + \epsilon_{t+1},\tag{12.1}\]
+  <p>其中\(\epsilon\)假设在t至t+1区间内独立同分布，服从\(N(0,\sigma^2)\)。该随机游走模型意味着：</p>
+  \[\operatorname{var}(r(1)) = \sigma^2, \quad \operatorname{var}(r(2)) = 2\sigma^2, \ldots, \operatorname{var}(r(n)) = n\sigma^2.\tag{12.2}\]
+  <p>因此，我们可以将上述推广为\(\operatorname{var}(r(n)) = n \times \operatorname{var}(r(1))\)。稍作代数变换得到：</p>
+  \[\frac{\operatorname{var}(r(n))/n}{\operatorname{var}(r(1))} = 1.\tag{12.3}\]
+</section>
+<section class="book-page" data-pdf-page="409">
+  <h2>12.1 有效市场假说</h2>
+<p>上式表明，n天的平均日方差应等于1天的方差。上述公式使我们能够经验性地检验这一关系。</p>
+<p><strong>步骤1：将数据分为两个时期</strong><br>
+  继续以 AMZN 为例，我们首先将 AMZN 收益率数据分为 2015 年至 2017 年（时期 A）和 2018 年至 2019 年（时期 B）。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; names(r.amzn)&lt;- &quot;AMZN&quot;
+&gt; rets.A&lt;- r.amzn[&quot;/2017-12-31&quot;]
+&gt; head.tail(rets.A)
+AMZN
+2015-01-02 -0.005914077
+2015-01-05 -0.020730670
+2015-01-06 -0.023098010
+AMZN
+2017-12-27 0.004662962
+2017-12-28 0.003242724
+2017-12-29 -0.014119964
+&gt; rets.B&lt;- r.amzn[&quot;2018-01-01/&quot;]
+&gt; head.tail(rets.B)
+AMZN
+2018-01-02 0.016570407
+2018-01-03 0.012694369
+2018-01-04 0.004466026
+AMZN
+2019-12-27 0.0005510283
+2019-12-30 -0.0123283480
+2019-12-31 0.0005142195</code></pre>
+</div>
+<p><strong>步骤2：计算时期 A 和时期 B 的方差</strong><br>
+  我们使用 <code>var()</code> 计算 AMZN 收益率的方差。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; (var.A&lt;- var(rets.A))
+AMZN
+AMZN 0.0003136365
+&gt; (var.B&lt;- var(rets.B))
+AMZN
+AMZN 0.0003624759</code></pre>
+</div>
+<p><strong>步骤3：计算时期 A 数据和时期 B 数据的自由度</strong><br>
+  由于我们估计一个参数，因此损失一个自由度。因此，这种情况下的自由度等于观测值数量减一，即 n - 1。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">&gt; ( d f . A&lt;- length(rets.A)- 1)
+[1] 754
+&gt; ( d f . B&lt;- length(rets.B)- 1)
+[1] 502</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="410">
+  <p>398 第12章 交易策略</p>
+<p>步骤4：计算方差比</p>
+<p>方差比通过将较大的方差除以较小的方差来计算。在此例中，我们将时期B的方差除以时期A的方差。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; (var.ratio&lt;− var.B/ var.A)
+2 AMZN
+3 AMZN 1.15572</code></pre>
+</div>
+<p>步骤4：计算方差比的 p 值</p>
+<p>我们使用以下代码计算 p 值。注意，方差较大的时期的自由度放在前面。结果显示 p 值为 7.4%。因此，如果显著性水平为 5%，则我们不能拒绝原假设，即两个时期的方差之比不为 1。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; (vr.pval&lt;− 2 ∗ (1 − pf(var.ratio , df.B, df.A)))
+2 AMZN
+3 AMZN0.07359709</code></pre>
+</div>
+<p>我们可以将上述结果与使用 <code>var.test()</code> 的结果进行比较。可以看到，使用 <code>var.test()</code> 得到的结果与我们上面计算的相同。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; var.test(rets.B, rets.A)
+3 F test to compare twovariances
+5 data: rets.B and rets.A
+6 F = 1.1557, num df = 502, denom df = 754, p−value = 0.0736
+7 alternative hypothesis:true ratio ofvariances is notequal to 1
+8 95 percent confidence interval:
+9 0.986292 1.357773
+10 sample estimates:
+11 AMZN
+12 AMZN 1.15572
+13 attr(,&quot;names&quot;)
+14 [1] &quot;ratioof variances&quot;</code></pre>
+</div>
+<h3>12.1.3 游程检验</h3>
+<p>检验股票收益率可预测性的另一种方法是考察收益率序列中是否存在游程。即，是否存在连续的正收益率或连续的负收益率的模式？游程的存在违反了收益率独立同分布（i.i.d.）的假设，意味着一定程度的收益率可预测性。</p>
+<p>步骤1：将收益率数据转换为因子。因子是分类变量，如 TRUE 或 FALSE。因此，我们将收益率转换为正收益率（TRUE）或负收益率（FALSE）（第1行）。然后我们可以使用 <code>factor()</code> 在第8行将其转换为因子。</p>
+</section>
+<section class="book-page" data-pdf-page="411">
+  <div class="r-code-block" id="code1">
+  <pre><code class="language-r">1 &gt; rets.factor&lt;− returns[, 1] &gt; 0
+2 &gt; head.tail(rets.factor)
+3 [1] FALSE FALSE FALSE
+4 [1] TRUE FALSE TRUE
+5 &gt; class(rets.factor)
+6 [1] &quot;logical&quot;
+7 &gt;
+8 &gt; rets.factor&lt;− factor(rets.factor)
+9 &gt; class(rets.factor)
+10 [1] &quot;factor&quot;</code></pre>
+</div>
+<p>步骤2：使用<code>tseries</code>包中的<code>runs.test()</code>对<code>rets.factor</code>执行游程检验。游程检验的原假设是收益率独立同分布（i.i.d.）。如下面的输出所示，我们游程检验的p值为36%，这意味着我们无法拒绝收益率是i.i.d.的原假设。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">1 &gt; library(tseries)
+2 &gt; runs.test(rets.factor)
+4 Runs Test
+6 data: rets.factor
+7 Standard Normal =−0.91595, p−value = 0.3597
+8 alternative hypothesis:two.sided</code></pre>
+</div>
+<h2 id="section-12-2">12.2 技术分析</h2>
+<p>技术分析是利用图表研究股票价格和成交量数据以预测未来趋势的方法。遵循技术分析的人将股票价格和成交量数据视为股票供需的指示。例如，股价上涨可能表明需求超过供给，而股价下跌可能表明供给超过需求。作为一种交易策略，从技术分析中获利依赖于识别趋势的能力以及在趋势早期阶段介入的能力。此外，相同的技术指标可能被不同的图表分析师根据其投资理念（例如，趋势跟随者或反向投资者）作出不同解释。</p>
+<p>技术指标大致可分为三类：（1）趋势指标，（2）波动性指标，（3）动量指标。每组内都有许多可供选择的技术指标。在本章中，我们对每种类型各举一个例子，从简单移动平均交叉（趋势）、布林带（波动性）和相对强弱指标（动量）开始。注意，上述例子以及更多技术指标都可以使用<code>chartSeries()</code>实现，我们之前用它创建了OHLC图。在构建交易策略时，通常将多个指标结合使用。例如，我们可以使用相对强弱指标来</p>
+</section>
+<section class="book-page" data-pdf-page="412">
+<p>确认通过简单移动平均线识别的信号。因此，我们可以将这些示例视为构建更复杂策略的基石。</p>
+<h3>12.2.1 趋势：简单移动平均线交叉</h3>
+<p>一个常见的技术分析趋势指标是简单移动平均线（SMA）交叉。在SMA中，移动平均线通过计算公司股票价格在特定天数内的平均值得到。“简单”一词源于这种平均对所有天数同等对待，无论这些天距离现在远近。之所以称为SMA“交叉”，是因为我们将使用两条SMA线，一个短期平均和一个长期平均，并在线交叉时做出交易决策。</p>
+<p>在我们的示例中，我们将使用50天（200天）的平均值作为短期（长期）平均。由于我们对当前决策感兴趣，极长的时间序列数据可能不是必需的。因此，我们将演示如何实现AMZN从2018年到2019年的SMA交叉。</p>
+<h4>步骤1：获取AMZN的收盘价</h4>
+<p>我们使用<code>load.data()</code>函数从Yahoo Finance导入AMZN数据。然后</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">data.amzn &lt;- load.data(&quot;AMZN Yahoo.csv&quot;, &quot;AMZN&quot;)
+sma &lt;- data.amzn$AMZN.Close
+head.tail(sma)
+# Output:
+# AMZN.Close
+# 2014-12-31 310.35
+# 2015-01-02 308.52
+# 2015-01-05 302.19
+# AMZN.Close
+# 2019-12-27 1869.80
+# 2019-12-30 1846.89
+# 2019-12-31 1847.84</code></pre>
+</div>
+<h4>步骤2：计算滚动50天和200天平均价格</h4>
+<p>要计算滚动或移动平均线，我们使用<code>rollmeanr()</code>，并选择窗口长度为<code>k=50</code>（50天移动平均线）和<code>k=200</code>（200天移动平均线）。注意，下面的<code>sma50</code>和<code>sma200</code>下的前三个观测值是NA，因为R分别从第50个和第200个观测值开始报告数据。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">sma$sma50 &lt;- rollmeanr(sma$AMZN.Close, k = 50)
+sma$sma200 &lt;- rollmeanr(sma$AMZN.Close, k = 200)
+head.tail(sma)
+# Output:
+# AMZN.Close sma50 sma200
+# 2014-12-31 310.35 NA NA
+# 2015-01-02 308.52 NA NA
+# 2015-01-05 302.19 NA NA
+# AMZN.Close sma50 sma200
+# 2019-12-27 1869.80 1775.790 1825.658
+# 2019-12-30 1846.89 1776.978 1826.331</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="413">
+  <h2>12.2 技术分析</h2>
+<p>步骤 2：计算简单移动平均线。以下输出展示了部分结果：</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">sma[48:52, ]</code></pre>
+</div>
+<pre>
+AMZN.Close sma50 sma200
+2015-03-11 366.37 NA NA
+2015-03-12 374.24 NA NA
+2015-03-13 370.58 345.6926 NA
+2015-03-16 373.35 346.9526 NA
+2015-03-17 371.92 348.2206 NA
+  </pre>
+<pre>
+AMZN.Close sma50 sma200
+2015-10-13 548.90 522.8242 NA
+2015-10-14 544.83 523.0828 NA
+2015-10-15 562.44 523.5914 432.0543
+2015-10-16 570.76 524.4174 433.3563
+2015-10-19 573.15 525.4280 434.6795
+  </pre>
+<p><strong>步骤 3：取 2018 和 2019 年数据子集</strong>。我们使用 xts 风格的日期子集，取 2018 年 1 月 1 日至 2019 年 12 月 31 日的数据。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">sma &lt;- sma[&quot;2018-01-01/2019-12-31&quot;]
+head.tail(sma)</code></pre>
+</div>
+<pre>
+AMZN.Close sma50 sma200
+2018-01-02 1189.01 1133.787 1005.517
+2018-01-03 1204.20 1138.213 1007.253
+2018-01-04 1209.59 1143.078 1009.085
+AMZN.Close sma50 sma200
+2019-12-27 1869.80 1775.790 1825.658
+2019-12-30 1846.89 1776.978 1826.331
+2019-12-31 1847.84 1778.784 1826.859
+  </pre>
+<p><strong>步骤 4：绘制简单移动平均线</strong>。为了确保 y 轴具有完整范围，我们使用 <code>range</code> 查找 <code>sma</code> 中的最小值和最大值。图表输出如图 12.1 所示。当 50 天移动平均线向上穿越 200 天移动平均线时，称为看涨交叉（bullish crossover）。此时，一些交易者可能将其视为买入股票的信号。反之，当 50 天移动平均线向下穿越 200 天移动平均线时，称为看跌交叉（bearish crossover）。此时，一些交易者可能将其视为卖出股票的信号。</p>
+<div class="r-code-block" id="code3">
+  <pre><code class="language-r">(y.range &lt;- range(sma))
+plot(y = sma$AMZN.Close,
+     x = index(sma),
+     xlab = &quot;&quot;,
+     ylab = &quot;Price / Moving Average&quot;,
+     type = &quot;l&quot;,
+     lwd = 2,
+     col = &quot;blue&quot;,
+     ylim = y.range,
+     main = &quot;AMZN Simple Moving Average&quot;)</code></pre>
+</div>
+
+</section>
+<section class="book-page" data-pdf-page="414">
+
+<figure class="book-figure" id="fig-12.1"><img src="/assets/img/analyzing-financial-data-r-cn/figure-ae9b026492df.png" alt="图12.1 AMZN的50日和200日简单移动平均线，2018–2019。">
+<figcaption>图12.1 AMZN的50日和200日简单移动平均线，2018–2019。数据来源：价格数据经CSI ©2020许可转载。www.csidata.com</figcaption>
+</figure>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">12 &gt; lines(y = sma$sma50 , x =index(sma), col = &quot;red&quot;)
+13 &gt; lines(y = sma$sma200 , x =index(sma), col = &quot;darkgreen&quot;)
+14 &gt; legend(&quot;bottomright&quot;,
+15 + c(&quot;AMZN Price&quot;, &quot;50D Moving Avg.&quot;, &quot;200D Moving Avg.&quot;),
+16 + lty = 1,
+17 + col = c(&quot;blue&quot;, &quot;red&quot;, &quot; darkgreen&quot;))</code></pre>
+</div>
+<h3>12.2.2 波动率：布林带</h3>
+<p>布林带是一种常用的波动率指标。布林带由三个部分组成。第一个部分是20日简单移动平均线（SMA）。第二个部分是上轨，位于20日SMA上方两个标准差处。第三个部分是下轨，位于20日SMA下方两个标准差处。布林带之所以被视为波动率指标，是因为当股票波动性增大（减小）时，布林带会变宽（变窄）。当</p>
+</section>
+<section class="book-page" data-pdf-page="415">
+<h3>12.2 技术分析</h3>
+<p>当布林带变窄时，可作为波动率即将上升的迹象。</p>
+<p>下面我们演示如何在2019年的AMZN股票上应用布林带。</p>
+<p><strong>步骤1：获取AMZN股票的收盘价</strong> 我们创建一个新数据集 <code>bb</code>，从 <code>data.amzn</code> 数据集中提取AMZN收盘价。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt;b b &lt;− data.amzn$AMZN.Close
+2 &gt; head.tail(bb)
+3 AMZN.Close
+4 2014−12−31 310.35
+5 2015−01−02 308.52
+6 2015−01−05 302.19
+7 AMZN.Close
+8 2019−12−27 1869.80
+9 2019−12−30 1846.89
+10 2019−12−31 1847.84</code></pre>
+</div>
+<p><strong>步骤2：计算滚动20天均值和标准差</strong> 类似于SMA的计算，我们使用 <code>rollmeanr()</code> 并设置 <code>k=20</code> 计算20日移动平均。对于标准差，我们使用 <code>rollapply()</code>，它允许我们在滚动基础上应用函数。这里，<code>FUN = sd</code> 告诉R我们要应用的函数是标准差函数，<code>width = 20</code> 告诉R我们要计算20日标准差。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt;b b$avg &lt;− rollmeanr(bb$AMZN.Close , k = 20)
+2 &gt;b b$sd &lt;− rollapply(bb$AMZN.Close ,width = 20, FUN = sd, fill = NA)
+3 &gt; head.tail(bb)
+4 AMZN.Close avg sd
+5 2014−12−31 310.35 NA NA
+6 2015−01−02 308.52 NA NA
+7 2015−01−05 302.19 NA NA
+8 AMZN.Close avg sd
+9 2019−12−27 1869.80 1780.365 35.71382
+10 2019−12−30 1846.89 1782.669 38.48159
+11 2019−12−31 1847.84 1785.981 41.14320</code></pre>
+</div>
+<p>由于我们使用20日移动平均和滚动标准差，前19个观测值在均值和标准差列中将是NA。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; bb[18:22, ]
+2 AMZN.Close avg sd
+3 2015−01−27 306.75 NA NA
+4 2015−01−28 303.91 NA NA
+5 2015−01−29 311.78 300.5385 8.232959
+6 2015−01−30 354.53 302.7475 14.525972
+7 2015−02−02 364.47 305.5450 20.037988</code></pre>
+</div>
+<p><strong>步骤3：子集到2019年数据</strong> 我们使用xts风格的日期子集将数据仅保留2019年的数据。</p>
+<div class="r-code-block" id="code-4">
+  <pre><code class="language-r">1 &gt;b b &lt;− bb[&quot;2019−01−01/2019−12−31&quot;]
+2 &gt; head.tail(bb)</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="416">
+<h2>12 交易策略</h2>
+<p><strong>步骤4：计算布林带</strong> 我们计算两倍标准差范围内的带。以 2019 年 1 月 2 日为例，这意味着上布林带等于 \(1783.04 (= 1558.43 + (2 \times 112.31))\)，下布林带等于 \(1333.81 (= 1558.43 - (2 \times 112.31))\)。请注意，上轨和下轨的区别在于我们是在均值项 \(2 \times bb\$sd\) 上加还是减。</p>
+<div class="r-code-block" id="bb-bands">
+  <pre><code class="language-r">1 &gt;b b$sd2up&lt;− bb$avg + 2 ∗ bb$sd
+2 &gt;b b$sd2down&lt;− bb$avg− 2 ∗ bb$sd
+3 &gt; head.tail(bb)
+4 AMZN.Close avg sd sd2up sd2down
+5 2019−01−02 1539.13 1558.427 112.30781 1783.043 1333.812
+6 2019−01−03 1500.28 1544.823 100.93262 1746.689 1342.958
+7 2019−01−04 1575.39 1540.173 97.00545 1734.184 1346.162
+8 AMZN.Close avg sd sd2up sd2down
+9 2019−12−27 1869.80 1780.365 35.71382 1851.793 1708.937
+10 2019−12−30 1846.89 1782.669 38.48159 1859.633 1705.706
+11 2019−12−31 1847.84 1785.981 41.14320 1868.268 1703.695</code></pre>
+</div>
+<p><strong>步骤5：绘制布林带</strong> 与绘制多条线通常的做法一样，我们需要确定 Y 轴的可能值范围。创建一个包含四条线条的图表。首先绘制 AMZN 收盘价。然后为 20 日移动平均线绘制一条虚线。接着，为上轨和下轨绘制两条实线。</p>
+<div class="r-code-block" id="bb-plot">
+  <pre><code class="language-r">1 &gt; (y.range&lt;− range(bb[, c(2, 4, 5)]))
+2 [1] 1333.812 2101.166
+3 &gt; plot(y = bb$AMZN.Close ,
+4 + x = index(bb),
+5 + xlab = &quot;&quot;,
+6 + ylab = &quot;&quot;,
+7 + type = &quot;l&quot;,
+8 + lwd = 2,
+9 + col = &quot;blue&quot;,
+10 + ylim = y.range ,
+11 + main = &quot;AMZN BollingerBands , 2019&quot;)
+12 &gt; lines(y = bb$avg, x = index(bb))
+13 &gt; lines(y = bb$sd2up , x =index(bb), col = &quot;red&quot;)
+14 &gt; lines(y = bb$sd2down , x = index(bb), col = &quot;darkgreen&quot;)
+15 &gt; legend(&quot;bottomright&quot;,
+16 + c(&quot;AMZN Price&quot;, &quot;20D Moving Avg.&quot;,
+17 + &quot;Upper Band&quot;, &quot;Lower Band&quot;),
+18 + lty = 1,</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="417">
+  <h2>12.2 技术分析</h2>
+<p>图12.2展示了相应的图形。假设正态分布，均值两侧的两个标准差应覆盖绝大多数数据。如图所示，2019年AMZN的大多数收盘价都落在布林带内。对于趋势跟踪者而言，当AMZN股价在2019年5月、7月和10月左右触及上轨时，这可能被视为股票"超买"的迹象。相反，当AMZN股价在2019年6月初和8月左右触及下轨时，这可能被视为股票"超卖"的迹象。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">19 + cex = 0.75,
+20 + col = c(&quot;blue&quot;, &quot;black&quot;, &quot;red&quot;, &quot; darkgreen&quot;))</code></pre>
+</div>
+<figure class="book-figure" id="fig-12.2"><img src="/assets/img/analyzing-financial-data-r-cn/figure-343f5a489a01.png" alt="图12.2 AMZN股价与布林带，2019年">
+    <figcaption>图12.2 AMZN股价与布林带，2019年。数据来源：价格数据经CSI许可转载©2020。www.csidata.com</figcaption>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="418">
+<h3 id="momentum-relative-strength-index">12.2.3 动量：相对强弱指数（Relative Strength Index, RSI）</h3>
+<p>一个常用的技术分析动量指标是相对强弱指数（RSI）。典型的计算使用14天周期。RSI的计算公式为</p>
+\[ RSI = 100 - \frac{100}{1 + RS}, \qquad (12.4) \]
+<p>其中 \( RS \) 等于上涨平均值除以下跌平均值，平均值使用下面描述的怀尔德指数移动平均（Wilder Exponential Moving Average）计算。</p>
+<p>RSI 与超买线（overbought line）和超卖线（oversold line）结合使用。超买线通常设定在70的水平，超卖线通常设定在30的水平。当RSI从超卖线下方上升并穿过超卖线时，产生买入信号。相反，当RSI从超买线上方下降并穿过超买线时，产生卖出信号。下面我们演示如何计算亚马逊公司（Amazon.com）在2018–2019期间的RSI。</p>
+<h4>步骤1：获取AMZN收盘价差异</h4>
+<p>我们将AMZN收盘价保存到一个名为<code>rsi</code>的新数据集中。然后使用<code>diff()</code>计算当日收盘价与前一交易日收盘价的差异。我们将这个变量命名为<code>delta</code>。</p>
+<div class="r-code-block" id="r1">
+  <pre><code class="language-r">1 &gt; rsi &lt;- data.amzn$AMZN.Close
+2 &gt; head.tail(rsi)
+3 AMZN.Close
+4 2014-12-31 310.35
+5 2015-01-02 308.52
+6 2015-01-05 302.19
+7 AMZN.Close
+8 2019-12-27 1869.80
+9 2019-12-30 1846.89
+10 2019-12-31 1847.84
+11 &gt;
+12 &gt; rsi$delta&lt;- diff(rsi$AMZN.Close)
+13 &gt; head.tail(rsi)
+14 AMZN.Close delta
+15 2014-12-31 310.35 NA
+16 2015-01-02 308.52 -1.830017
+17 2015-01-05 302.19 -6.329987
+18 AMZN.Close delta
+19 2019-12-27 1869.80 1.030029
+20 2019-12-30 1846.89 -22.910034
+21 2019-12-31 1847.84 0.949951</code></pre>
+</div>
+<h4>步骤2：创建虚拟变量以指示价格上涨或下跌</h4>
+<p>使用<code>ifelse()</code>，我们创建两个虚拟变量：一个用于标识AMZN价格较前一日上涨的时刻，另一个用于标识AMZN价格较前一日下跌的时刻。</p>
+</section>
+<section class="book-page" data-pdf-page="419">
+  <h2>12.2 技术分析</h2>
+<p><strong>步骤 2：计算上涨和下跌日期的指示变量</strong></p>
+<p>要构建上涨日价格序列，我们创建一个虚拟变量 <code>up</code>，如果价格变动为正则取 1，否则取 0。类似地创建 <code>down</code>。使用 <code>head.tail()</code> 查看数据框的前几行和后几行。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; rsi$up &lt;- ifelse(rsi$delta &gt; 0, 1, 0)
+2 &gt; rsi$down&lt;- ifelse(rsi$delta &lt; 0, 1, 0)
+3 &gt; head.tail(rsi)
+4 AMZN.Close delta up down
+5 2014−12−31 310.35 NA NA NA
+6 2015−01−02 308.52 −1.830017 0 1
+7 2015−01−05 302.19 −6.329987 0 1
+8 AMZN.Close delta up down
+9 2019−12−27 1869.80 1.030029 1 0
+10 2019−12−30 1846.89 −22.910034 0 1
+11 2019−12−31 1847.84 0.949951 1 0</code></pre>
+</div>
+<p><strong>步骤 3：计算上涨日和下跌日的价格</strong></p>
+<p>为了构建上涨日的价格序列，我们将 AMZN 收盘价与上涨虚拟变量相乘。如果是上涨日，<code>up</code> 等于 1，因此 <code>up.val</code> 等于当天的 AMZN 收盘价。否则，<code>up.val</code> 等于 0。类似地计算 <code>down.val</code>。在第 3 行，我们清理 <code>rsi</code> 数据集：删除第一个观测值（2014 年 12 月 31 日），该观测仅用于计算 2015 年 1 月 2 日的价格差；同时删除 <code>up</code> 和 <code>down</code> 列。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; rsi$up.val&lt;- rsi$delta* rsi$up
+2 &gt; rsi$down.val&lt;-- rsi$delta* rsi$down
+3 &gt; rsi &lt;- rsi[-1,-3:-4]
+4 &gt; head.tail(rsi)
+5 AMZN.Close delta up.val down.val
+6 2015−01−02 308.52 −1.830017 0 1.830017
+7 2015−01−05 302.19 −6.329987 0 6.329987
+8 2015−01−06 295.29 −6.899993 0 6.899993
+9 AMZN.Close delta up.val down.val
+10 2019−12−27 1869.80 1.030029 1.030029 0.00000
+11 2019−12−30 1846.89 −22.9100340.000000 22.91003
+12 2019−12−31 1847.84 0.949951 0.949951 0.00000</code></pre>
+</div>
+<p><strong>步骤 4：计算初始的 14 天上涨和下跌均值</strong></p>
+<p>在此步骤中，我们对 <code>up.val</code> 和 <code>down.val</code> 使用 <code>rollapply()</code> 函数，其中 <code>FUN = mean</code>。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; rsi$up.avg1&lt;- rollapply(rsi$up.val ,
+2 + width = 14, FUN = mean ,fill = NA, na.rm = TRUE)
+3 &gt; rsi$down.avg1&lt;- rollapply(rsi$down.val,
+4 + width = 14, FUN = mean ,fill = NA, na.rm = TRUE)
+5 &gt; head.tail(rsi)
+6 AMZN.Close delta up.val down.val up.avg1 down.avg1
+7 2015−01−02 308.52 −1.830017 0 1.830017 NA NA
+8 2015−01−05 302.19 −6.329987 0 6.329987 NA NA
+9 2015−01−06 295.29 −6.899993 0 6.899993 NA NA
+10 AMZN.Close delta up.val down.val up.avg1 down.avg1
+11 2019−12−27 1869.80 1.030029 1.030029 0.00000 10.48501 2.042149
+12 2019−12−30 1846.89 −22.9100340.000000 22.91003 10.48501 3.529297
+13 2019−12−31 1847.84 0.949951 0.949951 0.00000 10.55287 2.793579</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="420">
+  <p>步骤5：计算Wilder指数移动平均以计算最终的14日向上和向下平均值。为简化计算，我们将<code>rsi</code>数据集中的<code>up.val</code>和<code>down.val</code>列提取为独立的向量。然后，我们计算向上值和向下值的Wilder指数移动平均。该平均计算假设前一天的初始平均值权重为13/14，当前平均值权重为1/14。我们对向上平均值和向下平均值应用相同的逻辑。在Wilder指数移动平均下计算的值分别报告在<code>up.avg</code>和<code>down.avg</code>向量中。</p>
+<div class="r-code-block" id="code-0">
+  <pre><code class="language-r">&gt; up.val&lt;- as.numeric(rsi$up.val)
+&gt; down.val&lt;- as.numeric(rsi$down.val)
+&gt;
+&gt; up.avg&lt;- rsi$up.avg1
+&gt; for (i in 15:nrow(up.avg)){
++ up.avg[i] &lt;- ((up.avg[i- 1] * 1 3+u p . v a l [ i ] )/ 14)
++}
+&gt; up.avg[12:18, ]
+up.avg1
+2015-01-20 NA
+2015-01-21 NA
+2015-01-22 2.369282
+2015-01-23 2.347905
+2015-01-26 2.180198
+2015-01-27 2.024470
+2015-01-28 1.879865
+&gt; tail(up.avg, 3)
+up.avg1
+2019-12-27 10.364727
+2019-12-30 9.624389
+2019-12-31 9.004786
+&gt;
+&gt; down.avg&lt;- rsi$down.avg1
+&gt; for (i in 15:nrow(rsi)){
++ down.avg[i] &lt;- ((down.avg[i-1] * 13 + down.val[i])/ 14)
++}
+&gt; down.avg[12:18, ]
+down.avg1
+2015-01-20 NA
+2015-01-21 NA
+2015-01-22 2.371425
+2015-01-23 2.202037
+2015-01-26 2.239750
+2015-01-27 2.287625
+2015-01-28 2.327080
+&gt; tail(up.avg, 3)
+up.avg1
+2019-12-27 10.364727
+2019-12-30 9.624389
+2019-12-31 9.004786
+&gt;
+&gt; down.avg&lt;- rsi$down.avg1
+&gt; for (i in 15:nrow(rsi)){
++ down.avg[i] &lt;- ((down.avg[i-1] * 13 + down.val[i])/ 14)
++}
+&gt; down.avg[12:18, ]
+down.avg1
+2015-01-20 NA
+2015-01-21 NA
+2015-01-22 2.371425
+2015-01-23 2.202037
+2015-01-26 2.239750
+2015-01-27 2.287625
+2015-01-28 2.327080
+&gt; tail(up.avg, 3)
+up.avg1
+2019-12-27 10.364727
+2019-12-30 9.624389
+2019-12-31 9.004786</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="421">
+  <p><strong>步骤6：计算RSI</strong> 在计算RSI之前，我们首先创建一个名为<code>final</code>的新数据集。创建<code>final</code>数据集时，我们移除所有NA值。我们通过组合<code>up.avg</code>和<code>down.avg</code>向量时使用<code>na.omit()</code>来实现。然后，我们将<code>rs</code>列的值计算为<code>up.avg</code>除以<code>down.avg</code>。接着，使用上述公式计算<code>rsi</code>。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; final &lt;- na.omit(cbind(up.avg, down.avg))
+&gt; names(final)&lt;- c(&quot;up.avg&quot;, &quot;down.avg&quot;)
+&gt; head.tail(final)
+  up.avg down.avg
+2015-01-22 2.369282 2.371425
+2015-01-23 2.347905 2.202037
+2015-01-26 2.180198 2.239750
+  up.avg down.avg
+2019-12-27 10.364727 3.937459
+2019-12-30 9.624389 5.292643
+2019-12-31 9.004786 4.914597
+&gt; final$rs &lt;- final$up.avg / final$down.avg
+&gt; final$rsi &lt;- 100 - (100 / (1 + final$rs))
+&gt; head.tail(final)
+  up.avg down.avg       rs      rsi
+2015-01-22 2.369282 2.371425 0.9990964 49.97740
+2015-01-23 2.347905 2.202037 1.0662423 51.60296
+2015-01-26 2.180198 2.239750 0.9734113 49.32633
+  up.avg down.avg       rs      rsi
+2019-12-27 10.364727 3.937459 2.632339 72.46953
+2019-12-30 9.624389 5.292643 1.818447 64.51946
+2019-12-31 9.004786 4.914597 1.832253 64.69242</code></pre>
+</div>
+<p><strong>步骤7：子集化为2018年和2019年数据</strong> 现在我们将数据只限于2018年和2019年的数据。我们还在数据中创建了两条水平线，以便在xts绘图时使用。这两条水平线对应RSI为30和70。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; final &lt;- final[&quot;2018-01-01/2019-12-31&quot;]
+&gt; final$hl1 &lt;- rep(30, nrow(final))
+&gt; final$hl2 &lt;- rep(70, nrow(final))
+&gt; head.tail(final)
+  up.avg down.avg       rs      rsi hl1 hl2
+2018-01-02 5.853617 3.833006 1.527161 60.42991  30  70
+2018-01-03 6.520497 3.559220 1.832002 64.68929  30  70
+2018-01-04 6.439749 3.304990 1.948493 66.08437  30  70
+  up.avg down.avg       rs      rsi hl1 hl2
+2019-12-27 10.364727 3.937459 2.632339 72.46953  30  70
+2019-12-30 9.624389 5.292643 1.818447 64.51946  30  70
+2019-12-31 9.004786 4.914597 1.832253 64.69242  30  70</code></pre>
+</div>
+<p><strong>步骤8：绘制RSI</strong> 我们使用<code>plot()</code>创建rsi的图表。然后，在第8行和第9行分别添加RSI为30和70的水平线。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">&gt; plot(y = final$rsi,
++      x = index(final),
++      xlab = &quot;&quot;,</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="422">
+  <h2>12 交易策略</h2>
+<div class="r-code-block" id="code-422-1">
+  <pre><code class="language-r">ylab = &quot; Relative StrengthIndex&quot;,
+type = &quot;l&quot;,
+col = &quot;blue&quot;,
+main = &quot; AMZNRelative StrengthIndex , 2018-2019&quot;)
+&gt; lines(y = final$hl1, x = index(final), col = &quot;red&quot;)
+&gt; lines(y = final$hl2, x = index(final), col = &quot;darkgreen&quot;)</code></pre>
+</div>
+<p>图12.3展示了上述代码的输出。如果RSI高于70并向下穿过70，一些交易者将此视为买入股票的信号。这种情况在2018年和2019年中出现了几次。另一方面，如果RSI低于30并向上穿过30，一些交易者将此视为卖出股票的信号。这种情况在2018年10月至12月以及2019年6月至8月期间出现了几次。</p>
+<figure class="book-figure" id="fig-12.3"><img src="/assets/img/analyzing-financial-data-r-cn/figure-c8b7d7079e84.png" alt="图12.3 AMZN股票价格与相对强弱指标，2018-2019年" />
+    <figcaption>图12.3 AMZN股票价格与相对强弱指标，2018-2019年。数据来源：价格数据经CSI ©2020许可转载。www.csidata.com</figcaption>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="423">
+  <h2 id="section-12-3">12.3 构建简单交易策略</h2>
+<p>之前描述的技术指标可用于构建交易策略。本节将展示如何构建一个简单的移动平均交易策略。该策略假设：（1）如果收盘价高于 n 日最高价的移动平均线，我们就在下一个交易日买入股票；（2）如果收盘价低于 n 日最低价的移动平均线，我们就在下一个交易日卖出。请注意，为了符合实际情况，我们的操作（即买入或卖出）是在观察到信号之后进行的。</p>
+<p>要实现此交易策略，我们需要计算两个移动平均：最高价的移动平均和最低价的移动平均。这里我们计算 200 日移动平均（n = 200）。我们首先将数据分为 2 年期间（2016–2017），在此期间观察策略是否有效，然后是一个不重叠的 2 年期间（2018–2019），在此期间执行我们的策略。</p>
+<p><strong>步骤 1：获取收益率数据</strong> 我们在 AMZN 数据上实现上述简单移动平均策略。请注意，在下面导入数据时，我们没有使用 AMZN 代码作为前缀，而是使用 Stock 作为前缀。这是为了使其余代码更具通用性，以便我们只需更改导入证券的数据文件名，即可查看该策略在其他证券上的效果。对于此策略，我们需要最高价（第 2 列）、最低价（第 3 列）、收盘价（第 4 列）和调整后收盘价（第 6 列）。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; stock &lt;− load.data(&quot;AMZN Yahoo.csv&quot;, &quot;Stock&quot;)[, c(2:4, 6)]
+2 &gt; rets &lt;− Delt(stock$Stock.Adjusted)
+3 &gt; names(rets)&lt;− &quot;rets&quot;
+4 &gt; head.tail(rets)
+5 rets
+6 2014−12−31 NA
+7 2015−01−02−0.005896623
+8 2015−01−05−0.020517267
+9 rets
+10 2019−12−27 0.0005511802
+11 2019−12−30−0.0122526652
+12 2019−12−31 0.0005143517</code></pre>
+</div>
+<p><strong>步骤 2：计算高低价的 200 日移动平均线</strong> 我们创建一个变量 X 来表示移动平均的天数。在本例中，我们将 X 设为 200。然后，我们对 Stock.High 和 Stock.Low 应用 rollmean()，参数 k = X。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt;X &lt;− 200
+2 &gt; buy &lt;− rollmeanr(stock$Stock.High,k=X )
+3 &gt; head.tail(buy)
+4 Stock.High
+5 2015−10−15 436.7552
+6 2015−10−16 438.0450
+7 2015−10−19 439.3663
+8 Stock.High
+9 2019−12−27 1838.550</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="424">
+<h2 id="chapter-12">第12章 交易策略</h2>
+<p><strong>步骤3：计算买入和卖出信号</strong> 我们使用<code>ifelse()</code>计算买入和卖出信号。我们让R查看前一个交易日的<code>Stock.Close</code>值。如果该收盘价高于前一天的SMA最高价，则当天产生买入信号。如果该收盘价低于前一天的SMA最低价，则当天产生卖出信号。买入信号为1，卖出信号为-1，原因将在后续步骤中明确。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; buy$buy.sig&lt;- ifelse(Lag(stock$Stock.Close , k = 1) &gt;
++ Lag(buy , k = 1), 1, 0)
+&gt; buy &lt;- buy[-1, ]
+&gt; head(subset(buy, buy.sig == 1), 3)
+   Stock.High buy.sig
+2015-10-16   438.0450      1
+2015-10-19   439.3663      1
+2015-10-20   440.6894      1
+&gt;
+&gt; sell$sell.sig&lt;- ifelse(Lag(stock$Stock.Close , k = 1) &lt;
++ Lag(sell , k = 1), -1, 0)
+&gt; sell &lt;- sell[-1, ]
+&gt; head(subset(sell ,sell.sig ==-1), 3)
+   Stock.Low sell.sig
+2016-02-08  531.2316      -1
+2016-02-09  531.4066      -1
+2016-02-10  531.6495      -1</code></pre>
+</div>
+<p><strong>步骤4：计算指示变量以确定投资组合收益率</strong> 根据上述信号买卖股票时，我们希望据此策略创建相应的投资组合收益率。为此，我们创建一个名为<code>sign</code>的列，该列将<code>buy.sig</code>和<code>sell.sig</code>列的值相加。由于买入和卖出信号不会在同一天发生，因此将两列的值相加将生成：买入信号时为1，卖出信号时为-1，无信号时为0。因此，我们需要用最后一个信号替换这些0（例如，如果最后一个信号是买入，则我们希望用继续持有股票来替换该信号）。为此，我们创建一个名为<code>cum</code>的列（“cumulative”的缩写），并使用一个<code>for</code>循环来实现我们的目标。</p>
+</section>
+<section class="book-page" data-pdf-page="425">
+<h2 id="section-12.3">12.3 构建一个简单的交易策略</h2>
+<p>接下来，我们创建买入和卖出信号：</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; signal&lt;- cbind(buy$buy.sig, sell$sell.sig)
+&gt; head.tail(signal)
+  buy.sig sell.sig
+2015-10-16       1        0
+2015-10-19       1        0
+2015-10-20       1        0
+  buy.sig sell.sig
+2019-12-27       1        0
+2019-12-30       1        0
+2019-12-31       1        0</code></pre>
+</div>
+<p>然后，我们将信号合并为一个变量 <code>sign</code>，其中 1 表示买入，-1 表示卖出，0 表示无信号：</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; signal$sign&lt;- signal$buy.sig + signal$sell.sig
+&gt; head.tail(signal)
+  buy.sig sell.sig sign
+2015-10-16       1        0    1
+2015-10-19       1        0    1
+2015-10-20       1        0    1
+  buy.sig sell.sig sign
+2019-12-27       1        0    1
+2019-12-30       1        0    1
+2019-12-31       1        0    1</code></pre>
+</div>
+<p>接着，我们创建一个累计信号 <code>cum</code>，它跟踪当前的头寸方向（1 表示多头，-1 表示空头）。这里使用了一个循环：</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">&gt; signal$cum &lt;- rep(1, nrow(signal))
+&gt; for (t in 2:nrow(signal)){
++   signal$cum[t]&lt;- ifelse(signal$sign[t] == 0,
++                         signal$cum[t-1], signal$sign[t])
++ }
+&gt; head.tail(signal)
+  buy.sig sell.sig sign cum
+2015-10-16       1        0    1   1
+2015-10-19       1        0    1   1
+2015-10-20       1        0    1   1
+  buy.sig sell.sig sign cum
+2019-12-27       1        0    1   1
+2019-12-30       1        0    1   1
+2019-12-31       1        0    1   1</code></pre>
+</div>
+<p>最后，我们确定何时持有证券。如果 <code>cum</code> 等于 1，则持有股票，组合收益随股票价格变化而变化。如果 <code>cum</code> 等于 0，则空仓，即未持有股票时不受股票涨跌影响。</p>
+<div class="r-code-block" id="code-4">
+  <pre><code class="language-r">&gt; signal$invested&lt;- ifelse(signal$cum == -1, 0, 1)
+&gt; head.tail(signal)
+  buy.sig sell.sig sign cum invested
+2015-10-16       1        0    1   1        1
+2015-10-19       1        0    1   1        1
+2015-10-20       1        0    1   1        1
+  buy.sig sell.sig sign cum invested
+2019-12-27       1        0    1   1        1
+2019-12-30       1        0    1   1        1
+2019-12-31       1        0    1   1        1</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="426">
+<h2 id="step-5-calculate-the-in-sample-portfolio-return">步骤5：计算样本内投资组合收益率</h2>
+<p>我们使用2016年至2017年的两年期作为样本内期间。然后，我们提取信号数据集和收益率数据集在该期间的数据，并将其存入新数据集 <code>in.sample</code> 中。接下来，我们将2015年12月31日对应 <code>rets</code> 列的第一个值覆盖为0%收益率。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; in.sample&lt;- signal[&quot;2015-12-31/2017-12-31&quot;]
+&gt; in.sample$rets&lt;- rets[&quot;2015-12-31/2017-12-31&quot;]
+&gt; head.tail(in.sample)
+ buy.sig sell.sig sign cuminvested rets
+2015-12-31      1        0    1         1    1 -0.019127218
+2016-01-04      1        0    1         1    1 -0.057553780
+2016-01-05      1        0    1         1    1 -0.005023646
+ buy.sig sell.sig sign cuminvested rets
+2017-12-27      1        0    1         1    1  0.004673850
+2017-12-28      1        0    1         1    1  0.003247988
+2017-12-29      1        0    1         1    1 -0.014020745
+&gt;
+&gt; in.sample$rets[1]&lt;- 0
+&gt; head.tail(in.sample)
+ buy.sig sell.sig sign cuminvested rets
+2015-12-31      1        0    1         1    1  0.000000000
+2016-01-04      1        0    1         1    1 -0.057553780
+2016-01-05      1        0    1         1    1 -0.005023646
+ buy.sig sell.sig sign cuminvested rets
+2017-12-27      1        0    1         1    1  0.004673850
+2017-12-28      1        0    1         1    1  0.003247988
+2017-12-29      1        0    1         1    1 -0.014020745</code></pre>
+</div>
+<p>接下来，我们通过将收益率与累积信号投资额相乘来计算投资组合收益率 <code>port.ret</code>。当 <code>invested</code> 等于1时，我们做多股票；当 <code>invested</code> 等于0时，我们不投资股票。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; in.sample$port.ret&lt;- in.sample$rets * in.sample$invested
+&gt; head.tail(in.sample)
+ buy.sig sell.sig signcum invested rets port.ret
+2015-12-31      1        0     1         1    0.000000000  0.000000000
+2016-01-04      1        0     1         1   -0.057553780 -0.057553780
+2016-01-05      1        0     1         1   -0.005023646 -0.005023646
+ buy.sig sell.sig signcum invested rets port.ret
+2017-12-27      1        0     1         1    0.004673850  0.004673850
+2017-12-28      1        0     1         1    0.003247988  0.003247988
+2017-12-29      1        0     1         1   -0.014020745 -0.014020745</code></pre>
+</div>
+<p>然后，我们使用 <code>cumprod()</code> 累积总收益率。通过在 <code>port.ret</code> 上加1，我们将净投资组合收益率转换为总收益率。可以看到，该策略在两年期内产生了55.3%的投资组合收益率。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">&gt; in.sample$port.cret&lt;- cumprod(1 + in.sample$port.ret)
+&gt; head.tail(in.sample[,-c(1:4)])
+ invested rets port.ret port.cret
+2015-12-31        1    0.000000000  0.000000000  1.0000000
+2016-01-04        1   -0.057553780 -0.057553780 0.9424462
+2016-01-05        1   -0.005023646 -0.005023646 0.9377117
+ invested rets port.ret port.cret</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="427">
+  <h2>12.3 构建一个简单交易策略</h2>
+<p>现在，<code>in.sample</code> 数据集中的列数过多。因此，当我们输出上述前三个和最后三个观测值时，我们省略了第1至4列。</p>
+<div class="r-code-block" id="code-output">
+  <pre><code class="language-r">8 2017−12−27 1 0.004673850 0.004673850 1.569832
+9 2017−12−28 1 0.003247988 0.003247988 1.574930
+10 2017−12−29 1 −0.014020745−0.0140207451.552849</code></pre>
+</div>
+<h3>步骤6：绘制投资组合价值</h3>
+<p>下面的代码基于200日简单移动平均线（SMA）交易策略生成样本期内（2016年至2017年）的投资组合价值图。生成的图表如图12.4所示。该图显示，若在2015年12月31日对该交易策略投资1美元，则到2017年12月31日将产生1.55美元，即两年内55%的收益率。</p>
+<div class="r-code-block" id="code-plot">
+  <pre><code class="language-r">1 &gt; plot(y = in.sample$port.cret ,
+2 + x = index(in.sample),
+3 + xlab = &quot;&quot;,
+4 + ylab = &quot;Value of $1 Investment&quot;,
+5 + type = &quot;l&quot;,
+6 + col = &quot;blue&quot;,
+7 + main = &quot;200 −Day SMA Trading Strategy− In Sample&quot;)
+8 &gt; abline(h = 1)</code></pre>
+</div>
+<figure class="book-figure" id="fig-12.4"><img src="/assets/img/analyzing-financial-data-r-cn/figure-1c14d922b6e2.png" alt="200日简单移动平均线交易策略示例（样本内）">
+    <figcaption>图12.4 200日简单移动平均线交易策略示例（样本内）</figcaption>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="428">
+
+
+<h2>第7步：计算夏普比率</h2>
+<p>我们计算该投资组合策略的夏普比率。夏普比率等于年化平均超额收益率除以年化标准差。超额收益率是投资组合收益率减去无风险利率，假定无风险利率为1.55%。我们在第1行计算年化平均收益率，第4行计算年化标准差，第8行计算夏普比率。</p>
+<div class="r-code-block" id="code_1">
+  <pre><code class="language-r">1 &gt; (avg.ret&lt;− mean(in.sample$port.ret)∗ 252)
+2 [1] 0.2512271
+3 &gt;
+4 &gt; (sd.ret&lt;− sd(in.sample$port.ret)∗ sqrt(252))
+5 [1] 0.2510118
+6 &gt;
+7 &gt;r f &lt;− 0.0155
+8 &gt; (Sharpe&lt;− (avg.ret− rf) / sd.ret)
+9 [1] 0.9391078</code></pre>
+</div>
+<h2>第8步：计算最大回撤</h2>
+<p>观察图12.4，我们可以看到最大回撤可能出现在2016年前6个月。我们的初始投资为1美元，因此我们寻找投资组合价值大于1美元的其他实例。我们使用port.cret列中的值来识别。然后，我们在第6至7行中寻找2016年1月1日至2016年7月11日期间port.cret的最小值。输出显示，谷底出现在2016年3月18日，投资组合总价值为0.73美元。这意味着最大回撤为−26.69%。</p>
+<div class="r-code-block" id="code_2">
+  <pre><code class="language-r">1 &gt; head(subset(in.sample[,−c(1:4)], port.cret &gt;= 1), 3)
+2 invested rets port.ret port.cret
+3 2015−12−31 1 0.000000000 0.000000000 1.000000
+4 2016−07−11 1 0.010686409 0.010686409 1.000886
+5 2016−07−29 1 0.008238016 0.008238016 1.007565
+6 &gt; min.cret&lt;− subset(in.sample[&quot;2016−01−01/2016−07−11&quot;],
+7 + port.cret == min(port.cret))
+8 &gt; min.cret[,−c(1:4)]
+9 invested rets port.ret port.cret
+10 2016−03−18 1 −0.01315599−0.013155990.7330643
+11 &gt; (max.dd&lt;− as.numeric(min.cret$port.cret)− 1)
+12 [1]−0.2669357</code></pre>
+</div>
+<p>我们可以使用PerformanceAnalytics包中的<code>table.Drawdowns()</code>函数验证我们的计算。如输出所示，最大回撤确实出现在我们上面查看的期间。注意，表中显示第一天是2016年1月4日，这是2016年的第一个交易日。该期间的收益率为−26.69%，与我们上面的计算结果一致。</p>
+<div class="r-code-block" id="code_3">
+  <pre><code class="language-r">1 &gt; library(PerformanceAnalytics)
+2 &gt; table.Drawdowns(in.sample$port.ret)
+3 From Trough To Depth Length To Trough Recovery
+4 1 2016−01−04 2016−03−18 2016−07−11−0.2669 131 53 78
+5 2 2016−10−06 2016−11−14 2017−02−17−0.1484 93 28 65</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="429"><p>步骤9：计算样本外投资组合收益率。我们采用与步骤5相同的方法计算样本外投资组合收益率。请注意，我们将样本外数据的起始日期设为2017年12月29日。原因是2017年12月29日是2018年前的最后一个交易日。这使我们能够轻松地获取一个可用于开始计算的观测值。如最下方累积投资组合收益率所示，该投资组合策略在2年内产生了13.1%的收益率。</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">&gt; out.sample&lt;- signal[&quot;2017-12-29/2019-12-31&quot;]
+&gt; out.sample$rets&lt;- rets[&quot;2017-12-29/2019-12-31&quot;]
+&gt; head.tail(out.sample)</code></pre>
+</div>
+<pre>
+buy.sig sell.sig sign cuminvested rets
+2017-12-29 1 0 1 1 1 -0.01402074
+2018-01-02 1 0 1 1 1 0.01670846
+2018-01-03 1 0 1 1 1 0.01277528
+buy.sig sell.sig sign cuminvested rets
+2019-12-27 1 0 1 1 1 0.0005511802
+2019-12-30 1 0 1 1 1 -0.0122526652
+2019-12-31 1 0 1 1 1 0.0005143517
+</pre>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">&gt; out.sample$rets[1]&lt;- 0
+&gt; head.tail(out.sample)</code></pre>
+</div>
+<pre>
+buy.sig sell.sig sign cuminvested rets
+2017-12-29 1 0 1 1 1 0.00000000
+2018-01-02 1 0 1 1 1 0.01670846
+2018-01-03 1 0 1 1 1 0.01277528
+buy.sig sell.sig sign cuminvested rets
+2019-12-27 1 0 1 1 1 0.0005511802
+2019-12-30 1 0 1 1 1 -0.0122526652
+2019-12-31 1 0 1 1 1 0.0005143517
+</pre>
+<div class="r-code-block" id="code3">
+  <pre><code class="language-r">&gt; out.sample$port.ret&lt;- out.sample$rets * out.sample$invest
+&gt; head.tail(out.sample)</code></pre>
+</div>
+<pre>
+buy.sig sell.sig signcum invested rets port.ret
+2017-12-29 1 0 1 1 1 0.00000000 0.00000000
+2018-01-02 1 0 1 1 1 0.01670846 0.01670846
+2018-01-03 1 0 1 1 1 0.01277528 0.01277528
+buy.sig sell.sig signcum invested rets port.ret
+2019-12-27 1 0 1 1 1 0.0005511802 0.0005511802
+2019-12-30 1 0 1 1 1 -0.0122526652 -0.0122526652
+2019-12-31 1 0 1 1 1 0.0005143517 0.0005143517
+</pre>
+<div class="r-code-block" id="code4">
+  <pre><code class="language-r">&gt; out.sample$port.cret&lt;- cumprod(1 + out.sample$port.ret)
+&gt; head.tail(out.sample[,-c(1:4)])</code></pre>
+</div>
+<pre>
+invested rets port.ret port.cret
+2017-12-29 1 0.00000000 0.00000000 1.000000
+2018-01-02 1 0.01670846 0.01670846 1.016708
+2018-01-03 1 0.01277528 0.01277528 1.029697
+invested rets port.ret port.cret
+</pre></section>
+<section class="book-page" data-pdf-page="430">
+  <p><strong>步骤10：绘制投资组合价值</strong> 我们现在绘制样本外期间投资组合的价值。图12.5展示了样本外投资组合策略的价值。我们可以看到，样本外期间有若干平坦区域，这意味着在投资期间我们有几次处于空仓状态。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">plot(y = out.sample$port.cret,
+     x = index(out.sample),
+     xlab = &quot;&quot;,
+     ylab = &quot;Value of $1 Investment&quot;,
+     type = &quot;l&quot;,
+     col = &quot;blue&quot;,
+     main = &quot;200 −Day SMA Trading Strategy− Out−of−Sample&quot;)
+abline(h = 1)</code></pre>
+</div>
+<p><strong>步骤11：计算夏普比率</strong> 在此样本外测试中，我们计算得到该投资组合策略的夏普比率为0.32。这远低于接近1.0的样本内夏普比率。</p>
+<figure class="book-figure" id="fig-12.5"><img src="/assets/img/analyzing-financial-data-r-cn/figure-042ff79bf02e.png" alt="图12.5 200日SMA交易策略示例（样本外）">
+    <figcaption>图12.5 200日SMA交易策略示例（样本外）</figcaption>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="431">
+<h2 id="building-a-simple-trading-strategy">12.3 构建一个简单的交易策略</h2>
+<p><strong>第12步：计算最大回撤</strong> 我们通过找出峰值和谷底来计算最大回撤。第1行显示了投资组合的最大价值。从图12.5可以看出，投资组合未能恢复到峰值。因此，谷底是投资组合的最后一个值。然后我们计算最大回撤为从峰值到谷底的百分比变化，下降了35.16%。</p>
+<div class="r-code-block" id="step12a">
+  <pre><code class="language-r">1 &gt; (avg.ret&lt;- mean(out.sample$port.ret)* 252)
+2 [1] 0.08811198
+3 &gt;
+4 &gt; (sd.ret&lt;- sd(out.sample$port.ret)* sqrt(252))
+5 [1] 0.2301935
+6 &gt;
+7 &gt;r f &lt;- 0.0155
+8 &gt; (Sharpe&lt;- (avg.ret- rf) / sd.ret)
+9 [1] 0.3154389</code></pre>
+</div>
+<p>我们使用 PerformanceAnalytics 包中的 <code>table.Drawdowns()</code> 来计算最大回撤。下面的输出表明该函数发现的最大回撤为35.19%，与我们上面的计算结果略有出入。</p>
+<div class="r-code-block" id="step12b">
+  <pre><code class="language-r">1 &gt; (out.peak&lt;- subset(out.sample$port.cret ,port.cret == max(port.cret)))
+2 port.cret
+3 2018-09-04 1.743961
+4 &gt; (out.trough&lt;- out.sample$port.cret[nrow(out.sample)])
+5 port.cret
+6 2019-12-31 1.130788
+7 &gt; (max.dd&lt;- (as.numeric(out.trough)/ as.numeric(out.peak))- 1)
+8 [1]-0.3515979</code></pre>
+</div>
+<p>上述两个计算之间的差异在于 <code>table.Drawdowns()</code> 不知何故没有包含2019年12月31日，而是止于2019年12月30日。下面，我们展示了如果我们假设谷底在2019年12月30日，我们的最大回撤计算会是什么样子。如下输出所示，我们使用这个计算复制了 <code>table.Drawdowns()</code> 的结果。因此，在使用 <code>table.Drawdowns()</code> 时必须小心，因为它似乎在计算中少了一天。</p>
+<div class="r-code-block" id="step12c">
+  <pre><code class="language-r">1 &gt; library(PerformanceAnalytics)
+2 &gt; table.Drawdowns(out.sample$port.ret)
+3 From Trough To Depth Length To Trough Recovery
+4 1 2018-09-05 2019-12-30 &lt;NA&gt; -0.3519 334 332 NA
+5 2 2018-03-13 2018-04-02 2018-05-07-0.1416 39 14 25
+6 3 2018-02-01 2018-02-09 2018-02-14-0.0767 10 7 3
+7 4 2018-06-21 2018-06-27 2018-07-11-0.0512 14 5 9
+8 5 2018-07-26 2018-07-31 2018-08-08-0.0462 10 4 6</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="432">
+  <h2 id="section-12-4">12.4 机器学习技术</h2>
+<p>以上是对一种交易策略的简单实现。在实践中，我们可能会将多种交易策略结合在一起。我们可以考虑许多额外的因素。例如，我们可能需要考虑每笔交易的手续费，这会降低投资的实际收益率。然而，最近已有许多经纪商提供免佣金交易，例如 Schwab 和 Alpaca（算法交易）。还有其他问题需要考虑，如买卖时的买卖价差。这些考虑因素取决于我们想要实施的策略。</p>
+<p>机器学习（Machine Learning, ML）的前提是机器能够从数据中学习并做出预测（决策），且几乎不需要人工干预。我们可以将 ML 应用于许多领域。一种观点是，如果人类能在 1 秒内完成某件事，那么机器很可能也能学会做这件事。其思路是，人类在 1 秒内完成的事情是已经学会并实施了的。例如，投资中的模式识别是 ML 的一个有吸引力的候选方向，因为我们可以教会机器识别和学习不同的模式。考虑以下假设情形：假设你关注四只股票。机器可能能够识别出，当股票 B、C 和 D 在前一交易日均至少上涨 3% 后，股票 A 有 70% 的概率会上涨。那么，就可以创建一个模型来识别这种模式，并在观察到股票 B、C 和 D 均至少上涨 3% 时触发买入股票 A 的决策。当然，现实世界中的模式很少如此直接，概率通常也低得多。</p>
+<p>然而，基于不同投资标的的基本面寻找相似性并不是模式识别。因此，机器完全取代基本面投资更加困难。尽管如此，基本面投资过程的一部分可能被机器取代。另一方面，主要依赖利用过去价格和数据中的模式的技术分析，有可能被机器取代，因为它在一定程度上基于模式识别。ML 还有助于识别人眼不易察觉的模式。例如，使用 ML 可以提高效率的一个例子是，可以训练机器阅读公司 SEC 申报文件的文本，查看是否包含某些词语模式。无需人工查看所有 SEC 申报文件，机器可以被教会识别关键词以及这些词的任何模式。</p>
+<p>我们已经拥有一些识别模式的工具。例如，线性回归擅长识别数据中的模式，但当模式复杂（如非线性）时，线性回归就会遇到困难。在许多金融应用中，可能没有足够的数据来使用非常复杂的方法。例如，当我们查看一家上市公司的盈利数据时，通常每年只能观察到四个数据点。我们可以通过回溯更长时间来增加观测数量，但很快就会遇到信息相关性的问题，即</p>
+</section>
+<section class="book-page" data-pdf-page="433">
+<h2 id="machine-learning-techniques">12.4 机器学习技术</h2>
+<p>回顾对未来的预测时，时间跨度不宜过长。例如，公司如今的状况可能与5年前大不相同，因此在给定的日期范围内，如果公司每季度公布一次财报，我们最多只能有20次盈余披露。如果研究对象是私营企业，问题会更严重，因为数据是否可得并不确定。数据不足会导致机器学习学到的是噪声而非信号。机器学习的关键在于拥有足够数量、高质量且具有充分变异的数据。</p>
+<p>应用机器学习技术时最大的问题是过拟合。数据通常包含噪声成分和预测成分（即信号）。过拟合是指模型试图从噪声成分中学习，而噪声本质上是随机的（即没有信号可学）。从投资角度看，过拟合常常源于我们在训练数据集（样本内）中寻找极佳拟合的偏差，但最终在测试数据（样本外）或模型应用于现实世界时，预测结果却非常糟糕。</p>
+<p>理论上，模型中选用的因子是为了提高信噪比。为此，建模者需要具备相关知识和经验，理解为何应包含某些因子。例如，若我们试图预测未来股票收益率，则只应纳入与未来股票收益率相关的因子（如基于实证研究或理论）。这意味着，如果机器学习技术告诉我们月球温度变化能解释股票收益率的变动，我们很可能不会将其纳入模型。常用的因子包括基本面因子（如股票未来前景的决定因素）和技术指标（与未来供需相关的因子）。</p>
+<p>机器学习算法通常分为两类：监督学习和无监督学习。监督学习用于构建预测模型，无监督学习用于构建描述性模型。下面，我们将讨论试图预测未来股票价格的模型，因此我们将举例说明预测模型。我们通常认为预测模型是前瞻性的，但这类模型也可用于回顾性预测。例如，我们可能希望利用预测模型，根据股票当前价格以及可能影响公司股价从一年前演变至今的某些信息，来了解一年前公司的股价水平。一般而言，预测模型会被告知应学习什么以及如何学习该信息。因此，给定一组数据，算法会尝试优化模型，以找到能产生期望输出的特征组合。</p>
+<p>下面我们讨论两类预测模型的例子。第一类是分类，将预测值归入一个或多个类别。在我们的k近邻算法示例中，我们预测公司股价是上涨还是下跌。第二类是数值预测，顾名思义，预测的是数值。在下面的例子中，我们将线性回归模型拟合到股票价格数据，模型生成数值预测。我们以一个使用</p>
+</section>
+<section class="book-page" data-pdf-page="434">
+<h2 id="trading-strategies">12 交易策略</h2>
+<p>在数值预测和分类中，两者都使用人工神经网络（ANN）来预测公司股票的未来价格。虽然更复杂，但神经网络模型如果不借助一些沉重的数学工具就很难解释，因此对过程的解释也变得困难。换句话说，对许多人来说，神经网络可能是个黑箱。因此，如果需要解释导致特定结果的方法细节，神经网络模型可能不是最佳选择。例如，当贷款机构拒绝一个寻求信贷的人时，法律要求贷款机构解释申请人被拒绝的原因。机器学习算法难以解释以及难以识别为什么以及如何导致信贷被拒绝，这使得机器学习在这些市场的应用具有挑战性。幸运的是，当前的一些研究已致力于缓解这一可解释性问题。</p>
+<h3 id="general-steps-to-apply-ml">12.4.1 应用机器学习的一般步骤</h3>
+<p>通常，开发机器学习算法需要五个步骤：</p>
+<ol>
+<li><strong>收集数据</strong>。我们需要收集机器学习算法所需的数据。然后，我们需要足够的数据，以便可以将数据分为步骤3的训练集和步骤4的测试集。</li>
+<li><strong>分析数据</strong>。正如我们全书所讨论的，现实世界的数据通常不是为特定目的而设置的，可能包含错误和其他问题。因此，可能需要花费大量时间将数据整理成适当的形状。在这一步中，我们必须理解数据，包括其细微差别。对于编程的通才来说，这变得更困难，因为这些细微差别和某些数字的含义可能仅仅通过查看数据并不明显。因此，最好的方法是结合编程技能和实际处理数据的经验，因为这将让我们了解可以从现有数据中“学习”到什么。可能我们拥有的数据已经足够，或者我们可能意识到需要补充数据。</li>
+<li><strong>训练模型</strong>。我们希望将足够数量的数据分配给训练集。此步骤的最终结果是机器学习算法以模型的形式生成数据的表示。没有一种方法适用于所有场景。因此，选择机器学习算法的过程取决于我们所用数据的特征。</li>
+<li><strong>测试模型</strong>。使用步骤3中开发的模型，我们通过观察模型在另一个独立数据集（称为测试集）上的表现来测试模型从数据中学习的效果。在下面衡量性能时，我们使用均方根误差（RMSE）作为指标。但RMSE不是衡量性能的唯一方法，我们也可以选择其他指标。</li>
+<li><strong>改进模型</strong>。如果模型性能不令人满意，我们可以尝试进行修改以提高模型性能。这可能意味着</li>
+</ol>
+</section>
+<section class="book-page" data-pdf-page="435">
+<h3 id="k-nearest-neighbor-algorithm">12.4.2 k近邻算法</h3>
+<p>k近邻（k-nearest neighbor，kNN）算法是一种非参数方法，可用于预测股票价格是否会上涨或下跌。想象一下“物以类聚，人以群分”的说法。最近邻算法就像识别我们最亲密的k个朋友，并判断他们属于类型1还是类型2。例如，如果k=5，而我们最亲密的五个朋友中有四个类型1和一个类型2，那么kNN算法会将我们归类为有80%的概率属于类型1。</p>
+<p>从以上可以推断，k是选择的邻居数量。例如，如果k=1，算法会找到“最近”的邻居。“最近”通常定义为具有最小欧氏距离的点。基本上，欧氏距离就是用量尺连接两点得到的距离。在我们的示例中，如果最近的邻居是上涨，那么我们将预测结果分类为上涨。相反，如果最近的邻居是下跌，我们将预测结果分类为下跌。</p>
+<p>现在，假设k=5。在这种情况下，算法会找到五个最近的邻居，无论其类型如何。例如，五个最近的邻居可能是4个上涨和1个下跌，此时我们认为有80%的概率上涨，并将预测结果分类为上涨。或者，五个最近的邻居可能是2个上涨和3个下跌，此时我们认为有60%的概率下跌，并将预测结果分类为下跌。</p>
+<p>如上所示，选择奇数k可以避免平局。例如，如果我们选择k=4，可能会得到两个上涨和两个下跌作为最近的四个邻居。此时必须使用某种主观标准或随机方式打破平局。因此，为了完全避免平局问题，我们使用奇数k。</p>
+<p>此外，选择较小k和较大k之间存在权衡。我们可以考虑两个极端情况。如果k等于所有观测值，那么无论最近邻居是谁，都会选择总体中的多数。例如，总共有30个观测值，其中10个最近的邻居是上涨，后面20个是下跌，模型会预测为下跌。另一个极端，如果选择k=1，那么我们完全依赖最近的邻居，但最近的邻居可能是随机偶然、异常值或分类错误导致的。因此，k的最佳值是平衡这两个极端的数量。虽然选择k没有硬性规定，但实践中通常将k设定在3到10之间。</p>
+<p>最近邻算法更适合于因子（通常称为“特征”）与因变量（通常称为“目标”）之间的关系复杂或非线性的情况。</p>
+</section>
+<section class="book-page" data-pdf-page="436">
+<p>424 12 交易策略</p>
+<p>类别）繁多或复杂，但同一类型的股票往往是同质的。下面我们用一个简单示例说明如何使用k近邻（k-nearest neighbor，kNN）算法预测AMZN的涨跌。在我们的示例中，我们使用SPY作为因子。我们也可以包含许多其他因子，比如更多股票，但为简单起见，我们只使用一个因子。</p>
+<h3>步骤1：加载价格数据</h3>
+<p>使用load.data()函数导入AMZN和SPY的价格，并将两个价格序列的收盘价合并。</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">1 &gt; amzn &lt;− load.data(&quot;AMZN Yahoo.csv&quot;, &quot;AMZN&quot;)
+2 &gt; spy &lt;− load.data(&quot;SPY Yahoo.csv&quot;, &quot;SPY&quot;)
+3 &gt;
+4 &gt; prices&lt;− cbind(amzn$AMZN.Close , spy$SPY.Close)
+5 &gt; names(prices)&lt;− c(&quot;AMZN&quot;, &quot;SPY&quot;)
+6 &gt; head.tail(prices)
+7 AMZN SPY
+8 2014−12−31 310.35 205.54
+9 2015−01−02 308.52 205.43
+10 2015−01−05 302.19 201.72
+11 AMZN SPY
+12 2019−12−20 1786.50 320.73
+13 2019−12−23 1793.00 321.22
+14 2019−12−24 1789.21 321.23</code></pre>
+</div>
+<h3>步骤2：创建所需变量</h3>
+<p>在此步骤中，我们将在prices数据集中创建两列：date和Lag.AMZN。我们还会创建一个列Lag.AMZN，表示滞后一个交易日的价格。我们使用此变量来判断AMZN价格相对于前一个交易日价格是上涨还是下跌。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">1 &gt; date &lt;− data.frame(index(prices[−1,]))
+2 &gt; names(date)&lt;− &quot;date&quot;
+3 &gt; prices$Lag.AMZN&lt;− Lag(prices$AMZN , k = 1)
+4 &gt; prices&lt;− data.frame(prices[−1, ] )
+5 &gt; prices&lt;− cbind(date ,prices)
+6 &gt; rownames(prices)&lt;− seq(1, nrow(prices), 1)
+7 &gt; head.tail(prices)
+8 date AMZN SPY Lag.AMZN
+9 1 2015−01−02 308.52 205.43 310.35
+10 2 2015−01−05 302.19 201.72 308.52
+11 3 2015−01−06 295.29 199.82 302.19
+12 date AMZN SPY Lag.AMZN
+13 12522019−12−20 1786.50 320.73 1792.28
+14 12532019−12−23 1793.00 321.22 1786.50
+15 12542019−12−24 1789.21 321.23 1793.00</code></pre>
+</div>
+<h3>步骤3：识别数据分界点</h3>
+<p>为了简化后续编码，我们识别出将训练数据（2019年之前的数据）和测试数据（2019年的数据）分开的观测序号。因此，我们使用subset()函数识别2018年12月31日附近的日期。可以看出，训练数据集包含观测值1到1006，测试数据包含观测值1007到1254。我们使用nrow()获得最后一个观测序号。</p>
+</section>
+<section class="book-page" data-pdf-page="437">
+  <div class="r-code-block" id="code1">
+  <pre><code class="language-r">1 &gt; subset(prices , date &gt;= &quot;2018−12−28&quot; &amp; date &lt;= &quot;2019−01−04&quot;)
+2       date    AMZN    SPY Lag.AMZN
+3 10052018−12−28 1478.02 247.75 1461.64
+4 10062018−12−31 1501.97 249.92 1478.02
+5 10072019−01−02 1539.13 250.18 1501.97
+6 10082019−01−03 1500.28 244.21 1539.13
+7 10092019−01−04 1575.39 252.39 1500.28
+8 &gt; nrow(prices)
+9 [1] 1254</code></pre>
+</div>
+<h2>步骤4：创建盈亏逻辑向量</h2>
+<p>通过比较当天的亚马逊价格与昨天的亚马逊价格，我们可以判断股票是否增值。因此，我们可以创建一个包含TRUE或FALSE的逻辑向量，其中包含prices中每个观测值对应的值（即包含我们将用于训练和测试的所有数据）。我们使用<code>as.logical()</code>来实现这一点。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">1 &gt; gain &lt;− ifelse(prices$AMZN &gt; prices$Lag.AMZN , &quot;TRUE&quot;, &quot;FALSE&quot;)
+2 &gt; gain &lt;− as.logical(gain)
+3 &gt; class(gain)
+4 [1] &quot;logical&quot;</code></pre>
+</div>
+<h2>步骤5：归一化价格</h2>
+<p>在应用kNN时，通常需要对值的范围进行标准化。这是因为距离公式依赖于因子的度量方式。我们希望避免某些因子具有比其他因子更大的值，因为这会偏差距离计算。在我们的例子中，亚马逊和SPY的值在尺度上相差很大。最好对值进行归一化。我们采用简单的min-max方法将每个序列的值归一化到0和1之间。我们在一个名为<code>normalize()</code>的函数中实现min-max方法。如第5行到第8行所示，该函数将值归一化到0和1之间。第7行向量中的每个元素是第5行向量中对应元素值的5倍。归一化函数实质上将它们放在同一尺度上。当比较第6行与第8行时，我们可以看到这一点。然后，在第10行，我们将此归一化应用于AMZN和SPY的价格。</p>
+<div class="r-code-block" id="code3">
+  <pre><code class="language-r">1 &gt; normalize&lt;− function(x) {
+2 + return ((x − min(x))/ (max(x)− min(x)))
+3 +}
+4 &gt;
+5 &gt; normalize(c(1, 2, 3, 4, 5))
+6 [1] 0.00 0.25 0.50 0.75 1.00
+7 &gt; normalize(c(5, 10, 15, 20,25))
+8 [1] 0.00 0.25 0.50 0.75 1.00
+9 &gt;
+10 &gt; prices&lt;− as.data.frame(lapply(prices[2:3],normalize))
+11 &gt; head.tail(prices)
+12        AMZN       SPY
+13 1 0.012307697 0.1631133
+14 2 0.008695845 0.1363012
+15 3 0.004758751 0.1225700
+16        AMZN       SPY
+17 12520.8556340 0.9963865</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="438">
+<p>426 第12章 交易策略</p>
+<div class="r-code-block" id="r-code-1">
+  <pre><code class="language-r">18 12530.8593429 0.9999277
+19 12540.8571803 1.0000000
+20 &gt; min(prices)
+21 [1] 0
+22 &gt; max(prices)
+23 [1] 1</code></pre>
+</div>
+<p>步骤6：创建用于kNN的数据集 识别观测编号在此处会很有帮助。<code>knn()</code>需要输入训练数据集、测试数据集以及训练数据集的真实分类因子。</p>
+<div class="r-code-block" id="r-code-2">
+  <pre><code class="language-r">1 &gt; train.data&lt;− prices[1:1006, ]
+2 &gt; test.data&lt;− prices[1007:1254, ]
+3 &gt; cl.data&lt;− gain[1:1006]</code></pre>
+</div>
+<p>步骤7：使用<code>knn()</code>创建预测 首先加载包含<code>knn()</code>的<code>class</code>包。我们在上一步创建的三个数据集填入<code>knn()</code>所需的参数。我们从使用k = 1开始。R在这里完成了繁重的工作。</p>
+<div class="r-code-block" id="r-code-3">
+  <pre><code class="language-r">1 &gt; library(class)
+2 &gt; predict&lt;− knn(train = train.data ,
+3 + test = test. data ,
+4 + cl = cl.data ,
+5 +k = 1 )</code></pre>
+</div>
+<p>步骤8：查看输出 可以使用<code>table()</code>生成输出。第一个参数是包含预测的数据集，我们将其标记为<code>predict</code>。第二个参数是收益或亏损的分类，但这次我们使用测试数据集中的观测值。根据输出，我们有71个假阴性和49个假阳性。换句话说，总共248个值中有120个预测错误。即48.4%被错误分类，而51.6%被正确分类。我们还可以使用第7行代码获取正确预测的百分比。</p>
+<div class="r-code-block" id="r-code-4">
+  <pre><code class="language-r">1 &gt; table(predict ,
+2 + gain [1007:1254])
+4 predict FALSETRUE
+5 FALSE 66 71
+6 TRUE 49 62
+7 &gt; mean(predict == gain[1007:1254])
+8 [1] 0.516129</code></pre>
+</div>
+<p>步骤9：测试其他k值 在上面，我们使用了k = 1。然而，我们可以使用其他的k值。为避免平局，建议只使用奇数k值，因此我们首先创建一个1到40之间的奇数序列。然后创建第二个变量<code>pct</code>。我们首先为<code>pct</code>创建临时零值，但稍后将用准确预测的百分比填充它。然后将两者组合在标记为<code>accuracy</code>的数据集中。</p>
+</section>
+<section class="book-page" data-pdf-page="439">
+<h2>12.4 机器学习技术</h2>
+<p>我们创建一个数据框 accuracy，包含 k 和 pct 两列：</p>
+<div class="r-code-block" id="1">
+  <pre><code class="language-r">k &lt;- seq(1, by = 2, 40)
+pct &lt;- rep(0, length(k))
+accuracy &lt;- data.frame(k, pct)
+accuracy</code></pre>
+</div>
+<pre>
+   k pct
+1  1   0
+2  3   0
+3  5   0
+4  7   0
+5  9   0
+6 11   0
+7 13   0
+8 15   0
+9 17   0
+10 19  0
+11 21  0
+12 23  0
+13 25  0
+14 27  0
+15 29  0
+16 31  0
+17 33  0
+18 35  0
+19 37  0
+20 39  0
+</pre>
+<p>然后我们使用这 20 个 k 值运行 for 循环，并调用 set.seed(1) 以确保结果可重复。我们发现当 k=33 时准确率最高，达到 56.0%。图 12.6 也直观地展示了这一点。</p>
+<div class="r-code-block" id="2">
+  <pre><code class="language-r">set.seed(1)
+for (i in 1:20){
+  predict &lt;- knn(train.data ,test.data , cl.data , k =accuracy[i, 1])
+  accuracy[i, 2] &lt;- mean(predict== gain[1007:1254])
+}
+plot(x = accuracy$k,
+     y = accuracy $pct ,
+     xlab = &quot;k&quot;,
+     ylab = &quot; Accuracy&quot;,
+     type = &quot;l&quot;,
+     col = &quot;blue&quot;,
+     main = &quot; Accuracy Based onDifferent Values of k&quot;)
+subset(accuracy ,
+       accuracy $pct == max(accuracy$pct))</code></pre>
+</div>
+<pre>
+   k       pct
+17 33 0.5604839
+</pre>
+<p>以上结果可以这样解读：抛一枚均匀硬币有 50% 的概率。当 k=1 时，我们的算法准确率为 51.6%。即使在 k=33 时达到最大准确率 56.0%，也只比 k=1 高出几个百分点，准确率仅提升 6% 左右。</p>
+</section>
+<section class="book-page" data-pdf-page="440">
+  <figure class="book-figure" id="fig-12-6">
+    <img src="/assets/img/analyzing-financial-data-r-cn/figure-0c845c102f5c.png" alt="图12.6 基于不同k值的kNN算法准确率">
+    <figcaption>图12.6 基于不同k值的kNN算法准确率</figcaption>
+  </figure>
+<p>抛硬币。然而，这些微小的百分比增长仍可能导致不可忽视的收益，具体取决于我们如何实施交易策略以及投入的资金和杠杆。</p>
+<p>上述模型是一个简单模型，用以说明如何实现 kNN。可以应用涉及更多因子的更复杂模型来提高准确率百分比，但我们必须注意不要过拟合。</p>
+<h3 id="regression-and-k-fold-cross-validation">12.4.3 回归与k折交叉验证</h3>
+<p>我们可能不会立即将回归视为一种机器学习技术，但它们实际上是一种监督式机器学习算法的形式。我们可以使用回归模型从各种因子中学习，然后用它们预测未来值。当前，最热门的研究领域之一就是确定与投资相关的因子。在第5章中，我们讨论了历史上经过时间考验的因子模型：资本资产定价模型（CAPM）和Fama-French模型。但是，关于</p>
+</section>
+<section class="book-page" data-pdf-page="441">
+<h3 id="machine-learning-techniques">12.4 机器学习技术</h3>
+<p>因子已扩展到可能包含多种因子。例如，除了市场、规模和价值之外，其他被发现可能相关的因子包括动量、质量、经济增长和最小波动性。</p>
+<p>下面，我们展示如何通过结合回归和k折交叉验证，基于训练数据集选择“最佳”模型。对于我们的回归，我们使用均方根误差（RMSE）作为准确性的度量。</p>
+<p>在交叉验证中，我们首先将训练数据分成k个大小大致相等的折（即组）。然后模型在k-1折上拟合，剩余的一折（即未拟合模型的那折）用于计算模型性能。这个过程重复k次（即交叉验证是一种重抽样方法）。每次重抽样中，不同的折被留出作为验证集。我们最终得到k个RMSE估计值，k折交叉验证RMSE通过对k个RMSE求平均得到。这为我们提供了未来（例如测试数据）可能观察到的误差的近似值。例如，如果我们使用10折交叉验证，每次运行数据将被分成90%训练集和10%测试集。然后对于第二次运行，我们将再次划分数据为90%训练集和10%测试集，但两个集合中的数据不同。我们重复这个过程10次。10次运行将产生10个RMSE估计值，这10个RMSE的平均值就是10折交叉验证RMSE。</p>
+<p>虽然这种方法听起来可能难以实现，但我们可以使用caret包中的<code>train()</code>函数大大简化我们的任务。</p>
+<p>下面，在我们的例子中，我们希望在三个模型之间选择来预测AMZN的收益率。模型1仅使用市场。模型2在模型1的基础上加入Fama-French SMB和HML因子。最后，模型3在模型2的基础上加入Fama-French RMW和CMA因子。我们想知道哪个模型在训练数据集中表现“最佳”，然后使用该模型在测试数据集上预测AMZN价格。然后我们可以使用测试数据集期间的RMSE来测试该模型的预测准确性。让我们看看如何实现这一点。</p>
+<p><strong>步骤1：导入收益率数据</strong> 我们首先使用<code>load.data()</code>加载AMZN数据，然后从AMZN调整收盘价计算对数收益率。然后我们导入FF五因子模型数据。由于Fama-French收益率数据使用算术收益率，我们在第20行将其转换为对数收益率。然后我们使用<code>dim()</code>检查<code>rets.amzn</code>和<code>ff.xts</code>的观测数是否相同。在确认它们都有1258个观测值后，我们使用<code>cbind()</code>合并两个数据集。我还计算了AMZN超过无风险利率的超额收益率<code>exret</code>。</p>
+<div class="r-code-block" id="r-code-1">
+  <pre><code class="language-r">1 &gt; amzn &lt;- load.data(&quot;AMZN Yahoo.csv&quot;, &quot;AMZN&quot;)
+2 &gt; rets.amzn&lt;- diff(log(amzn$AMZN.Adjusted))
+3 &gt; rets.amzn&lt;- rets.amzn[&quot;2015-01-01/2019-12-31&quot;]
+4 &gt;
+5 &gt;ff &lt;- read.csv(&quot;F-F_Research_Data_5_Factors_2x3_daily.csv&quot;,
+6 + skip = 3, header = TRUE)
+7 &gt; library(lubridate)
+8 &gt;ff$date&lt;- ymd(ff$X)
+9 &gt; ff.xts&lt;- xts(ff[,-c(1, 8)], order = ff$date)
+10 &gt; head.tail(ff.xts)
+11 Mkt.RF SMB HML RMW CMA RF</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="442">
+  <p>430 第12章 交易策略</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">12 1963−07−01 −0.67 0.00−0.32−0.01 0.15 0.012
+ 13 1963−07−02 0.79 −0.27 0.27−0.07−0.190.012
+ 14 1963−07−03 0.63 −0.17−0.09 0.17−0.330.012
+ 15 Mkt.RF SMB HML RMW CMA RF
+ 16 2019−12−27 −0.09−0.54−0.07 0.24 0.16 0.007
+ 17 2019−12−30 −0.57 0.27 0.58 0.15 0.45 0.007
+ 18 2019−12−31 0.28 0.02 0.14 −0.110.22 0.007
+ 19 &gt;
+ 20 &gt; ff.xts&lt;− log(1 + ff.xts/ 100)
+ 21 &gt; ff.xts&lt;− ff.xts[&quot;2015−01−01/2019−12−31&quot;]
+ 22 &gt; options(digits = 3)
+ 23 &gt; head.tail(ff.xts)
+ 24 Mkt.RF SMB HML RMW CMA RF
+ 25 2015−01−02−1.10e−13−5.62e−13 8.99e−14−2.50e−13 9.99e−14 0
+ 26 2015−01−05−1.86e−12 2.60e−13−6.32e−13 1.60e−13−1.20e−13 0
+ 27 2015−01−06−1.05e−12−7.83e−13−2.60e−13 5.29e−13 4.00e−14 0
+ 28 Mkt.RF SMB HML RMW CMA RF
+ 29 2019−12−27−9.00e−14−5.41e−13−7.01e−14 2.4e−13 1.60e−13 7.11e−15
+ 30 2019−12−30−5.72e−13 2.70e−13 5.78e−13 1.5e−13 4.49e−13 7.11e−15
+ 31 2019−12−31 2.80e−13 2.00e−14 1.40e−13−1.1e−13 2.20e−13 7.11e−15
+ 32 &gt;
+ 33 &gt; dim(rets.amzn)
+ 34 [1] 1258 1
+ 35 &gt; dim(ff.xts)
+ 36 [1] 1258 6
+ 37 &gt;
+ 38 &gt; rets &lt;− cbind(rets.amzn , ff.xts)
+ 39 &gt; names(rets)[1]&lt;− &quot;AMZN&quot;
+ 40 &gt; rets$exret&lt;− rets.amzn$AMZN.Adjusted− rets$RF
+ 41 &gt; head.tail(rets[, c(1, 8)])
+ 42 AMZN exret
+ 43 2015−01−02−0.00591−0.00591
+ 44 2015−01−05−0.02073−0.02073
+ 45 2015−01−06−0.02310−0.02310
+ 46 AMZN exret
+ 47 2019−12−27 0.000551 0.000551
+ 48 2019−12−30−0.012328−0.012328
+ 49 2019−12−31 0.000514 0.000514
+ 50 &gt; options(digits = 7)</code></pre>
+</div>
+<p>步骤2：将数据划分为训练集和测试集。对于训练集，我们使用2015–2018年的数据。对于测试集，我们使用2019年的数据。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">1 &gt; train.data&lt;− rets[&quot;2015−01−01/2018−12−31&quot;]
+2 &gt; head.tail(train.data[, c(1, 8)])
+3 AMZN exret
+4 2015−01−02−0.00591−0.00591
+5 2015−01−05−0.02073−0.02073
+6 2015−01−06−0.02310−0.02310
+7 AMZN exret
+8 2018−12−27−0.00632−0.00632
+9 2018−12−28 0.01114 0.01114
+10 2018−12−31 0.01607 0.01607
+11 &gt;</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="443">
+  <h2>12.4 机器学习技术</h2>
+<p>步骤1和步骤2（略）</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">&gt; test.data&lt;- rets[&quot;2019-01-01/2019-12-31&quot;]
+&gt; head.tail(test.data[, c(1, 8)])
+   AMZN exret
+2019-01-02 0.0244 0.0244
+2019-01-03 -0.0256 -0.0256
+2019-01-04 0.0489 0.0489
+   AMZN exret
+2019-12-27 0.000551 0.000551
+2019-12-30 -0.012328 -0.012328
+2019-12-31 0.000514 0.000514</code></pre>
+</div>
+<p><strong>步骤3：使用10折交叉验证</strong>。在 caret 包中，我们可以使用 <code>train()</code> 轻松应用交叉验证。在第一个模型 <code>cv1</code> 中，我们仅使用市场收益率。平均 RMSE 为 1.51%。第二个模型 <code>cv2</code> 添加了 SMB 和 HML，平均 RMSE 为 1.38%。在最后一个模型 <code>cv3</code> 中，我们添加了 RMW 和 CMA，平均 RMSE 为 1.31%。因此，第三个模型的 RMSE 最低，我们认为这是“最佳”模型。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">&gt; library(caret)
+&gt; set.seed(1)
+&gt; (cv1 &lt;- train(
++   form = exret ~ Mkt.RF,
++   data = train. data,
++   method = &quot;lm&quot;,
++   trControl = trainControl(method = &quot;cv&quot;, number = 10)
++ ) )</code></pre>
+</div>
+<pre><code class="output">线性回归
+
+1006 个样本
+1 个预测变量
+
+无预处理
+重抽样：交叉验证 (10 折)
+样本量汇总：905, 906, 906, 904, 905, 906, ...
+重抽样结果：
+
+  RMSE    R 平方  MAE
+  0.0151  0.379   0.00961
+
+调优参数 'intercept' 保持常数值 TRUE</code></pre>
+<div class="r-code-block" id="code3">
+  <pre><code class="language-r">&gt; set.seed(1)
+&gt; (cv2 &lt;- train(
++   form = exret ~ Mkt.RF + SMB + HML,
++   data = train. data,
++   method = &quot;lm&quot;,
++   trControl = trainControl(method = &quot;cv&quot;, number = 10)
++ ) )</code></pre>
+</div>
+<pre><code class="output">线性回归
+
+1006 个样本
+3 个预测变量</code></pre>
+
+</section>
+<section class="book-page" data-pdf-page="444">
+  <pre>36 无预处理
+37 重抽样：交叉验证（10折）
+38 样本量汇总：905, 906, 906, 904, 905, 906, ...
+39 重抽样结果：
+41 RMSE  R平方  MAE
+42 0.0138  0.478  0.00874
+44 调优参数'intercept'保持为TRUE</pre>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">&gt;
+&gt; set.seed(1)
+&gt; (cv3 &lt;- train(
++ form = exret ~ Mkt.RF + SMB + HML + RMW + CMA ,
++ data = train. data ,
++ method = &quot;lm&quot;,
++ trControl = trainControl(method = &quot;cv&quot;, number = 10)
++) )</code></pre>
+</div>
+<pre>53 线性回归
+55 1006个样本
+56 5个预测变量
+58 无预处理
+59 重抽样：交叉验证（10折）
+60 样本量汇总：905, 906, 906, 904, 905, 906, ...
+61 重抽样结果：
+63 RMSE  R平方  MAE
+64 0.0131  0.526  0.00848
+66 调优参数'intercept'保持为TRUE</pre>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">&gt; summary(resamples(list(
++ model1 = cv1,
++ model2 = cv2,
++ model3 = cv3
++ )))</code></pre>
+</div>
+<pre>74 调用：
+75 summary.resamples(object = resamples(list(model1 = cv1, model2 = cv2 ...))
+77 模型：model1, model2, model3
+78 重抽样次数：10
+80 MAE
+81 最小值 第一四分位数 中位数 均值 第三四分位数 最大值 NA值
+82 model1 0.00814 0.00911 0.00931 0.00961 0.00995 0.0115 0
+83 model2 0.00719 0.00803 0.00866 0.00874 0.00943 0.0106 0
+84 model3 0.00727 0.00782 0.00846 0.00848 0.00915 0.0099 0
+86 RMSE
+87 最小值 第一四分位数 中位数 均值 第三四分位数 最大值 NA值
+88 model1 0.01121 0.0137 0.0147 0.0151 0.0163 0.0212 0
+89 model2 0.00933 0.0124 0.0138 0.0138 0.0148 0.0203 0</pre>
+</section>
+<section class="book-page" data-pdf-page="445">
+<h2>12.4 机器学习技术</h2>
+<pre class="r-output">
+90 model3 0.00940 0.0118 0.0127 0.0131 0.0143 0.0191 0
+91 NA数量
+92 R平方
+93 最小值 第一四分位数 中位数 均值 第三四分位数 最大值 NA数量
+94 model1 0.0915 0.333 0.386 0.379 0.409 0.623 0
+95 model2 0.1510 0.399 0.471 0.478 0.528 0.729 0
+96 model3 0.2346 0.476 0.521 0.526 0.567 0.741 0
+</pre>
+<p>步骤4：使用“最佳”模型预测收益率</p>
+<p>我们在数据上运行“最佳”模型，并将结果存储在<code>train.reg</code>中。然后使用<code>predict()</code>函数在<code>test.data</code>数据集上应用回归参数。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; train.reg&lt;- lm(exret~ Mkt.RF + SMB + HML + RMW + CMA ,
++ data = train.data)
+&gt; summary(train.reg)
+
+Call:
+lm(formula = exret~ Mkt.RF + SMB + HML + RMW + CMA, data = train.data)
+
+Residuals:
+   Min      1Q  Median      3Q     Max
+-0.09662 -0.00687 -0.00093  0.00537  0.13053
+
+Coefficients:
+             Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept) 1.04e-03  4.21e-04   2.46   0.01391 *
+Mkt.RF      1.10e+10  5.17e+08  21.32   &lt; 2e-16 ***
+SMB        -4.46e+09  8.61e+08  -5.18   2.7e-07 ***
+HML        -3.57e+09  1.01e+09  -3.52   0.00045 ***
+RMW        -2.35e+09  1.30e+09  -1.81   0.07094 .
+CMA        -1.70e+10  1.63e+09 -10.46   &lt; 2e-16 ***
+---
+Signif. codes:  0 &#x27;***&#x27; 0.001 &#x27;**&#x27; 0.01 &#x27;*&#x27; 0.05 &#x27;.&#x27; 0.1 &#x27; &#x27; 1
+
+Residual standard error: 0.0133 on 1000 degrees of freedom
+Multiple R-squared: 0.514,   Adjusted R-squared: 0.512
+F-statistic: 212 on 5 and 1000 DF,  p-value: &lt; 2e-16
+
+&gt; predicted&lt;- predict(train.reg, test.data)
+&gt; pred.data&lt;- data.frame(predicted)
+&gt; head.tail(pred.data)
+         predicted
+2019-01-02 -0.00786
+2019-01-03 -0.04780
+2019-01-04  0.05050
+         predicted
+2019-12-27 -5.70e-04
+2019-12-30 -1.65e-02
+2019-12-31  5.13e-05</code></pre>
+</div>
+<p>步骤5：计算预测误差</p>
+<p>作为预测误差的度量，我们将使用均方根误差（RMSE）。为此，我们首先合并实际</p>
+</section>
+<section class="book-page" data-pdf-page="446">
+<p>将AMZN收益率与预测的AMZN收益率进行比较。由于我们的预测是超额收益率，因此需要加回无风险利率。然后计算残差，即实际AMZN收益率与预测AMZN收益率之差。接着通过以下步骤计算RMSE：(1) 对残差平方，(2) 计算平方残差的均值，(3) 取该平均平方误差的平方根。可以看出，RMSE为0.970%。</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">&gt; predicted&lt;- data.frame(test.data[, c(1, 7)], pred.data)
+&gt; head.tail(predicted)
+    AMZN RF predicted
+2019-01-02 0.0244 9.99e-15 -0.00786
+2019-01-03 -0.0256 9.99e-15 -0.04780
+2019-01-04 0.0489 9.99e-15 0.05050
+    AMZN RF predicted
+2019-12-27 0.000551 7.11e-15 -5.70e-04
+2019-12-30 -0.012328 7.11e-15 -1.65e-02
+2019-12-31 0.000514 7.11e-15 5.13e-05
+&gt; predicted$rhat&lt;- predicted$predicted + predicted$RF
+&gt; head.tail(predicted)
+    AMZN RF predicted rhat
+2019-01-02 0.0244 9.99e-15 -0.00786 -0.00786
+2019-01-03 -0.0256 9.99e-15 -0.04780 -0.04780
+2019-01-04 0.0489 9.99e-15 0.05050 0.05050
+    AMZN RF predicted rhat
+2019-12-27 0.000551 7.11e-15 -5.70e-04 -5.70e-04
+2019-12-30 -0.012328 7.11e-15 -1.65e-02 -1.65e-02
+2019-12-31 0.000514 7.11e-15 5.13e-05 5.13e-05
+&gt; predicted$resid&lt;- predicted$AMZN - predicted$rhat
+&gt; head.tail(predicted)
+    AMZN RF predicted rhat resid
+2019-01-02 0.0244 9.99e-15 -0.00786 -0.00786 0.03230
+2019-01-03 -0.0256 9.99e-15 -0.04780 -0.04780 0.02223
+2019-01-04 0.0489 9.99e-15 0.05050 0.05050 -0.00165
+    AMZN RF predicted rhat resid
+2019-12-27 0.000551 7.11e-15 -5.70e-04 -5.70e-04 0.001121
+2019-12-30 -0.012328 7.11e-15 -1.65e-02 -1.65e-02 0.004188
+2019-12-31 0.000514 7.11e-15 5.13e-05 5.13e-05 0.000463
+&gt; options(digits = 7)
+&gt; (rmse &lt;- sqrt(mean(predicted$resid^2)))
+[1] 0.009696332</code></pre>
+</div>
+<h3>12.4.4 人工神经网络</h3>
+<p>人工神经网络通常被描述为黑箱。鉴于输入、模型、训练数据集以及机器学习的方式，输出的生成方式可能不容易解释。带着这个警告，我们将尝试给出一个高层次的</p>
+</section>
+<section class="book-page" data-pdf-page="447"><h2 id="section-12-4">12.4 机器学习技术 435</h2>
+<p>讨论神经网络如何实现，希望至少能对黑箱内部有一点了解。</p>
+<p>我们可以将神经网络视为类似人脑的工作方式。人脑约有1000亿个神经元。根据昆士兰大学脑研究所的说法，神经元是“负责从外部世界接收感觉输入、向肌肉发送运动指令以及在每一步之间转换和传递电信号的细胞”，并且“它们的相互作用定义了我们作为人的身份”。换句话说，神经元是一个相互连接的细胞网络，将某种输入信号转换为某种输出信号。神经网络模拟了神经元的这种功能。</p>
+<p>通常，要“学习”，我们需要大量的数据和许多参数。然而，为了说明和帮助理解（以及由于数据许可限制），我们只使用相对少量的数据和很少的参数。这足以展示如何实现模型。一旦我们有了输入数据，就需要关注（1）层和节点以及（2）激活函数。这被称为网络拓扑或网络架构。层和节点是神经网络的构建块。我们添加的层和节点越多，学习新特征的机会就越多。但没有预设规则规定需要多少层。表格数据常用的经验法则是使用两到五个隐藏层，如果有疑问，应该选择更多层。然后，节点的数量通常选择少于层数。一个实际考虑是，层和节点越多，模型变得越复杂，可能需要更多的计算能力。这是一个更大的问题，虽然我们的例子不涉及，但在实践中处理大量数据时非常相关。经过层和节点后，神经网络进入输出层。对于回归问题（如下面将展示的），输出层将包含一个节点。对于其他问题（即分类问题），可能有一个或多个节点，具体取决于问题。如果问题是二元的（例如，盈利或亏损，真或假），那么可能只需要一个节点。另一方面，如果我们要预测五个不同潜在结果中的哪一个，那么我们将有五个节点，输出将是每个潜在结果的概率。</p>
+<p>神经网络的另一个特征是激活函数，它决定节点是否有足够的信息输入来向下一层发送信号。例如，对于回归问题，我们将使用线性激活函数。一层的所有节点都连接到前一层的节点，每个连接都有一个权重。然后，该节点将输入乘以权重后相加，再加上一个额外的偏置参数。这些输入的总和成为激活函数的输入。</p>
+<p>如下所示，<code>neuralnet</code> 包允许我们进行简单的分层网络方法。在第一次运行时，神经网络将选择一组观测值，在所有节点连接上随机分配权重，并预测输出。神经网络评估自身的准确性，并自动调整所有节点连接的权重以提高准确性。这个过程是</p></section>
+<section class="book-page" data-pdf-page="448">
+  <h2>12. 交易策略</h2>
+<p>称为反向传播。为了执行反向传播，我们需要（1）目标函数和（2）优化器。对于回归问题，衡量性能的目标函数可以是均方根误差（RMSE）。在每次前向传播中，神经网络将基于RMSE衡量其性能。然后神经网络通过各层向后工作，计算关于网络权重的损失梯度（即损失曲线的导数），沿梯度相反方向小幅调整权重，然后抓取另一组观测值运行模型。该过程重复进行，直到目标函数最小化或低于某个预定义的阈值。这个过程称为梯度下降，是所使用的优化器。</p>
+<h3>第一步：缩放数据</h3>
+<p>我们将使用上述回归讨论中的相同变量来预测AMZN收益率。因此，我们可以使用数据集rets，但我们需要开发一种缩放数据的方法。原因在于网络神经元的常见激活函数定义在某些常见区间上，例如从-1到+1或从0到1。为此，我们选择使用最小-最大方法对数据进行归一化，使其缩放到0和1之间（包含端点）。我们称此函数为normalize()，与之前使用的函数相同。然后使用lapply()将该函数应用于full.data数据集中的每一列。</p>
+<pre><div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; normalize&lt;- function(x){
++ return ((x - min(x))/ (max(x)- min(x)))
++}
+&gt; maxmindf&lt;- as.data.frame(
++ lapply( rets ,normalize)
++)
+&gt; head.tail(maxmindf)
+         AMZN      SPYV      SPYG       CWI      IGLB
+2015-01-02 0.3535063 0.4745962 0.4206121 0.6375187 0.7666175
+2015-01-05 0.2841406 0.2830034 0.2802130 0.5066617 0.6516810
+2015-01-06 0.2730577 0.3978058 0.3635419 0.6185734 0.8238683
+         AMZN      SPYV      SPYG       CWI      IGLB
+2019-12-27 0.3837734 0.4951686 0.4488421 0.7231575 0.6352690
+2019-12-30 0.3234771 0.4416833 0.3734090 0.6456770 0.6250283
+2019-12-31 0.3836011 0.5286278 0.4670977 0.7408653 0.4814883</code></pre>
+</div></pre>
+<h3>第二步：创建训练集和测试集</h3>
+<p>以上现在是一个数据框对象，因此我们必须创建一个R可读作日期的日期变量。为此，我们首先从具有所需日期序列的xts对象中提取日期。在我们的示例中，该xts对象是rets数据集。然后我们将日期向量与第一步中的maxmindf数据集合并。接着我们可以使用date将数据子集划分为训练集train.set和测试集test.set。</p>
+<pre><div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; date &lt;- as.Date(index(rets))
+&gt; head.tail(date)
+[1] &quot;2015-01-02&quot; &quot;2015-01-05&quot; &quot;2015-01-06&quot;
+[1] &quot;2019-12-27&quot; &quot;2019-12-30&quot; &quot;2019-12-31&quot;
+&gt;
+&gt; rownames(maxmindf)&lt;- seq(1, nrow(maxmindf), 1)</code></pre>
+</div></pre>
+</section>
+<section class="book-page" data-pdf-page="449">
+  <h2>12.4 机器学习技术</h2>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">7 &gt; maxmindf&lt;- data.frame(date ,maxmindf)
+8 &gt; head.tail(maxmindf)
+9 date AMZN SPYV SPYG CWI IGLB
+10 1 2015-01-02 0.3535063 0.4745962 0.4206121 0.6375187 0.7666175
+11 2 2015-01-05 0.2841406 0.2830034 0.2802130 0.5066617 0.6516810
+12 3 2015-01-06 0.2730577 0.3978058 0.3635419 0.6185734 0.8238683
+13 date AMZN SPYV SPYG CWI IGLB
+14 12562019-12-27 0.3837734 0.4951686 0.4488421 0.7231575 0.6352690
+15 12572019-12-30 0.3234771 0.4416833 0.3734090 0.6456770 0.6250283
+16 12582019-12-31 0.3836011 0.5286278 0.4670977 0.7408653 0.4814883
+17 &gt;
+18 &gt; options(digits = 3)
+19 &gt; train.set&lt;- subset(maxmindf , date &lt;= &quot;2018-12-31&quot;)
+20 &gt; head.tail(train.set)
+21 date AMZN Mkt.RF SMB HML RMW CMA RF exret
+22 1 2015-01-02 0.354 0.442 0.261 0.410 0.427 0.437 0 0.354
+23 2 2015-01-05 0.284 0.249 0.460 0.266 0.553 0.370 0 0.284
+24 3 2015-01-06 0.273 0.339 0.207 0.340 0.666 0.419 0 0.273
+25 date AMZN Mkt.RF SMB HML RMW CMA RF exret
+26 10042018-12-27 0.352 0.540 0.224 0.374 0.467 0.437 1 0.351
+27 10052018-12-28 0.433 0.451 0.574 0.440 0.397 0.385 1 0.433
+28 10062018-12-31 0.456 0.554 0.366 0.298 0.480 0.370 1 0.456
+29 &gt;
+30 &gt; test.set&lt;- subset(maxmindf , date &gt;= &quot;2019-01-01&quot;)
+31 &gt; head.tail(test.set)
+32 date AMZN Mkt.RF SMB HML RMW CMA RF exret
+33 10072019-01-02 0.496 0.48 0.574 0.621 0.464 0.486 1 0.495
+34 10082019-01-03 0.262 0.18 0.523 0.637 0.427 0.683 1 0.261
+35 10092019-01-04 0.610 0.84 0.492 0.244 0.476 0.228 1 0.610
+36 date AMZN Mkt.RF SMB HML RMW CMA RF exret
+37 12562019-12-27 0.384 0.445 0.265 0.378 0.578 0.455 0.7 0.384
+38 12572019-12-30 0.323 0.391 0.463 0.508 0.550 0.544 0.7 0.323
+39 12582019-12-31 0.384 0.485 0.402 0.420 0.470 0.474 0.7 0.384</code></pre>
+</div>
+<p><strong>步骤3：基于Fama-French模型的预测</strong> 我们开始使用Fama-French五因子模型进行预测。加载 <code>neuralnet</code> 包。这将允许我们使用 <code>neuralnet()</code> 函数。参数 <code>hidden</code> 是一个整数向量，指定每个隐藏层的神经元数量。如下面第5行所示，我们使用了5层和3个神经元。图12.7以图形方式展示了这一点。然后，我们将 <code>threshold</code> 参数设置为0.01，该参数指定了停止准则的阈值。下面的 <code>result.matrix</code> 的值告诉我们关于阈值的各种信息，例如，达到阈值所需的步数。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; library(neuralnet)
+2 &gt; set.seed(1)
+3 &gt; nn.ff &lt;- neuralnet(exret~ Mkt.RF + SMB + HML + RMW + CMA ,
+4 + data = train.set,
+5 + hidden = c(5, 3),
+6 + linear.output = TRUE ,
+7 + threshold = 0.01)
+8 &gt; nn.ff$result.matrix</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="450">
+
+
+<h2>神经网络输出</h2>
+<figure class="book-figure" id="fig-12.7"><img src="/assets/img/analyzing-financial-data-r-cn/figure-f173ec9db452.png" alt="图12.7 具有五个隐藏层和三个节点的神经网络图">
+  <figcaption>图12.7 具有五个隐藏层和三个节点的神经网络图</figcaption>
+</figure>
+<p>以下为神经网络权重估计结果：</p>
+<pre><code>9 [,1]
+10 error 1.79e+00
+11 reached.threshold 8.63e−03
+12 steps 1.06e+03
+13 Intercept.to.1layhid1−6.36e−01
+14 Mkt.RF.to.1layhid1−8.35e−01
+15 SMB.to.1layhid1 −2.01e−01
+16 HML.to.1layhid1 1.91e+00
+17 RMW.to.1layhid1 5.91e −01
+18 CMA.to.1layhid1 1.11e+00
+19 Intercept.to.1layhid21.43e+00
+20 Mkt.RF.to.1layhid2 2.99e+00
+21 SMB.to.1layhid2 −7.37e−01
+22 HML.to.1layhid2 −7.23e−01
+23 RMW.to.1layhid2 1.13e −01
+24 CMA.to.1layhid2 −2.57e+00
+25 Intercept.to.1layhid3−5.69e+00
+26 Mkt.RF.to.1layhid3 4.23e+00
+27 SMB.to.1layhid3 −5.87e+00
+28 HML.to.1layhid3 1.80e+01
+29 RMW.to.1layhid3 2.51e+00
+30 CMA.to.1layhid3 −3.61e+01
+31 Intercept.to.1layhid47.47e−01
+32 Mkt.RF.to.1layhid4−3.38e+00
+33 SMB.to.1layhid4 9.20e −01
+34 HML.to.1layhid4 9.43e −01
+35 RMW.to.1layhid4 1.41e −01
+36 CMA.to.1layhid4 −5.10e−01</code></pre>
+</section>
+<section class="book-page" data-pdf-page="451">
+<h2>12.4 机器学习技术</h2>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">37 Intercept.to.1layhid56.10e−01
+38 Mkt.RF.to.1layhid5−2.45e+00
+39 SMB.to.1layhid5 −1.43e−01
+40 HML.to.1layhid5 −1.42e+00
+41 RMW.to.1layhid5 3.19e −01
+42 CMA.to.1layhid5 1.80e+00
+43 Intercept.to.2layhid11.37e+00
+44 1layhid1.to.2layhid1−4.13e−01
+45 1layhid2.to.2layhid1 4.74e−01
+46 1layhid3.to.2layhid1 2.33e+00
+47 1layhid4.to.2layhid1−1.20e+00
+48 1layhid5.to.2layhid1−2.47e−01
+49 Intercept.to.2layhid2−3.85e−01
+50 1layhid1.to.2layhid2−8.24e−02
+51 1layhid2.to.2layhid2 1.11e+00
+52 1layhid3.to.2layhid2 3.91e+00
+53 1layhid4.to.2layhid2 1.16e−02
+54 1layhid5.to.2layhid2−5.01e−02
+55 Intercept.to.2layhid36.87e−01
+56 1layhid1.to.2layhid3 6.41e−01
+57 1layhid2.to.2layhid3−7.64e−01
+58 1layhid3.to.2layhid3−9.16e+00
+59 1layhid4.to.2layhid3 1.50e−01
+60 1layhid5.to.2layhid3 7.62e−01
+61 Intercept.to.exret −1.01e−01
+62 2layhid1.to.exret 8.92e −01
+63 2layhid2.to.exret 4.09e −01
+64 2layhid3.to.exret −5.33e−01
+65 &gt; plot(nn.ff)</code></pre>
+</div>
+<p><strong>步骤4：将结果应用于测试数据集</strong> 我们将结果应用于测试数据集，使用 <code>compute()</code> 函数，以 <code>nn.ff</code> 和 <code>test.set</code> 为两个参数。神经网络的预测结果存储在 <code>net.result</code> 中。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; nn.result&lt;− compute(nn.ff, test.set)
+2 &gt; str(nn.result)
+3 List of 2
+4 $ neurons :List of 3
+5 ..$ : num [1:252, 1:6] 1 1 1 1111111. . .
+6 .. ..− attr(∗, &quot;dimnames&quot;)=List of 2
+7 .. .. ..$ : chr [1:252] &quot;1007&quot; &quot;1008&quot; &quot;1009&quot; &quot;1010&quot; ...
+8 .. .. ..$ : chr [1:6] &quot;&quot; &quot;Mkt.RF&quot; &quot;SMB&quot; &quot;HML&quot; ...
+9 ..$ : num [1:252, 1:6] 1 1 1 1111111. . .
+10 .. ..− attr(∗, &quot;dimnames&quot;)=List of 2
+11 .. .. ..$ : chr [1:252] &quot;1007&quot; &quot;1008&quot; &quot;1009&quot; &quot;1010&quot; ...
+12 .. .. ..$ : NULL
+13 ..$ : num [1:252, 1:4] 1 1 1 1111111. . .
+14 .. ..− attr(∗, &quot;dimnames&quot;)=List of 2
+15 .. .. ..$ : chr [1:252] &quot;1007&quot; &quot;1008&quot; &quot;1009&quot; &quot;1010&quot; ...
+16 .. .. ..$ : NULL
+17 $ net.result: num[1:252, 1] 0.342 0.1460.557 0.464 0.441 ...
+18 ..− attr(∗, &quot;dimnames&quot;)=List of 2
+19 .. ..$ : chr [1:252] &quot;1007&quot; &quot;1008&quot; &quot;1009&quot; &quot;1010&quot; ...</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="452">
+<h2>第12章 交易策略</h2>
+<p>第8步：反转预测数据和实际数据的缩放 为了计算预测误差，我们必须首先去除之前缩放操作的影响。我们通过将 net.result 乘以 full.data 数据集的最大值和最小值之差，然后加上 full.data 数据集的最小值，来撤销第4步中 min-max 方法的效果。我们对预测数据集和测试数据集都进行此操作。</p>
+<div class="r-code-block" id="r_code_1">
+  <pre><code class="language-r">1 &gt; ff.predicted&lt;− nn.result$net.result∗ (max(rets$AMZN)−
+2 + min(rets $AMZN)) + min(rets$AMZN)
+3 &gt; head.tail(ff.predicted)
+4 [,1]
+5 1007−0.00838
+6 1008−0.05022
+7 1009 0.03761
+8 [,1]
+9 1256 0.000331
+10 1257−0.016268
+11 1258 0.001024
+12 &gt;
+13 &gt; ff.predicted&lt;− as.numeric(ff.predicted)
+14 &gt; head.tail(ff.predicted)
+15 [1]−0.00838−0.05022 0.03761
+16 [1] 0.000331−0.016268 0.001024</code></pre>
+</div>
+<p>我们可以验证，当我们比较 rets 中的 AMZN 值与 capm.results 中的值时，我们正确地缩放回了原始值。例如，12月27日、30日和31日的实际 AMZN 收益率分别为 0.055%、-1.233% 和 0.051%。这些正是上面输出最后一行的值。</p>
+<div class="r-code-block" id="r_code_2">
+  <pre><code class="language-r">18 &gt; ff.test&lt;− test.set$AMZN ∗ (max(rets$AMZN)−
+19 + min(rets $AMZN)) + min(rets$AMZN)
+20 &gt; head.tail(ff.test)
+21 [1] 0.0244 −0.0256 0.0489
+22 [1] 0.000551−0.012328 0.000514</code></pre>
+</div>
+<p>第9步：合并实际值和预测值 我们将两个向量 ff.test 和 ff.predicted 合并为一个数据集，并标记为 ff.results。</p>
+<div class="r-code-block" id="r_code_3">
+  <pre><code class="language-r">1 &gt; ff.results&lt;− data.frame(ff.test , ff.predicted)
+2 &gt; names(ff.results)&lt;− c(&quot;actual&quot;, &quot;predicted&quot;)
+3 &gt; head.tail(ff.results)
+4 actual predicted
+5 1 0.0244 −0.00838</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="453">
+<h2 id="section-12-5">12.5 延伸阅读</h2>
+<p>步骤10：计算预测误差 我们将使用均方根误差（RMSE）作为评估预测精度的指标。首先计算预测值与实际值的平方偏差。然后使用 <code>mean()</code> 计算平方偏差的平均值，再使用 <code>sqrt()</code> 取平方根。如下所示，基于FF的预测的RMSE为0.979%。请注意，神经网络的每次运行都会产生不同的结果。因此，上面的输出可能与您得到的不完全一致，但应该相当接近。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; s q_deviation&lt;− (ff.results$actual− ff.results$predicted)^2
+2 &gt; comparison&lt;− cbind(ff.results , sq_deviation)
+3 &gt; head.tail(comparison)
+4 actual predicted sq_deviation
+5 1 0.0244 −0.00838 0.001077
+6 2 −0.0256 −0.05022 0.000608
+7 3 0.0489 0.03761 0.000126
+8 actual predicted sq_deviation
+9 250 0.000551 0.000331 4.82e−08
+10 251−0.012328−0.016268 1.55e−05
+11 252 0.000514 0.001024 2.60e−07
+12 &gt;
+13 &gt; (rmse &lt;− sqrt(mean(sq_deviation)))
+14 [1] 0.00979
+15 &gt; options(digits = 7)</code></pre>
+</div>
+<p>上述RMSE为0.979%。回顾我们使用回归进行预测的结果，RMSE为0.970%，两者相近，且回归的RMSE略低（即更好）。因此，在我们的示例中，使用神经网络相比线性模型似乎没有优势。尽管回归并不能保证始终表现更好，但这凸显了使用更复杂的模型并不总能带来更好的结果。在某些情况下，简单的模型可能同样好，甚至更好。因此，我们不应被某些模型的复杂性所迷惑，而应关注模型对给定任务的有效性。</p>
+<h3>12.5 延伸阅读</h3>
+<p>本章对交易策略（包括机器学习）进行了高级介绍。我们从讨论市场有效性开始，并介绍了一些用于检验市场有效性的实证检验。更多检验及其更详细的解释可见于[1, Campbell, Lo, and</p>
+</section>
+<section class="book-page" data-pdf-page="454">
+<p>MacKinlay (1997)]。接下来，我们介绍了一些技术指标。许多其他技术指标可以使用 <code>chartSeries</code> 生成。更多详情，请访问网址 http://www.quantmod.com/examples/charting/。要了解更多关于技术分析的一般知识，一本好书是 [9, Kirkpatrick and Dahlquist (2015)]。有几本优秀的教材深入探讨了这些不同主题的细节。对于交易策略，一本遵循量化方法的书是 [8, Kestner (2003)] 和 [6, Gray and Carlisle (2013)]。还有一些书从更一般的层面讨论交易系统，例如 [2, Chan (2009)] 和 [3, Chan (2013)]。此外，还有几本书详细介绍了如何构建交易系统，例如 [5, Fitschen (2013)] 和 [7, Kaufman (2013)]。关于机器学习，最近一本深入探讨金融机器学习主题的教材是 [11, Lopez de Prado (2018)]。我们可以用更多为R编写的一般机器学习书籍来补充这本教材，例如 [4, Ciaburro and Venkateswaran (2017)]、[10, Lantz (2013)] 和 [12, Wei (2015)]。</p>
+<h2 id="references-10">参考文献</h2>
+<ol class="references">
+  <li>Campbell, J., Lo, A., &amp; MacKinlay, A. C. (1997). <i>The Econometrics of Financial Markets</i>. Princeton: Princeton University.</li>
+<li>Chan, E. (2009). <i>Quantitative Trading: How to Build Your Own Algorithmic Trading Business</i>. New York: Wiley.</li>
+<li>Chan, E. (2013). <i>Algorithmic Trading: Winning Strategies and Other Rationale</i>. New York: Wiley.</li>
+<li>Ciaburro, G., &amp; Venkateswaran, B. (2017). <i>Neural Networks with R</i>. London: Packt.</li>
+<li>Fitschen, K. (2013). <i>Building Reliable Trading Systems</i>. New York: Wiley.</li>
+<li>Gray, W., &amp; Carlisle, T. (2013). <i>Quantitative Value</i>. New York: Wiley.</li>
+<li>Kaufman, P. (2013). <i>Trading Systems and Methods</i> (5th ed.). New York: Wiley.</li>
+<li>Kestner, L. (2003). <i>Quantitative Trading Strategies</i>. New York: McGraw-Hill.</li>
+<li>Kirkpatrick, C., &amp; Dahlquist, J. (2015). <i>Technical Analysis: The Complete Resource for Financial Market Technicians</i> (3rd ed.). New York: Wiley.</li>
+<li>Lantz, B. (2013). <i>Machine Learning with R</i>. London: Packt.</li>
+<li>Lopez de Prado, M. (2018). <i>Advances in Financial Machine Learning</i>. New York: Wiley.</li>
+<li>Wei, Y.-W. (2015). <i>Machine Learning with R Cookbook</i>. London: Packt.</li>
+</ol>
+</section>
+<nav class="chapter-nav"><a href="/analyzing-financial-data-r-cn/chapter-11/">上一节：第11章 模拟</a><a href="/analyzing-financial-data-r-cn/appendix-a/">下一节：附录A R入门</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=638ea974b0aa"></script>
+</body>
+</html>

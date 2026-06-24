@@ -1,0 +1,1596 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="第5章 因子模型 | 《使用 R 分析金融数据并实现金融模型》">
+  <title>第5章 因子模型 | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=163efa3dc728">
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <div class="sidebar-heading">
+    <h2>书籍目录</h2>
+    <div class="sidebar-actions" aria-label="二级目录控制">
+      <button type="button" data-sidebar-action="expand">全部展开</button>
+      <button type="button" data-sidebar-action="collapse">全部收起</button>
+    </div>
+  </div>
+  <nav class="sidebar-list"><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/">首页</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/dedication/">献辞</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/preface/">前言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/acknowledgments/">致谢</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-1/">第1章 价格</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-1" aria-label="展开第1章 价格二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-1" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-1">1.1 价格与价值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-2">1.2 从 Yahoo Finance 导入价格数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-3">1.3 检查数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-4">1.4 基本数据处理技巧</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-5">1.5 比较不同证券之间的资本利得</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-6">1.6 简单移动平均线和指数移动平均线</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-7">1.7 成交量加权平均价格（VWAP）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-8">1.8 绘制K线图</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-9">1.9 双轴价格与成交量图</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-10">1.10 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#references">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-2/">第2章 单个证券收益率</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-2" aria-label="展开第2章 单个证券收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-2" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-1">2.1 价格收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-2">2.2 总收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-3">2.3 对数总收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-4">2.4 缩尾处理与截尾处理</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-5">2.5 累积多日收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-6">2.6 周收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-7">2.7 月度收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-8">2.8 比较多种证券的表现</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-3/">第3章 投资组合收益率</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-3" aria-label="展开第3章 投资组合收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-3" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-1">3.1 投资组合收益率：长方法</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-2">3.2 使用矩阵代数的投资组合收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-3">3.3 构建基准投资组合收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-4">3.4 时间加权收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-5">3.5 资金加权收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-6">3.6 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#reference">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-4/">第4章 风险</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-4" aria-label="展开第4章 风险二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-4" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-1">4.1 风险-收益权衡</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-2">4.2 单个证券风险</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-3">4.3 投资组合风险</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-4">4.4 风险价值 (Value-at-Risk)</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-5">4.5 期望损失</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-6">4.6 替代风险度量</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-7">4.7 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#references-2">参考文献</a></div></div><div class="sidebar-item is-current is-open"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-5/" aria-current="page">第5章 因子模型</a><button class="sidebar-toggle" type="button" aria-expanded="true" aria-controls="sidebar-sections-chapter-5" aria-label="收起第5章 因子模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-5"><a class="section-link" href="#section-5-1">5.1 资本资产定价模型（CAPM）</a><a class="section-link" href="#section-5-2">5.2 市场模型</a><a class="section-link" href="#section-5-3">5.3 滚动窗口回归</a><a class="section-link" href="#section-5-4">5.4 不同参考日的Beta</a><a class="section-link" href="#section-5-5">5.5 Fama–French 三因子模型</a><a class="section-link" href="#section-5-6">5.6 异方差性检验</a><a class="section-link" href="#section-5-7">5.7 检验非正态性</a><a class="section-link" href="#section-5-8">5.8 自相关检验</a><a class="section-link" href="#section-5-9">5.9 事件研究</a><a class="section-link" href="#section-5-10">5.10 选择最佳回归变量</a><a class="section-link" href="#section-5-11">5.11 延伸阅读</a><a class="section-link" href="#references-3">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-6/">第6章 风险调整后的投资组合绩效度量</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-6" aria-label="展开第6章 风险调整后的投资组合绩效度量二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-6" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-1">6.1 投资组合与基准数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-2">6.2 夏普比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-3">6.3 Roy 的安全第一比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-4">6.4 特雷诺比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-5">6.5 索提诺比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-6">6.6 信息比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-7">6.7 合并结果</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-8">6.8 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#references-4">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-7/">第7章 Markowitz均值-方差优化</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-7" aria-label="展开第7章 Markowitz均值-方差优化二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-7" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-1">7.1 两个资产：手动方法</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-2">7.2 使用二次规划的两个资产情况</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-3">7.3 使用二次规划的多资产优化</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-4">7.4 允许卖空的影响</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-5">7.5 扩展阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#references-5">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-8/">第8章 股票</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-8" aria-label="展开第8章 股票二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-8" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-1">8.1 公司财务</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-2">8.2 预测（Projections）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-3">8.3 股权风险溢价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-4">8.4 去杠杆化 Beta</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-5">8.5 敏感性分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-6">8.6 使用回归分析的相对估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-7">8.7 识别股票收益率的显著变化</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-8">8.8 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#references-6">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-9/">第9章 固定收益</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-9" aria-label="展开第9章 固定收益二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-9" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-1">9.1 经济分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-2">9.2 美国国债</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-3">9.3 主成分分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-4">9.4 投资级债券利差</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-5">9.5 债券估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-6">9.6 久期与凸性</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-7">9.7 短期利率模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-8">9.8 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#references-7">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-10/">第10章 期权</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-10" aria-label="展开第10章 期权二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-10" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-1">10.1 获取期权链数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-2">10.2 Black–Scholes–Merton 期权定价模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-3">10.3 隐含波动率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-4">10.4 Cox, Ross, and Rubinstein 二叉树期权定价模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-5">10.5 美式期权定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-6">10.6 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#references-8">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-11/">第11章 模拟</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-11" aria-label="展开第11章 模拟二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-11" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-1">11.1 使用几何布朗运动模拟股票价格</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-2">11.2 模拟含股息和不含股息的股票价格</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-3">11.3 模拟具有相关价格的股票</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-4">11.4 使用模拟计算风险价值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-5">11.5 欧式期权的蒙特卡洛定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-6">11.6 使用对偶变量法的蒙特卡洛期权定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-7">11.7 奇异期权估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-8">11.8 扩展阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#references-9">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-12/">第12章 交易策略</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-12" aria-label="展开第12章 交易策略二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-12" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-1">12.1 有效市场假说</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-2">12.2 技术分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-3">12.3 构建简单交易策略</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-4">12.4 机器学习技术</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-5">12.5 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#references-10">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-a/">附录A R入门</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-appendix-a" aria-label="展开附录A R入门二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-appendix-a" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-1-installing-r">A.1 安装 R</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-2-the-r-working-directory">A.2 R 工作目录</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-3-r-console-output">A.3 R 控制台输出</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-4-r-editor">A.4 R 编辑器</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-5-packages">A.5 包</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-6-basic-commands">A.6 基本命令</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-7-the-r-workspace">A.7 R 工作空间</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-8-vectors">A.8 向量</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-9-combining-vectors">A.9 组合向量</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-10-matrices">A.10 矩阵</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-11-data-frame">A.11 data.frame</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-12-date-formats">A.12 日期格式</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-b/">附录B 预加载代码</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-c/">附录C 构建假设投资组合（月度收益率）</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-d/">附录D 构建假设投资组合（日收益率）</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/index/">索引</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <h1>第5章 因子模型</h1>
+<section class="book-page" data-pdf-page="152">
+<h1 id="chapter-5">第5章 因子模型</h1>
+<p>在金融学中，只有无法通过分散化消除的风险因子才会被定价到折现率中。人们已经开发出许多模型来识别此类因子，但几乎所有模型都没有理论基础。唯一一个具有理论基础、并在许多实际应用中被广泛使用的模型是资本资产定价模型（Capital Asset Pricing Model, CAPM），由[25, Sharpe (1964)]提出，我们将在5.1节中讨论。CAPM是一个单因子模型，以市场风险作为唯一因子。CAPM允许我们为目标公司提供市场风险上的因子载荷。换句话说，CAPM让我们能够确定某只股票对市场变动的敏感程度。例如，防御性股票预计会随市场变动而变化较小，甚至可能反向变动。</p>
+<p>CAPM几乎是所有金融教科书和课程中讲授的模型。然而，自20世纪60年代提出以来，许多研究发现CAPM在实证检验中表现不佳。但是，尚不清楚这些结果是由于CAPM自身的失败，还是因为我们无法找到合适的市场代理变量。CAPM中的“市场”本应囊括所有资产，但从实践角度看，我们无法找到反映这一点的代理变量。这一观点最早由[24, Roll (1977)]提出，被称为罗尔批评（Roll's Critique）。而且，与其他任何因子模型相比，CAPM仍然是投资者和金融专业人士最常用的方法。</p>
+<p>在实际应用中，通常使用一种与CAPM类似的更简单的模型，称为市场模型（market model）。我们将在5.2节中讨论市场模型。与CAPM类似，市场模型也是一个单因子模型。主要区别在于，市场模型没有对“市场”应该是什么施加理论限制，因此通常使用任何广泛基础的股票市场指数，例如标普500指数（S&P 500 Index）或MSCI世界指数（MSCI World Index）。</p>
+<p>CAPM的关键组成部分之一是beta，即股票收益对市场收益的敏感度。由于beta在许多应用（如折现率计算）中的重要性，我们将展示如何进行若干分析以检验beta估计的稳健性。在5.3节中，</p>
+</section>
+<section class="book-page" data-pdf-page="153">
+<p>我们展示了如何对beta进行时间序列分析。我们发现beta并不是平稳的（stationary）。也就是说，我们不能假设一个时期的beta在另一个时期保持不变。此外，即使在同一个时期，beta也可能因我们估计该时期收益率的方式不同而变化。例如，在第5.4节中，我们展示了选择一周中的哪一天来计算周收益率可能会产生影响。因此，典型的周五到周五收益率在某些情况下可能导致有偏的结果，但除非我们进行计算，否则无法事先判断。虽然我们仅展示了如何使用周收益率进行分析，但这一参考日问题在使用月收益率时也同样相关。通常的做法是使用月末价格计算月收益率，但也可以测试当使用月中价格计算收益率时，beta是否发生变化或如何变化。</p>
+<p>由于CAPM在实证中表现不佳，人们开发了包含多个因子的不同模型，称为多因子模型（multi-factor models）。这些模型包含了额外的因子，有助于解释股票预期收益率的更多变化。然而，这些多因子模型大多是实证或统计结果（即，它们并非基于理论）。一个著名的例子是Eugene Fama和Kenneth French提出的三因子模型（FF模型）。在[15, Fama and French (1993)]中，Fama和French发现规模和估值与大的收益溢价相关。作为规模的代理变量，Fama和French使用了小市值股票与大市值股票的收益率之差。作为估值的代理变量，他们使用了高账面市值比和低账面市值比（即价值股和成长股）股票的收益率之差。尽管基于统计结果，Fama-French模型仍是学术界使用的主流因子模型。我们将在5.5节讨论Fama-French模型。基于统计的模型的一个问题是，使用不同的时间段或纳入其他数据可能会改变结果。例如，使用更近期且更广泛的数据，Fama和French在2012年和2017年的文章中发现，要么没有规模溢价，要么规模溢价接近于零，这意味着只有价值溢价的结果仍然稳健。</p>
+<p>实施这些因子模型需要使用回归分析。而回归分析基于若干假设。下面我们展示如何检验其中三个关键假设。一个关键假设是方差恒定（即同方差性，homoskedastic）。在第5.6节中，我们展示如何实施检验以识别异方差性（heteroskedasticity），以及如何生成异方差一致性标准误（heteroskedasticity-consistent standard errors）来纠正该问题。另一个假设是残差服从正态分布。我们在第5.7节中介绍了若干非正态性检验。最后，假设残差不存在序列相关。我们在第5.8节中展示如何检验残差的自相关性。</p>
+<p>因子模型在实践和学术界中的一种应用是通过一种称为事件研究（event study）的技术。我们在第5.9节中讨论这一点。事件研究用于确定公开披露的新信息是否对公司价值产生了影响。从学术角度来看，我们对公司金融的大部分了解都来自于事件研究。事件研究的流行现已扩展到其他领域，例如法律。在证券诉讼中，</p>
+</section>
+<section class="book-page" data-pdf-page="154">
+  <h2 id="section-5-1">5.1 资本资产定价模型（CAPM）</h2>
+<p>例如，在几乎所有情况下，作证某些披露是否影响股票价格的专家证人通常需要使用事件研究。学术文献中的因子层出不穷，因此在因子模型中选择最佳因子可能并不简单直接。通常，我们必须结合定性和定量方法。没有明确的检验标准来做出这一决定，最合适的方法可能取决于具体事实和情况。在第5.10节中，我们将通过一个示例说明如何使用定量方法从一组较大的因子中选择最佳因子集，其中“最佳”由统计标准定义。这可以补充关于特定模型中应使用哪些回归变量的定性分析。</p>
+<p>投资者和实务中使用最广泛的因子模型是<strong>资本资产定价模型（Capital Asset Pricing Model, CAPM）</strong>，由 Sharpe（1964）[25] 提出。Berk 和 van Binsbergen [6] 使用了 1977 年 1 月至 2011 年 3 月期间 4,275 只共同基金的基金流量样本。该研究关注了共同基金投资者的行为，这些投资者涵盖了年收入超过 10 万美元的绝大多数家庭。作者发现，CAPM 是与共同基金投资者设定其必要收益率最一致的模型。Pinto 等人 [23] 调查了 CFA 协会的专业股票分析师。他们样本中的股票分析师大部分时间用于评估单个证券，以作出投资建议或投资组合决策。作者发现，1,436 名回应调查的股票分析师中有 68% 使用了 CAPM。Graham 和 Harvey [17] 调查了《财富》500 强 CFO 以及来自 4,440 家公司的金融高管，这些高管是金融高管协会的成员。该调查除其他事项外，研究了受访者如何做出资本预算（即投资）决策。基于调查回复，作者发现超过 70% 的受访者总是或几乎总是使用 CAPM。因此，我们首先讨论 CAPM。</p>
+<p>公司股票的价值等于股东期望从持有股票中获得的一系列潜在股息支付（即自由现金流）的现值。由于这些潜在的股息支付预计在未来不同时间点到达，我们必须通过适当的风险调整折现率来折现这些潜在的股息支付。CAPM 为我们提供了适当的风险调整折现率，用于折现这些股权现金流。从数学角度来看，CAPM 的公式为</p>
+  \[ R_i = R_f + \beta_i (R_m - R_f), \qquad (5.1) \]
+  <p>其中 \(R_i\) 是资产 \(i\) 的收益率，\(R_f\) 是无风险资产的收益率，\(R_m\) 是市场代理变量的收益率，\(\beta_i\) 是资产 \(i\) 对整体市场的敏感度。</p>
+</section>
+<section class="book-page" data-pdf-page="155">
+<h2>5 因子模型</h2>
+<p>CAPM回归 尽管CAPM方程通常可以表示为式(5.1)，但CAPM的实证检验通常将该公式转化为其超额收益形式。术语“超额”是指标的证券的收益率和市场收益率均减去无风险利率后的收益。也就是说，超额收益形式的CAPM如下：</p>
+\[R_i - R_f = \alpha + \beta_i (R_m - R_f), \qquad (5.2)\]
+<p>其中所有变量的定义与式(5.1)相同。式(5.2)中的α和β_i通过OLS回归进行估计。理论上，CAPM限制α=0，但在实践中通常不这样做。</p>
+<p>要执行CAPM回归，我们需要选择(i)估计期的长度，(ii)收益率数据的频率，以及(iii)计算中使用的无风险利率。这可能会给我们带来大量的组合，并可能导致结果出现大量变异。我们必须根据事实和情况运用我们的判断。在我们的实现中，对于(i)和(ii)，我们遵循Yahoo Finance（雅虎财经）使用的方法，即对标的证券的收益率和市场收益率均使用五年的月度收益率，即60个月度收益率观测值。对于(iii)，我们使用3个月期国债利率。</p>
+<p>步骤1：导入投资组合收益率数据 首先，我们将投资组合的收益率数据导入R。在实践中，我们很可能已经记录了投资组合的收益率，在执行CAPM时，我们会导入这些数据。为了在我们的示例中模拟这一过程，我们构建了一个假设投资组合，并将其月度收益率保存为Hypothetical Portfolio (monthly).csv。有关该投资组合如何构建的详细信息在附录C中描述。我们使用read.csv()命令导入包含投资组合收益率的CSV文件。使用dim()，我们看到该数据集中有60个观测值。右侧的数字告诉我们数据集包含两列。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; data.port&lt;− read.csv(&quot;Hypothetical Portfolio (Monthly).csv&quot;)
+2 &gt; data.port&lt;− data.port[,−1]
+3 &gt; dim(data.port)
+4 [1] 60 2
+5 &gt; head.tail(data.port)
+6 Date Port.Ret
+7 1 Jan 2015 0.07306837
+8 2 Feb 2015 0.07258170
+9 3 Mar 2015−0.02373268
+10 Date Port.Ret
+11 58 Oct 2019 0.05596117
+12 59 Nov 2019 0.04224452
+13 60 Dec 2019 0.04982447</code></pre>
+</div>
+<p>步骤2：导入SPY数据 我们通过load.data()实现。然后使用to.monthly()将数据转换为月度价格。接着，使用Delt()（第13行），我们基于调整后的收盘价计算收益率。接下来，我们</p>
+</section>
+<section class="book-page" data-pdf-page="156">
+  <h2>5.1 资本资产定价模型（CAPM）</h2>
+<p>通过移除第一个观测值（2014年12月）并重命名变量 market（第14和15行）来清理数据。使用 dim()（第16行），我们可以看到我们有60个市场收益率。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; SPY&lt;- load.data(&quot;SPY Yahoo.csv&quot;, &quot;SPY&quot;)
+2 &gt; market&lt;- to.monthly(SPY)
+3 &gt; head.tail(market)
+4 SPY.Open SPY.High SPY.LowSPY.Close SPY.Volume SPY.Adjusted
+5 Dec 2014 207.99 208.19 205.39 205.54 130333800 186.2590
+6 Jan 2015 206.38 206.88 198.55 199.45 3183506000 180.7403
+7 Feb 2015 200.05 212.24 197.86 210.66 1901638100 190.8988
+8 SPY.Open SPY.High SPY.LowSPY.Close SPY.Volume SPY.Adjusted
+9 Oct 2019 297.74 304.55 284.82 303.33 1386748300 301.8459
+10 Nov 2019 304.92 315.48 304.74 314.31 1037123500 312.7722
+11 Dec 2019 314.59 323.80 307.13 321.86 1285175800 321.8600
+12 &gt;
+13 &gt; market&lt;- Delt(market$SPY.Adjusted)
+14 &gt; market&lt;- market[-1, ]
+15 &gt; names(market)&lt;- &quot;Market&quot;
+16 &gt; dim(market)
+17 [1] 60 1
+18 &gt; head.tail(market)
+19 Market
+20 Jan 2015 -0.02962929
+21 Feb 2015 0.05620466
+22 Mar 2015 -0.01570571
+23 Market
+24 Oct 2019 0.02210462
+25 Nov 2019 0.03619827
+26 Dec 2019 0.02905545</code></pre>
+</div>
+<h3>步骤3：导入无风险利率数据</h3>
+<p>对于无风险利率，我们从FRED数据库导入3个月期国债数据（DGS3MO）。我们将数据保存为名为DGS3MO.csv的文件，并使用read.csv()将文件导入R。DGS3MO数据是日收益率，但包括非交易日。有关如何下载这些数据的详细信息，请参见第9章9.1节。例如，下面的第5行是2015年1月1日的数据，这是一个非交易日，DGS3MO列下的值为点（.）。在第8行，我们使用subset()移除所有值为点的观测值。在这一行中，我们告诉R保留DGS3MO不等于点的观测值。“不等于”由感叹号（!）后跟等号（=）表示。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; raw.rf&lt;- read.csv(&quot;DGS3MO.csv&quot;, header = TRUE)
+2 &gt; head(raw.rf, 3)
+3 DATE DGS3MO
+4 1 2014-12-31 0.04
+5 2 2015-01-01 .
+6 3 2015-01-02 0.02
+7 &gt;
+8 &gt; raw.rf&lt;- subset(raw.rf, DGS3MO!= &quot;.&quot;)
+9 &gt; str(raw.rf)
+10 &#x27;data.frame&#x27;: 1251 obs. of 2 variables:</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="157">
+<h2 id="chapter-5">第5章 因子模型</h2>
+<pre><code class="r">11 $ DATE : Factor w / 1305 levels "2014−12−31","2015−01−01" ,..: 1 3 4 5 6 7 ...
+12 $ DGS3MO: Factor w/ 223 levels ".","0.00","0.01",..: 6 4 5 5 5 5 4 ...
+13 > head.tail(raw.rf)
+14 DATE DGS3MO
+15 1 2014−12−31 0.04
+16 3 2015−01−02 0.02
+17 4 2015−01−05 0.03
+18 DATE DGS3MO
+19 13032019−12−27 1.57
+20 13042019−12−30 1.57
+21 13052019−12−31 1.55</code></pre>
+<p><strong>步骤3a：创建日期变量</strong> 稍后我们将把这些数据转换为 xts 对象。因此，我们需要一个 R 可以识别为日期的变量。不幸的是，数据集中的 DATE 列（第1列）被 R 视为因子（即分类变量）。所以我们必须创建一个独立的、被 R 视为 Date 变量的变量。</p>
+<pre><code class="r">1 > Date &lt;- as.Date(raw.rf$DATE , "%Y−%m−%d")
+2 > str(Date)
+3 Date[1:1251], format: "2014−12−31" "2015−01−02" "2015−01−05" "2015−01−06" ...
+4 > head.tail(Date)
+5 [1] "2014−12−31" "2015−01−02" "2015−01−05"
+6 [1] "2019−12−27" "2019−12−30" "2019−12−31"</code></pre>
+<p><strong>步骤3b：创建数值型 DGS3MO 变量</strong> 与日期问题类似，R 认为 raw.rf 中 DGS3MO 列（第2列）的值是因子。为了使其有用，我们希望它是一个数值变量。我们使用 <code>as.numeric()</code> 和 <code>as.character()</code> 的组合将数据转换为 R 认可的数值型。</p>
+<pre><code class="r">1 > DGS3MO&lt;- as.numeric(as.character(raw.rf$DGS3MO))
+2 > str(DGS3MO)
+3 num [1:1251]0.04 0.02 0.03 0.03 0.03 0.03 0.02 0.03 0.03 0.04 ...
+4 > head.tail(DGS3MO)
+5 [1] 0.04 0.02 0.03
+6 [1] 1.57 1.57 1.55</code></pre>
+<p><strong>步骤3c：组合数据集并转换为 xts 对象</strong> 我们使用 <code>cbind()</code> 组合 Date 和 DGS3MO 向量。本书中的大多数数据集和向量标签都是小写。然而，当这些向量组合时，向量的名称将成为变量名。因此，为了节省时间和代码行数，我们可以按照我们希望的变量名来命名向量。接下来，将两个向量组合成 rf 后，我们使用 <code>xts()</code> 将数据集转换为 xts 对象。</p>
+<pre><code class="r">1 > rf &lt;- cbind(data.frame(Date), data.frame(DGS3MO))
+2 > head.tail(rf)
+3 Date DGS3MO
+4 1 2014−12−31 0.04
+5 2 2015−01−02 0.02</code></pre>
+</section>
+<section class="book-page" data-pdf-page="158">
+  <h2>5.1 CAPM（资本资产定价模型）143</h2>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">3 2015−01−05 0.03
+Date DGS3MO
+12492019−12−27 1.57
+12502019−12−30 1.57
+12512019−12−31 1.55
+&gt;
+&gt;r f &lt;− xts(rf$DGS3MO ,order.by = rf$Date)
+&gt; names(rf)&lt;− &quot;DGS3MO&quot;
+&gt; head.tail(rf)
+DGS3MO
+2014−12−31 0.04
+2015−01−02 0.02
+2015−01−05 0.03
+DGS3MO
+2019−12−27 1.57
+2019−12−30 1.57
+2019−12−31 1.55</code></pre>
+</div>
+<p><strong>步骤3d：转换为月度价格</strong> 现在rf是一个xts对象，我们可以使用<code>to.monthly()</code>将数据转换为月度价格。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">&gt;r f &lt;− to.monthly(rf)
+&gt; head.tail(rf)
+rf.Open rf.High rf.Low rf.Close
+Dec 2014 0.04 0.04 0.04 0.04
+Jan 2015 0.02 0.04 0.02 0.02
+Feb 2015 0.02 0.03 0.01 0.02
+rf.Open rf.High rf.Low rf.Close
+Oct 2019 1.82 1.82 1.54 1.54
+Nov 2019 1.52 1.62 1.52 1.59
+Dec 2019 1.60 1.60 1.53 1.55</code></pre>
+</div>
+<p><strong>步骤3e：计算月度收益率</strong> 我们将使用每个月的开盘价作为该月的收益率。报告的收益率是年化收益率，因此我们假设几何平均将年化收益率转换为月度收益率。换句话说，如果将月度收益率复利12次，就会得到年化收益率。然后，我们将数据子集限制为仅包含2015年1月至2019年12月的数据。由于月度收益率很小，我们使用<code>scipen = 999</code>来提高R将数值转换为科学记数法的阈值。有时以小数形式读取数字比科学记数法更容易。</p>
+<div class="r-code-block" id="code3">
+  <pre><code class="language-r">&gt; options(scipen = 999)
+&gt;r f &lt;− (1 + rf $rf.Open/ 100)^(1/ 12)− 1
+&gt; head.tail(rf)
+rf.Open
+Dec 20140.00003332722
+Jan 20150.00001666514
+Feb 20150.00001666514
+rf.Open
+Oct 20190.001504160
+Nov 20190.001257927
+Dec 20190.001323654</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="159">
+
+
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt;
+&gt; rf.sub&lt;- subset(rf,
++ index(rf) &gt;= as .yearmon(&quot;Jan 2015&quot;)&amp;
++ index(rf) &lt;= as. yearmon(&quot;Dec 2019&quot;))
+&gt; head.tail(rf.sub)
+&gt; options(scipen = 0)</code></pre>
+</div>
+<pre>rf.Open
+Jan 20150.00001666514
+Feb 20150.00001666514
+Mar 20150.00001666514
+rf.Open
+Oct 20190.001504160
+Nov 20190.001257927
+Dec 20190.001323654</pre>
+<p><strong>步骤4：合并为一个数据集</strong> 我们使用 cbind() 将投资组合、市场和无风险利率数据合并为一个数据集。在此过程中，我们还重命名了变量。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; combo &lt;- cbind(market , rf.sub , data.port$Port.Ret)
+&gt; names(combo) &lt;- c(&quot;Market&quot;, &quot;Risk.Free&quot;, &quot;Port.Ret&quot;)
+&gt; head.tail(combo)</code></pre>
+</div>
+<pre>Market Risk. Free Port.Ret
+Jan 2015−0.029629291.666514e−05 0.07306837
+Feb 2015 0.05620466 1.666514e−05 0.07258170
+Mar 2015−0.015705711.666514e−05−0.02373268
+Market Risk. Free Port.Ret
+Oct 20190.02210462 0.001504160 0.05596117
+Nov 20190.03619827 0.001257927 0.04224452
+Dec 20190.02905545 0.001323654 0.04982447</pre>
+<p><strong>步骤5：计算超额投资组合收益率和超额市场收益率</strong> 为了实现公式 (5.1)，我们需要计算两个变量。首先，我们需要超额投资组合收益率 \(R_i - R_f\)（Ex.Ret），以及超额市场收益率 \(R_m - R_f\)（Ex.Market）。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">&gt; combo$Ex.Ret &lt;- combo$Port.Ret - combo$Risk.Free
+&gt; combo$Ex.Market &lt;- combo$Market - combo$Risk.Free
+&gt; head.tail(combo)</code></pre>
+</div>
+<pre>Market Risk.Free Port.Ret Ex.Ret Ex.Market
+Jan 2015−0.029629291.666514e−05 0.07306837 0.07305171−0.02964595
+Feb 2015 0.05620466 1.666514e−05 0.07258170 0.07256504 0.05618799
+Mar 2015−0.015705711.666514e−05−0.02373268−0.02374934−0.01572237
+Market Risk.Free Port.Ret Ex.Ret Ex.Market
+Oct 20190.02210462 0.001504160 0.05596117 0.05445701 0.02060046
+Nov 20190.03619827 0.001257927 0.04224452 0.04098659 0.03494034
+Dec 20190.02905545 0.001323654 0.04982447 0.04850082 0.02773179</pre>
+<p><strong>步骤6：对超额投资组合收益率关于超额市场收益率进行回归</strong> 使用 lm()，我们对超额投资组合收益率关于超额市场收益率进行 OLS 回归。我们使用 digits = 3 来显示输出的前三位非零数字，并使用 scipen = 999 来增加 R 转换前的阈值。</p>
+</section>
+<section class="book-page" data-pdf-page="160">
+<h2>5.1 CAPM（资本资产定价模型）</h2>
+<p>将数据转换为科学计数法。后者在查看非常小的p值时特别有用。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; options(digits = 3, scipen = 999)
+2 &gt; capm &lt;− lm(Ex.Ret~ Ex.Market ,data = combo)
+3 &gt; summary(capm)
+5 Call:
+6 lm(formula = Ex.Ret~ Ex.Market ,data = combo)
+8 Residuals:
+9 Min 1Q Median 3Q Max
+10 −0.09318−0.02069−0.00259 0.02482 0.09868
+12 Coefficients:
+13 Estimate Std. Error tvalue Pr(&gt;|t|)
+14 (Intercept) 0.01176 0.00516 2.28 0.026 ∗
+15 Ex.Market 1.26135 0.14604 8.640.0000000000053∗∗∗
+16 −−−
+17 Signif. codes: 0 ‘∗∗∗’ 0.001 ‘∗∗’ 0.01 ‘∗’ 0.05 ‘.’ 0.1 ‘ ’ 1
+19 Residual standarderror: 0.0387 on 58 degrees of freedom
+20 Multiple R−squared: 0.563,Adjusted R−squared: 0.555
+21 F−statistic:74.6 on 1 and 58 DF, p −value:0.0000000000053
+23 &gt; options(digits = 7, scipen = 0)</code></pre>
+</div>
+<h3>CAPM Alpha（回归Alpha）</h3>
+<p>当投资者投资基金时，他们通常会考虑基金经理对基金业绩的贡献。因此，我们需要一种方法，来衡量基金经理是否提供了超越简单投资于指数（即，与使用被动投资策略相比，经理主动管理是否有益？）的价值。另一种看待这个问题的方式是，我们想知道基金经理与其基准相比表现如何。</p>
+<p>为了回答这个问题，我们将经理的Alpha（α）视为这种超额业绩的度量。投资组合的Alpha可以通过CAPM的超额收益形式计算得出。该回归控制了投资组合收益对其基准的敏感性。因此，任何未被市场捕捉到的收益都可以归因于经理。这种归因可以通过回归的Alpha或截距项观察到。如果这个Alpha为正且统计显著，则认为经理提供了正的价值。相反，如果Alpha为负且统计显著，则意味着经理提供了负的价值（即，我们投资于基准会更好）。</p>
+<p>投资组合的Alpha是上述回归输出中的截距项。截距等于0.01176，相当于月收益率1.2%。这个Alpha在5%的水平上统计显著（即其p值小于或等于0.05），这是实践中常用的统计显著性水平。因此，假设我们的假设投资组合收益，经理...</p>
+</section>
+<section class="book-page" data-pdf-page="161">
+<h2>第5章 因子模型</h2>
+<p>提供了超出基准敏感度所预期的每月1.2%的增量收益率。</p>
+<p><strong>CAPM Beta</strong> 根据CAPM回归结果，我们可以得出的另一个重要度量是投资组合的贝塔（beta）。投资组合的贝塔衡量投资组合收益率对整体市场变动的敏感程度。因此，投资组合的贝塔衡量的是所谓的系统性风险或市场风险。系统性风险是证券风险中无法通过分散化消除的部分，因此贝塔通常被视为投资者承担无法分散的风险所获得的补偿。</p>
+<p>从上面的回归结果中，我们可以读出投资组合的贝塔。这是变量Ex.Market的系数，为1.26。p值告诉我们贝塔统计显著的最低显著性水平。Ex.Market系数的p值为0.00意味着，在任何常规显著性水平（如1%、5%或10%）下，我们投资组合的贝塔在统计上显著不为零。</p>
+<p>另一种查看贝塔和p值的方法是从回归摘要结果中直接调用它们。不必仅仅停留在<code>summary(CAPM)</code>，我们可以使用<code>$coefficients[]</code>，在方括号内放置一个数字或使用<code>c(...)</code>放置一个数字向量来输出。观察上面的回归摘要输出，我们看到系数有八个值。编号顺序如下：数字1是截距的估计值，数字2是市场超额收益率（即贝塔）的估计值，数字3返回到截距的标准误，数字4是贝塔的标准误，依此类推。因此，如果我们想知道贝塔及其p值，我们选择数字2和8。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; (beta&lt;−summary(capm)$coefficients[2])
+2 [1] 1.261345
+3 &gt;
+4 &gt; options(scipen = 999)
+5 &gt; (beta.pval&lt;−summary(capm)$coefficients[8])
+6 [1] 0.000000000005297137
+7 &gt; options(scipen = 0)</code></pre>
+</div>
+<p>我们也可以将输出合并为一行，使用<code>coefficients[c(2, 8)]</code>。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; options(scipen = 999)
+2 &gt; summary(capm)$coefficients[c(2, 8)]
+3 [1] 1.261345272239198900 0.000000000005297137
+4 &gt; options(scipen = 0)</code></pre>
+</div>
+<p>CAPM回归的结果显示CAPM贝塔为1.26。这个1.26的贝塔随后可用于CAPM中，例如计算公司的权益成本。这意味着如果市场上涨1%，我们预期投资组合上涨1.26%；然而，如果市场下跌1%，我们预期投资组合下跌1.26%。</p>
+</section>
+<section class="book-page" data-pdf-page="162">
+  <h3>使用计算得到的beta估计资本资产定价模型（CAPM）中的股权成本</h3>
+<p>为了使用CAPM计算股权成本，我们需要找到一个兼容的股权风险溢价（ERP）。在我们的例子中，我们应该使用基于3个月国库券计算的ERP。历史ERP的一个来源是Damodaran教授的网站（http://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html）。Damodaran教授计算了1928年至2019年的ERP为8.18%，该值基于S&P 500收益率的算术平均值与3个月国库券收益率之差。2019年12月31日，3个月国库券收益率为1.55%。使用式（5.1），基于这些ERP和无风险利率输入，我们的beta为1.26，得出该投资组合的CAPM股权成本估计值为11.9%。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; ERP &lt;− 0.0818
+2 &gt;R f &lt;− 0.0155
+3 &gt; (capm.coe&lt;− Rf + beta ∗ ERP)
+4 [1] 0.118678</code></pre>
+</div>
+<h3>计算调整后的beta</h3>
+<p>有研究表明，高于市场beta（即1）的beta长期来看会下降，而低于市场beta的beta长期来看会上升。由于估值采用长期视角，一些人认为计算股权成本所使用的beta需要调整，以反映这种向市场beta回归的趋势。如果特定公司的beta确实表现出向1回归，一种常见的调整是对原始beta（即我们上面计算的beta）赋予2/3权重，对市场beta（即1）赋予1/3权重。这种调整通常归功于[8, Blume (1975)]。由于我们的原始beta为1.26，高于市场beta1.0，我们预期调整后的beta会低于原始beta。如下输出所示，调整后的beta为1.17。如果我们使用调整后的beta 1.17而不是CAPM beta来估计CAPM股权成本，我们将计算得到股权成本为11.2%。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; (adj.beta&lt;− (2 / 3) ∗ beta + (1 / 3) ∗ 1)
+2 [1] 1.17423
+3 &gt; (capm.adjbeta&lt;− Rf + adj.beta∗ ERP)
+4 [1] 0.111552</code></pre>
+</div>
+<h2 id="section-5-2">5.2 市场模型</h2>
+<p>CAPM要求我们使用预期收益和真实市场投资组合。实践中一种更常见的计算beta的方法是使用市场模型，因为市场模型使用市场代理变量，而不要求该市场代理变量是真实市场投资组合。此外，市场模型不需要使用无风险利率，因此无需计算公司和市场的超额收益。也就是说，</p>
+</section>
+<section class="book-page" data-pdf-page="163">
+  <p>148 5 因子模型</p>
+<p>\(R_i = \alpha + \beta_i R_m\)， (5.3)</p>
+<p>其中所有变量的定义与 CAPM 回归中的相同。由于我们在计算上述 CAPM 时已经拥有了所有输入，我们只需要运行形如式 (5.3) 的回归来查看结果。</p>
+<div class="r-code-block" id="code-163-1">
+  <pre><code class="language-r">1 &gt; options(digits = 3, scipen = 999)
+2 &gt; mkt.model&lt;− lm(Port.Ret~ Market , data = combo)
+3 &gt; summary(mkt.model)
+5 Call:
+6 lm(formula = Port.Ret~ Market , data = combo)
+8 Residuals:
+9 Min 1Q Median 3Q Max
+10 −0.09291−0.02079−0.00259 0.02479 0.09874
+12 Coefficients:
+13 Estimate Std. Error tvalue Pr(&gt;|t|)
+14 (Intercept) 0.01157 0.00519 2.23 0.03 ∗
+15 Market 1.25714 0.14608 8.61 0.000000000006∗∗∗
+16 −−−
+17 Signif. codes: 0 ‘∗∗∗’ 0.001 ‘∗∗’ 0.01 ‘∗’ 0.05 ‘.’ 0.1 ‘ ’ 1
+19 Residual standarderror: 0.0387 on 58 degrees of freedom
+20 Multiple R−squared: 0.561,Adjusted R−squared: 0.553
+21 F−statistic:74.1 on 1 and 58 DF, p −value:0.00000000000596
+23 &gt; options(digits = 7, scipen = 0)</code></pre>
+</div>
+<p>市场模型 beta 为 1.257，非常接近使用 CAPM 计算的 beta 1.261。微小的差异主要是由于估计期内无风险利率较低，但无论如何，由于我们在方程两边减去几乎相同的数字，差异仍然应该是一个相对较小的数字。CAPM 和市场模型 beta 之间的微小差异是实践中的典型结果，这也是许多从业者在估计 beta 时使用市场模型的部分原因。</p>
+<p>我们对 CAPM beta 做出的任何推断也可以应用于市场模型 beta。例如，beta 为 1.26 的解释是：对于 S&P 500 指数收益率 1% 的增加（减少），我们预期投资组合将上涨（下跌）1.26%。我们还可以使用从市场模型计算出的 beta 来实现调整后的 beta 计算。鉴于两个 beta 计算如此接近，从实际角度看，这两种方法得出的 beta 几乎没有差异。使用市场模型 beta 估计的股权成本为 11.83%，非常接近使用 CAPM 估计的 11.87% 股权成本。</p>
+<div class="r-code-block" id="code-163-2">
+  <pre><code class="language-r">1 &gt; (mm.beta&lt;− summary(mkt.model)$coefficients[2])
+2 [1] 1.257142
+3 &gt; (mm.coe&lt;− Rf + mm.beta∗ ERP)
+4 [1] 0.1183342</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="164">
+  <h2 id="section-5-3">5.3 滚动窗口回归</h2>
+<p>使用市场模型的一个实际好处是，我们可以灵活地选择任意我们想要使用的股权风险溢价（ERP）。在CAPM中，ERP必须基于一个与CAPM中使用的无风险利率具有相同期限的无风险利率。例如，如果我们使用3个月的无风险利率，CAPM中的ERP必须基于市场收益率与3个月无风险证券收益率之差。另一方面，如果我们使用20年的无风险利率，CAPM中的ERP必须基于市场收益率与20年无风险证券收益率之差。这两个ERP将是不同的数值。在正常的向上倾斜的收益率曲线下，基于3个月无风险证券的ERP将大于基于20年无风险证券的ERP。由于市场模型没有指定无风险利率，我们可以应用基于任意期限无风险证券的ERP。</p>
+<p>Alpha和Beta的估计值对我们在估计这些变量时使用的假设很敏感。其中一个关键假设是我们估计Alpha和Beta的时间段。在本节中，我们展示如何在一个长时间窗口上滚动计算Alpha和Beta。具体来说，我们将使用一个252个交易日（即一年）的滚动窗口，并计算从2016年到2019年AMZN的Alpha和Beta的每日估计值。</p>
+<p><strong>步骤1：计算AMZN和SPY的收益率</strong> 我们使用<code>load.data()</code>将AMZN和SPY数据导入R。使用<code>Delt()</code>计算AMZN和SPY的总收益率。或者，我们可以使用<code>diff(log(x))</code>计算对数收益率，其中x是调整收盘价。实际上，无论我们使用算术收益率还是对数收益率计算Beta，差异通常非常小。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; data.amzn&lt;- load.data(&quot;AMZN Yahoo.csv&quot;, &quot;AMZN&quot;)
+&gt; data.spy&lt;- load.data(&quot;SPY Yahoo.csv&quot;, &quot;SPY&quot;)
+&gt;
+&gt; rets &lt;- Delt(data.amzn$AMZN.Adjusted)
+&gt; rets$SPY &lt;- Delt(data.spy$SPY.Adjusted)
+&gt; names(rets)[1]&lt;- &quot;AMZN&quot;
+&gt; rets &lt;- rets[-1, ]
+&gt; head.tail(rets)
+          AMZN           SPY
+2015-01-02 -0.005896623 -0.0005352814
+2015-01-05 -0.020517267 -0.0180595459
+2015-01-06 -0.022833293 -0.0094190191
+          AMZN           SPY
+2019-12-27  0.0005511802 -0.0002477767
+2019-12-30 -0.0122526652 -0.0055132196
+2019-12-31  0.0005143517  0.0024292950</code></pre>
+</div>
+<div class="footnotes">
+    <p>注：代码块中的行号仅为说明，实际运行时应省略。</p>
+  </div>
+</section>
+<section class="book-page" data-pdf-page="165">
+<p>第二步：运行滚动回归 我们将使用 <code>zoo</code> 包中的 <code>rollapply()</code> 来运行滚动回归。参数 <code>width = 252</code> 告诉 R 我们每次要使用 252 个观测值。在本例中，这意味着我们要在回归中使用 252 个交易日的日数据。花括号内的代码使用 <code>lm()</code> 运行回归，并让 R 将每次回归的输出存储在 <code>coeffs</code> 数据集中。由于我们需要 252 天的数据，数据集中第一个具有 Alpha 和 Beta 值的观测值是 2015 年 12 月 31 日。</p>
+<div class="r-code-block" id="1">
+  <pre><code class="language-r">require(zoo)
+coeffs &lt;- rollapply(rets,
+                    width = 252,
+                    FUN = function(X) {
+                      roll.reg &lt;- lm(AMZN ~ SPY, data = as.data.frame(X))
+                      return(roll.reg$coef)
+                    },
+                    by.column = FALSE)</code></pre>
+</div>
+<p>第三步：清理数据集 我们首先使用 <code>na.omit()</code> 从数据集中移除所有 NA。如我们所见，第一个有数据的观测值是 2015 年 12 月 31 日。由于我们想展示 2016 年起的滚动 Alpha 和 Beta，我们删除第一个观测值（第 12 行）。然后我们在第 13 行将变量重命名为 Alpha 和 Beta。</p>
+<div class="r-code-block" id="2">
+  <pre><code class="language-r">coeffs &lt;- na.omit(coeffs)
+head.tail(coeffs)
+coeffs &lt;- coeffs[-1, ]
+names(coeffs) &lt;- c(&quot;Alpha&quot;, &quot;Beta&quot;)
+options(digits = 3)
+head.tail(coeffs)</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="166">
+  <h2 id="rolling-window-regressions-5-3">5.3 滚动窗口回归</h2>
+<p>18 2016−01−05 0.00303 1.15<br>
+19 2016−01−06 0.00312 1.14<br>
+20 Alpha Beta<br>
+21 2019−12−27−0.0004421.32<br>
+22 2019−12−30−0.0005181.33<br>
+23 2019−12−31−0.0005441.32</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">options(digits=7)</code></pre>
+</div>
+<div class="r-code-block" id="post-r-eb896f7ae683">
+  <pre><code class="language-r">Step 4:</code></pre>
+</div>
+<p>绘制数据 我们创建两个图表：一个用于Alpha，一个用于Beta。然而，我们使用下面的第2行中的 mfrow() 将这两个图表放入一个图表中。 c(2, 1) 中的第一个数字告诉R我们希望图表上下堆叠，而第二个数字告诉R我们只有一列。如果我们有四个图表，例如，我们想在一个2×2的图表中显示它们，我们会输入 c(2, 2) 。这段代码的输出如图5.1所示。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">par(mfrow = c(2, 1))
+plot(y = coeffs$Alpha ,
+    x = index(coeffs),
+    xlab = &quot;&quot;,
+    ylab = &quot;Alpha&quot;,</code></pre>
+</div>
+<p>2016 2017 2018 2019 2020<br>
+0.000 0.002<br>
+AMZN Alpha，252天滚动窗口 <br>
+Alpha<br>
+2016 2017 2018 2019 2020<br>
+1.0 1.4 1.8<br>
+AMZN Beta，252天滚动窗口<br>
+Beta</p>
+<figure class="book-figure" id="fig-5.1"><img src="/assets/img/analyzing-financial-data-r-cn/figure-81297be7618b.png" alt="图5.1 使用252天滚动窗口估计的AMZN Alpha和Beta，2016-2019。数据来源：经CSI ©2020许可复制的价格数据。www.csidata.com" />
+    <figcaption>图5.1 使用252天滚动窗口估计的AMZN Alpha和Beta，2016-2019。数据来源：经CSI ©2020许可复制的价格数据。www.csidata.com</figcaption>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="167">
+
+  <div class="r-code-block" id="R_CODE_1">
+  <pre><code class="language-r">6 + type = &quot;l&quot;,
+7 + col = &quot;blue&quot;,
+8 + main = &quot;AMZN Alpha , 252−Day Rolling Window &quot;)
+9 &gt; plot(y = coeffs$Beta ,
+10 + x = index(coeffs),
+11 + xlab = &quot;&quot;,
+12 + ylab = &quot;Beta&quot;,
+13 + type = &quot;l&quot;,
+14 + col = &quot;red&quot;,
+15 + main = &quot;AMZN Beta , 252−Day Rolling Window&quot;)
+16 &gt; par(mfrow = c(1, 1))</code></pre>
+</div>
+<h2 id="section-5-4">5.4 不同参考日的Beta</h2>
+<p>Beta 也可能对计算收益率所采用的星期几或月份中的第几天敏感。当使用周收益率时，计算通常基于本周最后一个交易日到上周最后一个交易日的价格变化。在大多数周中，这些收益率是周五到周五的收益率。然而，使用一周中任何其他日子计算的周收益率可能与周五到周五的收益率不同。理论上，除非使用不同参考日计算的Beta值存在某种特殊性，否则没有理由偏好使用周五到周五的收益率而不是其他日子的收益率。类似地，月收益率通常计算为本月最后一个交易日到上月最后一个交易日的价格变化。在月末计算的Beta可能不同于在月中（或当月的其他时期）计算的Beta。在本节中，我们基于两年期周收益率，使用一周中不同的日子计算2019年底的AMZN Beta值。</p>
+<h3>步骤1：输入假设</h3>
+<p>我们将使用<code>zoo</code>和<code>dplyr</code>包进行计算。同时，在此输入计算的开始和结束日期。由于我们使用两年期周收益率，我们需要104个周收益率观测值（即52周×2年）。因此，我们需要一个开始日期（start.date）和结束日期（end.date），以留出一定余量（即超过两年窗口的时间），确保我们至少能计算出104个周收益率。在后续步骤中，我们将仅使用最近104个完整周的收益率。这就是将开始日期设为2017年12月1日的原因。</p>
+<div class="r-code-block" id="R_CODE_2">
+  <pre><code class="language-r">1 &gt; library(zoo)
+2 &gt; library(dplyr)
+3 &gt; start.date&lt;− &quot;2017−12−01&quot;
+4 &gt; end.date&lt;− &quot;2019−12−31&quot;</code></pre>
+</div>
+<h3>步骤2：创建AMZN和SPY价格数据集</h3>
+<p>我们使用<code>load.data()</code>导入AMZN和SPY数据。然后使用<code>cbind()</code>合并AMZN和SPY的调整后收盘价。接着，我们创建一个额外的日期向量，用于……</p>
+</section>
+<section class="book-page" data-pdf-page="168">
+<h2 id="chapter-5">5.4 不同参考日期的 Beta</h2>
+<p>将把 AMZN 和 SPY 的调整后收盘价附加到 new.prices 数据集中。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">data &lt;- load.data(&quot;AMZN Yahoo.csv&quot;, &quot;AMZN&quot;)
+mkt &lt;- load.data(&quot;SPY Yahoo.csv&quot;, &quot;SPY&quot;)
+prices &lt;- cbind(data$AMZN.Adjusted, mkt$SPY.Adjusted)
+date &lt;- as.Date(index(prices), format = &quot;%Y-%m-%d&quot;)
+prices &lt;- data.frame(prices)
+new.prices &lt;- cbind(data.frame(date), prices)
+head.tail(new.prices)</code></pre>
+</div>
+<pre class="output">
+   date AMZN.Adjusted SPY.Adjusted
+2014-12-31 2014-12-31 310.35 186.2590
+2015-01-02 2015-01-02 308.52 186.1593
+2015-01-05 2015-01-05 302.19 182.7974
+   date AMZN.Adjusted SPY.Adjusted
+2019-12-27 2019-12-27 1869.80 322.86
+2019-12-30 2019-12-30 1846.89 321.08
+2019-12-31 2019-12-31 1847.84 321.86
+</pre>
+<p><strong>步骤 3：创建所有日历日期的向量</strong> new.prices 数据集中的日期仅为交易日。然而，有时会存在没有交易的日子（例如节假日和周末）。如果某一天因非交易日而缺失数据，则可能成为问题。为缓解此问题，我们稍后将把交易假期前的最后一个交易价格复制过来，并将其作为该特定日期的价格。在此步骤中，我们首先创建 all.dates 数据集，其中包含我们上面选择的 start.date 和 end.date 之间的所有日历日期。我们使用 seq() 函数，并将增量设置为 by = “day”。如我们在第5行所见，all.dates 有 761 个观测值，这大致符合我们的预期，因为步骤1中设定的日期范围是两年（即每年365天 × 2年 = 730天）加上一个31天的月份数据。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">all.dates &lt;- seq(as.Date(start.date), as.Date(end.date), by = &quot;day&quot;)
+all.dates &lt;- data.frame(all.dates)
+names(all.dates) &lt;- &quot;date&quot;
+dim(all.dates)
+head.tail(all.dates)</code></pre>
+</div>
+<pre class="output">
+  date
+1 2017-12-01
+2 2017-12-02
+3 2017-12-03
+  date
+759 2019-12-29
+760 2019-12-30
+761 2019-12-31
+</pre>
+<p><strong>步骤 4：合并 all.dates 和 new.prices 数据集</strong> 我们使用 merge() 函数，并以 all.dates 为基础表。然后我们告知 R 使用 date 列将 new.prices 合并到 all.dates 中。all = TRUE 参数有效保留了 all.dates 中的所有日期，无论该日期在 new.prices 中是否可用。如下输出所示：</p>
+</section>
+<section class="book-page" data-pdf-page="169">
+<p>154 第5章 因子模型</p>
+<p>2019年12月28日和29日没有AMZN和SPY的数据，因为那是周末。使用<code>na.locf()</code>，我们保留最后一个可用数据点的值来填充缺失值（NAs）。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; combo &lt;− merge(all.dates , new.prices , by =&quot;date&quot;, all = TRUE)
+2 &gt; head(combo)
+3 date AMZN.Adjusted SPY.Adjusted
+4 1 2014−12−31 310.35 186.2590
+5 2 2015−01−02 308.52 186.1593
+6 3 2015−01−05 302.19 182.7974
+7 4 2015−01−06 295.29 181.0756
+8 5 2015−01−07 298.42 183.3320
+9 6 2015−01−08 300.46 186.5852
+10 &gt; tail(combo)
+11 date AMZN.Adjusted SPY.Adjusted
+12 14922019−12−26 1868.77 322.94
+13 14932019−12−27 1869.80 322.86
+14 14942019−12−28 NA NA
+15 14952019−12−29 NA NA
+16 14962019−12−30 1846.89 321.08
+17 14972019−12−31 1847.84 321.86
+18 &gt;
+19 &gt; combo &lt;− na.locf(combo)
+20 &gt; tail(combo)
+21 date AMZN.Adjusted SPY.Adjusted
+22 14922019−12−26 1868.77 322.94
+23 14932019−12−27 1869.80 322.86
+24 14942019−12−28 1869.80 322.86
+25 14952019−12−29 1869.80 322.86
+26 14962019−12−30 1846.89 321.08
+27 14972019−12−31 1847.84 321.86</code></pre>
+</div>
+<p><strong>第5步：添加星期变量</strong> 我们需要能够识别星期几，以便在后续步骤中在估计期间内选择特定的星期几。因此，我们使用<code>weekdays()</code>创建变量<code>wkday</code>。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; combo$wkday&lt;− weekdays(combo$date)
+2 &gt; head.tail(combo)
+3 date AMZN.Adjusted SPY.Adjusted wkday
+4 1 2014−12−31 310.35 186.2590 Wednesday
+5 2 2015−01−02 308.52 186.1593 Friday
+6 3 2015−01−05 302.19 182.7974 Monday
+7 date AMZN.Adjusted SPY.Adjusted wkday
+8 14952019−12−29 1869.80 322.86 Sunday
+9 14962019−12−30 1846.89 321.08 Monday
+10 14972019−12−31 1847.84 321.86 Tuesday</code></pre>
+</div>
+<p><strong>第6步：创建计算所需的对象</strong> 我们创建两个对象。首先，我们创建<code>beta</code>，这是一个数据框，目前对于一周中的五天，每个值都是临时值999。实际上我们可以输入任何值，但999确保如果在程序中出现错误且值未被覆盖，我们可以很容易地看到错误。在最后一行，我们创建一个名为<code>day.week</code>的向量，该向量具有...</p>
+</section>
+<section class="book-page" data-pdf-page="170">
+<h2>5.4 不同参考日的Beta</h2>
+<p>典型工作周的五天。当我们根据一周中不同的日子对数据进行子集划分时，我们会引用这个向量。</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">beta &lt;- data.frame(rep(999, 5))
+colnames(beta) &lt;- &quot;beta&quot;
+rownames(beta) &lt;- c(&quot;Monday&quot;, &quot;Tuesday&quot;, &quot;Wednesday&quot;, &quot;Thursday&quot;, &quot;Friday&quot;)
+head(beta)
+day.week &lt;- c(&quot;Monday&quot;, &quot;Tuesday&quot;, &quot;Wednesday&quot;, &quot;Thursday&quot;, &quot;Friday&quot;)</code></pre>
+</div>
+<p><strong>第7步：计算每周每天的Beta。</strong>由于在计算每周每天的Beta时我们重复相同的步骤，因此我们使用for循环来更高效地执行计算。第2行从combo数据集中识别出我们感兴趣的一周中的特定日子。然后在第3行和第4行计算股票和市场的收益率。接下来，我们在combo.ret中合并收益率数据。在本书的其他地方，我们关注数据清理。在这里，由于我们将在第9行子集划分最后104个观测值，我们可以选择不清理数据集。此外，由于这是一个中间计算，在实践中也不需要清理数据。最后，我们在第10行和第11行用回归的系数替换beta数据集中的beta值。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">for (j in 1:5) {
+  new.data &lt;- subset(combo, wkday == paste(day.week[j]))
+  stock.ret &lt;- new.data[, 2] / Lag(new.data[, 2], k = 1) - 1
+  mkt.ret &lt;- new.data[, 3] / Lag(new.data[, 3], k = 1) - 1
+
+  combo.ret &lt;- cbind(mkt.ret, stock.ret)
+  combo.ret &lt;- data.frame(combo.ret)
+  colnames(combo.ret) &lt;- c(&quot;mkt.ret&quot;, &quot;stock.ret&quot;)
+  combo.ret &lt;- combo.ret[(nrow(combo.ret) - 104 + 1):nrow(combo.ret), ]
+  beta[j, ] &lt;- summary(lm(stock.ret ~ mkt.ret, data = combo.ret))$coeff[2]
+}
+beta
+mean(beta$beta)
+median(beta$beta)</code></pre>
+</div>
+<pre><code>&gt; beta
+          beta
+Monday    1.480706
+Tuesday   1.529798
+Wednesday 1.563849
+Thursday  1.278707
+Friday    1.368291
+&gt; mean(beta$beta)
+[1] 1.44427
+&gt; median(beta$beta)
+[1] 1.480706
+</code></pre>
+</section>
+<section class="book-page" data-pdf-page="171">
+<h2>第5章 因子模型</h2>
+<h3>步骤8：绘制贝塔值</h3>
+<p>根据上文，我们已经可以看到，周四的贝塔值最低，而周三的亚马逊（AMZN）贝塔值最高。然而，通过图表直观比较不同贝塔值可能会更容易。下面代码中的第1行将贝塔值四舍五入到两位小数。我们将使用这些数值作为图表的数据标签。然后，我们使用 <code>barplot()</code> 创建图表。请注意，对于 y 轴范围（<code>ylim</code>），我们在最高贝塔值的基础上增加了0.5，以便在向图表添加贝塔值时留有足够空间。在最后一行，我们使用 <code>text()</code> 向图表添加文本。参数 <code>pos = 3</code> 允许我们将数值添加到柱子的顶部。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">vals &lt;- round(beta$beta ,digits = 2)
+mp &lt;- barplot(vals ,
+ names.arg=c(&quot;Monday&quot;, &quot;Tuesday&quot;, &quot;Wednesday&quot;, &quot;Thursday&quot;, &quot;Friday&quot;),
+ ylim = c(0, max(beta) + .5),
+ ylab = &quot;Beta&quot;,
+ border = 0,
+ col = c(&quot;gray40&quot;, &quot;red&quot;, &quot;blue&quot;, &quot; darkgreen&quot;, &quot;black&quot;),
+ main = &quot;AMZN Betas Based on Different ReferenceDays&quot;)
+text(mp,vals ,labels = vals , pos = 3)</code></pre>
+</div>
+<p>图5.2显示了在不同参考日计算的贝塔值中，周五至周五收益率对应的贝塔值处于倒数第二低的位置。如步骤7所示，周五至周五的贝塔值低于五个贝塔值的中位数和均值。先验地，没有理由相信某一种贝塔计算方法优于其他方法，尤其是考虑到这些都是基于同一时间段内的周收益率。因此，在某些情况下，我们可能希望在分析中考虑所有五个周贝塔值的平均值或中位数。然而，我们可能需要考虑的一点是，这些贝塔值是估计值，并且其他贝塔值是否位于例如周五至周五贝塔的95%置信区间内。换句话说，尽管数值看起来不同，但这些数值与周五至周五贝塔在统计上是否存在显著差异？</p>
+<p>我还使用标普500指数中的公司对参考贝塔进行了更大规模的分析。我从2020年5月18日标普500指数的成分股开始。然后，我查看了那些在2018年1月1日或之前首次被纳入指数的公司，以便获得两年的数据。最终我得到了356家公司。对于每家公司，我基于两年的周收益率计算了每个工作日的贝塔值。基于上述分析，我发现周五至周五贝塔在22%的情况下是最高的，在22%的情况下是第二高的，在21%的情况下是中位数贝塔。总体而言，周五至周五贝塔的平均排名为2.86，其中排名1为最高。换句话说，相对于其他工作日计算的贝塔，周五至周五贝塔似乎略微偏高。偏差的幅度也可能对股权成本估计产生不可忽视的影响。在上述样本中，偏离中位数贝塔的范围为−0.36到0.39。假设股权风险溢价为6%，那么CAPM股权成本可能相差−2.2%到2.3%。因此，如果人们认为使用不同工作日计算的贝塔值没有理由存在差异，那么上述分析表明，周五至周五贝塔高于或低于中位数贝塔的可能性都不可忽视。</p>
+</section>
+<section class="book-page" data-pdf-page="172">
+  <h2 id="section-5-5">5.5 Fama–French 三因子模型</h2>
+<figure class="book-figure" id="fig-5.2"><img src="/assets/img/analyzing-financial-data-r-cn/figure-854ab3d2bf72.png" alt="图5.2" />
+    <figcaption>图5.2 基于不同星期计算周收益率得到的2019年12月31日AMZN Beta值。数据来源：经CSI©2020许可复制的价格数据。www.csidata.com</figcaption>
+  </figure>
+<p>与中位数β的偏差可能对股权成本产生不可忽视的影响。不幸的是，在不进行计算的情况下，无法知道周五对周五β相对于基于一周中其他日期计算的β的位置。</p>
+<p>CAPM的流行源于其简单性，且它建立在金融理论基础上。然而，CAPM在实证检验中表现不佳。这表明可能需要添加其他因子来帮助解释市场无法解释的资产收益的剩余变化。一个在学术界尤其受欢迎的模型是Fama–French三因子模型（参见[15, Fama and French (1993)]）（FF模型）。例如，[10, Cochrane (2011)]指出，在实证工作中，FF模型已取代CAPM成为常规风险调整的工具。</p>
+</section>
+<section class="book-page" data-pdf-page="173">
+<p>158 第5章 因子模型</p>
+<p>在FF模型中，我们有</p>
+\[R_i = R_f + \beta_i(R_m - R_f) + h_i\text{HML} + s_i\text{SMB},\tag{5.4}\]
+<p>其中 HML 是高账面市值比（B/M）组合与低账面市值比组合收益率之差，SMB 是小公司股票组合与大公司股票组合收益率之差。其余变量定义与式 (5.1) 相同。</p>
+<p>实施 Fama–French 模型所需的数据可以从 Kenneth French 教授的数据图书馆（<a href="https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html">https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html</a>）下载。我们将使用的数据是 Fama–French 三因子模型数据。注意，French 教授数据图书馆中的文件会定期更新，因此稍后下载的数据会包含更多数据，但数据的起始时间应与我们下面报告的一致。</p>
+<p>Fama–French 数据可以按月、周或日频率以单独的 ZIP 文件下载。解压 ZIP 文件后，请务必将文本文件放入 R 工作目录，以便 R 访问。在我们的示例中，我们将使用月度频率的数据。</p>
+<p><strong>步骤1：导入投资组合收益率数据</strong> 我们将继续使用本章开头构建的投资组合。因此，应检查确保投资组合数据仍在 R 环境中。我们的投资组合包含 60 个月度收益率。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; data.port&lt;- read.csv(&quot;Hypothetical Portfolio (Monthly).csv&quot;)
+&gt; data.port&lt;- data.port[,-1]
+&gt; head.tail(data.port)
+  Date    Port.Ret
+1 Jan 2015  0.07306837
+2 Feb 2015  0.07258170
+3 Mar 2015 -0.02373268
+  Date    Port.Ret
+58 Oct 2019  0.05596117
+59 Nov 2019  0.04224452
+60 Dec 2019  0.04982447</code></pre>
+</div>
+<p><strong>步骤2：导入 Fama–French 数据</strong> 由于我们使用的是上述月度收益率投资组合，因此使用 Fama–French 月度数据系列。我们可以选择下载 TXT 或 CSV 版本的文件。我们下载 CSV 版本，以便使用 <code>read.csv()</code> 导入。打开 CSV 文件后，我们会发现标题从第4行开始，因此使用 <code>skip = 3</code> 忽略 CSV 文件的前三行。然后，<code>header = TRUE</code> 告诉 R 第4行应作为标题。此外，打开 CSV 文件后，我们注意到底部有年度收益率，因此我们希望 R 只读取 CSV 文件中月度收益率数据的最后一行。月度收益率数据的最后一行是 CSV 文件中的第1126行，但由于我们跳过了前三行并将一行用作标题（即总共四行），因此使用 <code>nrows = 1122</code> 告诉 R 仅读取标题之后的后续1122行。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; data.ff&lt;- read.csv(file = &quot;F-F_Research_Data_Factors.csv&quot;,</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="174">
+  <h3>5.5 Fama–French 三因子模型 159</h3>
+<pre><code class="r">2 + skip = 3,
+3 + header = TRUE,
+4 + nrows = 1122)
+5 > head.tail(data.ff)
+6   X Mkt.RF SMB HML RF
+7 1 192607 2.96 −2.30−2.870.22
+8 2 192608 2.64 −1.40 4.19 0.25
+9 3 192609 0.36 −1.32 0.01 0.23
+10   X Mkt.RF SMB HML RF
+11 1120 201910 2.06 0.25−2.070.15
+12 1121 201911 3.87 0.87−1.860.12
+13 1122 201912 2.77 0.69 1.82 0.14</code></pre>
+<p><strong>步骤 3：创建一个日期变量</strong> 使用 <code>str()</code>，我们看到这个年-月形式的变量被 R 读入为整数。为创建日期变量，我们使用 <code>lubridate</code> 包。在第 9 行，我们首先在每个 <code>X</code> 值的末尾添加一个 <code>01</code>。这样我们就可以使用 <code>ymd()</code> 轻松地将数据读入为年-月-日格式。</p>
+<pre><code class="r">1 > str(data.ff)
+2 'data.frame': 1122 obs. of 5 variables:
+3 $ X : int 192607 192608 192609 192610 192611 192612 192701 192702 ...
+4 $ Mkt.RF: num 2.96 2.64 0.36 -3.24 2.53 2.62 -0.06 4.18 0.13 0.46 ...
+5 $ SMB : num -2.3 -1.4 -1.32 0.04 -0.2 -0.04 -0.56 -0.1 -1.6 0.43 ...
+6 $ HML : num -2.87 4.19 0.01 0.51 -0.35 -0.02 4.83 3.17 -2.67 0.6 ...
+7 $ RF : num 0.22 0.25 0.23 0.32 0.31 0.28 0.25 0.26 0.3 0.25 ...
+8 > library(lubridate)
+9 > data.ff$dt <- paste(data.ff$X, "01", sep = "")
+10 > data.ff$Date <- ymd(data.ff$dt)
+11 > head.tail(data.ff)
+12   X Mkt.RF SMB HML RF dt Date
+13 1 192607 2.96 -2.30 -2.87 0.22 19260701 1926-07-01
+14 2 192608 2.64 -1.40 4.19 0.25 19260801 1926-08-01
+15 3 192609 0.36 -1.32 0.01 0.23 19260901 1926-09-01
+16   X Mkt.RF SMB HML RF dt Date
+17 1120 201910 2.06 0.25 -2.07 0.15 20191001 2019-10-01
+18 1121 201911 3.87 0.87 -1.86 0.12 20191101 2019-11-01
+19 1122 201912 2.77 0.69 1.82 0.14 20191201 2019-12-01
+20 > class(data.ff$Date)
+21 [1] "Date"
+22 > data.ff <- data.ff[,-c(1, 6)]</code></pre>
+<p>在最后一行，我们通过删除列 <code>X</code>（第 1 列）和 <code>dt</code>（第 6 列）来清理 <code>data.ff</code> 数据集。</p>
+<p><strong>步骤 4：将百分比收益率转换为小数</strong> 由于 <code>data.port</code> 中的收益率是小数形式，我们同样希望将 <code>data.ff</code> 的前四列中的值转换为小数。我们通过将前四列除以 100 来实现这一点。</p>
+<pre><code class="r">1 > data.ff[, 1:4] <- data.ff[, 1:4] / 100
+2 > head.tail(data.ff)
+3   Mkt.RF SMB HML RF Date
+4 1 0.0296 -0.0230 -0.0287 0.0022 1926-07-01</code></pre>
+</section>
+<section class="book-page" data-pdf-page="175">
+  <p>160 第5章 因子模型</p>
+<pre>5 2 0.0264−0.0140 0.0419 0.00251926−08−01
+6 3 0.0036−0.0132 0.0001 0.00231926−09−01
+7 Mkt.RF SMB HML RF Date
+8 1120 0.0206 0.0025−0.02070.00152019−10−01
+9 1121 0.0387 0.0087−0.01860.00122019−11−01
+10 1122 0.0277 0.00690.0182 0.00142019−12−01</pre>
+<p><b>步骤5：将Fama-French数据子集限定在2015–2019年。</b> 使用<span class="inline-code">subset()</span>函数，我们将FF数据限制在2015–2019年。然后，我们用观察序号替换行标签。我们确认有60个观测值，这正是五年月度收益率所预期的数量。</p>
+<div class="r-code-block" id="code5_1">
+  <pre><code class="language-r">1 &gt; ff.sub&lt;− subset(data.ff,
+2 + Date &gt;= &quot; 2015−01−01&quot; &amp;
+3 + Date &lt;= &quot; 2019−12−31&quot;)
+4 &gt; rownames(ff.sub)&lt;− seq(1, nrow(ff.sub), 1)
+5 &gt; head.tail(ff.sub)
+6 Mkt.RF SMB HML RF Date
+7 1 −0.0311−0.0056−0.0348 0 2015−01−01
+8 2 0.0613 0.0049 −0.0181 0 2015−02−01
+9 3 −0.0112 0.0303−0.0046 0 2015−03−01
+10 Mkt.RF SMB HML RF Date
+11 58 0.0206 0.0025−0.02070.00152019−10−01
+12 59 0.0387 0.0087−0.01860.00122019−11−01
+13 60 0.0277 0.0069 0.0182 0.00142019−12−01</code></pre>
+</div>
+<p><b>步骤6：合并投资组合收益率数据与Fama-French数据。</b> 我们使用<span class="inline-code">cbind()</span>将Fama-French数据与投资组合收益率数据合并。然后，我们将投资组合收益率变量重命名为<span class="inline-code">Port.Ret</span>。</p>
+<div class="r-code-block" id="code5_2">
+  <pre><code class="language-r">1 &gt; ff.sub&lt;− cbind(ff.sub, data.port[, 2])
+2 &gt; names(ff.sub)[6]&lt;− &quot;Port.Ret&quot;
+3 &gt; head.tail(ff.sub)
+4 Mkt.RF SMB HML RF Date Port.Ret
+5 1 −0.0311−0.0056−0.0348 0 2015−01−01 0.07306837
+6 2 0.0613 0.0049 −0.0181 0 2015−02−01 0.07258170
+7 3 −0.0112 0.0303−0.0046 0 2015−03−01−0.02373268
+8 Mkt.RF SMB HML RF Date Port.Ret
+9 58 0.0206 0.0025−0.02070.00152019−10−01 0.05596117
+10 59 0.0387 0.0087−0.01860.00122019−11−01 0.04224452
+11 60 0.0277 0.0069 0.0182 0.00142019−12−01 0.04982447</code></pre>
+</div>
+<p><b>步骤7：计算超额投资组合收益率。</b> 我们从投资组合收益率<span class="inline-code">Port.Ret</span>中减去无风险利率<span class="inline-code">RF</span>，得到投资组合相对于无风险利率的超额收益率<span class="inline-code">Port.RF</span>。</p>
+<div class="r-code-block" id="code5_3">
+  <pre><code class="language-r">1 &gt; ff.sub$Port.RF&lt;− ff.sub$Port.Ret− ff.sub$RF
+2 &gt; head.tail(ff.sub)
+3 Mkt.RF SMB HML RF Date Port.Ret Port.RF
+4 1 −0.0311−0.0056−0.0348 0 2015−01−01 0.07306837 0.07306837
+5 2 0.0613 0.0049 −0.0181 0 2015−02−01 0.07258170 0.07258170
+6 3 −0.0112 0.0303−0.0046 0 2015−03−01−0.02373268−0.02373268</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="176">
+<h2>5.5 Fama-French三因子模型</h2>
+<pre>
+8 58 0.0206 0.0025−0.02070.00152019−10−01 0.05596117 0.05446117
+9 59 0.0387 0.0087−0.01860.00122019−11−01 0.04224452 0.04104452
+10 60 0.0277 0.0069 0.0182 0.00142019−12−01 0.04982447 0.04842447
+</pre>
+<p><strong>步骤8：将Port.RF对Fama-French因子进行回归。</strong> 回归结果显示，所有三个Fama-French因子在常规显著性水平下均统计显著。基于Fama-French模型，Alpha不显著。换言之，该投资组合经理似乎并未增加价值。</p>
+<div class="r-code-block" id="ff-reg">
+  <pre><code class="language-r">ff.reg &lt;- lm(Port.RF ~ Mkt.RF + SMB + HML,
+    data = ff.sub)
+summary(ff.reg)</code></pre>
+</div>
+<pre><code>Call:
+lm(formula = Port.RF ~ Mkt.RF + SMB + HML, data = ff.sub)
+
+Residuals:
+   Min     1Q Median     3Q    Max
+-0.069818 -0.022926  0.000997  0.023078  0.077066
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)  0.008449   0.004523   1.868 0.066993 .
+Mkt.RF       1.269921   0.126658  10.026 4.16e-14 ***
+SMB         -0.523079   0.191646  -2.729 0.008464 **
+HML         -0.693077   0.167725  -4.132 0.000121 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.03346 on 56 degrees of freedom
+Multiple R-squared:  0.6836, Adjusted R-squared:  0.6667
+F-statistic: 40.34 on 3 and 56 DF,  p-value: 5.106e-14</code></pre>
+<p><strong>步骤9：比较Fama-French结果与CAPM结果。</strong> 使用相同数据，我们将超额组合收益率对超额市场收益率进行回归。与Fama-French模型相比，CAPM回归显示Alpha为正且显著。这可以被某些人视为投资组合经理增加了价值。因此，经理是否增加价值取决于我们使用哪些因子来控制经理的业绩。</p>
+<div class="r-code-block" id="capm-reg">
+  <pre><code class="language-r">capm.reg &lt;- lm(Port.RF ~ Mkt.RF,
+    data = ff.sub)
+summary(capm.reg)</code></pre>
+</div>
+<pre><code>Call:
+lm(formula = Port.RF ~ Mkt.RF, data = ff.sub)
+
+Residuals:
+    Min      1Q  Median      3Q     Max
+-0.104655 -0.021540 -0.004027  0.021938  0.104073
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept)  0.008449   0.004523   1.868 0.066993 .
+Mkt.RF       1.269921   0.126658  10.026 4.16e-14 ***
+---</code></pre>
+</section>
+<section class="book-page" data-pdf-page="177">
+<table>
+<thead>
+<tr><th>估计值</th>
+<th>标准误差</th>
+<th>t值</th>
+<th>Pr(>|t|)</th></tr>
+</thead>
+<tbody>
+<tr><td>(Intercept)</td>
+<td>0.012583</td>
+<td>0.005344</td>
+<td>2.355</td>
+<td>0.0219 *</td></tr>
+<tr><td>Mkt.RF</td>
+<td>1.171758</td>
+<td>0.145527</td>
+<td>8.052</td>
+<td>5.02e-11 ***</td></tr>
+</tbody>
+</table>
+<p>显著性标记：0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</p>
+<p>残差标准误差：0.04016，自由度为58</p>
+<p>多重R平方：0.5278，调整R平方：0.5197</p>
+<p>F统计量：64.83，分子自由度为1，分母自由度为58，p值：5.015e-11</p>
+<h2 id="section-5-6">5.6 异方差性检验</h2>
+<p>异方差性（heteroskedasticity）会导致普通最小二乘估计的标准误差出现正偏差或负偏差。这可能导致错误的推断。例如，参数估计可能在统计上显著，但当标准误差经过异方差性校正后，结果可能会被推翻。因此，检验异方差性并了解如何修正它（如果发现异方差性）是值得的。首先，我们使用Breusch-Pagan检验来检验异方差性。在R中，我们使用<code>lmtest</code>包中的<code>bptest()</code>函数来执行此检验。在第4行设置<code>studentize = FALSE</code>以使用原始的Breusch-Pagan检验，该检验假设回归误差服从正态分布。原假设是残差具有恒定方差（同方差性（homoskedastic）），下面显示的高p值表明我们不能拒绝原假设。换句话说，我们不能拒绝残差是同方差的原假设。</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">1 &gt; library(lmtest ,sandwich)
+2 &gt; bptest(formula(ff.reg),
+3 + data = ff.sub,
+4 + studentize = FALSE)</code></pre>
+</div>
+<pre>Breusch-Pagan检验
+
+data: formula(ff.reg)
+BP = 2.622, df = 3, p值 = 0.4537</pre>
+<p>R还允许我们在不假设正态性的情况下运行Breusch-Pagan检验。通过设置<code>studentize = TRUE</code>实现。结果显示出类似的结果。也就是说，我们不能拒绝残差是同方差的原假设。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">1 &gt; bptest(formula(ff.reg),
+2 + data = ff.sub,
+3 + studentize = TRUE)</code></pre>
+</div>
+<pre>学生化Breusch-Pagan检验
+
+data: formula(ff.reg)
+BP = 3.581, df = 3, p值 = 0.3104</pre>
+</section>
+<section class="book-page" data-pdf-page="178">
+
+<p>在我们的例子中，没有发现残差存在异方差性问题，但如果确实存在，我们可以使用 White 校正来修正 R 中的标准误。要进行 White 校正，我们在 lmtest 包中使用 coeftest()。type = "HC0" 使用原始 White 校正。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; library(lmtest)
+&gt; coeftest(ff.reg,
++          vcov. = vcovHC(ff.reg, type = &quot;HC0&quot;))</code></pre>
+</div>
+<pre><code>
+t-检验 of 系数:
+
+      Estimate Std. Error t value Pr(>|t|)
+(Intercept) 0.0084487 0.0043460  1.9440 0.056923 .
+Mkt.RF     1.2699207 0.1189252 10.6783 4.017e-15 ***
+SMB       -0.5230789 0.1706776 -3.0647 0.003349 **
+HML       -0.6930773 0.1629276 -4.2539 8.060e-05 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+</code></pre>
+<p>我们可以将上面的输出与下面未校正的结果进行比较。可以看出，参数估计值两者完全相同，但估计值的标准误不同。上面的标准误称为 White 标准误。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; summary(ff.reg)</code></pre>
+</div>
+<pre><code>
+Residuals:
+    Min      1Q  Median      3Q     Max
+-0.069818 -0.022926  0.000997  0.023078  0.077066
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept)  0.008449   0.004523   1.868 0.066993 .
+Mkt.RF       1.269921   0.126658  10.026 4.16e-14 ***
+SMB         -0.523079   0.191646  -2.729 0.008464 **
+HML         -0.693077   0.167725  -4.132 0.000121 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.03346 on 56 degrees of freedom
+Multiple R-squared:  0.6836,	Adjusted R-squared:  0.6667
+F-statistic: 40.34 on 3 and 56 DF,  p-value: 5.106e-14
+</code></pre>
+<p>在上面的 coeftest() 中使用 type = "HC1" 会按因子 \(n/(n-k)\) 调整自由度，从而使标准误略有变化。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">&gt; coeftest(ff.reg,
++          vcov. = vcovHC(ff.reg , type = &quot;HC1&quot;))</code></pre>
+</div>
+<pre><code>
+t-检验 of 系数:
+
+      Estimate Std. Error t value Pr(>|t|)
+</code></pre>
+
+</section>
+<section class="book-page" data-pdf-page="179">
+<p>164 5 因子模型</p>
+<pre>7 (Intercept) 0.00844870.0044985 1.8781 0.0655774 .
+8 Mkt.RF 1.2699207 0.1230993 10.31621.462e−14 ∗∗∗
+9 SMB −0.52307890.1766681−2.96080.0044934∗∗
+10 HML −0.69307730.1686461−4.10970.0001306∗∗∗
+11 −−−
+12 显著性代码：0 ‘∗∗∗’ 0.001 ‘∗∗’ 0.01 ‘∗’ 0.05 ‘.’ 0.1 ‘ ’ 1</pre>
+<h2 id="section-5-7">5.7 检验非正态性</h2>
+<p>线性回归模型通常假设残差服从正态分布。如果不是这种情况，我们需通过变换变量来修正问题，使得误差的分布近似正态分布。因此，我们可能想要检验非正态性，以便了解我们正在利用数据做出正确的推断。我们通过分析三阶矩（偏度）和四阶矩（峰度）来检验非正态性。如果残差服从正态分布，偏度应为0，峰度应为3。我们可以使用moments包中的skewness()和kurtosis()函数计算偏度和峰度。如输出所示，残差存在一些正偏度，且峰度略低于3。</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">&gt; library(moments)
+&gt; skewness(ff.reg$residuals)
+&gt; kurtosis(ff.reg$residuals)</code></pre>
+</div>
+<pre>[1] 0.02888204
+[1] 2.46439</pre>
+<p>我们可以使用更正式的检验来确定上述与正态分布的差异是否显著。我们可以分别检验偏度和峰度。对于偏度，我们可以使用D'Agostino检验，通过agostino.test()调用。如高p值所示，D'Agostino偏度检验不拒绝残差无偏（即与正态分布相同）的原假设。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">&gt; agostino.test(ff.reg$residuals)</code></pre>
+</div>
+<pre>3 D’Agostinoskewnesstest
+
+5 data: ff.reg$residuals
+6 skew = 0.028882, z = 0.100378, p−value = 0.92
+7 alternative hypothesis:data havea skewness</pre>
+<p>然后我们可以使用Anscombe-Glynn检验来检验峰度，通过anscombe.test()调用。如高p值所示，Anscombe-Glynn峰度检验不拒绝残差峰度为3（即与正态分布相同）的原假设。</p>
+<div class="r-code-block" id="code3">
+  <pre><code class="language-r">&gt; anscombe.test(ff.reg$residuals)</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="180">
+<h2 id="section-5-8">5.8 自相关检验</h2>
+<p>我们可能还想分析残差是否序列相关（即它们是否遵循某种模式）。这个问题称为自相关，是对经典线性回归模型假设的违反。一种常见的自相关检验是 Durbin–Watson (DW) 检验。要在 R 中进行此检验，我们使用 <code>lmtest</code> 包中的 <code>dwtest</code>。如下输出所示，DW 统计量为 1.98，p 值为 0.49。这表明残差不存在自相关。</p>
+<div class="r-code-block" id="dwtest">
+  <pre><code class="language-r">&gt; library(lmtest)
+&gt; dwtest(ff.reg)
+
+
+Durbin--Watson test
+
+
+data: ff.reg
+DW = 1.9837, p-value = 0.4938
+alternative hypothesis: true autocorrelation is greater than 0</code></pre>
+</div>
+<p>经验法则是 DW 统计量为 2 表示残差不存在自相关。然而，由于我们的输出包含 p 值，我们无需依赖这种经验法则来做出判断。</p>
+<h2 id="section-5-9">5.9 事件研究</h2>
+<p>事件研究用于检验新信息对公司股票价格的影响。因此，事件研究假定市场是半强式有效市场。半强式有效市场假说表明，公开信息会迅速被股票价格所吸收。</p>
+</section>
+<section class="book-page" data-pdf-page="181">
+<h2>5 因子模型</h2>
+<p>价格。那么，信息融入股票价格的速度有多快？Busse 和 Green [9] 研究了股票价格对 CNBC 报道的反应，他们发现股票在首次提及后的几秒钟内就会做出反应。因此，如果一个事件对股票价格有影响，我们应该观察到股票价格会迅速反应。</p>
+<p>我们在公司金融领域所了解的大部分内容都归功于事件研究。然而，事件研究的流行也扩展到其他领域，例如证券诉讼领域，在该领域中，专家几乎总是被期望使用事件研究来支持他们关于披露信息对公司股票价格影响的观点。</p>
+<p>事件研究的基础是资本资产定价模型（CAPM）。事件研究通过考察公司股票价格表现来估计特定事件对公司或一组公司的影响。事件研究利用公司股票收益率与一个或多个自变量之间的历史关系。自变量通常被选为市场和/或公司所在行业的代理变量。基于这种历史关系，事件研究在事件日预测一个公司收益率。然后，异常收益率（abnormal return）被计算为公司在事件日的实际收益率与预测收益率之间的差额。</p>
+<p>顾名思义，事件研究需要识别一个事件。该事件可能是影响特定公司的事件（例如，公司盈利公告），也可能是影响整个行业的事件（例如，新立法通过）。此外，有些事件并非孤立地报告（即，事件与其他可能也影响公司股票价格的信息一起宣布）。这些情况使得我们难以将事件的影响与当日也影响股票价格的其他新闻隔离开来。因此，我们在事件研究中检验的假设取决于事件的具体情况，可能需要进行更深入的分析才能确定我们计划研究的事件本身的效应。换句话说，我们不能简单地对事件研究采用一刀切的方法，因为底层经济状况可能不符合纯粹机械式的事件研究应用。这对于单公司事件研究更为突出，因为我们无法从多个公司的结果平均中获益。</p>
+<p>要进行事件研究，我们需要确定两个时间段。第一个时间段是事件产生影响的那一天或几天。我们称之为事件窗口。事件窗口的长度取决于所研究事件的类型。在美国，存在强有力的经验证据表明股票价格反应非常迅速，通常在重大新闻公告后的几秒或几分钟内。因此，当事件的时间点可以明确识别时，一天的事件窗口可能就足够了。在某些情况下，新闻可能在官方公告前几天或几周就被泄露。例如，在某些并购中，我们观察到目标公司的股票价格在官方并购公告前几天就已经开始上涨。在其他情况下，信息可能复杂得多，后续信息（例如，分析师的评论）可能会对先前披露的事件提供更多线索。在这些情况下，事件窗口可以延长至更长时间段，以完全捕捉事件的影响。因此，典型的事件窗口为一天（即仅事件日）、两天</p>
+</section>
+<section class="book-page" data-pdf-page="182">
+<h2>5.9 事件研究（Event Studies） 167</h2>
+<p>天（即前一天加事件日，或事件日加后一天），或三天（即前一天、事件日和后一天）。</p>
+<p>一旦定义了事件窗口，我们就可以选择适当的估计期，从中估计不受事件影响的正常条件下的参数。估计过程使用以下形式的市场模型（market model）：</p>
+\[R_{i,t} = \alpha + \beta R_{m,t} + \epsilon_{i,t}, \qquad (5.5)\]
+<p>其中 \(R_{i,t}\) 是标的公司 \(i\) 在第 \(t\) 天的收益率，\(R_{m,t}\) 是市场代理 \(m\) 在第 \(t\) 天的收益率。此外，我们假设 \(\operatorname{cov}(R_{m,t}, \epsilon_{i,t}) = 0\)，\(\operatorname{var}(\epsilon_{i,t}) = \sigma_i^2\)（即恒定方差），并且对于所有 \(n \neq 0\)，\(\operatorname{cov}(\epsilon_{i,t}, \epsilon_{i,t-n}) = 0\)。常见的做法是使用算术收益率或对数收益率计算，后者将 \(R_{i,t}\) 和 \(R_{m,t}\) 分别替换为 \(r_{i,t} = \ln(1 + R_{i,t})\) 和 \(r_{m,t} = \ln(1 + R_{m,t})\)。市场代理的常见选择是 S&P 500 指数或其他广泛基础的指数。</p>
+<p>注意，什么构成不受事件影响的期间取决于所研究的事件。例如，如果我们研究盈利公告，那么将估计期置于事件窗口之前可能是合适的。然而，如果我们研究的是大型并购事件之后立即发生的事件，该并购改变了公司的基本经济状况，那么将估计期置于事件窗口之后可能更好。此外，还必须注意异常收益率的波动性是否因非事件因素而显著不同。例如，如果我们选择包含 2020 年 3 月之前数据的估计期来分析 2020 年 3 月的股价变动，我们可能会发现许多显著的日子。</p>
+<p>除了估计期的位置，我们还必须确定估计期的长度。通常，当使用日度数据时，六个月或一年的期间就足够。替代方案可以是更长日期范围内的周度或月度数据，这能提供足够数量的观测值。例如，如果使用周收益率，至少可以使用两年的估计期；如果使用月收益率，则使用五年的估计期。注意，估计期长度的选择会导致在包含更多数据与包含较少相关数据以预测事件窗口期间股票表现的风险之间的权衡。</p>
+<p>然后我们可以将异常收益率（abnormal return）估计为：</p>
+\[AR_{i,\tau} = R_{i,\tau} - \alpha + \beta R_{m,\tau}, \qquad (5.6)\]
+<p>其中 \(\tau\) 是事件窗口。</p>
+<p>由于我们使用统计方法估计异常收益率，并非所有非零的异常收益率都应被解释为对披露信息的反应。原因是我们必须考虑公司股票收益率的正常波动性。例如，一只高度波动的股票可能在任意一天上下波动 5–10%，这意味着该股票 10% 的异常收益率无法与股票的正常波动性区分开来。因此，我们</p>
+</section>
+<section class="book-page" data-pdf-page="183">
+<p>为了检验异常收益率是否足够大以至于可以被认为是统计显著的，我们使用t检验来完成这一任务。</p>
+<p>如果我们假设估计期长度 \(L\) 足够长，那么可以论证 \(\text{var}(AR_{i,\tau}|R_{m,\tau})\) 收敛于 \(\sigma^2_i\)，从而有</p>
+\[\frac{AR_{i,\tau}}{\sigma_i} \sim N(0,1) \tag{5.7}\]
+<p>自由度为 \(L-2\)。也就是说，t统计量定义为</p>
+\[t_{i,\tau} = \frac{AR_{i,\tau}}{\sigma_i} \tag{5.8}\]
+<p>其中 \(\sigma_i\) 是市场模型回归方程(5.5)的残差均方根误差（RMSE）或标准误。\(t_{i,\tau}\) 是否显著取决于在 \(L-2\) 自由度下的p值是否小于或等于显著性阈值水平。p值告诉我们t统计量被认为统计显著的最小可能显著性水平，通常的显著性水平为1%、5%和10%。</p>
+<h3>5.9.1 示例：特斯拉股票在2019年4月24日发布2019年第一季度财报后下跌</h3>
+<p>在2019年4月24日的交易时段内，特斯拉（股票代码TSLA）公布了2019年第一季度的财务业绩。公司报告营收为45.4亿美元，低于投资者预期的51.9亿美元。特斯拉还报告每股亏损2.90美元，远高于投资者预期的每股亏损0.69美元。在其他条件不变的情况下，报告低于投资者预期的收入和收益应导致股价下跌。与这一预期一致，特斯拉股票在收盘时下跌约2%。然而，特斯拉股价的这一跌幅是否足够大，以至于无法用特斯拉股票的正常波动来解释？我们可以使用事件研究来检验这一点。</p>
+<p><strong>步骤1：确定估计期和事件窗口</strong> 我们感兴趣的事件日期是2019年4月24日。对于估计期，我们使用最接近事件日期但不包括事件日期的一年期。我们不希望事件污染估计。因此，我们从事件日期减去365个日历日，得到估计期的起始日，即2018年4月24日。因此，本例中的事件窗口为2018年4月24日至2019年4月23日。</p>
+<div class="r-code-block" id="r1">
+  <pre><code class="language-r">&gt; (event.dt&lt;- as.Date(&quot;2019-04-24&quot;))
+[1] &quot;2019-04-24&quot;
+&gt; (estper.start&lt;- event.dt- 365)
+[1] &quot;2018-04-24&quot;</code></pre>
+</div>
+
+</section>
+<section class="book-page" data-pdf-page="184">
+<h2>5.9 事件研究 169</h2>
+<p>步骤2：导入TSLA和SPY数据 我们使用load.data()加载TSLA和SPY的价格数据。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; data.firm&lt;− load.data(&quot;TSLA Yahoo.csv&quot;, &quot;TSLA&quot;)
+2 &gt; head.tail(data.firm)
+3 TSLA.Open TSLA.High TSLA.LowTSLA.Close TSLA.Volume TSLA.Adjusted
+4 2014−12−31 44.618 45.136 44.450 44.482 11487500 44.482
+5 2015−01−02 44.574 44.650 42.652 43.862 23822000 43.862
+6 2015−01−05 42.910 43.300 41.432 42.018 26842500 42.018
+7 TSLA.Open TSLA.High TSLA.LowTSLA.Close TSLA.Volume TSLA.Adjusted
+8 2019−12−27 87.000 87.062 85.222 86.076 49728500 86.076
+9 2019−12−30 85.758 85.800 81.852 82.940 62932000 82.940
+10 2019−12−31 81.000 84.258 80.416 83.666 51428500 83.666
+11 &gt;
+12 &gt; data.mkt&lt;− load.data(&quot;SPY Yahoo.csv&quot;, &quot;SPY&quot;)
+13 &gt; head.tail(data.mkt)
+14 SPY.Open SPY.High SPY.LowSPY.Close SPY.Volume SPY.Adjusted
+15 2014−12−31 207.99 208.19 205.39 205.54 130333800 186.2590
+16 2015−01−02 206.38 206.88 204.18 205.43 121465900 186.1593
+17 2015−01−05 204.17 204.37 201.35 201.72 169632600 182.7974
+18 SPY.Open SPY.High SPY.LowSPY.Close SPY.Volume SPY.Adjusted
+19 2019−12−27 323.74 323.80 322.28 322.86 42528800 322.86
+20 2019−12−30 322.95 323.10 320.55 321.08 49729100 321.08
+21 2019−12−31 320.53 322.13 320.15 321.86 57077300 321.86</code></pre>
+</div>
+<p>步骤3：计算TSLA和SPY的收益率 在第1行和第2行中，我们计算TSLA和SPY的对数收益率。然后我们清理收益率数据，排除2014年12月31日的观测，并重命名变量。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; rets &lt;− cbind(diff(log(data.firm$TSLA.Adjusted)),
+2 + diff(log(data.mkt$SPY.Adjusted)))
+3 &gt; rets &lt;− rets[−1, ]
+4 &gt; names(rets)&lt;− c(&quot;Firm&quot;, &quot;Market&quot;)
+5 &gt; head.tail(rets)
+6 Firm Market
+7 2015−01−02−0.014036226−0.0005354247
+8 2015−01−05−0.042950196−0.0182246098
+9 2015−01−06 0.005648234−0.0094636586
+10 Firm Market
+11 2019−12−27−0.001300423−0.0002478074
+12 2019−12−30−0.037113102−0.0055284735
+13 2019−12−31 0.008715203 0.0024263490</code></pre>
+</div>
+<p>步骤4：将收益率数据子集化为估计期和事件窗 我们首先创建一个名为window的变量，它是包含估计期和事件窗的日期范围。输出的格式使得我们可以在括号内部使用它来子集化xts对象（参见第4行）。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; window&lt;− paste(estper.start , &quot;/&quot;, event.dt, sep = &quot;&quot;)
+2 &gt; window
+3 [1] &quot;2018−04−24/2019−04−24&quot;
+4 &gt; rets &lt;− rets[window]
+5 &gt; head.tail(rets)
+6 Firm Market
+7 2018−04−24 0.0003175732−0.013558751</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="185">
+  <p>170 第5章 因子模型</p>
+<pre>
+8 2018−04−25−0.00982017990.002468396
+9 2018−04−26 0.0169211341 0.010114567
+10 Firm Market
+11 2019−04−22−0.0392207320.0008616182
+12 2019−04−23 0.004367234 0.0089514669
+13 2019−04−24−0.020055805−0.0022217592
+  </pre>
+<p><strong>第5步：进行事件研究</strong> 我们以示例为基础，介绍实施事件研究的三种方法。第一种方法采用单步方式，使用虚拟变量（或指示变量）来标识事件日期。第二种方法分为两个阶段：第一阶段在估计期内估计市场模型参数，第二阶段将这些参数估计值应用于事件日期。第三种方法使用非参数化的样本分位数方法来衡量统计显著性。在所有三种方法中，计算得到的异常收益率是一致的。前两种方法在用于计算t统计量和判定统计显著性的标准误上有所不同。第三种方法的不同之处在于，它利用估计期内异常收益率的排序来判断异常收益率是否大到足以具有统计显著性。</p>
+<h3>5.9.2 单步事件研究</h3>
+<p>单步事件研究同时考虑估计期和事件日期的数据，但在事件日期上添加一个虚拟变量。通常，我们对上述方程进行修改，在右侧添加第三项。即：</p>
+  \[ R_{i,t} = \alpha + \beta_i R_{m,t} + \sum_{n=1}^{N} \gamma_n D_n \qquad (5.9) \]
+  <p>其中 \(D_n\) 是一个虚拟变量，用于告知R 2019年4月24日是事件日期（第1行）。由于我们的示例只有一个事件日期，因此右侧第三项仅为 \(\gamma D\)，其中 \(\gamma\) 是异常收益率。\(D\) 在2019年4月24日取值为1，否则为0。在此单阶段事件研究中，时间 \(t\) 一直延续到2019年4月24日（即包括事件日期），并且只有该日期对应的虚拟变量取值为1。然后我们使用 <code>lm()</code> 运行市场模型回归。</p>
+<div class="r-code-block" id="1">
+  <pre><code class="language-r">1 &gt; rets$Dummy&lt;− ifelse(index(rets) == &quot;2019−04−24&quot;, 1, 0)
+2 &gt; head.tail(rets)
+3 Firm Market Dummy
+4 2018−04−24 0.0003175732−0.013558751 0
+5 2018−04−25−0.00982017990.002468396 0
+6 2018−04−26 0.0169211341 0.010114567 0
+7 Firm Market Dummy
+8 2019−04−22−0.0392207320.0008616182 0
+9 2019−04−23 0.004367234 0.0089514669 0
+10 2019−04−24−0.020055805−0.0022217592 0</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="186">
+<p>5.9 事件研究 171</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">9 2019−04−23 0.004367234 0.0089514669 0
+10 2019−04−24−0.020055805−0.0022217592 1
+11 &gt; event &lt;− lm(Firm~ Market + Dummy , data= rets)
+12 &gt; summary(event)
+14 Call:
+15 lm(formula = Firm~ Market + Dummy , data= rets)
+17 Residuals:
+18 Min 1Q Median 3Q Max
+19 −0.154874−0.017476 0.001918 0.016711 0.156417
+21 Coefficients:
+22 Estimate Std. Error tvalue Pr(&gt;|t|)
+23 (Intercept)−0.00085740.0021979−0.390 0.697
+24 Market 1.2706843 0.2337810 5.435 1.3e−07 ∗∗∗
+25 Dummy −0.01637530.0348554−0.470 0.639
+26 −−−
+27 Signif. codes: 0 ‘∗∗∗’ 0.001 ‘∗∗’ 0.01 ‘∗’ 0.05 ‘.’ 0.1 ‘ ‘ 1
+29 Residual standarderror: 0.03478 on 249 degrees of freedom
+30 Multiple R−squared: 0.1071,Adjusted R−squared: 0.09992
+31 F−statistic:14.93 on 2 and 249 DF, p −value: 7.503e
+−07</code></pre>
+</div>
+<p>在单步事件研究中，我们可以从回归结果中直接读出异常收益率。虚拟变量的系数（即 -0.016）即为事件日的异常收益率估计值。也就是说，该模型表明 2019年4月24日特斯拉的异常收益率为 -1.6%。然而，其 p 值为 0.470，意味着该异常收益率在统计上不显著。</p>
+<p>原因在于特斯拉异常收益率的正常波动幅度较大，这体现在输出中虚拟变量的标准误高达 3.49%。这意味着特斯拉股价在2019年4月24日的跌幅不到该水平的一半，因此无法与特斯拉股票的正常波动区分开来。</p>
+<h3>5.9.3 两阶段事件研究</h3>
+<p>与上述单步事件研究不同，两阶段事件研究将估计期和事件窗口分开。这是原始事件研究在文献 [14, Fama et al. (1969)] 中所采用的方法。</p>
+<p><strong>步骤1：创建事件窗口和估计期数据集</strong> 我们首先确定事件窗口（第1行）。本例中使用一个一天的事件窗口，即2019年4月24日。由于我们仍在使用 <code>rets</code> 数据集，可以删除第三列，即单步事件研究中使用的虚拟变量。在此步骤中，我们还要构建估计期数据集（第4行）。类似地，由于使用 <code>rets</code>，我们也删除第三列。</p>
+</section>
+<section class="book-page" data-pdf-page="187">
+<p>172 第5章 因子模型</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; (event.window&lt;- rets[&quot;2019−04−24&quot;,−3])
+1 Firm Market
+2 2019−04−24−0.02005581−0.002221759
+&gt; est.period&lt;- rets[&quot;2018−04−24/2019−04−23&quot;,−3]
+&gt; head.tail(est.period)
+1 Firm Market
+2 2018−04−24 0.0003175732−0.013558751
+3 2018−04−25−0.00982017990.002468396
+4 2018−04−26 0.0169211341 0.010114567
+5 Firm Market
+6 2019−04−18 0.007456590 0.0019672729
+7 2019−04−22−0.0392207320.0008616182
+8 2019−04−23 0.004367234 0.0089514669</code></pre>
+</div>
+<p><strong>第二步：将股票收益率对市场收益率进行回归</strong> 在这两个步骤的第一步中，我们使用估计期数据对 TSLA 收益率关于 SPY 收益率进行回归。我们可以比较系数的估计值和标准误，它们与一次通过事件研究中的回归结果一致。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; event2&lt;- lm(Firm~ Market , data = est.period)
+&gt; summary(event2)
+4 Call:
+5 lm(formula = Firm~ Market , data = est.period)
+7 Residuals:
+8 Min 1Q Median 3Q Max
+9 −0.154874−0.017547 0.002061 0.016810 0.156417
+11 Coefficients:
+12 Estimate Std. Error tvalue Pr(&gt;|t|)
+13 (Intercept)−0.00085740.0021979−0.390 0.697
+14 Market 1.2706843 0.2337810 5.435 1.3e−07 ∗∗∗
+15 −−−
+16 Signif. codes: 0 ‘∗∗∗’ 0.001 ‘∗∗’ 0.01 ‘∗’ 0.05 ‘.’ 0.1 ‘ ‘ 1
+18 Residual standarderror: 0.03478 on 249 degrees of freedom
+19 Multiple R−squared: 0.1061,Adjusted R−squared: 0.1025
+20 F−statistic:29.54 on 1 and 249 DF, p −value: 1.303e−07</code></pre>
+</div>
+<p><strong>第三步：识别回归的 Alpha、Beta 和 RMSE</strong> 为了计算预测的 TSLA 收益率，我们需要回归结果中的 alpha（截距）、beta 和均方根误差（sigma）。我们将在第二步中使用这些值来计算事件日的异常收益率，并确定异常收益率的统计显著性。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">&gt; (alpha&lt;- summary(event2)$coeff[1])
+[1]−0.0008573843
+&gt; (beta &lt;− summary(event2)$coeff[2])
+[1] 1.270684
+&gt; (rmse &lt;− summary(event2)$sigma)
+[1] 0.03478057</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="188">
+<h3 id="event-studies">5.9 事件研究（Event Studies）</h3>
+<p><strong>步骤 4：在事件窗口中使用 Alpha 和 Beta 预测股票收益率</strong></p>
+<p>在回归的第二步中，我们使用 alpha 和 beta 来估计 2019 年 4 月 24 日 TSLA 的预测收益率（第 1 行）。然后我们取实际收益率与预测收益率之间的差值，得到异常收益率（Abnormal Return）（第 2 行）。我们通过将异常收益率除以均方根误差（RMSE）来计算 t 统计量（第 3 行）。我们在第 4 行和第 5 行计算 t 统计量的双尾 p 值。</p>
+<pre><code class="r">1 > event.window$Pred &lt;- alpha + beta * event.window$Market
+2 > event.window$Ab.Ret &lt;- event.window$Firm - event.window$Pred
+3 > event.window$tStat &lt;- event.window$Ab.Ret / rmse
+4 > event.window$pval &lt;- 2 * (1 - pt(abs(event.window$tStat),
+5 + df = nrow(rets) - (2 + 1)))
+6 > options(digits = 3)
+7 > event.window
+8 Firm Market Pred Ab.Ret tStat pval
+9 2019-04-24 -0.0201 -0.00222 -0.00368 -0.0164 -0.471 0.638
+10 > options(digits = 7)</code></pre>
+<p>正如第 9 行的输出所示，异常收益率为 -0.0164 或 -1.64%，这与一步回归中计算的异常收益率相同。区别在于，两步法中的 t 统计量为 -0.471，而一步法事件研究中为 -0.470。由于异常收益率相同，t 统计量的差异源于用于计算 t 统计量的标准误差。在两步法事件研究中，我们使用估计期内回归的 RMSE 作为标准误差的估计。在一步法事件研究中，它使用略有不同的标准误差计算，因为它包含了与事件日期相关的某些信息（除了估计期数据）。两种方法在 t 统计量上的差异不会改变我们事件研究的定性结论。也就是说，2019 年 4 月 24 日 TSLA 的异常（即公司特定）收益率可以用市场因素解释。</p>
+<p>输入和假设的精度取决于事件研究的最终应用。在许多学术研究中，最终的事件研究结果通常是跨大量横截面样本公司或事件的平均值。这种平均有助于减少单个公司特定效应对异常收益率的影响，因此对输入和假设的精确度要求可能不那么严格。然而，在处理单一公司事件研究时，我们必须更加小心所使用的输入和假设。</p>
+<h3 id="sample-quantiles-non-parametric">5.9.4 样本分位数/非参数方法</h3>
+<p>在大多数使用事件研究的学术文章中，结果依赖于异常收益率的横截面聚合，并依赖于事件的平均效应。当基于单一公司的事件研究进行推断时，我们还可以考虑另一种方法，作为标准事件研究方法的补充。在本小节中，我们使用异常收益率的样本分位数（…）</p>
+</section>
+<section class="book-page" data-pdf-page="189">
+<h2>174 第5章 因子模型</h2>
+<p>估计期内的异常收益率，确定事件日的异常收益率是否大到具有统计显著性。由于我们不对估计期内异常收益率的分布做任何假设，因此该方法被视为非参数方法。</p>
+<p>为了实现该方法，我们可以继续之前两步法事件研究的例子。从该分析中，我们发现2019年4月24日TSLA的异常收益率为-1.64%。由于我们想知道2019年4月24日的股价下跌是否统计显著，我们将执行单尾检验。假设显著性水平α为5%，我们需要找到第α×N个观测值，其中N是估计期内的异常收益率观测值个数，为250。</p>
+<h3>步骤1：计算估计期内的异常收益率</h3>
+<p>估计期内的异常收益率等于实际收益率减去预测收益率。我们使用回归输出的系数来估计预测收益率。</p>
+<div class="r-code-block" id="1">
+  <pre><code class="language-r">1 &gt; ab.ret&lt;- est.period$Firm - alpha + beta * est.period$Market
+2 &gt; head.tail(ab.ret)
+3 Firm
+4 2018-04-24 -0.016053935
+5 2018-04-25 -0.005826244
+6 2018-04-26  0.030630940
+7 Firm
+8 2019-04-18  0.01081376
+9 2019-04-22 -0.03726850
+10 2019-04-23  0.01659911</code></pre>
+</div>
+<h3>步骤2：对异常收益率数据进行排序</h3>
+<p>我们首先使用<code>data.frame()</code>将对象转换为数据框。然后，使用<code>order()</code>将异常收益率从最小（即最负）到最大排序。</p>
+<div class="r-code-block" id="2">
+  <pre><code class="language-r">1 &gt; sorted&lt;- data.frame(ab.ret)
+2 &gt; sorted&lt;- sorted[order(sorted$Firm), ]
+3 &gt; head.tail(sorted)
+4 [1] -0.1486900 -0.1212715 -0.1124748
+5 [1]  0.1578002  0.1623663  0.1652305</code></pre>
+</div>
+<h3>步骤3：计算临界观测序号</h3>
+<p>为了得到临界观测序号，我们将所选的显著性水平乘以估计期内异常收益率观测值个数。在单尾检验中，我们选择的α为5%。这是一个单尾检验，因为我们想分析TSLA的股价在2019年4月24日是否下跌。估计期内有N=251个观测值，这意味着临界观测序号为12.55。为了避免分数观测值，我们选择下一个最大整数作为临界值。可以使用<code>ceiling()</code>函数找到它。</p>
+<div class="r-code-block" id="3">
+  <pre><code class="language-r">1 &gt; (alpha&lt;- 0.05)
+2 [1] 0.05
+3 &gt; ( N &lt;- nrow(est.period))</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="190">
+<h2>5.9 事件研究</h2>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">4 [1] 251
+5 &gt; (cut.off&lt;− alpha∗ N)
+6 [1] 12.55
+7 &gt; (cut.off&lt;− ceiling(alpha∗ N))
+8 [1] 13</code></pre>
+</div>
+<p>第4步：确定异常收益率截断值 cut.off 变量等于13，因此我们只需要13个观测值。下面，我们输出第13个最负的异常收益率，即−6.67%。如果我们的异常收益率比这个数值更负，我们将其视为统计显著。由于2019年4月24日的异常收益率仅为−1.64%，使用样本分位数表明TSLA当天的价格下跌不统计显著。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; sorted[cut.off]
+2 [1]−0.066725</code></pre>
+</div>
+<p>第5步：确定截断收益率的替代方法 如果不执行第3步和第4步，而是使用 quantile() 函数，我们可以得到类似的结果。quantile() 的第一个参数是数据集 sorted，第二个参数告诉R我们要输出哪些分位数。下面展示了在5%显著性水平下的下尾和上尾。在我们的例子中，相关数字是下分位数值−6.48%。这个数字与第4步的结果不同，等于第13和第14个最负异常收益率的中点。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; quantile(sorted , c(alpha , 1− alpha))
+2 5% 95%
+3 −0.064768260.05678372
+4 &gt; mean(c(sorted[13],sorted[14]))
+5 [1]−0.06476826</code></pre>
+</div>
+<p>差异是因为分位数有多种计算方式。R中有七种计算分位数的方法。如我们所见，类型1、2和3给出的答案与第4步相同，而其他四种类型则不同。关于各种类型之间的差异，请访问：<a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/quantile.html">https://stat.ethz.ch/R-manual/R-devel/library/stats/html/quantile.html</a>。</p>
+<div class="r-code-block" id="code-4">
+  <pre><code class="language-r">1 &gt; quantile(sorted , c(alpha , 1− alpha), type = 1)
+2 5% 95%
+3 −0.06672500.0581327
+4 &gt; quantile(sorted , c(alpha , 1− alpha), type = 2)
+5 5% 95%
+6 −0.06672500.0581327
+7 &gt; quantile(sorted , c(alpha , 1− alpha), type = 3)
+8 5% 95%
+9 −0.066725000.05543475
+10 &gt; quantile(sorted , c(alpha , 1− alpha), type = 4)
+11 5% 95%
+12 −0.067480500.05664883
+13 &gt; quantile(sorted , c(alpha , 1− alpha), type = 5)
+14 5% 95%
+15 −0.066529330.05799780
+16 &gt; quantile(sorted , c(alpha , 1− alpha), type = 6)</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="191">
+<h2 id="section-5-10">5.10 选择最佳回归变量</h2>
+<p>CAPM是一个单因子模型，这意味着只有一个因子被用来解释公司收益率。Fama–French模型有三个或五个因子，这意味着有多个因子被用来解释公司收益率。实践中使用了大量不同的因子模型。那么，我们如何确定在分析中应包含哪些因子集呢？对此没有明确的检验方法。我们可以单独考虑每个因子，分析是否应包含该因子。我们可以运行各种回归，然后检验以确定哪个模型更好。在这种情况下，我们可以使用调整后的R平方等指标来帮助得出结论。</p>
+<p>或者，我们可以使用基于方差分析和最小（最大负值）赤池信息量准则（Akaike Information Criterion, AIC）的方法来选择最佳模型。AIC处理模型的拟合优度与模型简洁性之间的权衡，并同时考虑过拟合和欠拟合的风险。</p>
+<p>我们可以通过向前或向后进行模型选择。向前选择意味着我们从最简单的模型开始，逐步扩展到完整模型。向后选择意味着我们从完整模型开始，逐步简化。在R中可以自动化这些步骤，如果我们考虑许多因子，这将非常有用。在下面的示例中，我们将使用附录C中构建的假设投资组合月收益率和Fama–French五因子模型。</p>
+<h3>5.10.1 创建收益率数据集</h3>
+<p>我们首先创建一个包含投资组合收益率和Fama–French五因子模型的合并数据集。</p>
+<p><strong>步骤1：导入投资组合收益率</strong> 我们使用<code>read.csv()</code>导入之前构建的投资组合收益率。输出显示我们的投资组合有60个月度收益率。</p>
+<div class="r-code-block" id="code-5-10-1">
+  <pre><code class="language-r">&gt; data.port&lt;- read.csv(&quot;Hypothetical Portfolio (Monthly).csv&quot;)
+&gt; data.port&lt;- data.port[,-1]
+&gt; head.tail(data.port)</code></pre>
+</div>
+<pre class="r-output">   Date    Port.Ret
+1 Jan 2015  0.07306837</pre>
+<pre class="r-output">  5%         95%
+ -0.06739656 0.06038842</pre>
+<div class="r-code-block" id="code-5-10-2">
+  <pre><code class="language-r">&gt; quantile(sorted, c(alpha, 1 - alpha), type = 7)</code></pre>
+</div>
+<pre class="r-output">  5%         95%
+ -0.06476826 0.05678372</pre>
+</section>
+<section class="book-page" data-pdf-page="192">
+<h2>5.10 选择最佳回归变量 177</h2>
+<pre>
+6 2 Feb 2015 0.07258170
+7 3 Mar 2015−0.02373268
+8 Date Port.Ret
+9 58 Oct 2019 0.05596117
+10 59 Nov 2019 0.04224452
+11 60 Dec 2019 0.04982447
+</pre>
+<p>步骤2：导入Fama–French 5因子数据 在Ken French的网站上，我们可以获取一个CSV文件，其中包含月度收益率的Fama–French 5因子模型数据。在Excel中打开CSV文件显示，标题行从第4行开始，因此我们希望跳过前三行，并告诉R它读取的第一行是标题行。FF 5因子模型数据始于1963年，共有682行月度收益率数据。在月度收益率数据下方是我们当前不感兴趣的年度数据。因此，我们告诉R只读取标题行之后的678行，其中678是总行数682减去四行（即我们跳过的三行加上标题行）。</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">&gt; data.ff5&lt;- read.csv(&quot;F−F_Research_Data_5_Factors_2x3.csv&quot;,
++ skip = 3,
++ header = TRUE ,
++ nrows = 678)
+&gt; head.tail(data.ff5)</code></pre>
+</div>
+<pre>
+6 X Mkt.RF SMB HML RMW CMA RF
+7 1 196307 −0.39−0.47−0.83 0.66−1.150.27
+8 2 196308 5.07 −0.79 1.67 0.39 −0.400.25
+9 3 196309 −1.57−0.48 0.18−0.76 0.24 0.27
+10 X Mkt.RF SMB HML RMW CMA RF
+11 676 201910 2.06 0.21−2.07 0.43−0.960.15
+12 677 201911 3.87 0.50−1.86−1.50−1.290.12
+13 678 201912 2.77 0.97 1.82 0.23 1.29 0.14
+</pre>
+<p>然后我们使用lubridate包创建一个R能够识别为日期的日期变量。为了简化这一过程，我们创建一个看起来像年-月-日的变量dt，方法是在列X的值末尾粘贴01。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">&gt; data.ff5$dt &lt;- paste(data.ff5$X, &quot;01&quot;, sep = &quot;&quot;)
+&gt; library(lubridate)
+&gt; data.ff5$Date&lt;- ymd(data.ff5$dt)
+&gt; head.tail(data.ff5)</code></pre>
+</div>
+<pre>
+5 X Mkt.RF SMB HML RMW CMA RF dt Date
+6 1 196307 −0.39−0.47−0.83 0.66−1.150.27196307011963−07−01
+7 2 196308 5.07 −0.79 1.67 0.39 −0.400.25196308011963−08−01
+8 3 196309 −1.57−0.48 0.18−0.76 0.24 0.27196309011963−09−01
+9 X Mkt.RF SMB HML RMW CMA RF dt Date
+10 676 201910 2.06 0.21−2.07 0.43−0.960.15201910012019−10−01
+11 677 201911 3.87 0.50−1.86−1.50−1.290.12201911012019−11−01
+12 678 201912 2.77 0.97 1.82 0.23 1.29 0.14201912012019−12−01
+</pre>
+<p>接下来，我们首先进行一些清理，从data.ff5中移除不必要的列，然后将数据子集设为2015年至2019年。</p>
+<div class="r-code-block" id="code3">
+  <pre><code class="language-r">&gt; data.ff5&lt;- data.ff5[,−c(1, 8)]
+&gt; ff5.sub&lt;- subset(data.ff5,
++ Date &gt;= &quot; 2015−01−01&quot; &amp;</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="193">
+<h2>178 第5章 因子模型</h2>
+<p>最后，我们将收益率除以100转换为小数形式，而不是百分比形式。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">4 + Date &lt;= &quot; 2019−12−31&quot;)
+5 &gt; rownames(ff5.sub)&lt;− seq(1, nrow(ff5.sub), 1)
+6 &gt; head.tail(ff5.sub)
+7 Mkt.RF SMB HML RMW CMA RF Date
+8 1 −3.11−0.87−3.48 1.67−1.67 0 2015−01−01
+9 2 6.13 0.21 −1.81−1.07−1.75 0 2015−02−01
+10 3 −1.12 3.04−0.46 0.10−0.51 0 2015−03−01
+11 Mkt.RF SMB HML RMW CMA RF Date
+12 58 2.06 0.21 −2.07 0.43−0.960.152019−10−01
+13 59 3.87 0.50 −1.86−1.50−1.290.122019−11−01
+14 60 2.77 0.97 1.82 0.23 1.29 0.14 2019−12−01</code></pre>
+</div>
+<p>步骤3：合并投资组合和Fama–French数据集。使用cbind()函数合并两个数据集。然后，我们计算超额投资组合收益率Port.RF，即从投资组合收益率Port.Ret中减去无风险利率RF。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; ff5.sub[, 1:6]&lt;− ff5.sub[, 1:6]/ 100
+2 &gt; head.tail(ff5.sub)
+3 Mkt.RF SMB HML RMW CMA RF Date
+4 1 −0.0311−0.0087−0.0348 0.0167−0.0167 0 2015−01−01
+5 2 0.0613 0.0021 −0.0181−0.0107−0.0175 0 2015−02−01
+6 3 −0.0112 0.0304−0.0046 0.0010−0.0051 0 2015−03−01
+7 Mkt.RF SMB HML RMW CMA RF Date
+8 58 0.0206 0.0021−0.0207 0.0043−0.00960.00152019−10−01
+9 59 0.0387 0.0050−0.0186−0.0150−0.01290.00122019−11−01
+10 60 0.0277 0.0097 0.0182 0.0023 0.0129 0.00142019−12−01</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="194">
+<h3 id="selecting-best-regression-variables">5.10.2 向前逐步法</h3>
+<p><strong>第1步：识别最小模型</strong> 在向前逐步法中，我们从最小模型开始，逐步扩展至完整模型。最小模型包含一个由1组成的向量。</p>
+<div class="r-code-block" id="r1">
+  <pre><code class="language-r">&gt; min.model&lt;- lm(Port.RF~ 1, data = combine)
+&gt; summary(min.model)
+
+Call:
+lm(formula = Port.RF~ 1, data = combine)
+
+Residuals:
+   Min      1Q  Median      3Q     Max
+-0.135053 -0.044315  0.004036  0.038522  0.135138
+
+Coefficients:
+            Estimate Std. Error t value Pr(&gt;|t|)
+(Intercept) 0.023002   0.007481   3.075  0.00319 **
+---
+Signif. codes:  0 &#x27;***&#x27; 0.001 &#x27;**&#x27; 0.01 &#x27;*&#x27; 0.05 &#x27;.&#x27; 0.1 &#x27; &#x27; 1
+
+Residual standard error: 0.05795 on 59 degrees of freedom</code></pre>
+</div>
+<p><strong>第2步：逐步运行</strong> 然后我们逐步添加变量直至完整模型，即 Fama-French 五因子模型。可以看到，最小模型的起始 AIC 为 -341。仅包含 Mkt.RF 的模型 AIC 为 -384。包含 Mkt.RF 和 CMA 的模型 AIC 为 -412。包含 Mkt.RF、CMA 和 SMB 的模型 AIC 为 -420。因此最后一个模型最优。</p>
+<div class="r-code-block" id="r2">
+  <pre><code class="language-r">&gt; fwd.model&lt;- step(min.model ,
++ direction = &quot;forward&quot;,
++ scope = ( ~ Mkt.RF + SMB + HML + RMW + CMA))
+Start:  AIC=-340.79
+Port.RF ~ 1
+
+       Df Sum of Sq      RSS      AIC
++ Mkt.RF  1  0.104582 0.093562 -383.81
++ CMA     1  0.074604 0.123539 -367.13
++ HML     1  0.022888 0.175256 -346.15
+&lt;none&gt;               0.198144 -340.79
++ SMB     1  0.000539 0.197605 -338.95
++ RMW     1  0.000067 0.198077 -338.81
+
+Step:  AIC = -383.81
+Port.RF ~ Mkt.RF
+
+       Df Sum of Sq      RSS      AIC
++ CMA     1  0.036632 0.056929 -411.62
++ HML     1  0.022536 0.071026 -398.34
++ SMB     1  0.016486 0.077076 -393.44
+&lt;none&gt;               0.093562 -383.81</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="195">
+  <div class="page-header">180 5 因子模型</div>
+<div class="r-code-block" id="1">
+  <pre><code class="language-r">+ RMW 1 0.000797 0.092764 −382.32
+Step: AIC =−411.62
+Port.RF~ Mkt.RF + CMA
+Df Sum of Sq RSS AIC
++ SMB 1 0.0087903 0.048139 −419.68
++ RMW 1 0.0019455 0.054984 −411.70
+&lt;none &gt; 0.056929−411.62
++ HML 1 0.0009467 0.055983 −410.62
+Step: AIC =−419.68
+Port.RF~ Mkt.RF + CMA + SMB
+Df Sum of Sq RSS AIC
+&lt;none &gt; 0.048139−419.68
++ HML 1 1.9852e −04 0.047940−417.93
++ RMW 1 7.6512e −05 0.048062−417.78
+&gt; summary(fwd.model)
+Call:
+lm(formula = Port.RF~ Mkt.RF + CMA + SMB, data = combine)
+Residuals:
+Min 1Q Median 3Q Max
+−0.064899−0.016831−0.004939 0.015285 0.069306
+Coefficients:
+Estimate Std. Error tvalue Pr(&gt;|t|)
+(Intercept) 0.009086 0.003949 2.301 0.02514∗
+Mkt.RF 1.102979 0.117771 9.365 4.66e−13 ∗∗∗
+CMA −1.459816 0.251608
+−5.8023.19e−07 ∗∗∗
+SMB −0.528665 0.165323−3.198 0.00228∗∗
+−−−
+Signif. codes: 0 ‘∗∗∗’ 0.001 ‘∗∗’ 0.01 ‘∗’ 0.05 ‘.’ 0.1 ‘ ’ 1
+Residual standarderror: 0.02932 on 56 degrees of freedom
+Multiple R−squared: 0.757,Adjusted R−squared: 0.744
+F−statistic:58.17 on 3 and 56 DF, p −value: &lt; 2.2e−16</code></pre>
+</div>
+<h3>5.10.3 向后逐步回归方法</h3>
+<p><strong>步骤1：从完整模型开始</strong> 在向后逐步方法中，我们从完整模型开始，然后逐步简化模型。完整模型包含所有五个因子。</p>
+<div class="r-code-block" id="2">
+  <pre><code class="language-r">&gt; full.model&lt;- lm(Port.RF~ Mkt.RF + SMB + HML + RMW + CMA ,
++ data = combine)</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="196">
+<h2>5.10 选择最佳回归变量</h2>
+<p>第2步：运行步骤</p>
+<p>我们从Fama-French五因子模型（包含所有自变量）开始，然后逐步简化模型。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">reduced.model &lt;- step(full.model,
+                      direction = &quot;backward&quot;)</code></pre>
+</div>
+<pre>Start: AIC=−416.04
+Port.RF~ Mkt.RF + SMB + HML + RMW + CMA
+
+       Df Sum of Sq      RSS    AIC
+− RMW  1   0.000090 0.047940 −417.93
+− HML  1   0.000212 0.048062 −417.78
+<none>                0.047850 −416.04
+− SMB  1   0.006245 0.054095 −410.68
+− CMA  1   0.014571 0.062422 −402.09
+− Mkt.RF 1  0.074224 0.122075 −361.85
+
+Step: AIC =−417.93
+Port.RF~ Mkt.RF + SMB + HML + CMA
+
+       Df Sum of Sq      RSS    AIC
+− HML  1   0.000199 0.048139 −419.68
+<none>                0.047940 −417.93
+− SMB  1   0.008042 0.055983 −410.62
+− CMA  1   0.014484 0.062425 −404.09
+− Mkt.RF 1  0.074634 0.122575 −363.60
+
+Step: AIC =−419.68
+Port.RF~ Mkt.RF + SMB + CMA
+
+       Df Sum of Sq      RSS    AIC
+<none>                0.048139 −419.68
+− SMB  1   0.008790 0.056929 −411.62
+− CMA  1   0.028937 0.077076 −393.44
+− Mkt.RF 1  0.075399 0.123538 −365.13</pre>
+<p>第3步：展示最佳模型的回归结果</p>
+<p>最佳模型的回归结果保存在reduced.model对象中。因此，我们可以使用summary()函数输出回归结果。正如我们所见，无论我们使用向前还是向后逐步回归，最终都会得到相同的结果。也就是说，模型包含Mkt.RF、SMB和CMA作为因子。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">summary(reduced.model)</code></pre>
+</div>
+<pre>Call:
+lm(formula = Port.RF~ Mkt.RF + SMB + CMA, data = combine)
+
+Residuals:
+    Min      1Q  Median      3Q     Max
+−0.064899 −0.016831 −0.004939 0.015285 0.069306
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept) 0.009086   0.003949   2.301   0.02514 ∗</pre>
+</section>
+<section class="book-page" data-pdf-page="197">
+<h3>5.10.4 抑制步骤的输出</h3>
+<p>一旦我们熟悉了模型的使用，我们可以抑制得到结果的各个步骤。我们通过向 <code>step()</code> 内部添加 <code>trace = 0</code> 来实现这一点。下面的输出与上面向后法的输出相同。唯一的区别是我们没有打印出 R 在步骤 2 中达到最佳模型所采取的所有不同步骤的输出。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; reduced.model2 &lt;- step(full.model ,
++                       direction = &quot;backward&quot;,
++                       trace = 0)</code></pre>
+</div>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; summary(reduced.model2)</code></pre>
+</div>
+<pre>
+
+Call:
+lm(formula = Port.RF ~ Mkt.RF + SMB + CMA, data = combine)
+
+Residuals:
+    Min      1Q  Median      3Q     Max
+-0.064899 -0.016831 -0.004939  0.015285  0.069306
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept)  0.009086   0.003949   2.301   0.02514 *
+Mkt.RF       1.102979   0.117771   9.365 4.66e-13 ***
+SMB         -0.528665   0.165323  -3.198   0.00228 **
+CMA         -1.459816   0.251608  -5.802 3.19e-07 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 0.02932 on 56 degrees of freedom
+Multiple R-squared:  0.757, Adjusted R-squared:  0.744
+F-statistic: 58.17 on 3 and 56 DF,  p-value: < 2.2e-16
+</pre>
+</section>
+<section class="book-page" data-pdf-page="198">
+<h2 id="section-5-11">5.11 延伸阅读</h2>
+<p>CAPM 的原始论文是 [25, Sharpe (1964)]。在上述例子中，我们使用 60 个月的收益率数据计算了 beta。例如，这是雅虎财经（Yahoo Finance）使用的收益率频率和估计期长度。如上所述，收益率频率和估计期长度可以变化。例如，Morningstar 使用三年的月度收益率数据，而 Bloomberg 终端的默认设置为两年周收益率数据。也经常使用其他收益率频率和估计期长度。然而，我们必须意识到以下两个权衡。第一个权衡是，高频率（即日收益率数据）比低频率（即月度数据）更容易受到非同步交易问题的影响。第二个权衡是，较短的估计期可能更贴合当前的 beta，但可能更容易受到极端事件的影响，而较长的估计期可能包含更旧且相关性较低的数据。</p>
+<p>我们还使用 3 个月无风险利率来估计 CAPM。根据具体应用，我们可能希望使用更长期限的无风险利率。例如，在估值背景下计算权益成本时，我们可能希望使用 10 年或 20 年期美国国债。</p>
+<p>FF 模型的原始论文是 [15, Fama and French (1993)]。在 [16, Fama and French (2015)] 中，作者开发了一个五因子模型。与 FF 模型相关的大量数据可以在 Ken French 的网站 (https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html) 上找到。关于因子模型的优秀论述见 [13, Damodaran (2012)] 和 [20, Koller, et al. (2010)]。</p>
+<p>关于因子投资在资产管理中的应用，参见 [1, Ang (2014)]。从实证角度对价值、动量与流动性等常见因子的详细讨论见 [5, Bali, et al. (2016)]。有许多研究质疑发现因子的论文的可靠性。在 [2, Ang (2017)]、[3, Ang (2018)] 和 [4, Ang (2020)] 中，我讨论了规模为何不再是有效的因子。其他研究讨论了更广泛因子的问题。这类研究的例子包括 [11, Cornell (2020)]、[19, Hou, Xue, and Zhang (2020)] 和 [18, Harvey, Liu, and Zhu (2016)]。</p>
+<p>事件研究的开创性论文是 [14, Fama, et al. (1969)]。关于事件研究的优秀背景介绍见 [21, Kothari and Warner (2005)]。作者报告称，从 1974 年到 2000 年，五本顶级金融期刊上发表的 575 余篇文章使用了事件研究。关于我们所用方法的精彩讨论见 [22, MacKinlay (1997)] 和 [7, Binder (1985)]。关于事件研究在证券诉讼中的更具体应用，参见 [12, Crew, et al. (2007)]。</p>
+</section>
+<section class="book-page" data-pdf-page="199">
+  <h2 id="references-3">参考文献</h2>
+<ol>
+    <li>Ang, A. (2014). <em>Asset management: a systematic approach to factor investing</em>. Oxford: Oxford University Press.</li>
+<li>Ang, C. (2017). Why we shouldn’t add a size premium to the CAPM cost of equity. <em>NACVA QuickRead</em>. http://quickreadbuzz.com/2017/02/15/shouldnt-add-size-premium-capm-cost-equity/ .</li>
+<li>Ang, C. (2018). The absence of a size effect relevant to the cost of equity. <em>Business Valuation Review</em>, 37, 87–92.</li>
+<li>Ang, C. (2020). It’s time for valuation experts to let go of the size premium. <em>Law360</em>. https://www.law360.com/articles/1283192.</li>
+<li>Bali, T., Engle, R., & Murray, S. (2016). <em>Empirical asset pricing: the cross section of stock returns</em>. Wiley.</li>
+<li>Berk, J., & van Binsbergen, J. (2017). How do investors compute the discount rate? They use the CAPM. <em>Financial Analysts Journal</em>, 73, 25–32.</li>
+<li>Binder, J. (1985). On the use of the multivariate regression model in event studies. <em>Journal of Accounting Research</em>, 23, 370–383.</li>
+<li>Blume, S. (1975). Betas and their regression tendencies. <em>Journal of Finance</em>, 30, 785–795.</li>
+<li>Busse, J., & Green, T. C. (2002). Market efficiency in real time. <em>Journal of Financial Economics</em>, 65, 415–437.</li>
+<li>Cochrane, J. (2011). Presidential address: Discount rates. <em>Journal of Finance</em>, 66, 1047–1108.</li>
+<li>Cornell, B. (2020). Stock characteristics and stock returns: A skeptic’s look at the cross section of expected returns. <em>Journal of Portfolio Management</em>, 46, 131–142.</li>
+<li>Crew, N., Gold, K., & Moore, M. (2007). Federal securities acts and areas of expert analysis. In R. Weil, et al. (Eds.) <em>Litigation services handbook</em> (4th edn.). Wiley.</li>
+<li>Damodaran, A. (2012). <em>Investment valuation: Tools and techniques for determining the value of any asset</em> (3rd edn.). Wiley.</li>
+<li>Fama, E., Fischer, L., Jensen, M., & Roll, R. (1969). The speed of adjustment of stock prices to new information. <em>International Economic Review</em>, 10, 1–21.</li>
+<li>Fama, E., & French, K. (1993). Common risk factors in the returns on stocks and bonds. <em>Journal of Financial Economics</em>, 33, 3–56.</li>
+<li>Fama, E., & French, K. (2015). A five-factor asset pricing model. <em>Journal of Financial Economics</em>, 116, 1–22.</li>
+<li>Graham, J., & Harvey, C. (2002). How do CFOs make capital budgeting and capital structure decisions? <em>Journal of Applied Corporate Finance</em>, 15, 8–23.</li>
+<li>Harvey, C., Liu, Y., & Zhu, H. (2016). … and the cross-section of expected returns. <em>Review of Financial Studies</em>, 29, 5–68.</li>
+<li>Hou, K., Xue, C., & Zhang, L. (2020). Replicating anomalies. <em>Review of Financial Studies</em>, 33, 2019–2133.</li>
+<li>Koller, T., Goedhart, M., & Wessels, D. (2010). <em>Valuation: Measuring and managing the value of companies</em> (5th edn.). Wiley.</li>
+<li>Kothari, S. P., & Warner, J. B. (2005). Econometrics of event studies. In B. E. Eckbo (Ed.) <em>Handbook of corporate finance: empirical corporate finance</em>. Elsevier/North-Holland.</li>
+<li>MacKinlay, A. C. (1997). Event studies in economics and finance. <em>Journal of Economic Literature</em>, 35, 13–39.</li>
+<li>Pinto, J., Robinson, T., & Stowe, J. (2015). Equity valuation: a survey of professional practice. Working paper, accessed at the Social Science Research Network https://ssrn.com/abstract=2657717.</li>
+<li>Roll, R. (1977). A critique of the asset pricing theory’s tests. <em>Journal of Financial Economics</em>, 4, 129–176.</li>
+<li>Sharpe, W. (1964). Capital asset prices: A theory of market equilibrium under conditions of risk. <em>Journal of Finance</em>, 3, 425–442.</li>
+  </ol>
+</section>
+<nav class="chapter-nav"><a href="/analyzing-financial-data-r-cn/chapter-4/">上一节：第4章 风险</a><a href="/analyzing-financial-data-r-cn/chapter-6/">下一节：第6章 风险调整后的投资组合绩效度量</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=638ea974b0aa"></script>
+</body>
+</html>

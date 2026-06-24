@@ -1,0 +1,913 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="第7章 Markowitz均值-方差优化 | 《使用 R 分析金融数据并实现金融模型》">
+  <title>第7章 Markowitz均值-方差优化 | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=163efa3dc728">
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <div class="sidebar-heading">
+    <h2>书籍目录</h2>
+    <div class="sidebar-actions" aria-label="二级目录控制">
+      <button type="button" data-sidebar-action="expand">全部展开</button>
+      <button type="button" data-sidebar-action="collapse">全部收起</button>
+    </div>
+  </div>
+  <nav class="sidebar-list"><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/">首页</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/dedication/">献辞</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/preface/">前言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/acknowledgments/">致谢</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-1/">第1章 价格</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-1" aria-label="展开第1章 价格二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-1" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-1">1.1 价格与价值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-2">1.2 从 Yahoo Finance 导入价格数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-3">1.3 检查数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-4">1.4 基本数据处理技巧</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-5">1.5 比较不同证券之间的资本利得</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-6">1.6 简单移动平均线和指数移动平均线</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-7">1.7 成交量加权平均价格（VWAP）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-8">1.8 绘制K线图</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-9">1.9 双轴价格与成交量图</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-10">1.10 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#references">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-2/">第2章 单个证券收益率</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-2" aria-label="展开第2章 单个证券收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-2" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-1">2.1 价格收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-2">2.2 总收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-3">2.3 对数总收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-4">2.4 缩尾处理与截尾处理</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-5">2.5 累积多日收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-6">2.6 周收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-7">2.7 月度收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-8">2.8 比较多种证券的表现</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-3/">第3章 投资组合收益率</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-3" aria-label="展开第3章 投资组合收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-3" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-1">3.1 投资组合收益率：长方法</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-2">3.2 使用矩阵代数的投资组合收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-3">3.3 构建基准投资组合收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-4">3.4 时间加权收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-5">3.5 资金加权收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-6">3.6 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#reference">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-4/">第4章 风险</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-4" aria-label="展开第4章 风险二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-4" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-1">4.1 风险-收益权衡</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-2">4.2 单个证券风险</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-3">4.3 投资组合风险</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-4">4.4 风险价值 (Value-at-Risk)</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-5">4.5 期望损失</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-6">4.6 替代风险度量</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-7">4.7 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#references-2">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-5/">第5章 因子模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-5" aria-label="展开第5章 因子模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-5" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-1">5.1 资本资产定价模型（CAPM）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-2">5.2 市场模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-3">5.3 滚动窗口回归</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-4">5.4 不同参考日的Beta</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-5">5.5 Fama–French 三因子模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-6">5.6 异方差性检验</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-7">5.7 检验非正态性</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-8">5.8 自相关检验</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-9">5.9 事件研究</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-10">5.10 选择最佳回归变量</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-11">5.11 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#references-3">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-6/">第6章 风险调整后的投资组合绩效度量</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-6" aria-label="展开第6章 风险调整后的投资组合绩效度量二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-6" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-1">6.1 投资组合与基准数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-2">6.2 夏普比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-3">6.3 Roy 的安全第一比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-4">6.4 特雷诺比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-5">6.5 索提诺比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-6">6.6 信息比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-7">6.7 合并结果</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-8">6.8 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#references-4">参考文献</a></div></div><div class="sidebar-item is-current is-open"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-7/" aria-current="page">第7章 Markowitz均值-方差优化</a><button class="sidebar-toggle" type="button" aria-expanded="true" aria-controls="sidebar-sections-chapter-7" aria-label="收起第7章 Markowitz均值-方差优化二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-7"><a class="section-link" href="#section-7-1">7.1 两个资产：手动方法</a><a class="section-link" href="#section-7-2">7.2 使用二次规划的两个资产情况</a><a class="section-link" href="#section-7-3">7.3 使用二次规划的多资产优化</a><a class="section-link" href="#section-7-4">7.4 允许卖空的影响</a><a class="section-link" href="#section-7-5">7.5 扩展阅读</a><a class="section-link" href="#references-5">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-8/">第8章 股票</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-8" aria-label="展开第8章 股票二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-8" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-1">8.1 公司财务</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-2">8.2 预测（Projections）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-3">8.3 股权风险溢价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-4">8.4 去杠杆化 Beta</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-5">8.5 敏感性分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-6">8.6 使用回归分析的相对估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-7">8.7 识别股票收益率的显著变化</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-8">8.8 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#references-6">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-9/">第9章 固定收益</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-9" aria-label="展开第9章 固定收益二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-9" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-1">9.1 经济分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-2">9.2 美国国债</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-3">9.3 主成分分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-4">9.4 投资级债券利差</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-5">9.5 债券估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-6">9.6 久期与凸性</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-7">9.7 短期利率模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-8">9.8 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#references-7">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-10/">第10章 期权</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-10" aria-label="展开第10章 期权二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-10" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-1">10.1 获取期权链数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-2">10.2 Black–Scholes–Merton 期权定价模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-3">10.3 隐含波动率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-4">10.4 Cox, Ross, and Rubinstein 二叉树期权定价模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-5">10.5 美式期权定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-6">10.6 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#references-8">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-11/">第11章 模拟</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-11" aria-label="展开第11章 模拟二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-11" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-1">11.1 使用几何布朗运动模拟股票价格</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-2">11.2 模拟含股息和不含股息的股票价格</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-3">11.3 模拟具有相关价格的股票</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-4">11.4 使用模拟计算风险价值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-5">11.5 欧式期权的蒙特卡洛定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-6">11.6 使用对偶变量法的蒙特卡洛期权定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-7">11.7 奇异期权估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-8">11.8 扩展阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#references-9">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-12/">第12章 交易策略</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-12" aria-label="展开第12章 交易策略二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-12" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-1">12.1 有效市场假说</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-2">12.2 技术分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-3">12.3 构建简单交易策略</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-4">12.4 机器学习技术</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-5">12.5 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#references-10">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-a/">附录A R入门</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-appendix-a" aria-label="展开附录A R入门二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-appendix-a" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-1-installing-r">A.1 安装 R</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-2-the-r-working-directory">A.2 R 工作目录</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-3-r-console-output">A.3 R 控制台输出</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-4-r-editor">A.4 R 编辑器</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-5-packages">A.5 包</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-6-basic-commands">A.6 基本命令</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-7-the-r-workspace">A.7 R 工作空间</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-8-vectors">A.8 向量</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-9-combining-vectors">A.9 组合向量</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-10-matrices">A.10 矩阵</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-11-data-frame">A.11 data.frame</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-12-date-formats">A.12 日期格式</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-b/">附录B 预加载代码</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-c/">附录C 构建假设投资组合（月度收益率）</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-d/">附录D 构建假设投资组合（日收益率）</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/index/">索引</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <h1>第7章 Markowitz均值-方差优化</h1>
+<section class="book-page" data-pdf-page="211"><h1 id="chapter-7">第7章 Markowitz 均值-方差优化</h1>
+<p>在 [3] 中，Harry Markowitz 提出了一种理论，阐述如何利用均值和方差来确定在给定风险水平下提供最高收益的投资组合。这种方法告诉我们，重要的是投资组合中资产之间的共同变动（即协方差），而不是单个证券本身的风险。其含义是，通过适当分散投资组合，你可以将整个投资组合的风险降低到低于构成投资组合的资产的加权平均风险。后续研究表明，分散投资的大部分好处可以通过在投资组合中持有 12 到 18 只证券来实现。</p>
+<p>在本章中，我们将展示如何构建均值-方差（MV）有效前沿，它是由投资组合中证券的各种组合产生的所有投资组合的集合，这些组合在给定风险水平下提供最高的收益。在第 7.1 节中，我们首先手动使用两种资产构建 MV 有效前沿，以便理解我们试图完成的目标。然后，在第 7.2 节中，我们将这种针对两种资产的手动方法转换为使用二次规划的方法。由于许多投资者（例如，一些养老基金）出于各种原因不允许或不能卖空证券，我们在不允许卖空的情况下实现两种资产的情况。</p>
+<p>然后，我们将二次规划方法扩展到多种证券，以展示如何找到 MV 有效投资组合。在多种资产情景下，我们首先在第 7.3 节中继续不允许卖空的限制，然后在第 7.4 节中展示允许卖空对 MV 有效前沿的影响。我们将看到，允许卖空会向外扩展 MV 有效前沿，从而我们能够在给定风险水平下实现更高的收益。</p></section>
+<section class="book-page" data-pdf-page="212">
+<h2 id="section-7-1">7.1 两个资产：手动方法</h2>
+<p>在本节中，我们首先通过一个两资产投资组合的案例，逐步展示如何构建均值-方差（MV）有效前沿，并手动列出每一步的计算过程。这种方法称为“手动方法”，因为我们在没有借助任何简化技术的情况下，逐一展开每个步骤。</p>
+<p>考虑这样一个场景：我们可以将资金投资于美国大盘股（我们使用代码为SPY的标普500指数ETF作为代理）或美国投资级债券（我们使用代码为IGLB的iShares长期公司债券ETF作为代理）。在决定两种证券各自的投资金额时，我们可能希望了解两类投资组合：最小方差投资组合（即两种证券的组合中风险最小的）和切点投资组合（即两种证券的组合中夏普比率最高的）。下面我们演示如何识别这两类投资组合。此外，并非所有由SPY和IGLB组合生成的投资组合都能在给定风险水平下提供最高收益。我们将识别出满足这些标准的投资组合集合，这些投资组合称为MV有效投资组合。</p>
+<p><strong>步骤1：计算SPY和IGLB的月收益率</strong> 我们使用<code>load.data()</code>导入SPY和IGLB数据。然后使用<code>to.monthly()</code>将日数据转换为月数据。接着，对SPY和IGLB的月度调整价格应用<code>Delt()</code>计算月收益率。然后，我们删除第一个观测值（2014年12月）以清理收益率数据集，并重命名收益率变量。</p>
+<div class="r-code-block" id="0">
+  <pre><code class="language-r">&gt; SPY &lt;- load.data(&quot;SPY Yahoo.csv&quot;, &quot;SPY&quot;)
+&gt; SPY &lt;- to.monthly(SPY)
+&gt;
+&gt; IGLB &lt;- load.data(&quot;IGLB Yahoo.csv&quot;, &quot;IGLB&quot;)
+&gt; IGLB &lt;- to.monthly(IGLB)
+&gt;
+&gt; rets &lt;- cbind(Delt(SPY$SPY.Adjusted),
++               Delt(IGLB $IGLB.Adjusted))
+&gt; rets &lt;- rets[-1, ]
+&gt; names(rets)&lt;- c(&quot;SPY&quot;, &quot;IGLB&quot;)
+&gt; head.tail(rets)
+          SPY          IGLB
+Jan 2015 -0.02962929  5.315343e-02
+Feb 2015  0.05620466 -2.737789e-02
+Mar 2015 -0.01570571 -4.791363e-05
+          SPY          IGLB
+Oct 2019  0.02210462  0.001911647
+Nov 2019  0.03619827  0.006902584
+Dec 2019  0.02905545  0.003505375</code></pre>
+</div>
+<p><strong>步骤2：计算SPY和IGLB收益率的均值和标准差</strong> 顾名思义，均值-方差有效前沿要求我们找到投资组合收益率的均值与方差（严格来说是标准差）。如</p>
+</section>
+<section class="book-page" data-pdf-page="213">
+<h2>7.1 两个资产的详细计算</h2>
+<p>这样，我们需要找到各个证券的收益率均值和标准差。均值收益率使用 <code>mean()</code> 计算，标准差使用 <code>sd()</code> 计算。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; (avg.SPY&lt;- mean(rets$SPY))
+2 [1] 0.009744689
+3 &gt; (avg.IGLB&lt;- mean(rets$IGLB))
+4 [1] 0.004984509
+5 &gt;
+6 &gt; (sd.SPY&lt;- sd(rets$SPY))
+7 [1] 0.03448893
+8 &gt; (sd.IGLB&lt;- sd(rets$IGLB))
+9 [1] 0.02363155</code></pre>
+</div>
+<p><strong>步骤3：</strong>计算 SPY 和 IGLB 收益率的协方差。我们在第4章讨论过，在投资组合的背景下，重要的是投资组合中的资产如何共同变动。衡量资产共同变动的指标是协方差，我们使用 <code>cov()</code> 计算。我们应用 <code>as.numeric()</code> 将输出转换为不带任何可能引起混淆的标题/标签的数字。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; (covar&lt;- as.numeric(cov(rets$SPY, rets$IGLB)))
+2 [1] 0.0001280108</code></pre>
+</div>
+<p><strong>步骤4：</strong>创建 SPY 和 IGLB 的假设权重向量。当我们在第4章计算投资组合风险时，我们假设了两个证券的权重。为了找出 SPY 和 IGLB 风险-收益组合的完整谱系，我们需要创建一个可能的权重组合向量。由于许多个人投资者和机构投资者不卖空股票或不允许卖空，我们可以将权重限制在 100% SPY/0% IGLB 到 0% SPY/100% IGLB 之间。由于权重之和必须为1，我们可以创建一个 SPY 权重从 0% 到 100% 的向量，步长为 1%。IGLB 权重为 1 减去 SPY 权重。注意，增量的数量是速度与准确性之间的权衡。对于当前目的，使用 1% 的增量已经足够准确，并且不会显著影响程序运行速度。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; w.SPY &lt;- seq(0, 1, by = 0.01)
+2 &gt; w.IGLB&lt;- 1 - w.SPY
+3 &gt; port &lt;- data.frame(cbind(w.SPY, w.IGLB))
+4 &gt; head.tail(port)
+5 w.SPY w.IGLB
+6 1 0.00 1.00
+7 2 0.01 0.99
+8 3 0.02 0.98
+9 w.SPY w.IGLB
+10 99 0.98 0.02
+11 100 0.99 0.01
+12 101 1.00 0.00</code></pre>
+</div>
+<p><strong>步骤5：</strong>计算每对权重的投资组合收益率。由于我们有 101 对 SPY 和 IGLB 权重，我们可以计算每个权重组合下的投资组合收益率</p>
+</section>
+<section class="book-page" data-pdf-page="214">
+<p>第7章 Markowitz 均值-方差优化</p>
+<p>对于这些权重对，投资组合收益率是组合中证券收益率的加权平均。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; port$Port.Ret&lt;− port$w.SPY∗ avg.SPY +
+2 + port $w.IGLB∗ avg.IGLB
+3 &gt; head.tail(port)
+4 w.SPY w.IGLB Port.Ret
+5 1 0.00 1.00 0.004984509
+6 2 0.01 0.99 0.005032111
+7 3 0.02 0.98 0.005079713
+8 w.SPY w.IGLB Port.Ret
+9 99 0.98 0.02 0.009649486
+10 100 0.99 0.01 0.009697088
+11 101 1.00 0.00 0.009744689</code></pre>
+</div>
+<p>第6步：计算每个权重对的投资组合风险。同样地，我们计算每对SPY和IGLB权重的投资组合风险。第4章更详细地描述了该计算。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; port$Port.Risk&lt;− sqrt((port$w.SPY^2∗ sd.SPY^2) +
+2 + (port $w.IGLB^2∗ sd.IGLB^2) +
+3 +( 2 ∗ covar∗ port$w.SPY∗ port$w.IGLB))
+4 &gt; head.tail(port)
+5 w.SPY w.IGLB Port.Ret Port.Risk
+6 1 0.00 1.00 0.004984509 0.02363155
+7 2 0.01 0.99 0.005032111 0.02345188
+8 3 0.02 0.98 0.005079713 0.02327723
+9 w.SPY w.IGLB Port.Ret Port.Risk
+10 99 0.98 0.02 0.009649486 0.03387660
+11 100 0.99 0.01 0.009697088 0.03418195
+12 101 1.00 0.00 0.009744689 0.03448893</code></pre>
+</div>
+<p>第7步：识别最小方差投资组合。最小方差投资组合是拥有最小投资组合风险的投资组合。为了识别该投资组合，我们结合使用<code>subset()</code>和<code>min()</code>。下面的输出显示，如果我们将投资组合的29%投资于SPY，71%投资于IGLB，则达到最小方差投资组合<code>minvar.port</code>。该投资组合的月收益率为0.64%，月标准差为2.08%。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; (minvar.port&lt;− subset(port ,Port.Risk == min(Port.Risk)))
+2 w.SPY w.IGLB Port. Ret Port.Risk Sharpe
+3 30 0.29 0.71 0.006364961 0.02083904 0.2434515</code></pre>
+</div>
+<p>第8步：识别切点投资组合。切点投资组合是产生最高夏普比率的投资组合。夏普比率需要无风险利率，我们使用3个月期固定期限国债收益率作为该利率的代理。由于2019年12月31日的收益率为1.55%年化收益率，我们将其除以12转换为月收益率。</p>
+<div class="r-code-block" id="code-4">
+  <pre><code class="language-r">1 &gt;r f &lt;− 0.0155/ 12
+2 &gt; port$Sharpe&lt;− (port$Port.Ret− rf) / port$Port.Risk
+3 &gt; head.tail(port)</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="215">
+<h2 id="two-assets-the-long-way">7.1 两种资产：完整计算过程</h2>
+<div class="r-code-block" id="code-block-0">
+  <pre><code class="language-r">&gt; (tangency.port&lt;- subset(port ,Sharpe == max(Sharpe)))
+   w.SPY w.IGLB Port.Ret Port.Risk Sharpe
+57  0.56  0.44 0.00765021 0.02332858 0.2725646</code></pre>
+</div>
+<p>然后，我们使用 <code>subset()</code> 和 <code>max()</code> 来识别具有最高夏普比率的投资组合。该投资组合是 SPY 权重为 56%、IGLB 权重为 44% 的组合，其夏普比率为 0.27。</p>
+<p><strong>步骤 9：识别有效投资组合</strong> 并非 SPY 和 IGLB 的所有组合都能被归类为有效投资组合。有效投资组合是指在给定风险水平下产生最高收益的投资组合。我们通过 <code>subset()</code> 来提取这些有效投资组合，即保留收益大于最小方差投资组合收益的那些组合。如下面输出所示，共有 72 个这样的组合。</p>
+<div class="r-code-block" id="code-block-1">
+  <pre><code class="language-r">&gt; eff.frontier&lt;- subset(port ,Port.Ret &gt;=minvar.port$Port.Ret)
+&gt; dim(eff.frontier)
+[1] 72 5
+&gt; head.tail(eff.frontier)
+    w.SPY w.IGLB  Port.Ret  Port.Risk    Sharpe
+30  0.29  0.71 0.006364961 0.02083904 0.2434515
+31  0.30  0.70 0.006412563 0.02084368 0.2456810
+32  0.31  0.69 0.006460165 0.02085547 0.2478245
+    w.SPY w.IGLB  Port.Ret  Port.Risk    Sharpe
+99  0.98  0.02 0.009649486 0.03387660 0.2467137
+100 0.99  0.01 0.009697088 0.03418195 0.2459023
+101 1.00  0.00 0.009744689 0.03448893 0.2450938</code></pre>
+</div>
+<p><strong>步骤 10：绘制均值-方差有效前沿</strong> 我们可以如下绘制均值-方差有效前沿。首先，我们用蓝色空心圆绘制所有由 SPY 和 IGLB 组合形成的投资组合。在第 9 至 11 行，我们使用 <code>pch = 16</code> 以实心蓝点绘制有效前沿。在第 14 至 16 行，我们使用 <code>points()</code> 和 <code>pch = 17</code> 添加一个红色方形标记来标记最小方差投资组合。我们使用 <code>cex = 2.5</code> 来增大方形标记的大小。在第 18 至 21 行，我们使用 <code>pch = 19</code> 和 <code>cex = 2.5</code> 添加一个绿色三角形标记来标记切点投资组合。</p>
+<div class="r-code-block" id="code-block-2">
+  <pre><code class="language-r">&gt; plot(x = port$Port.Risk ,
++      xlab = &quot; PortfolioRisk&quot;,
++      y = port $Port.Ret,
++      ylab = &quot; Portfolio Return&quot;,
++      col = &quot;blue&quot;,</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="216">
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">6 + main = &quot; Mean−−Variance Efficient Frontier of Two Assets
+7 + (Based on the Long Way)&quot;)
+8 &gt;
+9 &gt; points(x = eff.frontier$Port.Risk ,
+10 + col = &quot;blue&quot;,
+11 + y = eff.frontier $Port.Ret , pch = 16)
+12 &gt;
+13 &gt; points(x = minvar.port$Port.Risk ,
+14 + y = minvar.port $Port.Ret,
+15 + col = &quot;red&quot;,
+16 + pch = 15, cex = 2.5)
+17 &gt;
+18 &gt; points(x =tangency.port$Port.Risk ,
+19 + y = tangency .port$Port.Ret,
+20 + col = &quot;darkgreen&quot;,
+21 + pch = 17, cex = 2.5)</code></pre>
+</div>
+<p>如图7.1所示，有效前沿下方的蓝色空心圆点与前沿上某些投资组合具有相同的风险水平，但收益率更低。</p>
+<figure class="book-figure" id="fig-7.1"><img src="/assets/img/analyzing-financial-data-r-cn/figure-f422bc206951.png" alt="图7.1 使用穷举法计算的由SPY和IGLB构成的投资组合的均值-方差有效前沿" />
+<figcaption>图7.1 使用穷举法计算的由SPY和IGLB构成的投资组合的均值-方差有效前沿</figcaption>
+</figure>
+</section>
+<section class="book-page" data-pdf-page="217">
+<h2 id="section-7-2">7.2 使用二次规划的两个资产情况</h2>
+<p>这意味着边界下方的投资组合并非有效，因为它们在相同风险水平下提供更低的收益。这就是为什么在识别均值-方差有效前沿上的点时，我们只关注最小方差点以上的投资组合的收益的原因。</p>
+<p>在两只资产的情况下，长方法（Long Way）是可处理的。然而，大多数投资组合包含多于两只资产，使用长方法会迅速变得极其困难。原因在于，投资组合中的证券数量越多，方差-协方差项的数量增长越快。事实上，给定投资组合中的 \(N\) 只证券，方差-协方差矩阵将有 \(N(N+1)/2\) 个元素，其中包括 \(N\) 个方差项和 \(N(N-1)/2\) 个协方差项。对于两只资产，总共有 \(3 [= 2(2+1)/2]\) 项，包括两个方差项和一个 \([= 2(2-1)/2]\) 协方差项。当有四只资产时，如我们后面的例子，总共有 \(10 [= 4(4+1)/2]\) 项，包括四个方差项和六个 \([= 4(4-1)/2]\) 协方差项。如果有15只证券，总共有 \(120 [= 15(15+1)/2]\) 项，包括15个方差项和 \(105 [= 15(15-1)/2]\) 协方差项。因此，在实践中使用长方法会很困难。</p>
+<p>长方法有助于直观理解我们应用二次规划（quadratic programming）时在做什么。这项技术称为二次规划，因为我们是在二次函数上进行优化。二次函数是一个具有平方项变量（此处为权重）的函数。在两只资产的情况下，我们最小化式(4.2)。该公式中的权重是平方的。就我们的目的而言，二次规划寻找在特定收益水平下风险最小的证券组合。</p>
+<p><strong>步骤1：将收益率数据集转换为矩阵</strong> 回顾第4章，我们在计算投资组合风险时使用了矩阵代数。在利用二次规划计算均值-方差有效前沿时，我们应用了那里学到的知识。注意，我们已经在上文计算了SPY和IGLB在rets数据集中的收益率，因此我们可以使用<code>matrix()</code>将rets数据集转换为矩阵。<code>matrix()</code>的第二个参数是矩阵的行数，本例中为60。然后我们重命名列标题，否则我们会看到通用的<code>[,1]</code>和<code>[,2]</code>作为标题。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; mat.ret&lt;- matrix(rets ,nrow(rets))
+2 &gt; colnames(mat.ret)&lt;- c(&quot;SPY&quot;, &quot;IGLB&quot;)
+3 &gt; head.tail(mat.ret)
+4 SPY IGLB
+5 [1,] -0.02962929 5.315343e-02
+6 [2,] 0.05620466 -2.737789e-02
+7 [3,] -0.01570571 -4.791363e-05
+8 SPY IGLB</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="218">
+
+<p>步骤 2：计算方差-协方差矩阵。对 <code>mat.ret</code> 应用 <code>cov()</code> 计算方差-协方差矩阵。主对角线（即左上到右下）上的项是方差项。具体来说，SPY 收益率的方差为 0.001189，IGLB 收益率的方差为 0.000558。非对角线上的 0.000128 是协方差项。注意非对角线上的两个数字相同，因为 SPY 与 IGLB 的协方差和 IGLB 与 SPY 的协方差相等。</p>
+<div class="r-code-block" id="r1">
+  <pre><code class="language-r">&gt; (vcov &lt;- cov(mat.ret))
+         SPY        IGLB
+SPY  0.0011894861 0.0001280108
+IGLB 0.0001280108 0.0005584502</code></pre>
+</div>
+<p>步骤 3：构建目标投资组合收益率向量。在二次规划方法中，我们不是创建 SPY 和 IGLB 的权重序列，而是构建一个目标投资组合收益率序列。术语“向量”指一行或一列数字。为了创建这个潜在投资组合收益率的序列，我们必须设定上下界。当不允许卖空时（如本例），收益率的自然边界一端是 SPY 收益率，另一端是 IGLB 收益率。这是因为两种极端的收益率组合是 100% SPY/0% IGLB（投资组合收益率等于 SPY 收益率）和 0% SPY/100% IGLB（投资组合收益率等于 IGLB 收益率）。因此，第一步是分别找出 SPY 和 IGLB 的平均收益率。</p>
+<div class="r-code-block" id="r2">
+  <pre><code class="language-r">&gt; avg.ret &lt;- matrix(apply(mat.ret, 2, mean))
+&gt; colnames(avg.ret) &lt;- paste(&quot;Avg.Ret&quot;)
+&gt; rownames(avg.ret) &lt;- paste(c(&quot;SPY&quot;,&quot;IGLB&quot;))
+&gt; avg.ret
+       Avg.Ret
+SPY  0.009744689
+IGLB 0.004984509</code></pre>
+</div>
+<p>然后，我们将较小的平均收益率设为最小收益率 <code>min.ret</code>，较大的平均收益率设为最大收益率 <code>max.ret</code>。</p>
+<div class="r-code-block" id="r3">
+  <pre><code class="language-r">&gt; (min.ret &lt;- min(avg.ret))
+[1] 0.004984509
+&gt; (max.ret &lt;- max(avg.ret))
+[1] 0.009744689</code></pre>
+</div>
+<p>接下来，我们创建一个从 <code>min.ret</code> 开始到 <code>max.ret</code> 结束的序列，中间插入 100 个增量。增量的数量再次是精度和速度之间的权衡。对于我们的工作，100 个增量是一个合理的选择。<code>tgt.ret</code> 是目标收益率投资组合向量。</p>
+<div class="r-code-block" id="r4">
+  <pre><code class="language-r">&gt; increments &lt;- 100</code></pre>
+</div>
+
+</section>
+<section class="book-page" data-pdf-page="219">
+<h2 id="two-assets-using-quadratic-programming">7.2 使用二次规划的两资产组合</h2>
+<ol start="2">
+<li><pre><code class="r">tgt.ret &lt;- seq(min.ret, max.ret, length = increments)</code></pre></li>
+<li><pre><code class="r">head.tail(tgt.ret)</code></pre></li>
+</ol>
+<pre><code>[1] 0.004984509 0.005032592 0.005080674
+[1] 0.009648524 0.009696607 0.009744689</code></pre>
+<p><strong>步骤 4：构造临时投资组合标准差向量</strong> 优化程序的一个输出是投资组合标准差。然而，输出需要在每次迭代后覆盖现有向量的值。由于迭代次数等于增量数，我们为临时投资组合标准差向量创建一系列100个零。为此，我们使用 <code>rep()</code>，它重复零值，其 <code>length</code> 等于增量数。</p>
+<pre><code class="r">(tgt.sd &lt;- rep(0, length = increments))</code></pre>
+<pre><code>[ 1 ] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[37] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[73] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</code></pre>
+<p><strong>步骤 5：构造临时投资组合权重向量</strong> 类似地，优化程序的另一个输出是投资组合权重。然而，输出需要在每次迭代后覆盖现有权重向量的值。由于迭代次数等于增量数，我们为临时投资组合权重向量创建一系列100个零。为此，我们使用 <code>rep()</code>，它重复零值，其 <code>length</code> 等于增量数。</p>
+<pre><code class="r">wgt &lt;- matrix(0, nrow = increments, ncol = length(avg.ret))
+head.tail(wgt)</code></pre>
+<pre><code>     [,1] [,2]
+[1,]    0    0
+[2,]    0    0
+[3,]    0    0
+     [,1] [,2]
+[98,]    0    0
+[99,]    0    0
+[100,]   0    0</code></pre>
+<p><strong>步骤 6：运行 quadprog 优化器</strong> 为了运行优化器，我们使用 <code>solve.QP()</code>，它是 quadprog 包的一部分。优化器循环计算100次（即我们设定的增量数）。在每次迭代中，我们希望优化器根据方程 (4.5) 最小化投资组合风险，并满足三个约束条件：(1) 投资组合中的权重之和必须等于1；(2) 投资组合收益率必须等于目标收益率（我们在 <code>tgt.ret</code> 中指定）；(3) 每只证券的权重必须大于或等于零（即不允许卖空）。下面的代码看似复杂，是因为需要大量代码修改 <code>solve.QP()</code> 的内建设置以符合上述目标函数和约束条件。</p>
+<pre><code class="r">library(quadprog)
+for (i in 1:increments) {
+  Dmat &lt;- 2 * vcov</code></pre>
+
+</section>
+<section class="book-page" data-pdf-page="220">
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">4 + dvec &lt;− c(rep(0, length(avg.ret)))
+5 + Amat &lt;− cbind(rep(1, length(avg.ret)), avg.ret,
+6 + diag(1, nrow = ncol(mat.ret)))
+7 + bvec &lt;− c(1, tgt.ret[i], rep(0, ncol(mat.ret)))
+8 + soln &lt;− solve.QP(Dmat , dvec , Amat , bvec , meq = 2)
+9 + tgt.sd[i] &lt;− sqrt(soln$value)
+10 + wgt[i, ] &lt;− soln$solution
+11 +}</code></pre>
+</div>
+<p>在第8行中，<code>solve.QP</code>尝试求解如下形式的二次规划问题：</p>
+\[
+\min(-\mathbf{d}^\top \mathbf{b} + \frac{1}{2} \mathbf{b}^\top \mathbf{D} \mathbf{b}) \quad (7.1)
+\]
+<p>约束条件为</p>
+\[
+\mathbf{A}^\top \mathbf{b} \geq \mathbf{b}_0. \quad (7.2)
+\]
+<p>这些在以上代码中的对应关系如下。Dmat（D）是方差-协方差矩阵。dvec（d）是目标收益率。然后，Amat（A）是定义约束条件的矩阵。该矩阵包含三个约束。第6行中的第三个约束限制权重非负（即不允许卖空）。bvec（b）对应于Amat中的三个约束。我们将<code>meq</code>设为2，这意味着前两个约束被设为等式。具体来说，权重之和必须为1（约束1），且收益率等于目标收益率（约束2）。</p>
+<p>从优化器的输出中，我们使用两个列表。首先，我们报告<code>value</code>，即二次规划问题的解——目标标准差。其次，我们还使用<code>solution</code>，它给出了实现目标标准差的权重。下面，我们报告这些优化器输出，即对应于我们构建的每个目标投资组合收益率水平的投资组合标准差。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">1 &gt; head.tail(tgt.sd)
+2 [1] 0.02363155 0.02345009 0.02327375
+3 [1] 0.03387045 0.03417886 0.03448893</code></pre>
+</div>
+<p>下面的<code>wgt</code>输出显示了每个目标收益率水平下的SPY和IGLB权重。</p>
+<div class="r-code-block" id="code3">
+  <pre><code class="language-r">1 &gt; head.tail(wgt)
+2 [,1] [,2]
+3 [1,] 0.00000000 1.000000
+4 [2,] 0.01010101 0.989899
+5 [3,] 0.02020202 0.979798
+6 [,1] [,2]
+7 [98,] 0.979798 0.02020202
+8 [99,] 0.989899 0.01010101
+9 [100,]1.000000 0.00000000</code></pre>
+</div>
+<p><strong>步骤7：合并投资组合的收益率、标准差和权重。</strong> 使用<code>cbind()</code>，我们将<code>tgt.ret</code>、<code>tgt.sd</code>和<code>wgt</code>合并为<code>tgt.port</code>。</p>
+</section>
+<section class="book-page" data-pdf-page="221">
+<h2>7.2 使用二次规划的两个资产</h2>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">1 &gt; tgt.port&lt;- data.frame(cbind(tgt.ret, tgt.sd, wgt))
+2 &gt; names(tgt.port)[c(3, 4)]&lt;- c(&quot;w.SPY&quot;, &quot;w.IGLB&quot;)
+3 &gt; head.tail(tgt.port)
+4   tgt.ret     tgt.sd     w.SPY     w.IGLB
+5 1 0.004984509 0.02363155 0.00000000 1.000000
+6 2 0.005032592 0.02345009 0.01010101 0.989899
+7 3 0.005080674 0.02327375 0.02020202 0.979798
+8     tgt.ret     tgt.sd     w.SPY     w.IGLB
+9 98 0.009648524 0.03387045 0.979798 0.02020202
+10 99 0.009696607 0.03417886 0.989899 0.01010101
+11 100 0.009744689 0.03448893 1.000000 0.00000000</code></pre>
+</div>
+<p><strong>步骤8：识别最小方差投资组合</strong> 我们通过找到产生最小投资组合标准差（即 <code>min(tgt.sd)</code>）的权重对来识别最小方差投资组合。为了提取该投资组合，我们使用 <code>subset()</code>。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">1 &gt; (minvar.port&lt;- subset(tgt.port , tgt.sd == min(tgt.sd)))
+2     tgt.ret     tgt.sd     w.SPY     w.IGLB
+3 30 0.006378905 0.02083965 0.2929293 0.7070707</code></pre>
+</div>
+<p>与我们之前在“长方法”中找到的结果一致，最小方差投资组合的权重为SPY 29%和IGLB 71%。但是，请注意，与长方法相比，使用二次规划方法计算时，最小方差投资组合的权重分配、投资组合收益率和投资组合标准差略有不同。这种差异是由于在长方法中创建目标权重作为起点并使用它们找到其余结果，而在二次规划案例中，我们创建目标收益率作为起点，然后使用它们找到其余结果。</p>
+<p><strong>步骤9：识别切点投资组合</strong> 回忆一下，切点投资组合是夏普比率最高的投资组合。注意我们在R环境中仍有 <code>rf</code> 为1.55%。我们在第1行计算每对权重的夏普比率。在第12行，我们使用 <code>subset()</code> 找到 <code>max(Sharpe)</code> 来识别切点投资组合。</p>
+<div class="r-code-block" id="code3">
+  <pre><code class="language-r">1 &gt; tgt.port$Sharpe&lt;- (tgt.port$tgt.ret- rf) / tgt.port$tgt.sd
+2 &gt; head.tail(tgt.port)
+3     tgt.ret     tgt.sd     w.SPY     w.IGLB    Sharpe
+4 1 0.004984509 0.02363155 0.00000000 1.000000 0.1562675
+5 2 0.005032592 0.02345009 0.01010101 0.989899 0.1595271
+6 3 0.005080674 0.02327375 0.02020202 0.979798 0.1628017
+7     tgt.ret     tgt.sd     w.SPY     w.IGLB    Sharpe
+8 98 0.009648524 0.03387045 0.979798 0.02020202 0.2467301
+9 99 0.009696607 0.03417886 0.989899 0.01010101 0.2459105
+10 100 0.009744689 0.03448893 1.000000 0.00000000 0.2450938
+11 &gt;
+12 &gt; (tangency.port&lt;- subset(tgt.port ,Sharpe == max(Sharpe)))
+13     tgt.ret     tgt.sd     w.SPY     w.IGLB    Sharpe
+14 57 0.007677136 0.0234276 0.5656566 0.4343434 0.2725618</code></pre>
+</div>
+<p>上述输出显示切点投资组合是SPY权重57%、IGLB权重43%的投资组合。在长方法中，切点投资组合的权重为56%</p>
+</section>
+<section class="book-page" data-pdf-page="222">
+<p>208 第7章 Markowitz 均值-方差优化</p>
+<p>在 SPY 上配置 56%，在 IGLB 上配置 44%。这种差异是因为在二次规划方法中，我们从目标收益率出发，然后寻找目标权重。因此，目标权重不一定是像我们在“长方法”中采用的那样以 1% 为增量。</p>
+<p><strong>步骤 10：识别有效投资组合</strong> 我们通过寻找收益率高于最小方差投资组合收益率的投资组合来识别有效投资组合集合。下面的输出显示我们有 71 个这样的投资组合。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; eff.frontier&lt;− subset(tgt.port , tgt.ret &gt;=minvar.port$tgt.ret)
+2 &gt; dim(eff.frontier)
+4 &gt; head.tail(eff.frontier)</code></pre>
+</div>
+<pre>5 tgt.ret tgt.sd w.SPY w.IGLB 夏普比率
+6 30 0.006378905 0.02083965 0.2929293 0.7070707 0.2441134
+7 31 0.006426988 0.02084650 0.3030303 0.6969697 0.2463398
+8 32 0.006475071 0.02086064 0.3131313 0.6868687 0.2484777
+9 tgt.ret tgt.sd w.SPY w.IGLB 夏普比率
+10 98 0.009648524 0.03387045 0.979798 0.02020202 0.2467301
+11 99 0.009696607 0.03417886 0.989899 0.01010101 0.2459105
+12 100 0.009744689 0.03448893 1.000000 0.00000000 0.2450938</pre>
+<p><strong>步骤 11：绘制均值-方差有效前沿</strong> 我们按照“长方法”中步骤 10 的相同步骤来绘制均值-方差有效前沿。图 7.2 显示了由以下代码生成的图表。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; plot(x = tgt.sd,
+2 + xlab = &quot; PortfolioRisk&quot;,
+3 + y = tgt.ret ,
+4 + ylab = &quot; Portfolio Return&quot;,
+5 + col = &quot;blue&quot;,
+6 + main = &quot; Mean−−Variance Efficient Frontier of Two Assets
+7 + (Based on the Quadratic Programming Approach)&quot; )
+8 &gt;
+9 &gt; points(x = eff.frontier$tgt.sd,
+10 + col = &quot;blue&quot;,
+11 + y = eff.frontier $tgt.ret , pch = 16)
+12 &gt;
+13 &gt; points(x = minvar.port$tgt.sd,
+14 + y = minvar.port $tgt.ret ,
+15 + col = &quot;red&quot;,
+16 + pch = 15, cex = 2.5)
+17 &gt;
+18 &gt; points(x =tangency.port$tgt.sd,
+19 + y = tangency .port$tgt.ret ,
+20 + col = &quot;darkgreen&quot;,
+21 + pch = 17, cex = 2.5)</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="223">
+<h2>7.2 使用二次规划的两资产</h2>
+<figure class="book-figure" id="fig-7.2"><img src="/assets/img/analyzing-financial-data-r-cn/figure-353ae6663730.png" alt="图7.2 使用二次规划计算的由SPY和IGLB组成的投资组合的均值-方差有效前沿">
+<figcaption>图7.2 使用二次规划计算的由SPY和IGLB组成的投资组合的均值-方差有效前沿</figcaption>
+</figure>
+<p><strong>比较长方法（Long Way）和二次规划</strong></p>
+<p>我们注意到，二次规划方法的结果似乎与长方法（Long Way）在最小方差组合和切点组合上略有不同。我们解释这种差异是由于计算方式的不同。具体来说，长方法将计算拟合到一组预设的组合权重组合，而二次规划方法将计算拟合到一组预设的组合收益率水平。尽管如此，我们在下面展示，使用长方法和二次规划方法计算的有效前沿图实际上完全一致。图7.3显示了下面代码的结果。如图所示，这两种方法的结果几乎没有差异。</p>
+<p>（续）</p>
+</section>
+<section class="book-page" data-pdf-page="224">
+  <h2>210 7 Markowitz 均值-方差优化</h2>
+<div class="r-code-block" id="r-code-224-1">
+  <pre><code class="language-r">1 &gt; plot(x = port$Port.Risk ,
+2 + xlab = &quot; PortfolioRisk&quot;,
+3 + y = port $Port.Ret,
+4 + ylab = &quot; Portfolio Return&quot;,
+5 + type = &quot;l&quot;,
+6 + lwd = 6,
+7 + lty = 3,
+8 + main = &quot; Mean−−Variance Efficient Frontier of Two Assets
+9 + Comparing BothApproaches&quot;)
+10 &gt; lines(x = tgt.sd, y = tgt.ret, col = &quot;red&quot;, type = &quot;l&quot;, lwd = 2)
+11 &gt; legend(&quot;bottomright&quot;,
+12 + c(&quot;The Long Way&quot;, &quot;Quadratic Programming&quot;),
+13 + col = c(&quot;black&quot;, &quot;red&quot;),
+14 + lty = c(3, 1),
+15 + lwd = c(6, 2))</code></pre>
+</div>
+<figure class="book-figure" id="fig-7.3"><img src="/assets/img/analyzing-financial-data-r-cn/figure-ad5f1b122b7f.png" alt="图7.3 使用穷举法和二次规划计算的均值-方差有效前沿比较">
+    <figcaption>图7.3 使用穷举法和二次规划计算的均值-方差有效前沿比较</figcaption>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="225">
+  <h2 id="section-7-3">7.3 使用二次规划的多资产优化</h2>
+<p>我们之前的投资组合仅包含两种资产：SPY 和 IGLB。尽管这些资产让我们接触到许多证券，但我们的敞口仅限于美国大盘股和美国投资级债券。我们可以分别使用 SPYV 和 SPYG 将 SPY 的大盘股敞口拆分为价值股和成长股。我们还可以使用 CWI 增加对全球股票的敞口。因此，在下面的例子中，我们展示如何对四种资产进行均值-方差优化。</p>
+<p>在开始之前，最好使用 <code>rm(list = ls())</code> 清理 R 环境。确保在运行此代码之前所有临时数据都已保存。我们还应该运行附录 B 中的预加载代码，以便拥有 <code>load.data()</code> 和 <code>head.tail()</code> 函数。</p>
+<h3>步骤1：计算 SPYV、SPYG、CWI 和 IGLB 的月度收益率</h3>
+<p>使用 <code>load.data()</code>，我们导入 SPYV、SPYG、CWI 和 IGLB 的价格数据。然后使用 <code>to.monthly()</code> 将日数据转换为月度数据，再对每只证券的调整收盘价应用 <code>Delt()</code> 计算月度收益率。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; SPYV &lt;- load.data(&quot;SPYV Yahoo.csv&quot;, &quot;SPYV&quot;)
+&gt; spyv &lt;- to.monthly(SPYV)
+&gt;
+&gt; SPYG &lt;- load.data(&quot;SPYG Yahoo.csv&quot;, &quot;SPYG&quot;)
+&gt; spyg &lt;- to.monthly(SPYG)
+&gt;
+&gt; CWI &lt;- load.data(&quot;CWI Yahoo.csv&quot;, &quot;CWI&quot;)
+&gt; cwi &lt;- to.monthly(CWI)
+&gt;
+&gt; IGLB &lt;- load.data(&quot;IGLB Yahoo.csv&quot;, &quot;IGLB&quot;)
+&gt; iglb &lt;- to.monthly(IGLB)
+&gt;
+&gt; rets &lt;- cbind(Delt(spyv$SPYV.Adjusted), Delt(spyg$SPYG.Adjusted),
++               Delt(cwi$CWI.Adjusted), Delt(iglb$IGLB.Adjusted))
+&gt; rets &lt;- rets[-1, ]
+&gt; names(rets) &lt;- c(&quot;SPYV&quot;, &quot;SPYG&quot;, &quot;CWI&quot;, &quot;IGLB&quot;)
+&gt; head.tail(rets)</code></pre>
+</div>
+<pre>            SPYV       SPYG         CWI        IGLB
+Jan 2015 -0.04470711 -0.01910356 -0.005678171 5.315343e-02
+Feb 2015  0.05648936  0.05969036  0.058010028 -2.737789e-02
+Mar 2015 -0.01486472 -0.01735287 -0.015909157 -4.791363e-05
+Oct 2019  0.02690863  0.01748521  0.03410982  0.001911647
+Nov 2019  0.03869599  0.03436953  0.01246980  0.006902584
+Dec 2019  0.03028203  0.02786833  0.03953882  0.003505375</pre>
+<h3>步骤2：将收益率数据集转换为矩阵</h3>
+<p>使用 <code>matrix()</code> 将 <code>rets</code> 转换为标记为 <code>mat.ret</code> 的矩阵。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; mat.ret &lt;- matrix(rets, nrow(rets))
+&gt; colnames(mat.ret) &lt;- c(&quot;SPYV&quot;, &quot;SPYG&quot;, &quot;CWI&quot;, &quot;IGLB&quot;)</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="226">
+  <h2 id="chapter-7">第7章 Markowitz 均值-方差优化</h2>
+<pre><code class="r">3 &gt; head.tail(mat.ret)
+4 SPYV SPYG CWI IGLB
+5 [1,]−0.04470711−0.01910356−0.0056781715.315343e−02
+6 [2,] 0.05648936 0.05969036 0.058010028−2.737789e−02
+7 [3,]−0.01486472−0.01735287−0.015909157−4.791363e−05
+8 SPYV SPYG CWI IGLB
+9 [58,] 0.02690863 0.01748521 0.03410982 0.001911647
+10 [59,] 0.03869599 0.03436953 0.01246980 0.006902584
+11 [60,] 0.03028203 0.02786833 0.03953882 0.003505375</code></pre>
+<p><strong>步骤 3：使用 <code>cov()</code> 计算收益率的方差-协方差矩阵</strong></p>
+<p>我们可以计算 <code>mat.ret</code> 中证券的方差-协方差矩阵。对角线元素是各证券的方差，非对角线元素是证券之间的协方差。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; (vcov &lt;- cov(mat.ret))
+2 SPYV SPYG CWI IGLB
+3 SPYV0.0013417926 0.0011281879 0.0010668378 0.0000839524
+4 SPYG0.0011281879 0.0012756119 0.0010461777 0.0001651636
+5 CWI 0.0010668378 0.0010461777 0.0013046755 0.0002553844
+6 IGLB0.0000839524 0.0001651636 0.0002553844 0.0005584502</code></pre>
+</div>
+<p><strong>步骤 4：构建目标投资组合收益率向量</strong></p>
+<p>与双资产情况类似，现在我们创建一个目标投资组合收益率向量。我们首先需要计算每个证券的平均收益率（第1行）。然后，我们确定四个证券中的最小和最大收益率（第11至14行）。接着，在第16-17行，我们创建一个目标收益率向量，从最小收益率0.5%到最大收益率1.1%，中间有100个增量。使用 <code>length()</code>，我们可以看到这总共给出了100个目标收益率（第18行）。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; avg.ret&lt;- matrix(apply(mat.ret, 2, mean))
+2 &gt; rownames(avg.ret)&lt;- c(&quot;SPYV&quot;, &quot;SPYG&quot;, &quot;CWI&quot;, &quot;IGLB&quot;)
+3 &gt; colnames(avg.ret)&lt;- c(&quot;Avg.Ret&quot;)
+4 &gt; avg.ret
+5 Avg.Ret
+6 SPYV0.008180608
+7 SPYG0.011084436
+8 CWI 0.005402004
+9 IGLB0.004984509
+10 &gt;
+11 &gt; (min.ret&lt;- min(avg.ret))
+12 [1] 0.004984509
+13 &gt; (max.ret&lt;- max(avg.ret))
+14 [1] 0.01108444
+15 &gt;
+16 &gt; increments&lt;- 100
+17 &gt; tgt.ret&lt;- seq(min.ret, max.ret, length = increments)
+18 &gt; length(tgt.ret)
+19 [1] 100
+20 &gt; head.tail(tgt.ret)
+21 [1] 0.004984509 0.005046125 0.005107740
+22 [1] 0.01096120 0.01102282 0.01108444</code></pre>
+</div>
+
+</section>
+<section class="book-page" data-pdf-page="227">
+<h3>7.3 使用二次规划的多资产优化</h3>
+<p><strong>步骤5：构建临时标准差向量</strong></p>
+<p>优化器将对它执行的100次迭代中的每一次输出一个投资组合标准差。因此，我们需要创建一个占位符，以便优化器可以用每次循环生成的标准差值覆盖该临时向量的元素。</p>
+<div class="r-code-block" id="0">
+  <pre><code class="language-r">&gt; (tgt.sd&lt;- rep(0, length= increments))
+[ 1 ]000000000000000000000000000000000000
+[37] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[73] 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0</code></pre>
+</div>
+<p><strong>步骤6：构建临时投资组合权重向量</strong></p>
+<p>类似地，优化器也会输出投资组合权重，并且需要覆盖这些权重的占位符。由于我们的投资组合有四个资产，我们需要一个100行4列的矩阵。</p>
+<div class="r-code-block" id="1">
+  <pre><code class="language-r">&gt; wgt &lt;- matrix(0, nrow = increments , ncol = length(avg.ret))
+&gt; colnames(wgt)&lt;- c(&quot;SPYV&quot;, &quot;SPYG&quot;, &quot;CWI&quot;, &quot;IGLB&quot;)
+&gt; head.tail(wgt)
+     SPYV SPYG CWI IGLB
+[1,]    0    0   0    0
+[2,]    0    0   0    0
+[3,]    0    0   0    0
+    SPYV SPYG CWI IGLB
+[98,]   0    0   0    0
+[99,]   0    0   0    0
+[100,]  0    0   0    0</code></pre>
+</div>
+<p><strong>步骤7：运行quadprog优化器</strong></p>
+<p>下面的代码类似于我们在两资产情况下运行的代码。</p>
+<div class="r-code-block" id="2">
+  <pre><code class="language-r">&gt; library(quadprog)
+&gt; for (i in 1:increments){
++   Dmat &lt;- 2*vcov
++   dvec &lt;- c(rep(0, length(avg.ret)))
++   Amat &lt;- cbind(rep(1, length(avg.ret)), avg.ret,
++                 diag(1, nrow = ncol(mat.ret)))
++   bvec &lt;- c(1, tgt.ret[i], rep(0, ncol(mat.ret)))
++   soln &lt;- solve.QP(Dmat, dvec, Amat, bvec, meq = 2)
++   tgt.sd[i] &lt;- sqrt(soln$value)
++   wgt[i, ] &lt;- soln$solution
++}
+&gt; head.tail(tgt.sd)
+[1] 0.02363155 0.02232601 0.02204782
+[1] 0.03509073 0.03540243 0.03571571
+&gt;
+&gt; colnames(wgt)&lt;- c(&quot;w.SPYV&quot;, &quot;w.SPYG&quot;, &quot;w.CWI&quot;, &quot;w.IGLB&quot;)
+&gt; head.tail(wgt)
+         w.SPYV     w.SPYG      w.CWI     w.IGLB
+[1,] 0.00000000 -9.029089e-18 2.359224e-15 1.0000000
+[2,] 0.00000000  5.149084e-18 1.475837e-01 0.8524163
+[3,] 0.01355094  0.000000e+00 1.914292e-01 0.7950199
+          w.SPYV     w.SPYG      w.CWI     w.IGLB</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="228">
+<p>214 第7章 Markowitz 均值-方差优化</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">23 [98,] 0 0.979798 6.823144e −17 2.020202e−02
+24 [99,] 0 0.989899 6.938190e −17 1.010101e−02
+25 [100,] 0 1.000000 7.053236e−17−8.881784e−16</code></pre>
+</div>
+<p>检查权重之和是否仍为1</p>
+<p>当手动输入覆盖结果时，检查结果是否仍合理是良好的实践。在上述示例中，我们因为数值非常小且已将全部权重100%分配给单一证券而断言其应为零。我们可以使用 <code>rowSums()</code> 命令对各行的所有权重求和并输出结果，从而轻松进行检查。可以看到，我们的检查结果得到100个观测值，每个观测值的权重之和均为1。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">1 &gt; (CHECK.wgt&lt;- rowSums(wgt))
+2 [ 1 ]1111111111111111111111111111111
+3 [32] 1111111111111111111111111111111
+4 [63] 1111111111111111111111111111111
+5 [94] 1111111</code></pre>
+</div>
+<p>取决于屏幕大小，左边的数字（即行首元素对应的观测编号）可能会变化。关键在于正确答案应得到一百个1。</p>
+<p><strong>步骤8：合并投资组合的收益率、标准差和权重</strong></p>
+<p>现在我们将之前创建的不同数据对象合并，以便观察四个证券的何种组合能产生特定的投资组合收益率/投资组合标准差组合。我们使用 <code>cbind()</code> 来完成此操作。</p>
+<div class="r-code-block" id="code3">
+  <pre><code class="language-r">1 &gt; tgt.port&lt;- data.frame(cbind(tgt.ret, tgt.sd, wgt))
+2 &gt; options(digits = 3)
+3 &gt; head.tail(tgt.port)
+4 tgt.ret tgt.sd w.SPYV w.SPYG w.CWI w.IGLB
+5 1 0.00498 0.0236 0.0000−9.03e−18 2.36e−15 1.000
+6 2 0.00505 0.02230.0000 5.15e−18 1.48e−01 0.852
+7 3 0.00511 0.0220 0.0136 0.00e+00 1.91e−01 0.795
+8 tgt.ret tgt.sd w.SPYV w.SPYG w.CWI w.IGLB
+9 98 0.0110 0.0351 0 0.98 6.82e −17 2.02e−02
+10 99 0.0110 0.0354 0 0.99 6.94e −17 1.01e−02
+11 100 0.0111 0.0357 0 1.00 7.05e −17−8.88e−16
+12 &gt; options(digits = 7)
+13 &gt;
+14 &gt; no.short.tgt.port&lt;- tgt.port</code></pre>
+</div>
+<p>请注意，我们在上面添加了最后一行代码，以便将结果存储以备后用。在后续章节中，我们将比较不允许卖空时的这些结果与允许卖空时的结果。</p>
+</section>
+<section class="book-page" data-pdf-page="229">
+<h3>7.3 使用二次规划的多资产</h3>
+<h4>步骤9：确定最小方差投资组合</h4>
+<p>最小方差投资组合是标准差最低的投资组合。下面的输出显示，该投资组合在SPYV中权重为27%，在IGLB中权重为73%，而在SPYG和CWI中几乎没有权重。</p>
+<div class="r-code-block" id="code-7-3-9">
+  <pre><code class="language-r">1 &gt; options(digits = 3)
+2 &gt; (minvar.port&lt;− subset(tgt.port , tgt.sd == min(tgt.sd)))
+3 tgt.ret tgt.sd w.SPYV w.SPYG w.CWI w.IGLB
+4 15 0.005850.0207 0.27 −3.35e−18 2.2e−18 0.73
+5 &gt; options(digits = 7)</code></pre>
+</div>
+<h4>步骤10：确定切点投资组合</h4>
+<p>切点投资组合是夏普比率最高的投资组合。因此，我们首先计算每种投资组合权重组合的夏普比率。注意，无风险利率必须转换为月利率。我们通过将年化无风险利率除以12来实现这一点。如下面的输出所示，切点投资组合的投资组合收益率为0.87%，标准差为2.52%。这通过SPYG中61%的权重和IGLB中39%的权重实现，而SPYV和CWI几乎没有权重。</p>
+<div class="r-code-block" id="code-7-3-10">
+  <pre><code class="language-r">1 &gt;r f &lt;− 0.0155/ 12
+2 &gt; options(digits = 3)
+3 &gt; tgt.port$Sharpe&lt;− (tgt.port$tgt.ret− rf) / tgt.port$tgt.sd
+4 &gt; head.tail(tgt.port)
+5 tgt.ret tgt.sd w.SPYV w.SPYG w.CWI w.IGLB Sharpe
+6 1 0.00498 0.0236 0.0000−9.03e−18 2.36e−15 1.000 0.156
+7 2 0.00505 0.02230.0000 5.15e−18 1.48e−01 0.852 0.168
+8 3 0.00511 0.0220 0.0136 0.00e+00 1.91e−01 0.795 0.173
+9 tgt.ret tgt.sd w.SPYVw.SPYG w.CWI w.IGLB Sharpe
+10 98 0.0110 0.0351 0 0.98 6.82e −17 2.02e−02 0.276
+11 99 0.0110 0.0354 0 0.99 6.94e −17 1.01e−02 0.275
+12 100 0.0111 0.0357 0 1.00 7.05e −17−8.88e−16 0.274
+13 &gt;
+14 &gt; (tangency.port&lt;− subset(tgt.port ,Sharpe == max(Sharpe)))
+15 tgt.ret tgt.sd w.SPYVw.SPYG w.CWI w.IGLB Sharpe
+16 61 0.00868 0.0252 0 0.606 2.57e −17 0.394 0.293
+17 &gt; options(digits = 7)</code></pre>
+</div>
+<h4>步骤11：确定有效投资组合</h4>
+<p>有效投资组合的收益率高于最小方差投资组合的收益率。第3行显示共有86个有效投资组合。</p>
+<div class="r-code-block" id="code-7-3-11">
+  <pre><code class="language-r">1 &gt; eff.frontier&lt;− subset(tgt.port , tgt.ret &gt;=minvar.port$tgt.ret)
+2 &gt; dim(eff.frontier)
+3 [1] 86 7
+4 &gt; options(digits = 3)
+5 &gt; head.tail(eff.frontier)
+6 tgt.ret tgt.sd w.SPYV w.SPYG w.CWI w.IGLB Sharpe
+7 15 0.00585 0.0207 0.270−3.35e−18 2.20e−18 0.730 0.220
+8 16 0.00591 0.0207 0.266 1.21e−02 3.85e−18 0.722 0.223
+9 17 0.00597 0.0207 0.256 2.75e−02 8.26e−18 0.717 0.226
+10 tgt.ret tgt.sd w.SPYVw.SPYG w.CWI w.IGLB Sharpe
+11 98 0.0110 0.0351 0 0.98 6.82e −17 2.02e−02 0.276</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="230">
+<pre>12 99 0.0110 0.0354 0 0.99 6.94e−17 1.01e−02 0.275
+13 100 0.0111 0.0357 0 1.00 7.05e−17−8.88e−16 0.274</pre>
+<div class="r-code-block" id="code-001">
+  <pre><code class="language-r">14 &gt; options(digits = 7)</code></pre>
+</div>
+<p>步骤12：绘制均值-方差有效前沿。我们现在绘制这四种资产投资组合的有效前沿。请注意，这些投资组合是由优化器在限制卖空的情况下生成的。图7.4显示了四种资产投资组合的均值-方差有效前沿。</p>
+<figure class="book-figure" id="fig-7.4"><img src="/assets/img/analyzing-financial-data-r-cn/figure-b5b63bd5a99b.png" alt="图7.4">
+<figcaption>图7.4 由SPYV、SPYG、CWI和IGLB组成的投资组合的均值-方差有效前沿（不允许卖空）</figcaption>
+</figure>
+<div class="r-code-block" id="code-002">
+  <pre><code class="language-r">1 &gt; plot(x = tgt.sd,
+2 + xlab = &quot; PortfolioRisk&quot;,
+3 + y = tgt.ret ,
+4 + ylab = &quot; Portfolio Return&quot;,
+5 + col = &quot;blue&quot;,
+6 + main = &quot; Mean−−Variance Efficient Frontier ofFour Assets
+7 + (Not Allowing Short Selling)&quot;)
+8 &gt;
+9 &gt; points(x = eff.frontier$tgt.sd,</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="231">
+<h2 id="section-7-4">7.4 允许卖空的影响</h2>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">10 + y = eff.frontier $tgt.ret ,
+11 + col = &quot;blue&quot;, pch = 16)
+12 &gt;
+13 &gt; points(x = minvar.port$tgt.sd,
+14 + y = minvar.port $tgt.ret ,
+15 + col = &quot;red&quot;, pch = 15, cex = 2.5)
+16 &gt;
+17 &gt; points(x =tangency.port$tgt.sd,
+18 + y = tangency .port$tgt.ret ,
+19 + col = &quot;darkgreen&quot;, pch = 17, cex = 2.5)</code></pre>
+</div>
+<p>在继续运行代码之前，我们先花些时间思考一下，预期允许卖空会产生什么影响。注意，如果不允许卖空，我们就增加了一个约束，限制优化器对证券赋予负权重，而如果允许卖空，这些负权重可能会提高收益率。因此，我们预计会有两件事：第一，当不施加卖空限制时，我们的情况不会变差；第二，在通过卖空某只证券能够获益的情况下，卖空应该会提高收益率。事实上，正如我们在本节末尾将看到的，这些结果成立。</p>
+<p>现在，我们来讨论在允许卖空时需要修改的代码部分。步骤1至3无需修改。我们从上一节的步骤4开始修改。</p>
+<p>步骤4ss：构建目标投资组合收益率向量（修改以允许卖空）步骤4中不同的部分涉及如何构建投资组合收益率向量的界限。回顾一下，当不允许卖空时，我们可以通过四只证券的最大和最小平均收益率来设定投资组合收益率的界限。但是，当允许卖空时，理论上我们可以卖出其他证券，并将这些证券的销售所得投资于收益率最高的证券。对于上界，我们将其构造为投资组合中四只证券最大收益率的两倍。这个数字是任意的，但能满足我们的目的，提供足够范围的投资组合收益率。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; tgt.ret&lt;− seq(min.ret , max.ret∗2, length = increments)
+2 &gt; head.tail(tgt.ret)
+3 [1] 0.004984509 0.005158088 0.005331668
+4 [1] 0.02182171 0.02199529 0.02216887</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="232">
+<h4>步骤 5ss：构建虚拟投资组合标准差向量</h4>
+<p>此处无变化。</p>
+<h4>步骤 6ss：构建虚拟投资组合权重向量</h4>
+<p>此处无变化。</p>
+<h4>步骤 7ss：运行 quadprog 优化器（修改以允许卖空）</h4>
+<p>两个变化在 <code>Amat</code> 和 <code>bvec</code> 行（第5-6行）。我们移除的是与优化器第三约束相关的项，即权重必须大于或等于0。</p>
+<div class="r-code-block" id="code-7-1">
+  <pre><code class="language-r">1 &gt; library(quadprog)
+2 &gt; for (i in 1:length(tgt.ret)){
+3 + Dmat &lt;− 2 ∗ vcov
+4 + dvec &lt;− c(rep(0, length(avg.ret)))
+5 + Amat &lt;− cbind(rep(1, length(avg.ret)), avg.ret)
+6 + bvec &lt;− c(1, tgt.ret[i])
+7 + soln &lt;− solve.QP(Dmat , dvec , Amat , bvec , meq = 2)
+8 + tgt.sd[i] &lt;− sqrt(soln$value)
+9 + wgt[i, ] &lt;− soln$solution
+10 +}
+11 &gt; head.tail(tgt.sd)
+12 [1] 0.02110113 0.02096358 0.02084466
+13 [1] 0.06060900 0.06120956 0.06181088
+14 &gt; head.tail(wgt)
+15 w.SPYV w.SPYG w.CWI w.IGLB
+16 [1,] 0.3954250−0.20893240.025521142 0.7879863
+17 [2,] 0.3874432−0.17481900.003966194 0.7834096
+18 [3,] 0.3794614−0.1407056−0.0175887540.7788330
+19 w.SPYV w.SPYG w.CWI w.IGLB
+20 [98,]−0.37881073.100066−2.0653090.3440534
+21 [99,]−0.38679253.134179−2.0868640.3394768
+22 [100,]−0.39477433.168293−2.1084190.3349002</code></pre>
+</div>
+<p>正如我们所看到的，某些资产上的负权重远非零。例如，第100个投资组合在 SPYG 上的投资组合权重为317%，部分通过对 CWI 卖空融资，金额相当于投资组合价值的211%。为了确认，我们可以检查所有权重之和仍为1。</p>
+<div class="r-code-block" id="code-7-2">
+  <pre><code class="language-r">1 &gt; (CHECK.wgt&lt;− rowSums(wgt))
+2 [ 1 ]111111111111111111111111111111111111
+3 [37] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+4 [73] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1</code></pre>
+</div>
+<h4>步骤 8ss：合并投资组合的收益率、标准差和权重</h4>
+<p>此处的代码无变化。</p>
+<div class="r-code-block" id="code-7-3">
+  <pre><code class="language-r">1 &gt; tgt.port&lt;− data.frame(cbind(tgt.ret, tgt.sd, wgt))
+2 &gt; head.tail(tgt.port)
+3 tgt.ret tgt.sd w.SPYV w.SPYG w.CWI w.IGLB
+4 1 0.004984509 0.02110113 0.3954250−0.20893240.025521142 0.7879863
+5 2 0.005158088 0.02096358 0.3874432−0.17481900.003966194 0.7834096
+6 3 0.005331668 0.02084466 0.3794614−0.1407056−0.0175887540.7788330
+7 tgt.ret tgt.sd w.SPYV w.SPYG w.CWI w.IGLB</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="233">
+
+<h2 id="effect-of-allowing-short-selling">7.4 允许卖空的影响</h2>
+<p>输出结果如下：</p>
+<pre><code>8 98 0.02182171 0.06060900−0.37881073.100066−2.0653090.3440534
+9 99 0.02199529 0.06120956−0.38679253.134179−2.0868640.3394768
+10 100 0.02216887 0.06181088−0.39477433.168293−2.1084190.3349002
+11 ></code></pre>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">with.short.tgt.port&lt;- tgt.port</code></pre>
+</div>
+<p>我们添加了最后一行来存储结果，稍后将用于与不允许卖空时的早期结果进行比较。</p>
+<h3>步骤9ss：识别最小方差投资组合</h3>
+<p>下面的输出显示，最小方差投资组合的权重为：IGLB占75%，SPYV占33%，SPYG占6%，CWI占-15%。换句话说，该投资组合指示卖空CWI。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">(minvar.port&lt;- subset(tgt.port , tgt.sd == min(tgt.sd)))</code></pre>
+</div>
+<pre><code>2 tgt.ret tgt.sd w.SPYV w.SPYG w.CWI w.IGLB
+3 9 0.006373144 0.02053677 0.3315705 0.06397468−0.14691840.7513732</code></pre>
+<h3>步骤10ss：识别切点投资组合</h3>
+<p>现在我们转向计算切点投资组合，即具有最高夏普比率的投资组合。因此，我们首先计算所有已构建投资组合的夏普比率。输出的最后一行显示，切点投资组合的夏普比率为0.366，权重为：SPYG占126%，IGLB占59%，SPYV占5%，CWI占-90%。</p>
+<div class="r-code-block" id="code3">
+  <pre><code class="language-r">tgt.port$Sharpe&lt;- (tgt.port$tgt.ret- rf) / tgt.port$tgt.sd
+options(digits = 3)
+head.tail(tgt.port)
+(tangency.port&lt;- subset(tgt.port ,Sharpe == max(Sharpe)))
+options(digits = 7)</code></pre>
+</div>
+<pre><code>4 tgt.ret tgt.sd w.SPYVw.SPYG w.CWI w.IGLB Sharpe
+5 1 0.00498 0.0211 0.395−0.209 0.02552 0.788 0.175
+6 2 0.00516 0.0210 0.387−0.175 0.00397 0.783 0.184
+7 3 0.00533 0.0208 0.379−0.141−0.01759 0.779 0.194
+8 tgt.ret tgt.sd w.SPYVw.SPYG w.CWIw.IGLB Sharpe
+9 98 0.0218 0.0606 −0.379 3.10−2.07 0.344 0.339
+10 99 0.0220 0.0612 −0.387 3.13−2.09 0.339 0.338
+11 100 0.0222 0.0618−0.395 3.17−2.11 0.335 0.338
+12 >
+13 > (tangency.port&lt;- subset(tgt.port ,Sharpe == max(Sharpe)))
+14 tgt.ret tgt.sd w.SPYVw.SPYG w.CWI w.IGLB Sharpe
+15 44 0.0124 0.0305 0.0522 1.26 −0.901 0.591 0.366
+16 > options(digits = 7)</code></pre>
+<h3>步骤11ss：识别有效投资组合</h3>
+<p>我们识别有效投资组合，即收益高于最小方差投资组合收益的投资组合。</p>
+
+</section>
+<section class="book-page" data-pdf-page="234">
+  <h2>220 第7章 Markowitz 均值-方差优化</h2>
+<div class="r-code-placeholder"><div class="r-code-block" id="code-1">
+  <pre><code class="language-r">eff.frontier&lt;− subset(tgt.port , tgt.ret &gt;=minvar.port$tgt.ret)
+options(digits = 3)
+head.tail(eff.frontier)
+options(digits = 7)</code></pre>
+</div></div>
+<p><strong>步骤12ss：绘制均值-方差有效前沿</strong> 我们现在绘制当卖空不受限制时这个四资产投资组合的有效前沿。图7.5</p>
+<figure class="book-figure" id="fig-7.5"><img src="/assets/img/analyzing-financial-data-r-cn/figure-e947cca19922.png" alt="图7.5 由 SPYV、SPYG、CWI 和 IGLB 构成且允许卖空的投资组合的均值-方差有效前沿">
+    <figcaption>图7.5 由 SPYV、SPYG、CWI 和 IGLB 构成且允许卖空的投资组合的均值-方差有效前沿</figcaption>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="235">
+<h2 id="effect-of-allowing-short-selling">7.4 允许卖空的影响</h2>
+<p>图7.5展示了在移除卖空限制后，四资产投资组合的均值-方差有效前沿。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; plot(x = tgt.sd,
++ xlab = &quot; PortfolioRisk&quot;,
++ y = tgt.ret ,
++ ylab = &quot; Portfolio Return&quot;,
++ col = &quot;blue&quot;,
++ main = &quot; Mean−−Variance Efficient Frontier ofFour Assets
++ (Allowing Short Selling)&quot;)
+&gt;
+&gt; points(x = eff.frontier$tgt.sd,
++ y = eff.frontier $tgt.ret ,
++ col = &quot;blue&quot;, pch = 16)
+&gt;
+&gt; points(x = minvar.port$tgt.sd,
++ y = minvar.port $tgt.ret ,
++ col = &quot;red&quot;, pch = 15, cex = 2.5)
+&gt;
+&gt; points(x =tangency.port$tgt.sd,
++ y = tangency .port$tgt.ret ,
++ col = &quot;darkgreen&quot;, pch = 17, cex = 2.5)</code></pre>
+</div>
+<p>比较允许卖空与不允许卖空的有效前沿</p>
+<p>由于两个单独的图形难以直观对比允许卖空与不允许卖空的均值-方差有效前沿差异，我们将两个有效前沿绘制在同一张图中。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; plot(x = no.short.tgt.port$tgt.sd,
++ y = no.short.tgt.port $tgt.ret ,
++ xlab = &quot; PortfolioRisk&quot;,
++ ylab = &quot; Portfolio Return&quot;,
++ type = &quot;l&quot;,
++ main = &quot;MV Efficient Frontier forFour Assets
++ With and Without Short Selling&quot;)
+&gt; lines(x = with.short.tgt.port$tgt.sd,
++ y = with.short.tgt.port $tgt.ret ,
++ col = &quot;red&quot;,
++ type = &quot;l&quot;)
+&gt; legend(&quot;bottomright&quot;,
++ c(&quot;Not Allow Short&quot;, &quot;Allow Short&quot;),
++ col = c(&quot;black&quot;, &quot;red&quot;),
++ lty = 1)</code></pre>
+</div>
+<p>图7.6展示了上述代码的输出结果。黑色线条代表不允许卖空时的有效前沿，红色线条代表允许卖空时的有效前沿。结果表明，如果允许卖空，我们能够在相同的风险水平下获得更高的投资组合收益率。</p>
+</section>
+<section class="book-page" data-pdf-page="236">
+  <h2 id="section-7-5">7.5 扩展阅读</h2>
+<p>对于一个给定的风险水平，我们能够获得更高的组合收益率，或者对于一个给定的组合收益率，我们能够获得更低的风险。</p>
+<figure class="book-figure" id="fig-7.6"><img src="/assets/img/analyzing-financial-data-r-cn/figure-f2246429b40e.png" alt="比较由SPYV, SPYG, CWI和IGLB构成的投资组合在有卖空和无卖空情况下的均值-方差有效前沿" />
+    <figcaption>图7.6 比较由SPYV, SPYG, CWI和IGLB构成的投资组合在有卖空和无卖空情况下的均值-方差有效前沿</figcaption>
+  </figure>
+<p>更多关于夏普比率的细节见[4]和[5]。Markowitz[3]是关于投资组合选择的原始论文。更全面且现代的资产配置和投资组合管理论述见[2]。计算有效前沿的其他技术见[1]。</p>
+</section>
+<section class="book-page" data-pdf-page="237">
+<h2 id="references-5">参考文献</h2>
+<ol>
+<li>Elton, E., Gruber, M., Brown, S., &amp; Goetzmann, W. (2010). <em>Modern portfolio theory and investment analysis</em> (第8版). Hoboken: Wiley.</li>
+<li>Maginn, J., Tuttle, D., Pinto, J., &amp; McLeavey, D. (2007). <em>Managing investment portfolios: A dynamic process</em> (第3版). Hoboken: Wiley.</li>
+<li>Markowitz, H. (1952). Portfolio selection. <em>Journal of Finance</em>, 7, 77–91.</li>
+<li>Sharpe, W. (1975). Adjusting for risk in portfolio performance. <em>Journal of Portfolio Management</em>, 1, 29–34.</li>
+<li>Sharpe, W. (1994). The Sharpe ratio. <em>Journal of Portfolio Management</em>, 21, 49–58.</li>
+</ol>
+</section>
+<nav class="chapter-nav"><a href="/analyzing-financial-data-r-cn/chapter-6/">上一节：第6章 风险调整后的投资组合绩效度量</a><a href="/analyzing-financial-data-r-cn/chapter-8/">下一节：第8章 股票</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=638ea974b0aa"></script>
+</body>
+</html>

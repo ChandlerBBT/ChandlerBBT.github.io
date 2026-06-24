@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="附录A R入门 | 《使用 R 分析金融数据并实现金融模型》">
+  <title>附录A R入门 | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=163efa3dc728">
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <div class="sidebar-heading">
+    <h2>书籍目录</h2>
+    <div class="sidebar-actions" aria-label="二级目录控制">
+      <button type="button" data-sidebar-action="expand">全部展开</button>
+      <button type="button" data-sidebar-action="collapse">全部收起</button>
+    </div>
+  </div>
+  <nav class="sidebar-list"><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/">首页</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/dedication/">献辞</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/preface/">前言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/acknowledgments/">致谢</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-1/">第1章 价格</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-1" aria-label="展开第1章 价格二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-1" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-1">1.1 价格与价值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-2">1.2 从 Yahoo Finance 导入价格数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-3">1.3 检查数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-4">1.4 基本数据处理技巧</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-5">1.5 比较不同证券之间的资本利得</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-6">1.6 简单移动平均线和指数移动平均线</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-7">1.7 成交量加权平均价格（VWAP）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-8">1.8 绘制K线图</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-9">1.9 双轴价格与成交量图</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-10">1.10 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#references">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-2/">第2章 单个证券收益率</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-2" aria-label="展开第2章 单个证券收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-2" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-1">2.1 价格收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-2">2.2 总收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-3">2.3 对数总收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-4">2.4 缩尾处理与截尾处理</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-5">2.5 累积多日收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-6">2.6 周收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-7">2.7 月度收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-8">2.8 比较多种证券的表现</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-3/">第3章 投资组合收益率</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-3" aria-label="展开第3章 投资组合收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-3" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-1">3.1 投资组合收益率：长方法</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-2">3.2 使用矩阵代数的投资组合收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-3">3.3 构建基准投资组合收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-4">3.4 时间加权收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-5">3.5 资金加权收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-6">3.6 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#reference">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-4/">第4章 风险</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-4" aria-label="展开第4章 风险二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-4" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-1">4.1 风险-收益权衡</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-2">4.2 单个证券风险</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-3">4.3 投资组合风险</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-4">4.4 风险价值 (Value-at-Risk)</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-5">4.5 期望损失</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-6">4.6 替代风险度量</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-7">4.7 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#references-2">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-5/">第5章 因子模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-5" aria-label="展开第5章 因子模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-5" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-1">5.1 资本资产定价模型（CAPM）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-2">5.2 市场模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-3">5.3 滚动窗口回归</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-4">5.4 不同参考日的Beta</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-5">5.5 Fama–French 三因子模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-6">5.6 异方差性检验</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-7">5.7 检验非正态性</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-8">5.8 自相关检验</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-9">5.9 事件研究</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-10">5.10 选择最佳回归变量</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-11">5.11 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#references-3">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-6/">第6章 风险调整后的投资组合绩效度量</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-6" aria-label="展开第6章 风险调整后的投资组合绩效度量二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-6" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-1">6.1 投资组合与基准数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-2">6.2 夏普比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-3">6.3 Roy 的安全第一比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-4">6.4 特雷诺比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-5">6.5 索提诺比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-6">6.6 信息比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-7">6.7 合并结果</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-8">6.8 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#references-4">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-7/">第7章 Markowitz均值-方差优化</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-7" aria-label="展开第7章 Markowitz均值-方差优化二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-7" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-1">7.1 两个资产：手动方法</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-2">7.2 使用二次规划的两个资产情况</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-3">7.3 使用二次规划的多资产优化</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-4">7.4 允许卖空的影响</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-5">7.5 扩展阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#references-5">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-8/">第8章 股票</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-8" aria-label="展开第8章 股票二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-8" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-1">8.1 公司财务</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-2">8.2 预测（Projections）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-3">8.3 股权风险溢价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-4">8.4 去杠杆化 Beta</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-5">8.5 敏感性分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-6">8.6 使用回归分析的相对估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-7">8.7 识别股票收益率的显著变化</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-8">8.8 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#references-6">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-9/">第9章 固定收益</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-9" aria-label="展开第9章 固定收益二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-9" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-1">9.1 经济分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-2">9.2 美国国债</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-3">9.3 主成分分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-4">9.4 投资级债券利差</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-5">9.5 债券估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-6">9.6 久期与凸性</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-7">9.7 短期利率模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-8">9.8 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#references-7">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-10/">第10章 期权</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-10" aria-label="展开第10章 期权二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-10" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-1">10.1 获取期权链数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-2">10.2 Black–Scholes–Merton 期权定价模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-3">10.3 隐含波动率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-4">10.4 Cox, Ross, and Rubinstein 二叉树期权定价模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-5">10.5 美式期权定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-6">10.6 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#references-8">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-11/">第11章 模拟</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-11" aria-label="展开第11章 模拟二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-11" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-1">11.1 使用几何布朗运动模拟股票价格</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-2">11.2 模拟含股息和不含股息的股票价格</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-3">11.3 模拟具有相关价格的股票</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-4">11.4 使用模拟计算风险价值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-5">11.5 欧式期权的蒙特卡洛定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-6">11.6 使用对偶变量法的蒙特卡洛期权定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-7">11.7 奇异期权估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-8">11.8 扩展阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#references-9">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-12/">第12章 交易策略</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-12" aria-label="展开第12章 交易策略二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-12" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-1">12.1 有效市场假说</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-2">12.2 技术分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-3">12.3 构建简单交易策略</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-4">12.4 机器学习技术</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-5">12.5 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#references-10">参考文献</a></div></div><div class="sidebar-item is-current is-open"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-a/" aria-current="page">附录A R入门</a><button class="sidebar-toggle" type="button" aria-expanded="true" aria-controls="sidebar-sections-appendix-a" aria-label="收起附录A R入门二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-appendix-a"><a class="section-link" href="#a-1-installing-r">A.1 安装 R</a><a class="section-link" href="#a-2-the-r-working-directory">A.2 R 工作目录</a><a class="section-link" href="#a-3-r-console-output">A.3 R 控制台输出</a><a class="section-link" href="#a-4-r-editor">A.4 R 编辑器</a><a class="section-link" href="#a-5-packages">A.5 包</a><a class="section-link" href="#a-6-basic-commands">A.6 基本命令</a><a class="section-link" href="#a-7-the-r-workspace">A.7 R 工作空间</a><a class="section-link" href="#a-8-vectors">A.8 向量</a><a class="section-link" href="#a-9-combining-vectors">A.9 组合向量</a><a class="section-link" href="#a-10-matrices">A.10 矩阵</a><a class="section-link" href="#a-11-data-frame">A.11 data.frame</a><a class="section-link" href="#a-12-date-formats">A.12 日期格式</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-b/">附录B 预加载代码</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-c/">附录C 构建假设投资组合（月度收益率）</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-d/">附录D 构建假设投资组合（日收益率）</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/index/">索引</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <h1>附录A R入门</h1>
+<section class="book-page" data-pdf-page="455">
+<h1>附录A R入门</h1>
+<h2 id="a-1-installing-r">A.1 安装 R</h2>
+<p>要开始使用 R，我们首先需要在本地系统下载并安装 R。我们可以访问 Comprehensive R Archive Network (CRAN) 网站（<a href="http://cran.r-project.org">http://cran.r-project.org</a>）下载最新版本。R 提供 Windows、OS X 和 Linux 版本。截至本书撰写时，R 最新版本为 3.6.2，代号 “Dark and Stormy Night”，发布日期为 2019 年 12 月 12 日。本书中的代码已在 64 位 Windows 版 R 3.6.2 上测试通过，但多数程序（若非全部）也应适用于其他 R 版本。</p>
+<h2 id="a-2-the-r-working-directory">A.2 R 工作目录</h2>
+<p>在本书中，我们将使用的程序和外部 CSV 文件应放置在 R 工作目录（working directory）中。要确定 R 将硬盘上的哪个目录用作工作目录，请在命令提示符（command prompt）中键入 <code>getwd()</code>。命令提示符是 R 控制台中以 “&gt;” 开头的行。</p>
+<div class="r-code-block" id="1">
+  <pre><code class="language-r">1 &gt; getwd()
+2 [1] &quot;C:/Users/cliff&quot;</code></pre>
+</div>
+<p>注意，不以 &gt; 符号开头的行是您键入内容的输出。上述输出显示，我系统中的工作目录是 /Users/cliff。然后，我们可以将所有相关程序和文件创建并保存到此 R 工作目录或我们选择的任何其他工作目录中。虽然我们可以更改工作目录，但这对于本书并非必需，我们仅使用 R 输出的默认工作目录即可。要选择不同的工作目录，请使用 <code>setwd()</code>。假设我们想改用目录 c:/Users/cliff/R，可以在命令提示符中输入以下内容：</p>
+</section>
+<section class="book-page" data-pdf-page="456">
+  <h2 id="a-3-r-console-output">A.3 R 控制台输出</h2>
+<p>本书中每行以命令提示符（>）或加号（+）开头的输出都是代码行。加号（+）表示该行代码与前一行代码被 R 视为一个连续代码串，该代码串因某种原因被分成了多行。例如，当我们对数据进行子集操作时，可以输入以下代码：</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; subset(data ,index(data) &gt; &quot;2018−12−31&quot;)</code></pre>
+</div>
+<p>或</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; subset(data ,
++ index(data) &gt; &quot; 2018−12−31&quot;)</code></pre>
+</div>
+<p>第二种代码形式更易于阅读，但使用了多行，而不是第一种将所有参数放在一行中的形式。两种形式将生成相同的输出，即对数据进行子集操作，仅保留 2018 年 12 月 31 日之后的值。对于较长的代码行，有经验的程序员可能更喜欢使用第二种形式，因为它更容易看出哪些代码行属于一组，以及代码使用了哪些不同的操作。本书将同时使用这两种形式。</p>
+<h2 id="a-4-r-editor">A.4 R 编辑器</h2>
+<p>在 R 中编写代码时，我们可以直接在 R 控制台中输入代码，按回车键后刚刚输入的代码就会执行。然而，通常更好的做法是使用 R 编辑器进行编程。R 编辑器的外观类似于普通文本编辑器（例如 Windows 中的记事本或 OS X 中的 TextEdit）。我们可以通过点击“File > New Script”或在 Windows 中按 CTRL+N 来调出 R 编辑器。在 OS X 中，可以通过点击“File > New Document”或按 Command+N 来创建新脚本。</p>
+<p>然后，我们在 R 编辑器中输入输出中跟在命令提示符（>）或加号（+）之后的文本（不包括这些符号）。换句话说，对于上面的子集操作示例，我们在 R 编辑器中输入以下内容：</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">subset(data ,
+index(data) &gt; &quot;2018−12−31&quot;)</code></pre>
+</div>
+<p>然后，我们高亮要执行的代码部分，在 Windows 中按 CTRL+R，或在 OS X 中按 Command+ENTER。对上述代码执行此操作将执行代码，并生成输出，其中代码被分成两行，第二行前面有加号（+）。请注意，第二行是</p>
+</section>
+<section class="book-page" data-pdf-page="457">
+<p>缩进。代码是否缩进通常不会影响程序的执行。缩进只是让我们更容易识别哪些行属于一组（并且可能是良好的编程习惯）。在上面的例子中，缩进的第二行很容易被识别为与第一行代码属于同一组。</p>
+<h2 id="a-5-packages">A.5 包</h2>
+<p>包就像工具箱，包含许多有助于简化任务的函数。R的基本安装附带一组内置包，帮助我们完成许多工作。然而，对于本书中的一些计算，我们需要安装额外的包。我们将主要使用<code>quantmod</code>，它还会加载另一个我们经常使用的包，即<code>xts</code>包。</p>
+<p>要加载一个包，我们使用<code>library()</code>。例如，要加载<code>quantmod</code>包，我们输入以下内容：</p>
+<div class="r-code-block" id="r-code-457-1">
+  <pre><code class="language-r">1 &gt; library(quantmod)
+2 Loading required package: Defaults
+3 Loading required package: xts
+4 Loading required package: zoo
+
+6 Attaching package: ‘zoo’
+
+8 The following objects are maskedfrom ‘package:base’:
+
+10 as.Date , as.Date.numeric
+
+12 Loading required package: TTR
+13 Version 0.4−0 included newdatadefaults. See ?getSymbols.</code></pre>
+</div>
+<p>在每个R会话中，首次加载包时，我们可能会看到类似上面<code>quantmod</code>的一系列消息。我们只需要在每个R会话期间加载一次包，因此为了确保代码顺利执行，我们应该在每次启动R时始终加载<code>quantmod</code>，这也会同时加载<code>xts</code>包。</p>
+<p>我们在附录B中讨论了一些其他应预先加载的代码。这些代码有助于简化我们的讨论并利用我们之前讨论过的内容。</p>
+<p>重新加载之前已经加载过的包不会造成任何伤害。然而，后续加载包时不会出现警告消息，因此当您看不到像上面<code>quantmod</code>那样的警告消息时，请不要惊慌。例如，如果我们再次加载<code>quantmod</code>，输出将如下所示（即没有任何警告消息）：</p>
+<div class="r-code-block" id="r-code-457-2">
+  <pre><code class="language-r">1 &gt; library(quantmod)</code></pre>
+</div>
+<p>如果该包尚未安装在本地系统上，R将生成一条错误消息。例如，如果我们尝试加载<code>tseries</code>包，而它尚未安装在本地计算机上，我们将看到以下输出：</p>
+</section>
+<section class="book-page" data-pdf-page="458">
+<p>446 附录A R入门</p>
+<p>我们可以使用 <code>library()</code> 加载一个包。如果该包尚未安装，R 将生成错误消息。例如，如果 <code>tseries</code> 包未安装，则会出现以下错误：</p>
+<div class="r-code-block" id="r_code_1">
+  <pre><code class="language-r">1 &gt; library(tseries)
+2 Error in library(tseries) : there is no package called &#x27;tseries&#x27;</code></pre>
+</div>
+<p>然后，我们可以使用 <code>install.packages()</code> 安装该包。请注意，我们需要将包名放在括号内并用引号括起来，否则 R 将生成错误消息，提示无法找到该包。</p>
+<div class="r-code-block" id="r_code_2">
+  <pre><code class="language-r">1 &gt; install.packages(tseries)
+2 Error in install.packages(tseries) : object &#x27;tseries&#x27; not found</code></pre>
+</div>
+<p>除了将包名放在引号中，我们还可以包含 <code>dependencies = TRUE</code>，这也会安装当前包所依赖的其他包。</p>
+<div class="r-code-block" id="r_code_3">
+  <pre><code class="language-r">1 &gt; install.packages(&quot;tseries&quot;, dependencies = TRUE)
+2 Installing package into &#x27;C:/Users/cang/Documents/R/win-library/3.6&#x27;
+3 (as &#x27;lib&#x27; is unspecified)
+4 --- Please select a CRAN mirror for use in this session---
+5 trying URL &#x27;https://cran.cnr.berkeley.edu/bin/windows/contrib/3.6/ ...
+6 Content type &#x27;application/zip&#x27; length 417283 bytes (407 KB)
+7 downloaded 407 KB
+9 package &#x27;tseries&#x27; successfully unpacked and MD5sums checked
+11 The downloaded binary packages are in
+12 C:\Users\cang\AppData\Local\Temp\RtmpqKcNnm\downloaded_packages</code></pre>
+</div>
+<p>除非我们之前已选择过用于下载包的 CRAN 镜像站点，否则 R 会打开一个窗口，要求我们选择一个 CRAN 镜像站点。我们通常可以选择任意站点，包仍会安装。每次我们打开 R 会话并需要使用 CRAN 镜像时，这个窗口都会弹出。因此，我们不必受限于选择的 CRAN 镜像。从实际角度来看，CRAN 镜像的选择并不重要。</p>
+<p>此外，我们可以使用 <code>help()</code> 调出该包的帮助文件。将打开一个新窗口，其中加载了该包的网页样式帮助文档。</p>
+<div class="r-code-block" id="r_code_4">
+  <pre><code class="language-r">1 &gt; help(package=&quot;tseries&quot;)
+2 starting httpd help server ... done</code></pre>
+</div>
+<p>您还可以使用 <code>(.packages())</code> 检查某个包是否已安装。当我们启动 R 时，已经安装了一些包。在我的系统中，显示以下输出：</p>
+<div class="r-code-block" id="r_code_5">
+  <pre><code class="language-r">1 &gt; (.packages())
+2 [1] &quot;stats&quot; &quot;graphics&quot; &quot;grDevices&quot; &quot;utils&quot; &quot;datasets&quot; &quot;methods&quot;
+3 &quot;base&quot;</code></pre>
+</div>
+<p>加载 <code>quantmod</code> 后，显示以下输出：</p>
+<div class="r-code-block" id="r_code_6">
+  <pre><code class="language-r">1 &gt; (.packages())
+2 [1] &quot;quantmod&quot; &quot;TTR&quot; &quot;xts&quot; &quot;zoo&quot; &quot;stats&quot;
+3 &quot;graphics&quot; &quot;grDevices&quot; &quot;utils&quot;
+4 [9] &quot;datasets&quot; &quot;methods&quot; &quot;base&quot;</code></pre>
+</div>
+<p>如我们所见，加载 <code>quantmod</code> 也会加载 <code>TTR</code> 和 <code>xts</code> 包。</p>
+</section>
+<section class='book-page' data-pdf-page='459'>
+<h2 id='a-6-basic-commands'>A.6 基本命令</h2>
+<p>在本书中，我们将使用打字机字体来表示与 R 相关的命令。希望这有助于将 R 相关的输入与普通文本区分开来。我们对创建的数据集、矩阵、向量和变量使用斜体。我们使用衬线字体表示列标题/标签和文件名。</p>
+<p>R 是交互式的，因此我们可以直接在命令提示符中输入表达式并查看结果，就像使用计算器一样。例如，假设我们想将 2 和 3 相加，我们可以像使用计算器一样使用 R。</p>
+<div><div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt;2+3
+[1] 5</code></pre>
+</div></div>
+<p>或者，我们也可以将 2 和 3 相乘。</p>
+<div><div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt;2 ∗ 3
+[1] 6</code></pre>
+</div></div>
+<p>将 R 作为计算器使用可能并不是 R 的最佳用途。我们可以通过使用赋值运算符“←”（由小于号 < 和减号 - 组成）将内容存储在对象中。假设我们令 x = 2 和 y = 3，然后将两个对象相加和相乘。注意，要查看对象存储的内容，我们必须在命令提示符中输入对象名称。也就是说，第一行仅生成一个空命令提示符，再次输入 x 会显示输出 2。</p>
+<div><div class="r-code-block" id="code-3">
+  <pre><code class="language-r">&gt;x &lt;− 2
+&gt;x
+[1] 2
+&gt;y &lt;− 3
+&gt;y
+[1] 3
+&gt;x+y
+[1] 5
+&gt;x ∗ y
+[1] 6</code></pre>
+</div></div>
+<p>或者，我们可以通过将代码括在括号中来显示对象中存储的内容。例如，要一步显示 x <- 2 已将 2 存储在 x 中，我们输入</p>
+<div><div class="r-code-block" id="code-4">
+  <pre><code class="language-r">&gt;( x &lt;− 2)
+[1] 2</code></pre>
+</div></div>
+<p>虽然我们主要使用上述赋值运算符，但有时也会使用等号 (=) 进行赋值。选择是偏好问题，在两种方法之间切换不会影响任何结果。第三种赋值方式是使用向右的箭头 (→) 的赋值运算符。然而，这可能过于混乱，因此我们将系统地仅使用向左的箭头或等号进行赋值。</p>
+<div><div class="r-code-block" id="code-5">
+  <pre><code class="language-r">&gt;2 −&gt;x
+&gt;x
+[1] 2</code></pre>
+</div></div>
+</section>
+<section class="book-page" data-pdf-page="460"><h2 id="a-7-the-r-workspace">A.7 R 工作空间</h2>
+<p>注意，R 是区分大小写的。例如，上面创建的对象 x 是小写的。如果我们输入大写的 X，将会产生错误：</p>
+<div class="r-code-block" id="code-0">
+  <pre><code class="language-r">1 &gt;X
+2 Error: object &#x27;X&#x27; not found</code></pre>
+</div>
+<p>上述显然不是问题的详尽列表，而只是最基本的命令。我们将在本书的正文中介绍必要的操作、函数和命令，用于具体的应用。这有助于将来回忆如何使用这些术语。</p>
+<p>R 工作空间包含 R 内存中对象的列表。要查看 R 工作空间，我们使用 <code>ls()</code>。由于我们之前创建了对象 x 和 y，这些应该是 R 工作空间中的变量，如下所示：</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt;l s ( )
+2 [1] &quot;x&quot; &quot;y&quot;</code></pre>
+</div>
+<p>在每个章节中，我们可能会使用本章前面部分创建的对象。例如，我们可能在本章的第一部分获取股票价格数据，然后在第五部分使用相同的数据。因此，将对象保存在 R 工作空间中是有帮助的，因为它可以避免重新拉取数据。在这一点上，这可能不是一个大问题，但随着你构建更复杂的模型，它可能会成为一个问题。</p>
+<p>然而，当我们转到不同的章节或进行完全独立的分析时，我们可能希望清除内存中所有旧的对象。我们可能会重复使用变量和数据集名称，以使事情更直观和易于理解。例如，我们可能在所有章节中使用 <code>data.amzn</code> 来指代亚马逊股票价格数据。但是，我们可能以不同的方式操作该数据集。因此，为了避免无意中调用已被操作的对象从而导致计算错误，我们可能需要考虑清空工作空间（即，清除内存中的所有内容）。我们使用 <code>rm(list=ls())</code> 来实现。如下所示，运行此代码后，R 工作空间中使用的数据集 x 和 y 将不复存在。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; rm(list=ls())
+2 &gt;l s ( )
+3 character(0)</code></pre>
+</div>
+<p>使用 <code>rm(list=ls())</code> 需要注意的一个重要事项是，我们必须小心使用此代码，因为它会删除工作空间中的任何对象。在使用此代码之前，请确保保存任何临时数据或函数。此外，如果我们与他人共享代码，我们应该有意识地决定是否包含 <code>rm(list=ls())</code>。如果我们发送代码，运行代码的人可能会无意中删除他们工作空间中的重要对象。</p></section>
+<section class="book-page" data-pdf-page="461">
+<h2 id="a-9-combining-vectors">A.9 组合向量</h2>
+<p>使用了 <code>rm(list=ls())</code> 命令，而且他们直接运行它，没有移除或注释掉 <code>rm(list=ls())</code>。</p>
+<h2 id="a-8-vectors">A.8 向量</h2>
+<p>我们可以在R中创建向量，向量可以包含数字或文本。向量 a 包含一个数字向量，向量 b 包含一个文本向量，而向量 c 包含一个数字和文本的混合向量。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt;a &lt;− c(1, 2, 3, 5, 6, 7)
+2 &gt;a
+3 [ 1 ]123567
+4 &gt;( b &lt;− c(&quot;Sun&quot;, &quot;Mon&quot;, &quot;Tue&quot;, &quot;Thu&quot;, &quot;Fri&quot; ,&quot;Sat&quot;))
+5 [1] &quot;Sun&quot; &quot;Mon&quot; &quot;Tue&quot; &quot;Thu&quot; &quot;Fri&quot; &quot;Sat&quot;
+6 &gt;( c &lt;− c(1, 2, 3, &quot;Sun&quot;, &quot;Mon&quot;, &quot;Tue&quot;))
+7 [1] &quot;1&quot; &quot;2&quot; &quot;3&quot; &quot;Sun&quot; &quot;Mon&quot; &quot;Tue&quot;</code></pre>
+</div>
+<p>注意，纯数值向量 a 列出数字时不带引号，而任何部分包含文本或字符的向量在列出值时都会带引号。在上面的例子中，我们使用 <code>c()</code> 创建了一个向量。注意，在R中许多需要串接在一起的东西都会用到 <code>c()</code>。</p>
+<p>我们可以通过方括号和指定元素编号来选择向量中的元素。假设我们要选择向量 a 和向量 b 中的第四个元素。我们就在调用向量名后的方括号内放入“4”。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; a[4]
+2 [1] 5
+3 &gt; b[4]
+4 [1] &quot;Thu&quot;</code></pre>
+</div>
+<p>我们可以按行或按列组合向量。要按列组合向量，我们使用 <code>cbind()</code>。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; (col.vectors&lt;− cbind(a, b))
+2 ab
+3 [1,] &quot;1&quot; &quot;Sun&quot;
+4 [2,] &quot;2&quot; &quot;Mon&quot;
+5 [3,] &quot;3&quot; &quot;Tue&quot;
+6 [4,] &quot;5&quot; &quot;Thu&quot;
+7 [5,] &quot;6&quot; &quot;Fri&quot;
+8 [6,] &quot;7&quot; &quot;Sat&quot;</code></pre>
+</div>
+<p>要按行组合向量，我们使用 <code>rbind()</code>。</p>
+<div class="r-code-block" id="code-4">
+  <pre><code class="language-r">1 &gt; (row.vectors&lt;− rbind(a ,b))</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="462">
+<h2 id="a-10-matrices">A.10 矩阵</h2>
+<p>当我们组合上述向量时，其数据结构转换成了矩阵。我们使用 <code>class()</code> 来显示对象的类。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; class(rightcol.vectors)
+[1] &quot;matrix&quot;
+&gt; dim(rightcol.vectors)
+[1] 6 3</code></pre>
+</div>
+<p>矩阵是一个具有维度的向量。在我们的示例中，<code>rightcol.vectors</code> 的维度为 6 行 × 3 列，通常称为 6 × 3 矩阵。我们可以使用 <code>dim()</code> 显示矩阵的维度。在进行投资组合计算时，我们将使用矩阵，因为这极大地简化了实现过程。</p>
+</section>
+<section class="book-page" data-pdf-page="463">
+<h2 id="a-11-data-frame">A.11 data.frame</h2>
+<p>data.frame 对象是一种灵活的数据结构，在需要进行更复杂计算时我们将使用它。data.frame 对象包含行和列。要将上述 rightcol.vectors 矩阵转换为 data.frame 对象，我们可以使用 data.frame()。</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">&gt; df &lt;- data.frame(rightcol.vectors)
+&gt; class(df)
+[1] &quot;data.frame&quot;
+&gt; df
+     a   b c
+1    1 Sun 1
+2    2 Mon 2
+3    3 Tue 3
+4    4 Wed 4
+5    5 Thu 5
+6    6 Fri 6</code></pre>
+</div>
+<p>现在该对象是 data.frame，我们可以使用美元符号 ($) 后跟列标签来选取特定的列。例如，如果我们想选取 df 的第二列，可以输入 df$b。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">&gt; df$b
+[1] Sun Mon Tue Wed Thu Fri
+Levels: Fri Mon Sat Sun Thu Tue</code></pre>
+</div>
+<p>也可以通过在 df 后放置方括号并在逗号后输入 2 来实现相同效果，例如 df[, 2]。</p>
+<div class="r-code-block" id="code3">
+  <pre><code class="language-r">&gt; df[, 2]
+[1] Sun Mon Tue Wed Thu Fri
+Levels: Fri Mon Sat Sun Thu Tue</code></pre>
+</div>
+<p>在 data.frame 中，我们还可以通过行号来识别行。例如，如果我们只想查看第四行，再次使用方括号，这次在逗号前放置数字 4，例如 df[4, ]。注意第 1 行开头的 4 是行号，即我们想要查看的行。</p>
+<div class="r-code-block" id="code4">
+  <pre><code class="language-r">&gt; df[4, ]
+  a   b c
+4 4 Wed 4</code></pre>
+</div>
+<p>如果我们想知道特定行/列的值，可以在逗号两侧都输入值。假设我们想知道 df 第二列的第四个值，可以在命令提示符输入 df[4, 2]。</p>
+<div class="r-code-block" id="code5">
+  <pre><code class="language-r">&gt; df[4, 2]
+[1] Wed
+Levels: Fri Mon Sat Sun Thu Tue</code></pre>
+</div>
+<p>这些技术在后续需要从 data.frame 对象中选取子集和提取元素时会非常有用。</p>
+</section>
+<section class="book-page" data-pdf-page="464"><h2 id="a-12-date-formats">A.12 日期格式</h2>
+<p>R 使用特定的符号来表示日期格式。下表描述了这些符号并给出了示例（表 A.1）。</p>
+<table><caption>表 A.1 R 日期格式的符号与描述（以 2019 年 12 月 31 日为例）</caption><thead><tr><th>符号</th>
+<th>描述</th>
+<th>示例</th></tr></thead>
+<tbody><tr><td><code>%Y</code></td>
+<td>4 位年份</td>
+<td>2019</td></tr>
+<tr><td><code>%y</code></td>
+<td>2 位年份</td>
+<td>19</td></tr>
+<tr><td><code>%m</code></td>
+<td>2 位月份</td>
+<td>12</td></tr>
+<tr><td><code>%b</code></td>
+<td>短月份名称</td>
+<td>Dec</td></tr>
+<tr><td><code>%B</code></td>
+<td>长月份名称</td>
+<td>December</td></tr>
+<tr><td><code>%d</code></td>
+<td>月份中的日子（0 到 31）</td>
+<td>31</td></tr>
+<tr><td><code>%a</code></td>
+<td>短星期名称</td>
+<td>Tue</td></tr>
+<tr><td><code>%A</code></td>
+<td>长星期名称</td>
+<td>Tuesday</td></tr></tbody></table></section>
+<nav class="chapter-nav"><a href="/analyzing-financial-data-r-cn/chapter-12/">上一节：第12章 交易策略</a><a href="/analyzing-financial-data-r-cn/appendix-b/">下一节：附录B 预加载代码</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=638ea974b0aa"></script>
+</body>
+</html>

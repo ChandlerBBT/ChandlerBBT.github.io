@@ -6,6 +6,13 @@
     <description>记录我在工作与学习中，围绕 AI 提升效率的探索、实践与复盘。</description>
 
     <item>
+      <title>《使用 R 分析金融数据并实现金融模型》简体中文教程</title>
+      <link>https://chandlerbbt.github.io/posts/analyzing-financial-data-r-cn/</link>
+      <guid>https://chandlerbbt.github.io/posts/analyzing-financial-data-r-cn/</guid>
+      <pubDate>Wed, 24 Jun 2026 00:00:00 +0800</pubDate>
+      <description>《Analyzing Financial Data and Implementing Financial Models Using R》的简体中文教程入口，覆盖金融数据分析、投资组合、固定收益、期权、模拟与交易策略，并保留原书 R 代码。</description>
+    </item>
+    <item>
       <title>《金融工程统计与数据分析：R 示例》简体中文教程</title>
       <link>https://chandlerbbt.github.io/posts/statistics-data-analysis-financial-engineering-cn/</link>
       <guid>https://chandlerbbt.github.io/posts/statistics-data-analysis-financial-engineering-cn/</guid>

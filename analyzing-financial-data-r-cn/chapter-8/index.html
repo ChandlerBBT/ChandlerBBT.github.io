@@ -1,0 +1,1307 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="第8章 股票 | 《使用 R 分析金融数据并实现金融模型》">
+  <title>第8章 股票 | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=163efa3dc728">
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <div class="sidebar-heading">
+    <h2>书籍目录</h2>
+    <div class="sidebar-actions" aria-label="二级目录控制">
+      <button type="button" data-sidebar-action="expand">全部展开</button>
+      <button type="button" data-sidebar-action="collapse">全部收起</button>
+    </div>
+  </div>
+  <nav class="sidebar-list"><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/">首页</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/dedication/">献辞</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/preface/">前言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/acknowledgments/">致谢</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-1/">第1章 价格</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-1" aria-label="展开第1章 价格二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-1" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-1">1.1 价格与价值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-2">1.2 从 Yahoo Finance 导入价格数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-3">1.3 检查数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-4">1.4 基本数据处理技巧</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-5">1.5 比较不同证券之间的资本利得</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-6">1.6 简单移动平均线和指数移动平均线</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-7">1.7 成交量加权平均价格（VWAP）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-8">1.8 绘制K线图</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-9">1.9 双轴价格与成交量图</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-10">1.10 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#references">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-2/">第2章 单个证券收益率</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-2" aria-label="展开第2章 单个证券收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-2" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-1">2.1 价格收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-2">2.2 总收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-3">2.3 对数总收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-4">2.4 缩尾处理与截尾处理</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-5">2.5 累积多日收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-6">2.6 周收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-7">2.7 月度收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-8">2.8 比较多种证券的表现</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-3/">第3章 投资组合收益率</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-3" aria-label="展开第3章 投资组合收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-3" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-1">3.1 投资组合收益率：长方法</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-2">3.2 使用矩阵代数的投资组合收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-3">3.3 构建基准投资组合收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-4">3.4 时间加权收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-5">3.5 资金加权收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-6">3.6 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#reference">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-4/">第4章 风险</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-4" aria-label="展开第4章 风险二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-4" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-1">4.1 风险-收益权衡</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-2">4.2 单个证券风险</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-3">4.3 投资组合风险</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-4">4.4 风险价值 (Value-at-Risk)</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-5">4.5 期望损失</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-6">4.6 替代风险度量</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-7">4.7 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#references-2">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-5/">第5章 因子模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-5" aria-label="展开第5章 因子模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-5" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-1">5.1 资本资产定价模型（CAPM）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-2">5.2 市场模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-3">5.3 滚动窗口回归</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-4">5.4 不同参考日的Beta</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-5">5.5 Fama–French 三因子模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-6">5.6 异方差性检验</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-7">5.7 检验非正态性</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-8">5.8 自相关检验</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-9">5.9 事件研究</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-10">5.10 选择最佳回归变量</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-11">5.11 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#references-3">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-6/">第6章 风险调整后的投资组合绩效度量</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-6" aria-label="展开第6章 风险调整后的投资组合绩效度量二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-6" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-1">6.1 投资组合与基准数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-2">6.2 夏普比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-3">6.3 Roy 的安全第一比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-4">6.4 特雷诺比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-5">6.5 索提诺比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-6">6.6 信息比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-7">6.7 合并结果</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-8">6.8 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#references-4">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-7/">第7章 Markowitz均值-方差优化</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-7" aria-label="展开第7章 Markowitz均值-方差优化二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-7" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-1">7.1 两个资产：手动方法</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-2">7.2 使用二次规划的两个资产情况</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-3">7.3 使用二次规划的多资产优化</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-4">7.4 允许卖空的影响</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-5">7.5 扩展阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#references-5">参考文献</a></div></div><div class="sidebar-item is-current is-open"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-8/" aria-current="page">第8章 股票</a><button class="sidebar-toggle" type="button" aria-expanded="true" aria-controls="sidebar-sections-chapter-8" aria-label="收起第8章 股票二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-8"><a class="section-link" href="#section-8-1">8.1 公司财务</a><a class="section-link" href="#section-8-2">8.2 预测（Projections）</a><a class="section-link" href="#section-8-3">8.3 股权风险溢价</a><a class="section-link" href="#section-8-4">8.4 去杠杆化 Beta</a><a class="section-link" href="#section-8-5">8.5 敏感性分析</a><a class="section-link" href="#section-8-6">8.6 使用回归分析的相对估值</a><a class="section-link" href="#section-8-7">8.7 识别股票收益率的显著变化</a><a class="section-link" href="#section-8-8">8.8 延伸阅读</a><a class="section-link" href="#references-6">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-9/">第9章 固定收益</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-9" aria-label="展开第9章 固定收益二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-9" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-1">9.1 经济分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-2">9.2 美国国债</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-3">9.3 主成分分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-4">9.4 投资级债券利差</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-5">9.5 债券估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-6">9.6 久期与凸性</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-7">9.7 短期利率模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-8">9.8 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#references-7">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-10/">第10章 期权</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-10" aria-label="展开第10章 期权二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-10" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-1">10.1 获取期权链数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-2">10.2 Black–Scholes–Merton 期权定价模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-3">10.3 隐含波动率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-4">10.4 Cox, Ross, and Rubinstein 二叉树期权定价模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-5">10.5 美式期权定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-6">10.6 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#references-8">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-11/">第11章 模拟</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-11" aria-label="展开第11章 模拟二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-11" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-1">11.1 使用几何布朗运动模拟股票价格</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-2">11.2 模拟含股息和不含股息的股票价格</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-3">11.3 模拟具有相关价格的股票</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-4">11.4 使用模拟计算风险价值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-5">11.5 欧式期权的蒙特卡洛定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-6">11.6 使用对偶变量法的蒙特卡洛期权定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-7">11.7 奇异期权估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-8">11.8 扩展阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#references-9">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-12/">第12章 交易策略</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-12" aria-label="展开第12章 交易策略二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-12" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-1">12.1 有效市场假说</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-2">12.2 技术分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-3">12.3 构建简单交易策略</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-4">12.4 机器学习技术</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-5">12.5 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#references-10">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-a/">附录A R入门</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-appendix-a" aria-label="展开附录A R入门二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-appendix-a" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-1-installing-r">A.1 安装 R</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-2-the-r-working-directory">A.2 R 工作目录</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-3-r-console-output">A.3 R 控制台输出</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-4-r-editor">A.4 R 编辑器</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-5-packages">A.5 包</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-6-basic-commands">A.6 基本命令</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-7-the-r-workspace">A.7 R 工作空间</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-8-vectors">A.8 向量</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-9-combining-vectors">A.9 组合向量</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-10-matrices">A.10 矩阵</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-11-data-frame">A.11 data.frame</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-12-date-formats">A.12 日期格式</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-b/">附录B 预加载代码</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-c/">附录C 构建假设投资组合（月度收益率）</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-d/">附录D 构建假设投资组合（日收益率）</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/index/">索引</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <h1>第8章 股票</h1>
+<section class="book-page" data-pdf-page="238">
+<h1 id="chapter-8">第8章 股票</h1>
+<p>一项资产的价值是该资产预期产生的自由现金流（free cash flows）按适当的风险调整折现率折现后的现值（present value）。因此，进行估值的主要组成部分之一是形成对自由现金流的预测。自由现金流是指公司可以在不影响公司前景的情况下分配给资本提供者的现金流。为了得到自由现金流，我们通常从收入预测开始，并将剩余的大部分项目预测为收入的某个函数。关于预测现金流的更多细节可参见文献[10]。在本章中，我们首先在第8.1节讨论如何通过从公司的SEC（美国证券交易委员会）文件中抓取数据来获取公司的财务数据。公司的SEC文件是历史财务信息的来源。然而，股权价值基于对未来业绩的预测。因此，我们最终必须处理财务数据的预测，这将在第8.2节讨论。</p>
+<p>估值中的另一个组成部分是折现率或资本成本。如第5章所述，资本资产定价模型（CAPM）是最常用的估计权益成本（cost of equity）的模型。CAPM需要三个组成部分。第一个是无风险利率（risk-free rate），我们之前已在第5章讨论过。第二个组成部分是股权风险溢价（equity risk premium，ERP）。在第8.3节中，我们讨论一种估计ERP的方法，即使用历史数据。第三个组成部分是目标公司的beta（Beta），即股票收益率对市场收益率的敏感度。我们在第5章中讨论了如何计算beta，该beta被称为杠杆beta（levered beta），因为它包含了公司的财务杠杆。在其他条件相同的情况下，负债较多的公司风险更高。然而，我们通常需要根据平均回归期杠杆比率与目标杠杆比率之间的杠杆差异来调整beta，然后才能将其用于折现率。我们将在第8.4节展示如何做到这一点。</p>
+<p>诸如折现现金流分析之类的估值依赖于若干关键输入和假设。尽管在选择这些输入和假设时可能已经非常谨慎，但某些关键输入和假设可能存在合理的变动范围。因此，了解改变这些假设对价值的影响可能是有帮助的。在第8.5节中，我们展示如何执行简单的敏感性分析（sensitivity analysis）。</p>
+</section>
+<section class="book-page" data-pdf-page="239">
+<h2 id="section-8-1">8.1 公司财务</h2>
+<p>226 第8章 股票</p>
+<p>当我们改变DCF估值中的折现率和永续增长率假设时，敏感性分析尤为重要。</p>
+<p>另一种常见的股票估值方法是进行相对估值（relative valuation）。该方法使用可比公司的倍数来评估目标公司。例如，价格倍数（price multiple）以证券市场价格为分子，以每股收益等财务指标为分母。该倍数称为市盈率（Price-to-Earnings Ratio, P/E），是投资中最常用的倍数之一。为了确定目标公司的价值，通常从可比公司倍数范围内选取某个倍数来推断目标公司的价值。当可比公司与目标公司非常相似时，常用的选择是可比公司倍数的中位数或平均值。可比公司越接近目标公司，其中位数或平均倍数在估计目标公司价值时就越准确。然而，这一决策需要定性与定量分析相结合。在第8.6节中，我们展示如何使用回归分析，基于可比公司的倍数定量确定目标公司的倍数。这种方法更加定量化，能够在估计目标公司适当倍数时考虑可比公司之间属性差异的影响。</p>
+<p>随后，我们展示如何在R中对股票收益率数据进行检验。在第8.7.1节中，我们展示如何使用t检验统计检验两个时期的平均收益率是否相同。然后，在第8.7.2节中，我们展示如何识别数据中的断点（breakpoints），以揭示股票收益率与选定自变量之间的关系在不同时期是否发生变化。在第8.7.3节中，我们使用邹检验（Chow Test）统计检验数据结构变化。邹检验可以判断截距和贝塔（beta）是否发生变化。我们还可以单独检验贝塔的变化（即不包括截距的变化），这在第8.7.4节中完成。</p>
+<p>需要注意的是，本章的讨论并非全面详尽，而是侧重于展示与股票相关问题分析相关的定量技术示例。</p>
+<hr>
+<p>分析公司股票时，通常从公司的财务报表入手。财务报表是标准化报告，这意味着其编制和报告方式基于市场参与者普遍理解的一套规则。具体而言，公司财务报表中的绝大多数信息符合公认会计原则（Generally Accepted Accounting Principles, GAAP）或国际会计准则（International Accounting Standards, IAS）。这些准则也反映了会计和监管机构（如美国证券交易委员会）的某些立场。标准化并不意味着我们应该对这些数值照单全收，而是指我们对这些数值的计算方法有一般性的理解，并能够据此进行分析。</p>
+</section>
+<section class="book-page" data-pdf-page="240">
+  <h2 id="company-financials">8.1 公司财务</h2>
+<p>因此，我们了解净利润中包含某些一次性调整。因此，如果我们希望获得一个不包括这些一次性调整的收益数字，我们知道不能直接以净利润的面值取用，而必须对其进行调整。</p>
+<p>公司财务报表的来源有很多。对于需向美国证券交易委员会（SEC）申报的公司，我们可以使用SEC的电子门户网站EDGAR。上市公司通常提交季度报告（10-Q表格）或年度报告（10-K表格）。外国公司通常提交其半年和年度报告（20-F表格）。有时，我们也可以从公司网站或通过其他数据库获取这些定期申报文件。</p>
+<p>R中提供了能够从这些SEC申报文件中抓取信息的工具。下面，我们展示如何使用R从公司的SEC申报文件中获取关键财务指标。我们以亚马逊2019年10-K表格中“项目6：选定合并财务数据”所报告的2015年至2019年选定财务信息为例。为了高效地导入我们希望在示例中使用的信息，需要结合使用R包和对数据进行人工检查。</p>
+<p><strong>步骤1：从SEC申报文件获取财务数据</strong> 我们首先从亚马逊2019年10-K的HTML版表格中抓取数据。为此，我们需要加载tidyverse和rvest包。在第4行，我们放置亚马逊2019年10-K HTML版本的URL。操作如下：首先，前往SEC EDGAR网站（https://www.sec.gov/edgar/searchedgar/companysearch.html），在搜索框中输入“AMZN”，并在申报类型中键入“10-K”。然后我们看到第一个申报文件是于2020年1月31日提交的10-K，即亚马逊的2019年10-K。点击该链接，会打开10-K的XBRL版本。接下来，屏幕左上角的菜单有一个“以HTML形式打开”选项，我们点击它。这将带我们进入亚马逊2019年10-K的HTML版本。我们可以复制并粘贴下面的第4行中的URL。然后，我们可以使用此页面来比较下面获得的值，以确保我们捕获了正确的数字。亚马逊2019年10-K的完整URL为：https://www.sec.gov/Archives/edgar/data/1018724/000101872420000004/amzn-20191231x10k.htm。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; library(tidyverse)
+2 &gt; library(rvest)
+3 &gt; temp &lt;−
+4 + &quot;https: //www.sec.gov/Archives/edgar/data/1018724/ ... &quot;% &gt; %
+5 + read _html() %&gt;%
+6 + html _table() %&gt;%
+7 + map _df(bind_cols) %&gt;%
+8 +a s _tibble()
+9 &gt; head.tail(temp)</code></pre>
+</div>
+<pre><code># A tibble: 3 x 33
+   X1    X2    X3    X4    X5    X6    X7    X8    X9    X10   X11
+   &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+ 1 N     AN    AN    AN    AN    AN    AN    AN    AN    AN    AN   A
+ 2 N     AN    AN    AN    AN    AN    AN    AN    AN    AN    AN   A
+ 3 N     AN    AN    AN    AN    AN    AN    AN    AN    AN    AN   A</code></pre>
+</section>
+<section class="book-page" data-pdf-page="241">
+<h2>第8章 股票</h2>
+<pre>
+16 # ... with 22 more variables: X12 &lt;chr&gt;, X13 &lt;chr&gt;, X14 &lt;chr&gt;,
+17 # X15 &lt;chr&gt;, X16 &lt;chr&gt;, X17 &lt;chr&gt;, X18 &lt;chr&gt;, X19 &lt;chr&gt;, X20 &lt;chr&gt;,
+18 # X21 &lt;chr&gt;, X22 &lt;chr&gt;, X23 &lt;chr&gt;, X24 &lt;chr&gt;, X25 &lt;chr&gt;, X26 &lt;chr&gt;,
+19 # X27 &lt;chr&gt;, X28 &lt;chr&gt;, X29 &lt;chr&gt;, X30 &lt;lgl&gt;, X31 &lt;chr&gt;, X32 &lt;chr&gt;,
+20 # X33 &lt;chr&gt;
+21 # A tibble: 3 x 33
+22 X1 X2 X3 X4 X5 X6 X7 X8 X9 X10 X11
+23 &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+24 1 " " N A" "N AN AN AN AN AN AN AN A
+25 2 /s/ Wend~ NA "" NA NA NA NA NA NA NA NA
+26 3 Wendell~ NA Dire ~ NA NA NA NA NA NA NA NA
+27 # ... with 22 more variables: X12 &lt;chr&gt;, X13 &lt;chr&gt;, X14 &lt;chr&gt;,
+28 # X15 &lt;chr&gt;, X16 &lt;chr&gt;, X17 &lt;chr&gt;, X18 &lt;chr&gt;, X19 &lt;chr&gt;, X20 &lt;chr&gt;,
+29 # X21 &lt;chr&gt;, X22 &lt;chr&gt;, X23 &lt;chr&gt;, X24 &lt;chr&gt;, X25 &lt;chr&gt;, X26 &lt;chr&gt;,
+30 # X27 &lt;chr&gt;, X28 &lt;chr&gt;, X29 &lt;chr&gt;, X30 &lt;lgl&gt;, X31 &lt;chr&gt;, X32 &lt;chr&gt;,
+31 # X33 &lt;chr&gt;
+</pre>
+<p><strong>步骤2：手动识别相关行和列</strong> 虽然编写代码来识别适当的行和列很诱人，但查看底层数据要高效和简单得多。这可以通过查看 <code>temp</code> 数据集来完成。这样，我们将看到我们感兴趣的数据在行258到278（含）之间。一旦我们子集化了这些行，我们就可以查看这个更小的数据集，并看到存在多余的行和列。我们在下面的第2行中移除它们。然后，我们将列标题重命名为比X1、X2等更有意义的名称（第3行）。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; finl.data&lt;- temp[258:278, ]
+2 &gt; finl.data&lt;- finl.data[-c(1:4, 10, 13, 15:19), c(1, 4, 8, 12, 16, 20)]
+3 &gt; names(finl.data)&lt;- c(&quot;Metric&quot;,2015, 2016, 2017, 2018,2019)
+4 &gt; head(finl.data , 3)</code></pre>
+</div>
+<pre>
+5 # A tibble:3x6
+6 Metric ‘2015‘ ‘2016‘ ‘2017‘ ‘2018‘ ‘2019‘
+7 &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+8 1 Net sales 107,006 135,987 177,866 232,887 280,522
+9 2 Operating income 2,233 4,186 4,106 12,421 14,541
+10 3 Net income (loss) 596 2 ,371 3,033 10,073 11,588
+</pre>
+<p><strong>步骤3：清理数据集名称和值</strong> 如上所示，Metric值有时很长，因此我们可能希望缩短它们，使其看起来更美观，但我们必须注意保持足够的细节，以便理解这些行项目是什么。我们在第1到6行中执行此操作。接下来，我们还注意到，2015到2019列下的值被R读取为字符，因此我们需要将它们改为数字。这样我们才能对它们进行处理。我们在第7到11行中执行此操作。我们使用 <code>gsub()</code> 从字符值中删除逗号，然后使用 <code>as.numeric()</code> 将这些值转换为数值。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; finl.data[4, 1]&lt;- &quot;Basic EPS&quot;
+2 &gt; finl.data[5, 1]&lt;- &quot;Diluted EPS&quot;
+3 &gt; finl.data[6, 1]&lt;- &quot;Wtd avg shares- Basic&quot;
+4 &gt; finl.data[7, 1]&lt;- &quot;wtd avg shares- Diulted&quot;
+5 &gt; finl.data[8, 1]&lt;- &quot;CF fromoperations&quot;</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="242">
+  <p>8.1 公司财务 229</p>
+<div class="r-code-block" id="1">
+  <pre><code class="language-r">6 &gt; finl.data[10, 1]&lt;- &quot;LT obligations&quot;
+7 &gt; finl.data$&quot;2015&quot;&lt;- as.numeric(gsub(&quot;,&quot;, &quot;&quot;, finl.data$&quot;2015&quot;))
+8 &gt; finl.data$&quot;2016&quot;&lt;- as.numeric(gsub(&quot;,&quot;, &quot;&quot;, finl.data$&quot;2016&quot;))
+9 &gt; finl.data$&quot;2017&quot;&lt;- as.numeric(gsub(&quot;,&quot;, &quot;&quot;, finl.data$&quot;2017&quot;))
+10 &gt; finl.data$&quot;2018&quot;&lt;- as.numeric(gsub(&quot;,&quot;, &quot;&quot;, finl.data$&quot;2018&quot;))
+11 &gt; finl.data$&quot;2019&quot;&lt;- as.numeric(gsub(&quot;,&quot;, &quot;&quot;, finl.data$&quot;2019&quot;))
+12 &gt; finl.data
+13 # A tibble: 10 x 6
+14 Metric &#x27;2015&#x27; &#x27;2016&#x27; &#x27;2017&#x27; &#x27;2018&#x27; &#x27;2019&#x27;
+15 &lt;chr&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+16 1 Net sales 107006 135987 177866 232887 280522
+17 2 Operating income 2233 4186 4106 12421 14541
+18 3 Net income (loss) 596 2371 3033 10073 11588
+19 4 Basic EPS 1.28 5.01 6.32 20.7 23.5
+20 5 Diluted EPS 1.25 4.9 6.15 20.1 23.0
+21 6 Wtd avg shares- Basic 467 474 480 487 494
+22 7 wtd avg shares- Diulted 477 484 493 500 504
+23 8 CF from operations 11909 17203 18365 30723 38514
+24 9 Total assets 64747 83402 131310 162648 225248
+25 10 LT obligations 17477 20301 45718 50708 75376</code></pre>
+</div>
+<p><strong>步骤4：转换为数据框</strong> 通过将数据集转换为数据框，可以改进 <code>finl.data</code> 的格式。上面的输出显示，值在小数点处对齐，无论小数点是显式还是隐式。下面的输出显示，作为数据框对象，输出在小数点处包含两个零，这是我们在呈现此类数据时常见的格式，并且一切再次看起来对齐了。</p>
+<div class="r-code-block" id="2">
+  <pre><code class="language-r">1 &gt; df.finl&lt;- data.frame(finl.data)
+2 &gt; str(df.finl)
+3 &#x27;data.frame&#x27;: 10obs. of 6 variables:
+4 $ Metric: chr &quot;Net sales&quot; &quot;Operating income&quot; &quot;Netincome (loss)&quot; ...
+5 $ X2015 : num 1.07e+05 2.23e+03 5.96e+02 1.28 1.25 ...
+6 $ X2016 : num 1.36e+05 4.19e+03 2.37e+03 5.01 4.90 ...
+7 $ X2017 : num 1.78e+05 4.11e+03 3.03e+03 6.32 6.15 ...
+8 $ X2018 : num 232887 12421 10073 20.7 20.1 ...
+9 $ X2019 : num 280522 14541 11588 23.5 23 ...
+10 &gt; df.finl
+11 Metric X2015 X2016 X2017 X2018 X2019
+12 1 Net sales 107006.00 135987.00 177866.00 232887.00 280522.00
+13 2 Operating income 2233.00 4186.00 4106.00 12421.00 14541.00
+14 3 Net income (loss) 596.00 2371.00 3033.00 10073.00 11588.00
+15 4 Basic EPS 1.28 5.01 6.32 20.68 23.46
+16 5 Diluted EPS 1.25 4.90 6.15 20.14 23.01
+17 6 Wtd avg shares - Basic 467.00 474.00 480.00 487.00 494.00
+18 7 wtd avg shares- Diulted 477.00 484.00 493.00 500.00 504.00
+19 8 CF from operations 11909.00 17203.00 18365.00 30723.00 38514.00
+20 9 Total assets 64747.00 83402.00 131310.00 162648.00 225248.00
+21 10 LT obligations 17477.00 20301.00 45718.00 50708.00 75376.00</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="243">
+<p>21 10 LT obligations 17477.00 20301.00 45718.00 50708.00 75376.00</p>
+<p>现在我们已经将这些数据转换到 R 中，就可以进行任何想要的分析了。例如，如果我们想用条形图展示 Amazon 的历史销售额，可以将销售数据提取为矩阵。在这个例子中，我们将数字除以 1000 以便于阅读。由于数字原本以百万美元为单位，调整后我们报告的值就是十亿美元。也就是说，2019 年的销售额为 2810 亿美元。第 13 和 14 行将数值添加到条形顶部。添加到 y 的 20 是通过试错确定的——数字越大，文本位置越高。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; (sales&lt;− as.matrix(round((df.finl[1, 2:6])/1000, 0)))
+2 X2015 X2016 X2017 X2018 X2019
+3 1 107 136 178 233 281
+4 &gt;
+5 &gt;x &lt;− barplot(sales ,
+6 + names.arg = seq(2015,2019, 1),
+7 + ylim = c(0, 350),
+8 + ylab = &quot;Net sales (bln)&quot;,
+9 + col = &quot;blue&quot;,
+10 + border = 0,
+11 + main = &quot;AMZN Net Sales , 2015− 2019&quot;)
+12 &gt;
+13 &gt;y &lt;− as.matrix(sales)
+14 &gt; text(x, y + 20, labels = as.character(y))</code></pre>
+</div>
+<p>上述代码的输出如图 8.1 所示。如图所示，Amazon 的销售额从 2015 年的 1070 亿美元增长到 2019 年的 2810 亿美元。</p>
+<h2 id="section-8-2">8.2 预测（Projections）</h2>
+<p>股东关注公司未来预期产生的自由现金流（free cash flows）。“自由”一词指的是公司可以在不影响运营的情况下分配的资金。出于估值目的，我们希望使用足够长期的预测，使得在预测的最后一年，公司被认为处于稳态（steady state）。在稳态下，公司销售额以可持续增长率（sustainable rate）增长，利润率（margins）相对稳定，并且能够从利润中再投资（reinvest）以自融资（self-finance）业务增长（即无需外部融资）。</p>
+<p>公司达到稳态所需的时间应逐例确定。例如，成熟公司可能已经处于稳态，而早期阶段的公司可能需要 10-15 年才能达到稳态（假设它最终能达到）。根据经验，我们通常看到的预测范围一般为 5 到 15 年。有些公司不做预测，而有些公司只做 1-3 年的预测。</p>
+</section>
+<section class="book-page" data-pdf-page="244">
+  <h2>8.2 预测</h2>
+<figure class="book-figure" id="fig-8.1"><img src="/assets/img/analyzing-financial-data-r-cn/figure-a8c67de25661.png" alt="图8.1 亚马逊2015年至2019年的历史销售额">
+    <figcaption>图8.1 亚马逊2015年至2019年的历史销售额。来源：亚马逊2019年10-K</figcaption>
+  </figure>
+<p>预测的准确性随着预测时间跨度的增加而降低。直观上，这是因为我们越往远期看，可见性越低，且预测误差会累积。因此，更详细的预测通常在预测期的头几年更有用。而对于预测期的较后年份，基于关键价值驱动因素演变的更一般模型更为合适。换句话说，当预测误差很大时，更详细的模型在较后年份能带来的好处并不明确。</p>
+<p>制定预测的一种常见方法是预测未来收入，然后将其余大多数项目作为收入的某种函数来估算。例如，如果毛利率在时间上相对于收入保持相对恒定的百分比，那么预测的毛利率可以使用适当的毛利率百分比乘以预测收入来估算。为了便于下面的说明，我们将以收入预测为例。</p>
+</section>
+<section class="book-page" data-pdf-page="245">
+  <h2>232 第8章 股票</h2>
+<h3>8.2.1 基于历史趋势的预测</h3>
+<p>一种简单的预测方法是利用公司的历史趋势。如果存在明显的趋势且该趋势预期会持续，这种方法尤其有用。以一个真实公司为例，我们查看 Barnes & Noble 的历史销售额。从 Barnes & Noble 的 10-K 报告中，我们可以获得该公司 2012 至 2019 财年的销售额数据。注意，Barnes & Noble 的财年结束于每年四月的最后一个星期六（例如，2018 年 4 月 28 日，2019 年 4 月 27 日等）。我们仅使用 2012 年之后的数据，因为对数据的审查表明，2012 年之前的数据与后期数据不可比。有些数据库可以简化这一步骤，但我们通过访问 SEC 网站来获取数据。然后使用 <code>c()</code> 手动输入销售额数据。</p>
+<div class="r-code-block" id="1">
+  <pre><code class="language-r">1 &gt; (sales&lt;- c(5385.537, 5075.761, 4633.345, 4297.108, 4163.844,
+2 + 3894.558, 3662.280,3552.745))
+3 [1] 5385.537 5075.761 4633.345 4297.108 4163.844 3894.558 3662.280 3552.745</code></pre>
+</div>
+<p>除了上述手动输入之外，我们还可以从包含历史数据的网页中抓取这些数据。这些表格的格式略有不同，因此我们可以使用与前一节不同的方法来抓取这些表格中的数据。</p>
+<p><strong>步骤 1：获取历史销售额数据</strong>  我们需要从两个网页获取 2012 至 2019 年的销售额数据。第一个 URL 是 https://www.sec.gov/Archives/edgar/data/890491/000119312519176078/d703316dex131.htm。第二个 URL 是 https://www.sec.gov/Archives/edgar/data/890491/000119312516630221/d179245dex131.htm。请务必将下面的 <code>url1</code> 和 <code>url2</code> 替换为完整的 URL。第一个 URL 提供 2015 至 2019 财年的数据，但按时间倒序排列（即 3,552,745 美元是 2019 年的销售额数据）。第二个 URL 提供 2012 至 2016 财年的数据。第 8 行和第 18 行删除了数字中的逗号，以便 R 能够将这些条目转换为数值。</p>
+<div class="r-code-block" id="2">
+  <pre><code class="language-r">1 &gt; url1 &lt;- &quot;https://www.sec.gov/Archives/edgar/data/890491/ ...&quot;
+2 &gt; barnes1&lt;- html_session(url1) %&gt;%
+3 + html _node(&quot;table&quot;) %&gt;%
+4 + html _table()
+5 &gt; (barnes1&lt;- barnes1[9, c(4, 8, 12, 16, 20)])
+6 X4 X8 X12 X16 X20
+7 9 3,552,745 3,662,280 3,894,558 4,163,844 4,297,108
+8 &gt; (sales1&lt;- as.numeric(gsub(&quot;,&quot;, &quot;&quot;, barnes1)))
+9 [1] 3552745 3662280 3894558 4163844 4297108
+10 &gt;
+11 &gt; url2 &lt;- &quot;https://www.sec.gov/Archives/edgar/data/890491/ ...&quot;
+12 &gt; barnes2&lt;- html_session(url2) %&gt;%
+13 + html _node(&quot;table&quot;) %&gt;%
+14 + html _table()
+15 &gt; (barnes2&lt;- barnes2[9, c(4, 8, 12, 16, 20)])
+16 X4 X8 X12 X16 X20
+17 9 4,163,844 4,297,108 4,633,345 5,075,761 5,385,537
+18 &gt; (sales2&lt;- as.numeric(gsub(&quot;,&quot;, &quot;&quot;, barnes2)))</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="246">
+  <h3>8.2 预测 233</h3>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">19 [1] 4163844 4297108 4633345 5075761 5385537</code></pre>
+</div>
+<p><strong>步骤2：建立绘图数据集</strong> 我们可以快速视觉化查看 Barnes & Noble 数据的样子。在这样做之前，我们需要将数据整理成合适的形状。在后续分析中，我们需要以百万为单位的数据，因此我们首先在行1中创建了一个以百万计量的销售额变量。由于存在重叠数据，我们删除了 sales2 数据集的前两列，这些列是重叠的 2015 和 2016 财年。在与 year 中的年份数据合并后，从行5的输出可以看出，销售额数据是按时间倒序排列的。因此，我们使用 order() 对数据进行排序。最后，为了绘图，我们将销售额数据转换为十亿单位。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; (sales&lt;− c(sales1 ,sales2 [−c(1:2)])/ 1000)
+2 [1] 3552.745 3662.280 3894.558 4163.844 4297.108 4633.345 5075.761 5385.537
+3 &gt; (year &lt;− seq(2019, 2012,−1))
+4 [1] 2019 2018 2017 2016 2015 2014 2013 2012
+5 &gt; (sales&lt;− data.frame(year ,sales))
+6   year sales
+7 1 2019 3552.745
+8 2 2018 3662.280
+9 3 2017 3894.558
+10 4 2016 4163.844
+11 5 2015 4297.108
+12 6 2014 4633.345
+13 7 2013 5075.761
+14 8 2012 5385.537
+15 &gt; (sales&lt;− sales[order(year), ])
+16   year sales
+17 8 2012 5385.537
+18 7 2013 5075.761
+19 6 2014 4633.345
+20 5 2015 4297.108
+21 4 2016 4163.844
+22 3 2017 3894.558
+23 2 2018 3662.280
+24 1 2019 3552.745
+25 &gt;
+26 &gt; (sales.plot&lt;− round(sales$sales/ 1000, 1))
+27 [1] 5.4 5.1 4.6 4.3 4.2 3.9 3.7 3.6</code></pre>
+</div>
+<p>在上述操作中，我们删除了重叠数据。然而，重叠数据可以帮助我们检查合并的值是否一致。这里，重叠时期的值完全相同，这让我们确信我们使用的是相同的数据，并且可以自信地合并两段收入流。</p>
+<p><strong>步骤4：绘制销售数据图</strong> 通过绘制如图8.2所示的简单条形图，我们可以看到 Barnes & Noble 的销售额呈现下降趋势。这在意料之中，因为近年来，实体书店（尤其是 Barnes & Noble）受到了在线图书零售商/书店（即 Amazon）增长的冲击。因此，如果我们基于这段历史数据预测未来五年的销售额，……</p>
+</section>
+<section class="book-page" data-pdf-page="247">
+  <p>234 第8章 股票</p>
+<figure class="book-figure" id="fig-8.2"><img src="/assets/img/analyzing-financial-data-r-cn/figure-188169df9ba5.png" alt="Barnes & Noble 的历史销售额">
+    <figcaption id="caption-0030">图 8.2 Barnes & Noble 的历史销售额。该图显示了 Barnes & Noble 2012 至 2019 财年的历史销售额。数据来源：Barnes & Noble 向 SEC 提交的文件。</figcaption>
+  </figure>
+<p>趋势来看，我们可以预期 Barnes & Noble 的销售额将继续这种下降趋势。量化这种未来下降趋势的一种方法是通过回归分析。下面我们通过一个例子来说明如何实现这种方法。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt;x &lt;− barplot(sales.plot ,
++ ylim = c(0, 6),
++ ylab = &quot;Sales ( $ blns)&quot;,
++ col = &quot;blue&quot;,
++ border = 0,
++ names.arg = seq(2012,2019, 1),
++ main = &quot;Barnes &amp; NobleSales ,2012−−2019&quot;)
+&gt;
+&gt;y &lt;− as.matrix(sales.plot)
+&gt; text(x, y + 0.30, labels = as.character(y))</code></pre>
+</div>
+<p>第5步：创建包含历史销售额和趋势变量的数据集。我们从公司的 SEC 文件中获取 Barnes & Noble 的历史销售额数据。我们获得 2012 至 2019 财年的数据。我们将预测未来 5 年（即 2020 至 2024 财年）；因此，我们需要在 hist.sales 末尾添加五个额外的观测值。</p>
+</section>
+<section class="book-page" data-pdf-page="248">
+<h2>8.2 预测</h2>
+<p>我们使用 rep() 来创建变量。rep() 的第一个参数是我们希望重复的值，第二个参数是重复的次数。在此例中，我们告诉 R 将零重复 5 次。接下来，我们创建了趋势变量，其取值为 1, 2, 3, 直到 13。为此，我们使用了 seq()。然后，我们使用 cbind() 将两个向量合并，并使用 data.frame() 将对象转换为数据框。</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">1 &gt; (hist.sales&lt;- c(5385.537, 5075.761, 4633.345, 4297.108,
+2 + 4163.844, 3894.558, 3662.280, 3552.745, rep(0, 5)))
+3 [1] 5385.537 5075.761 4633.345 4297.108 4163.844 3894.558 3662.280 3552.745
+4 [9] 0.000 0.000 0.000 0.000 0.000
+5 &gt; (trend&lt;- seq(1, 13, 1))
+6 [ 1 ]123456789 1 0 1 1 1 2 1 3
+7 &gt; reg.data&lt;- data.frame(cbind(hist.sales ,trend))
+8 &gt; reg.data
+9 hist.sales trend
+10 1 5385.537 1
+11 2 5075.761 2
+12 3 4633.345 3
+13 4 4297.108 4
+14 5 4163.844 5
+15 6 3894.558 6
+16 7 3662.280 7
+17 8 3552.745 8
+18 9 0.000 9
+19 10 0.000 10
+20 11 0.000 11
+21 12 0.000 12
+22 13 0.000 13</code></pre>
+</div>
+<p><strong>第6步：将历史数据对趋势变量进行回归</strong> 在此步骤中，我们只想使用 2012 至 2019 财年的数据。因此，我们只需要 reg.data 的前八个观测值。我们使用 lm() 运行回归，为了子集化 reg.data，我们在逗号右侧添加方括号 [1:8, ]。正如我们预期的那样，回归结果显示趋势变量的系数为负。此外，截距和趋势均统计显著，p 值非常小。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">1 &gt; hist.reg&lt;- lm(hist.sales~ trend , data = reg.data[1:8, ])
+2 &gt; summary(hist.reg)
+3
+4 Call:
+5 lm(formula =hist.sales~ trend , data = reg.data[1:8, ])
+6
+7 Residuals:
+8 Min 1Q Median 3Q Max
+9 −168.46 −55.26 −22.82 91.75 146.54
+10
+11 Coefficients:
+12 Estimate Std. Error tvalue Pr(&gt;|t|)
+13 (Intercept)5524.93 92.55 59.70 1.48e−09 ∗∗∗
+14 trend −264.84 18.33 −14.456.88e−06 ∗∗∗</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="249">
+<p>236 第8章 股票</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">15 −−−
+16 Signif. codes: 0 ‘∗∗∗’ 0.001 ‘∗∗’ 0.01 ‘∗’ 0.05 ‘.’ 0.1 ‘ ’ 1
+18 Residual standard error: 118.8on 6 degrees of freedom
+19 Multiple R−squared: 0.9721,Adjusted R−squared: 0.9674
+20 F−statistic:208.8 on 1 and 6 DF, p −value: 6.88e−06</code></pre>
+</div>
+<p>步骤7：预测2020至2024财年的销售额。然后我们使用<code>predict()</code>函数来预测未来5年的销售额。<code>predict()</code>函数需要两个参数：第一，上一步的回归输出<code>hist.reg</code>；第二，用于预测的数据，即<code>reg.data</code>中的第9到第13个观测值。要使用<code>predict()</code>，第二个数据集必须拥有与回归所用数据相同的变量。因此，通过取回归所用数据的一个子集，我们确保使用的数据集具有相同的变量。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; (proj.sales&lt;− predict(hist.reg, reg.data[9:13, ]))
+2 91 01 11 21 3
+3 3141.367 2876.526 2611.686 2346.846 2082.006</code></pre>
+</div>
+<p>步骤8：绘制历史与预测销售额。在我们的示例中，很容易看出预测期内的趋势也是负的。第一年（2020财年）的预测销售额为31亿美元，而最后一年（2024财年）的预测销售额为21亿美元。然而，通过可视化来观察可能更容易且更有说服力。在能够创建历史与预测销售额的条形图之前，我们首先需要进行一些数据处理。我们首先在<code>proj.sales</code>前面添加8个0。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; proj.sales&lt;− c(rep(0, 8), proj.sales)
+2 &gt; names(proj.sales)&lt;− seq(2012, 2024, 1)
+3 &gt; proj.sales
+4 2012 2013 2014 2015 2016 2017 2018 2019
+5 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000
+6 2020 2021 2022 2023 2024
+7 3141.367 2876.526 2611.686 2346.846 2082.006</code></pre>
+</div>
+<p>然后我们创建一个新的数据集<code>forecast</code>，它堆叠了行向量<code>hist.sales</code>和<code>proj.sales</code>。我们将销售额除以1000，将其从百万转换为十亿。我们还重命名列以使输出更易于理解。</p>
+<div class="r-code-block" id="code-4">
+  <pre><code class="language-r">1 &gt; forecast&lt;− rbind(hist.sales , proj.sales)/ 1000
+2 &gt; colnames(forecast)&lt;− seq(2012, 2024, 1)
+3 &gt; forecast
+4 2012 2013 2014 2015 2016 2017 2018
+5 hist.sales5.385537 5.075761 4.633345 4.297108 4.163844 3.894558 3.66228
+6 proj.sales0.000000 0.000000 0.000000 0.000000 0.000000 0.000000 0.00000
+7 2019 2020 2021 2022 2023 2024
+8 hist.sales3.552745 0.000000 0.000000 0.000000 0.000000 0.000000
+9 proj.sales0.000000 3.141367 2.876526 2.611686 2.346846 2.082006</code></pre>
+</div>
+<p>接下来，我们使用<code>barplot()</code>来绘制历史与预测数据的图表。第4行中的y轴范围在图表顶部提供了额外空间，以便在柱状图顶部添加数据标签。要添加柱状图顶部的数据标签，我们首先</p>
+</section>
+<section class="book-page" data-pdf-page="250">
+  <h3 id="projections">8.2 预测</h3>
+<figure class="book-figure" id="fig-8.3"><img src="/assets/img/analyzing-financial-data-r-cn/figure-11f5cfa11eb1.png" alt="图8.3 Barnes & Noble的历史销售额和预测销售额">
+    <figcaption>图8.3 Barnes & Noble的历史销售额和预测销售额。该图显示了Barnes & Noble在FY2012至FY2019的历史销售额。该图还显示了基于历史销售趋势的FY2020至FY2024的预测销售额。来源：Barnes & Noble的SEC文件及作者计算。</figcaption>
+  </figure>
+<p>创建一个组合数据集，将历史销售额和预测销售额合并为一行，使用第10行中的<code>colSums()</code>。然后，同样在第10行中，我们使用<code>round()</code>只显示一位小数。这随后在第14行中使用。在第15行中，我们在y轴位置添加了额外的0.4（即4亿美元），将数据标签向上移动。否则，数据标签将太靠近条形顶部。额外的0.4是通过试错法得到的。根据我们对数据标签位置的偏好，可以使用不同的值。图表输出如图8.3所示。</p>
+<div class="r-code-block" id="code-250-1">
+  <pre><code class="language-r">&gt;x &lt;− barplot(forecast ,
++ xlab = &quot;&quot;,
++ ylab = &quot;Sales (billions)&quot;,
++ ylim = c(0, 6),
++ col = c(&quot;blue&quot;, &quot;red&quot;),
++ border = 0,
++ main = &quot;Barnes &amp; NobleHistoricalSales and
++ Projected Sales Based onHistoricalSales Trend&quot;)
+&gt; (combo&lt;− round(colSums(forecast), 1))</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="251">
+<p>238 第8章 股票</p>
+<pre>11 2012 2013 2014 2015 2016 2017 2018 2019 2020 2021 2022 2023 2024
+12 5.4 5.1 4.6 4.3 4.2 3.9 3.7 3.6 3.1 2.9 2.6 2.3 2.1</pre>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt;
+&gt;y &lt;- as.matrix(combo)
+&gt; text(x, y + 0.4, labels = as.character(y))</code></pre>
+</div>
+<p>为一家公司编制预测不仅需要分析师的训练，还需要对业务的了解。因此，在没有支持的情况下，仅仅像我们上面那样跟随趋势，所得的预测可能不可靠。上述内容仅旨在说明如何使用历史趋势来预测一家公司的销售额。话虽如此，上述预测并非Barnes & Noble公司2020至2024财年的实际预测。</p>
+<h2>8.2.2 分析第三方编制的预测</h2>
+<p>编制我们自己预测的另一种选择是使用公司或第三方（如顾问、分析师等）编制的预测，前提是这些预测可用且我们能接触到。出于说明目的，我们还可以使用公司编制的Barnes & Noble 2020至2024财年销售额的实际预测。这些预测在Barnes & Noble于2019年7月26日提交的SEC Schedule 14D-9中报告。无论预测是由公司还是其他第三方编制，我们分析这些预测以更好地理解其内容都是合理的。</p>
+<p>尽管与自行编制预测相比，理解第三方做出的预测不需要同样多的业务知识，但我们仍然需要对业务有相当的理解，才能对所采用的各种趋势和假设做出可靠的决策和判断。例如，我们需要理解价值来源。我们需要对公司的竞争优势有所了解，以判断公司产品或服务是否产生了需求。我们需要对行业动态有所了解。对于所分析的公司，我们需要了解其业务的具体内容会因公司而异。</p>
+<p>然而，我们可以进行一些测试来帮助我们提出正确的问题。我们可以做的一件事是分析预测是否与历史趋势一致。在进行更复杂的分析之前，简单的预测图表可以让我们对预期有一个良好的感觉。</p>
+<p>步骤1：获取预测数据 我们可以使用<code>c()</code>手动输入预测，或者从包含数据的网页中抓取数据。我们在此展示如何执行后者。Barnes & Noble预测数据的完整URL是https://www.sec.gov/Archives/edgar/data/890491/000119312519203182/d770574dsc14d9a.htm。请确保在下面第1行中使用该URL。第3至7行使用</p>
+</section>
+<section class="book-page" data-pdf-page="252">
+<h2>8.2 预测</h2>
+<p>我们使用本章开头的相同代码从Amazon的10-K中抓取数据。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; url.proj&lt;− &quot;https://www.sec.gov/Archives/edgar/data/890491/...&quot;
+2 &gt;
+3 &gt; barnes.proj&lt;− url.proj %&gt;%
+4 + read _html() %&gt;%
+5 + html _table() %&gt;%
+6 + map _df(bind_cols) %&gt;%
+7 +a s _tibble()
+8 &gt; (barnes.proj&lt;− barnes.proj[9, c(4, 8, 12, 16, 20)])
+9 # A tibble:1x5
+10 X4 X8 X12 X16 X20
+11 &lt;chr &gt; &lt;chr &gt; &lt;chr &gt; &lt;chr &gt; &lt;chr &gt;
+12 1 3,475,850 3,555,666 3,657,419 3,772,115 3,909,922
+13 &gt; (barnes.proj&lt;− as.numeric(gsub(&quot;,&quot;, &quot;&quot;, barnes.proj))/ 1000)
+14 [1] 3475.850 3555.666 3657.419 3772.115 3909.922</code></pre>
+</div>
+<p>步骤2：设置图表数据 我们将创建一个堆叠条形图，因此我们需要创建两个数据序列：历史销售额和预测销售额。对于历史销售额数据，我们需要它在2012年至2019年有实际值，而在2020年至2024年为零。对于预测销售额数据，我们需要它在2012年至2019年为零，在2020年至2024年为预测值。我们在下面的第1行和第3行实现这些。在第3行中，我们将barnes中的值除以1000，将其从百万转换为十亿，以便绘图。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; hist &lt;− c(sales$sales , rep(0, 5))
+2 &gt; proj &lt;− c(rep(0, 8), barnes.proj)
+3 &gt; barnes&lt;− rbind(hist ,proj)/ 1000
+4 &gt; colnames(barnes)&lt;− seq(2012, 2024, 1)
+5 &gt; barnes[, 1:6]
+6 2012 2013 2014 2015 2016 2017
+7 hist5.385537 5.075761 4.633345 4.297108 4.163844 3.894558
+8 proj0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+9 &gt; barnes[, 7:13]
+10 2018 2019 2020 2021 2022 2023 2024
+11 hist 3.662283.552745 0.00000 0.000000 0.000000 0.000000 0.000000
+12 proj 0.000000.000000 3.47585 3.555666 3.657419 3.772115 3.909922</code></pre>
+</div>
+<p>步骤3：绘制数据 基于上述数据设置，一个堆叠条形图（即barplot()的默认设置），我们只需在第1行输入barnes。这将堆叠我们创建的两个数据序列，但每个序列仅在相应时期有非零值。这也简化了代码，因为R将为每个序列创建两种不同的颜色。在第5行中，我们将历史数据着色为蓝色条，预测数据着色为红色条。然后我们使用与上面相同的技术向条形图添加数据标签。此代码的输出是图8.4。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt;x &lt;− barplot(barnes ,
+2 + xlab = &quot;&quot;,
+3 + ylab = &quot;Sales (billions)&quot;,
+4 + ylim = c(0, 6),</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="253">
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; + col = c(&quot;blue&quot;, &quot;red&quot;),
+&gt; + border = 0,
+&gt; + names.arg = seq(2012,2024, 1),
+&gt; + main = &quot;Barnes &amp; NobleHistoricalSales and
+&gt; + Projected Sales Based onCompany Projections&quot;)
+&gt; &gt;
+&gt; &gt; (combo&lt;− round(colSums(barnes), 1))
+&gt; 2012 2013 2014 2015 2016 2017 2018 2019 2020 2021 2022 2023 2024
+&gt; 5.4 5.1 4.6 4.3 4.2 3.9 3.7 3.6 3.5 3.6 3.7 3.8 3.9
+&gt; &gt;
+&gt; &gt;y &lt;− as.matrix(combo)
+&gt; &gt; text(x, y + 0.4, labels = as.character(y))</code></pre>
+</div>
+<p>如图8.4所示，历史收入呈下降趋势，但公司似乎认为在2020至2024财年这一下降趋势将发生逆转。尽管2020财年略低于2019财年，但灰色条形图向上倾斜。实际上，公司预测销售额将从2020财年的35亿美元增长12.5%，到2024财年达到39亿美元。历史数据中的一个中断</p>
+<figure class="book-figure" id="fig-8.4"><img src="/assets/img/analyzing-financial-data-r-cn/figure-86914659a80e.png" alt="图8.4 Barnes & Noble的历史销售额和公司预测销售额">
+<figcaption>图8.4 Barnes & Noble的历史销售额和公司预测销售额。该图显示了Barnes & Noble在2012至2019财年的历史销售额。该图还显示了公司对2020至2024财年的预测销售额。资料来源：Barnes & Noble的SEC文件。</figcaption>
+</figure>
+</section>
+<section class="book-page" data-pdf-page="254">
+<h2>8.2 预测 241</h2>
+<p>趋势逆转并非完全不可能，但它有助于我们制定研究任务，例如判断是否存在此类逆转的合理性以及逆转的可能性。</p>
+<h3>8.2.3 分析预测中的隐含增长率</h3>
+<p>我们还可以比较预测期内的平均增长率与历史数据的平均增长率。常用的平均方法有两种：几何平均数（geometric average）和算术平均数（arithmetic average）。我们首先讨论几何平均数。几何平均数也称为复合年增长率（compound annual growth rate，CAGR），它将多年增长率转换为一个等效的年增长率。我们首先创建一个名为 <code>data</code> 的数据集，其中包含 Barnes & Noble 的历史销售数据和预测销售数据。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; data &lt;- data.frame(cbind(seq(2012,2024, 1),company))
+2 &gt; names(data)&lt;- c(&quot;Year&quot;, &quot;Sales&quot;)
+3 &gt; data
+4 Year Sales
+5 1 2012 5385.537
+6 2 2013 5075.761
+7 3 2014 4633.345
+8 4 2015 4297.108
+9 5 2016 4163.844
+10 6 2017 3894.558
+11 7 2018 3662.280
+12 8 2019 3552.745
+13 9 2020 3475.850
+14 10 2021 3555.666
+15 11 2022 3657.419
+16 12 2023 3772.115
+17 13 2024 3909.922</code></pre>
+</div>
+<p>预测期是从 2020 财年到 2024 财年。因此，要基于预测水平计算增长率，我们需要查看从 2019 财年的 35.5 亿美元水平到 2024 财年的 39.1 亿美元水平的变化。数学上，5 年期 CAGR（即几何平均数）的计算如下：</p>
+
+\[
+\text{CAGR} = \left( \frac{\$3.91}{\$3.55} \right)^{1/5} - 1. \tag{8.1}
+\]
+
+<p>如我们所见，这 5 年期间的 CAGR 为 1.9%。我们可以对 7 年的历史销售期进行类似计算。按照同样的计算方法，历史销售的 CAGR 为 -5.8%。这意味着，在历史期间内，销售额平均每年下降 5.8%，但预测期内销售额预计每年增长 1.9%。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; (proj.cagr&lt;- (data$Sales[13]/ data$Sales[8])^(1/5) - 1)
+2 [1] 0.01934409
+3 &gt; (hist.cagr&lt;- (data$Sales[8]/ data$Sales[1])^(1/7) -1)
+4 [1]-0.05769669</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="255">
+
+<p>242 第8章 股票</p>
+<p>另外，我们也可以使用算术平均。我们首先需要计算年度增长率，即计算从某一年到下一年的百分比变化。我们可以使用<code>Delt()</code>函数来计算这个百分比变化。我们将增长数据集从FY 2013开始，因为我们使用FY 2012的销售额水平来计算从FY 2012到FY 2013的增长率。由于我们没有FY 2011的数据，因此<code>Growth</code>将等于<code>NA</code>。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; growth&lt;− Delt(data$Sales)
+2 &gt; growth&lt;− growth[−1, ]
+3 &gt; growth&lt;− data.frame(cbind(seq(2013,2024, 1),growth))
+4 &gt; names(growth)&lt;− c(&quot;Year&quot;, &quot;Growth&quot;)
+5 &gt; growth
+6 Year Growth
+7 1 2013 −0.05751998
+8 2 2014 −0.08716250
+9 3 2015 −0.07256895
+10 4 2016 −0.03101249
+11 5 2017 −0.06467245
+12 6 2018 −0.05964168
+13 7 2019 −0.02990896
+14 8 2020 −0.02164383
+15 9 2021 0.02296302
+16 10 2022 0.02861714
+17 11 2023 0.03135982
+18 12 2024 0.03653309</code></pre>
+</div>
+<p>然后我们可以使用<code>mean()</code>计算增长率的算术平均。从上文可知，历史期间的年度增长率在第1行到第7行（第7–13行），预测期间的年度增长率在第8行到第12行（第14–18行）。我们发现历史期间的算术平均增长率为−5.75%，预测期间为1.96%。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; (hist.arith&lt;− mean(growth[1:7, 2]))
+2 [1]−0.05749815
+3 &gt; (proj.arith&lt;− mean(growth[8:12, 2]))
+4 [1] 0.01956585</code></pre>
+</div>
+<p>现在，我们可以将计算得到的几何平均增长率和算术平均增长率结合起来，以便轻松比较。如下所示，使用两种方法计算的增长率结果相近。从这个结果中可以得出的一个启示是，预期的增长率转变大约为8%（即从历史期间年增长率约−5.7%转变为预测期间年增长率约1.9%）。尽管这种转变可能发生，但我们仍需评估，基于公司当时的事实和前景，年度增长率8%的转变是否合理。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; growth.summary&lt;- rbind(cbind(proj.cagr ,hist.cagr),
+2 + cbind(proj. arith , hist.arith))
+3 &gt; colnames(growth.summary)&lt;- c(&quot;Projected&quot;, &quot;Historical&quot;)
+4 &gt; rownames(growth.summary)&lt;- c(&quot;CAGR&quot;, &quot;Arithmetic&quot;)
+5 &gt; growth.summary</code></pre>
+</div>
+
+</section>
+<section class="book-page" data-pdf-page="256">
+  <h2 id="section-8-2">8.2 预测</h2>
+<table>
+    <thead>
+      <tr><th></th>
+<th>预测值</th>
+<th>历史值</th></tr>
+    </thead>
+<tbody>
+      <tr><td>CAGR</td>
+<td>0.01934409</td>
+<td>-0.05769669</td></tr>
+<tr><td>算术平均值</td>
+<td>0.01956585</td>
+<td>-0.05749815</td></tr>
+    </tbody>
+  </table>
+<p>此外，注意CAGR和算术平均值非常接近的情况可能并不总是成立。假设今年销售额为100万美元，明年为50万美元，后年又回到100万美元。由于从100万美元开始，到100万美元结束，CAGR（复合年增长率）即几何平均值为0%。然而，算术平均值将计算-50%增长和100%增长的简单平均，得到算术平均值为25%。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; temp.sales&lt;- c(1, 0.5, 1)
+&gt; (cagr &lt;- (1 / 1)^(1/2) - 1)
+[1] 0
+&gt; temp.growth&lt;- Delt(temp.sales)
+&gt; (temp.growth&lt;- temp.growth[-1, ] )
+[1]-0.5 1.0
+&gt; mean(temp.growth)
+[1] 0.25</code></pre>
+</div>
+<h3 id="section-8-2-4">8.2.4 使用回归分析评估预测</h3>
+<p>分析预测的一种方法是将公司制定的预测与我们基于公司销售历史趋势制定的预测进行比较。首先，我们通过目视检查预测来进行分析。</p>
+<p><strong>步骤1：创建包含两种预测的数据集</strong></p>
+<p>我们将历史销售额和我们预测的销售额合并到 <code>ours</code> 数据集中。在预测销售额上使用 <code>as.numeric()</code>，将其转换为无表头的数值向量。否则，我们将合并无表头的 <code>hist.sales</code> 和有表头的 <code>proj.sales</code>，在2020到2024年之前会出现一堆空白。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; (ours &lt;- c(hist.sales[1:8], as.numeric(proj.sales[9:13])))
+[1] 5385.537 5075.761 4633.345 4297.108 4163.844 3894.558 3662.280 3552.745
+[9] 3141.367 2876.526 2611.686 2346.846 2082.006
+&gt; (company&lt;- c(hist[1:8], proj[9:13]))
+[1] 5385.537 5075.761 4633.345 4297.108 4163.844 3894.558 3662.280 3552.745
+[9] 3475.850 3555.666 3657.419 3772.115 3909.922
+&gt; plot.data&lt;- data.frame(cbind(ours ,company))
+&gt; plot.data$year&lt;- seq(2012, 2024, 1)
+&gt; rownames(plot.data)&lt;- seq(1, 13, 1)
+&gt; plot.data
+    ours company year
+1  5385.537 5385.537 2012
+2  5075.761 5075.761 2013
+3  4633.345 4633.345 2014
+4  4297.108 4297.108 2015
+5  4163.844 4163.844 2016
+6  3894.558 3894.558 2017
+7  3662.280 3662.280 2018
+8  3552.745 3552.745 2019
+9  3141.367 3475.850 2020
+10 2876.526 3555.666 2021
+11 2611.686 3657.419 2022
+12 2346.846 3772.115 2023
+13 2082.006 3909.922 2024</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="257">
+<p>244 第8章 股票</p>
+<p>16 5 4163.844 4163.844 2016<br>
+17 6 3894.558 3894.558 2017<br>
+18 7 3662.280 3662.280 2018<br>
+19 8 3552.745 3552.745 2019<br>
+20 9 3141.367 3475.850 2020<br>
+21 10 2876.526 3555.666 2021<br>
+22 11 2611.686 3657.419 2022<br>
+23 12 2346.846 3772.115 2023<br>
+24 13 2082.006 3909.922 2024</p>
+<p><strong>步骤2：绘制两个预测图</strong> 选择何种图表以及如何绘制数据是个人偏好的问题。本例中我们使用折线图。在图8.5中，截至2019年的红线是实际历史销售额数据。2020年及之后的数据为预测值，两个预测从此处开始出现分歧。基于历史趋势的预测（即蓝线）呈向下倾斜，表明如果历史趋势持续，Barnes & Noble 从2020财年到2024财年的销售额将继续下降。相比之下，代表公司预测的红线则讲述了不同的故事：它显示Barnes & Noble的销售额在预测期内将回升。因此，随着预测期不断向前推进，两个预测之间的差距逐渐扩大。判断这一差距为何存在以及为何不断扩大，对于理解公司预测是否可靠至关重要。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">plot(x = plot.data$year ,
++ xlab = &quot;Years&quot;,
++ y = plot.data $ours ,
++ ylab = &quot;Sales (millions)&quot;,
++ type = &quot;l&quot;,
++ lwd = 2,
++ col = &quot;blue&quot;,
++ main = &quot;Barnes &amp; Noble SalesProjections
++ Based on HistoricalTrend vs.Company Projections&quot;)</code></pre>
+</div>
+<p>我们可以通过直观观察数据获得大量信息。然而，使用更复杂的评估方法还可能产生一些额外见解。一种常用的技术是回归分析。回归分析的关键在于将历史时期和预测时期分开，在考虑了数据趋势后，判断趋势是否发生变化，或者历史时期与预测时期的销售额水平是否发生偏移。该分析的结果并非给出哪个预测正确、哪个错误的绝对答案，而是</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">lines(x = plot.data$year ,
++ y = plot.data $company ,
++ lwd = 2,
++ col = &quot;red&quot;)
++ legend(&quot;topright&quot;,
++ c(&quot;Historical Trend&quot;, &quot;CompanyProjections&quot;),
++ col = c(&quot;blue&quot;, &quot;red&quot;),
++ lwd = c(2, 2))</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="258">
+  <h3 id="projections">8.2 预测</h3>
+<p>帮助我们确定要问哪些问题，以便我们对预测感到放心。</p>
+<p><strong>步骤 1：设置收入向量和趋势向量</strong> 向量 <code>rev</code> 包含13个元素，第一个元素为1，第二个为2，以此类推。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; (rev &lt;- c(hist[1:8], proj[9:13]))
+[1] 5385.537 5075.761 4633.345 4297.108 4163.844 3894.558 3662.280 3552.745
+[9] 3475.850 3555.666 3657.419 3772.115 3909.922
+&gt; (trend&lt;- seq(1, 13, 1))
+[1] 1 2 3 4 5 6 7 8 9 10 11 12 13</code></pre>
+</div>
+<p><strong>步骤 2：创建趋势变化向量</strong> 向量 <code>trend.chg</code> 在历史数据期间取值0，在5年预测期内取从1到5的递增序列。</p>
+<figure class="book-figure" id="fig-8.5"><img src="/assets/img/analyzing-financial-data-r-cn/figure-180fca470cd2.png" alt="图8.5 比较Barnes & Noble的销售预测">
+    <figcaption>图8.5 比较Barnes & Noble的销售预测。从FY 2012到FY 2019的实线是历史销售数据。从FY 2020到FY 2024的实线是基于公司历史销售趋势的预测。从FY 2020到FY 2024的虚线是公司自己制定的预测。来源：Barnes & Noble的SEC文件和作者计算。</figcaption>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="259">
+<p>246 第8章 股票</p>
+<p><strong>第3步：运行回归确定趋势变化</strong></p>
+<p>我们使用 <code>lm()</code> 运行一个 OLS 回归，以 <code>rev</code> 对 <code>trend</code> 和 <code>trend.chg</code> 进行回归。正如我们所料，回归结果显示趋势为负且显著。输出还显示该趋势以统计显著的量增加。换句话说，当我们从历史销售数据转向预测销售数据时，趋势发生了变化。</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">(trend.chg &lt;- c(rep(0, 8), seq(1, 5, 1)))</code></pre>
+</div>
+<pre class="r-output">[1] 0 0 0 0 0 0 0 0 1 2 3 4 5</pre>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">reg1 &lt;- lm(rev ~ trend + trend.chg)
+summary(reg1)</code></pre>
+</div>
+<pre class="r-output">Call:
+lm(formula = rev ~ trend + trend.chg)
+
+Residuals:
+    Min      1Q  Median      3Q     Max
+-165.31  -30.58  -11.70   33.95  162.31
+
+Coefficients:
+            Estimate Std. Error t value Pr(>|t|)
+(Intercept) 5534.39      70.57   78.42  2.78e-15 ***
+trend       -267.99      13.01  -20.60  1.61e-09 ***
+trend.chg    365.10      28.59   12.77  1.62e-07 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 93.81 on 10 degrees of freedom
+Multiple R-squared:  0.9804,	Adjusted R-squared:  0.9765
+F-statistic: 249.8 on 2 and 10 DF,  p-value: 2.907e-09</pre>
+<p><strong>第4步：创建趋势移位向量</strong></p>
+<p>移位向量由 13 个元素组成。前八个代表历史时期的元素为 0。后五个代表预测期的元素为 1。为了创建这些重复的值，我们使用 <code>rep()</code>，第一个参数是要重复的值，第二个参数是重复次数。</p>
+<div class="r-code-block" id="code3">
+  <pre><code class="language-r">(shift &lt;- c(rep(0, 8), rep(1, 5)))</code></pre>
+</div>
+<pre class="r-output">[1] 0 0 0 0 0 0 0 0 1 1 1 1 1</pre>
+<p><strong>第5步：运行回归确定趋势移位</strong></p>
+<p>我们使用 <code>lm()</code> 运行一个 OLS 回归，以 <code>rev</code> 对 <code>trend</code> 和 <code>shift</code> 进行回归。正如我们所料，回归结果显示趋势为负且显著。输出还显示该趋势并未发生统计显著的移位（即水平没有上升或下降）。换句话说，在考虑了数据中的趋势后，预测的销售水平与投影的销售水平没有差异。</p>
+<div class="r-code-block" id="code4">
+  <pre><code class="language-r">reg2 &lt;- lm(rev ~ trend + shift)
+summary(reg2)</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="260">
+<h2 id="section-8-3">8.3 股权风险溢价</h2>
+<p>上述分析帮助我们确定需要提出哪些问题来对公司的预测感到满意。例如，我们希望了解哪些信息支持销售趋势逆转（即下跌趋势反转）。</p>
+<p>虽然我们介绍了一些可用于检验预测的方法，但适当的检验取决于具体的预测、数据的可获得性以及做出预测时所处的经济因素。由于公司的价值在很大程度上取决于我们使用的预测，因此对预测感到满意至关重要。</p>
+<p>当使用资本资产定价模型（CAPM, capital asset pricing model）计算股权成本时，所需的组成部分之一是股权风险溢价（ERP, equity risk premium）。尽管ERP可以通过多种方式计算，但学术文献中最常见的ERP呈现方式是使用历史数据。在本节中，我们展示如何使用R从Damodaran教授的网站获取ERP数据，并利用算术平均和几何平均计算ERP。为此，我们再次使用本章开头使用的tidyverse和rvest包。</p>
+<p><strong>步骤1：获取ERP数据</strong> 我们从Damodaran教授的网站获取ERP数据，该网站包含一个大型表格，其中包含从1928年到2019年的多列数据。完整的URL是http://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/histretSP.html，我们应在第1行中使用该URL。第4至8行读取网页上的数据。</p>
+<pre>
+Call:
+lm(formula = rev~ trend + shift)
+
+Residuals:
+   Min     1Q Median     3Q    Max
+−584.45 −149.01  −72.78  259.98  621.83
+
+Coefficients:
+            Estimate Std. Error tvalue Pr(>|t|)
+(Intercept) 5201.88    249.63  20.838 1.44e−09 ***
+trend       −193.05     48.27  −4.000 0.00252 **
+shift        595.88    371.21   1.605 0.13952
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1
+
+Residual standard error: 348 on 10 degrees of freedom
+Multiple R-squared:  0.7299,	Adjusted R-squared:  0.6759
+F-statistic: 13.51 on 2 and 10 DF,  p-value: 0.001437
+</pre>
+</section>
+<section class="book-page" data-pdf-page="261">
+  <h2>248 股票</h2>
+<p><strong>步骤 1：从网页读取数据</strong></p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">url &lt;- &quot;http://pages.stern.nyu.edu/~adamodar/New_Home_Page/ ...&quot;
+
+temp &lt;-
+  url %&gt;%
+  read_html() %&gt;%
+  html_table() %&gt;%
+  map_df(bind_cols) %&gt;%
+  as_tibble()</code></pre>
+</div>
+<pre class="r-output">head.tail(temp)
+# A tibble: 3 x 18
+X1 X2 X3 X4 X5 X6 X7 X8 X9 X10 X11
+<chr> <chr> <chr> <chr> <chr> <chr> <chr> <chr> <chr> <chr> <chr>
+1 "" "Annu~ "Annu~ "Annu~ "Annu~ Value~ Valu~ Valu~ Valu~ Annu~ Annu~
+2 Year S&P5~ 3-mon~ US T.~ "Baa\~ S&P5~ 3-mo~ US T~ "Baa~ "Sto~ "Sto~
+3 1928 43.81% 3.08% 0.84% 3.22% " $~ "$~ "$~ "$~ 40.7~ 42.9~
+# ... with 7 more variables: X12 <chr>, X13 <chr>, X14 <chr>,
+# X15 <chr>, X16 <chr>, X17 <chr>, X18 <chr>
+# A tibble: 3 x 18
+X1 X2 X3 X4 X5 X6 X7 X8 X9 X10 X11
+<chr> <chr> <chr> <chr> <chr> <chr> <chr> <chr> <chr> <chr> <chr>
+1 2018 -4.23%1.94%-0.0~ -2.7~ "$~ "$~ "$~ "$~ -6.1~ -4.2~
+2 2019 31.22% 1.55% 9.64% 15.3~ "$~ "$~ "$~ "$~ 29.6~ 21.5~
+3 "" "" "" "" "" "" "" "" "" "" ""
+# ... with 7 more variables: X12 <chr>, X13 <chr>, X14 <chr>,
+# X15 <chr>, X16 <chr>, X17 <chr>, X18 <chr></pre>
+<p><strong>步骤 2：手动识别相关行与列</strong> 除了使用代码识别相关列之外，我们可以直接查看数据并确定要保留或删除的行和列。从上面的输出可以看出，我们可以删除前两行。通过查看数据集或访问网页，我们感兴趣的是第1列（年份）、第10列（基于国库券的ERP）和第11列（基于国债的ERP）。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">erp &lt;- data.frame(temp[-c(1,2), c(1, 10, 11)])
+head.tail(erp)</code></pre>
+</div>
+<pre class="r-output">head.tail(erp)
+X1 X10 X11
+1 1928 40.73% 42.98%
+2 1929 -11.46% -12.50%
+3 1930 -29.67% -29.66%
+X1 X10 X11
+91 2018 -6.17% -4.21%
+92 2019 29.67% 21.59%
+93</pre>
+<p><strong>步骤 3：数据清洗</strong> 如上面的输出所示，在开始处理之前，我们可能需要对数据进行一些清洗。在第1行中，我们重命名列标题。注意，我们将基于国库券的ERP重命名为“ST”（表示短期）。相应地，将基于国债的ERP重命名为“LT”（表示长期）。国库券是期限为1年或以下的工具，而国债是期限为10年或以上的工具。第2行将Year列中的值转换为数值型，而第3行和第4行将...</p>
+</section>
+<section class="book-page" data-pdf-page="262">
+<h2>8.3 股权风险溢价</h2>
+<p>使用 gsub() 将 ERP 值转换为数值的同时删除百分号。最后，第 5 行删除多余的第 93 行，从上面的输出可以看出该行没有任何数据。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; names(erp)&lt;- c(&quot;Year&quot;, &quot;ERP.ST&quot;, &quot;ERP.LT&quot;)
+2 &gt; erp$Year&lt;- as.numeric(erp$Year)
+3 &gt; erp$ERP.ST&lt;- as.numeric(gsub(&quot;%&quot;, &quot;&quot;, erp$ERP.ST))/100
+4 &gt; erp$ERP.LT&lt;- as.numeric(gsub(&quot;%&quot;, &quot;&quot;, erp$ERP.LT))/100
+5 &gt; erp &lt;- erp[-93, ]
+6 &gt; head.tail(erp)
+7 Year ERP.ST ERP.LT
+8 1 1928 0.4073 0.4298
+9 2 1929-0.1146-0.1250
+10 3 1930-0.2967-0.2966
+11 Year ERP.ST ERP.LT
+12 90 2017 0.2067 0.1880
+13 91 2018-0.0617-0.0421
+14 92 2019 0.2967 0.2159</code></pre>
+</div>
+<p><strong>步骤 4：基于算术均值计算 ERP</strong></p>
+<p>利用上述数据，我们可以基于 1928 年至 2019 年的算术均值计算 ERP。为此，我们对第 2 列和第 3 列应用 colMeans()。这给出了基于国库券的 ERP 为 8.2%，基于长期国债的 ERP 为 6.4%。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; (arith.erp&lt;- colMeans(erp[, 2:3]))
+2 ERP.ST ERP.LT
+3 0.08175109 0.06425652</code></pre>
+</div>
+<p><strong>步骤 5：基于几何均值计算 ERP</strong></p>
+<p>几何均值的计算稍微复杂一些。我们分几个步骤进行。首先，在第 1 行和第 2 行中，我们计算了年度总超额市场收益率。然后，在第 13 行中，我们使用这些年度总超额市场收益率来累积这些年度总超额市场收益率的乘积。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; gross.erp&lt;- erp
+2 &gt; gross.erp[, 2:3]&lt;- 1 + gross.erp[, 2:3]
+3 &gt; head.tail(gross.erp)
+4 Year ERP.ST ERP.LT
+5 1 1928 1.4073 1.4298
+6 2 1929 0.8854 0.8750
+7 3 1930 0.7033 0.7034
+8 Year ERP.ST ERP.LT
+9 90 2017 1.2067 1.1880
+10 91 2018 0.9383 0.9579
+11 92 2019 1.2967 1.2159
+12 &gt;
+13 &gt; cum.erp&lt;- apply(gross.erp[,2:3], 2,cumprod)
+14 &gt; head.tail(cum.erp)
+15 ERP.ST ERP.LT
+16 1 1.4073000 1.4298000
+17 2 1.2460234 1.2510750
+18 3 0.8763283 0.8800062
+19 ERP.ST ERP.LT</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="263">
+<pre>20 90 208.0378 35.53110
+21 91 195.2019 34.03524
+22 92 253.1183 41.38345</pre>
+<p>接下来，我们计算所涉及的收益率年数。本例中，我们取1928年和2019年之差，再加1。原因在于1928年的数字是收益率，这意味着收益率计算的起始值为1927年。然后，在第4行和第6行，我们分别基于国库券和国债计算几何ERP。输出显示基于国库券的ERP为6.2%，基于国债的ERP为4.1%。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; (num.years&lt;-
+ gross.erp[nrow(gross.erp), 1]-
+ gross.erp[1, 1] + 1)
+2 [1] 92
+3 &gt;
+4 &gt; (geo.erp.st&lt;-
+ cum.erp[92, 1]^(1/
+ num.years)-
+ 1)
+5 [1] 0.06199649
+6 &gt; (geo.erp.lt&lt;-
+ cum.erp[92, 2]^(1/
+ num.years)-
+ 1)
+7 [1] 0.04129601
+8 &gt;
+9 &gt; (geo.erp&lt;-
+ cbind(geo.erp.st, geo.erp.lt))
+10 geo.erp.st geo.erp.lt
+11 [1,] 0.06199649 0.04129601</code></pre>
+</div>
+<p>最后，我们创建一个汇总表，以便轻松比较我们计算的ERP。如我们所见，几何ERP小于算术ERP。还注意到长期ERP小于短期ERP。因此，我们必须记住保持一致，即我们应用什么ERP，以及我们使用什么无风险利率。特别是，如果在CAPM中使用国库券利率，那么我们必须使用基于国库券的ERP。如果在CAPM中使用国债利率，那么我们必须使用基于国债的ERP。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; (erp.summary&lt;-
+ rbind(arith.erp, geo.erp))
+2 ERP.ST ERP.LT
+3 arith.erp0.08175109 0.06425652
+4 0.06199649 0.04129601
+5 &gt; rownames(erp.summary)&lt;-
+ c(&quot;Arithmetic&quot;, &quot;Geometric&quot;)
+6 &gt; erp.summary
+7 ERP.ST ERP.LT
+8 Arithmetic 0.08175109 0.06425652
+9 Geometric 0.06199649 0.04129601</code></pre>
+</div>
+<h2 id="section-8-4">8.4 去杠杆化 Beta</h2>
+<p>使用CAPM计算的折现率的另一个关键组成部分是使用适当的权益贝塔。在某些情况下，目标公司的贝塔是通过同行业公司的贝塔来估计的。这些同行业公司可能具有与目标公司不同的杠杆，因此我们必须根据杠杆差异调整贝塔。在债务贝塔为零的假设下，一个常用公式是由Bob Hamada开发的以下公式：</p>
+</section>
+<section class="book-page" data-pdf-page="264">
+<h3>8.4 去杠杆化 Beta</h3>
+<p>\[
+\beta_U = \frac{\beta_L}{1 + (1 - t)D/E}, \tag{8.2}
+\]</p>
+<p>其中，\(\beta_U\) 是去杠杆化beta (unlevered beta)，\(\beta_L\) 是杠杆化beta (levered beta)，\(t\) 是税率，\(D/E\) 是公司的债务股本比 (debt-to-equity ratio)。</p>
+<p>让我们看一个例子来了解如何使用上述公式。假设该公司有一个基于回归的beta为1.2，回归期间的平均债务股本比率为40%，回归期间的税率为20%。这些输入得到的去杠杆化beta为0.91。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; reg.beta&lt;- 1.2
+2 &gt; avg.de&lt;- 0.40
+3 &gt; tax &lt;- 0.20
+4 &gt; target.de&lt;- 0.50
+5 &gt;
+6 &gt; (beta.unl&lt;- reg.beta/ (1 + (1 - tax)* avg.de))
+7 [1] 0.9090909</code></pre>
+</div>
+<p>现在，假设目标债务股本比率为50%，我们发现杠杆化beta等于1.27。这是合理的，因为在其他条件相同的情况下，更多的杠杆意味着更多的风险。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; (beta.lev&lt;- beta.unl* (1 + (1 - tax)* target.de))
+2 [1] 1.272727</code></pre>
+</div>
+<p>对于使用历史数据和回归分析估计的beta，我认为应该使用回归期间的平均杠杆比率来对beta进行去杠杆化。我在[4]中更详细地讨论了这个问题。原因是回归得到的beta估计值是基于该期间的平均收益率，而该收益率又基于该期间的平均杠杆。因此，直接使用回归beta隐含地假设回归期间的平均杠杆比率与目标杠杆比率相同。另一种思考方式是，直接使用回归beta并不假设当前杠杆比率就是目标杠杆比率。</p>
+<p>这个问题也扩展到当我们使用同行业公司的beta时。我们使用同行业公司beta的典型分析如下：每个同行业公司的beta都是通过某个历史时期的回归估计的。然后，每个同行业的回归beta使用该公司的当前杠杆比率进行去杠杆化。然后，使用目标公司的目标杠杆比率对同行业公司去杠杆化beta的均值或中位数进行再杠杆化，得到目标公司的杠杆化beta。然而，问题在于使用当前杠杆比率并不能正确地去除每个同行业公司回归beta的杠杆。相反，我们应该使用每个同行业公司在回归期间的平均杠杆比率来去除其回归beta的杠杆。</p>
+<p>上述公式假设债务beta为零。如果债务beta不为零，则需要使用一个包含债务beta的公式。因为投资组合的beta等于投资组合各组成部分beta的加权平均值，所以去杠杆化（资产）beta等于债务beta和权益beta的加权平均值。即：</p>
+</section>
+<section class="book-page" data-pdf-page="265">
+<p>去杠杆化的贝塔（β）等于债务贝塔乘以债务权重加上股权贝塔乘以股权权重：</p>
+$$\beta_{\text{unlevered}} = \beta_{\text{debt}} \frac{D}{D+E} + \beta_{\text{equity}} \frac{E}{D+E}. \tag{8.3}$$
+<p>这是Brealey、Myers和Allen所著公司金融教科书中使用的公式。我在延伸阅读部分讨论了其他几个包含债务贝塔的公式。</p>
+<h2 id="section-8-5">8.5 敏感性分析</h2>
+<p>在进行估值时，我们会对输入值和假设做出判断。其中一些输入值比其他输入值对价值的驱动作用更为关键。尽管我们在提出这些假设时可能有一定依据，但我们也应该认识到这些输入值或假设也可能落在某个合理的范围之内。因此，我们可能希望了解如果判断有误，价值将如何变化。用于进行这类测试的技术称为敏感性分析。</p>
+<p>这里，我们以一个简化的估值练习为例，其中一个金额为100美元的年金\(c\)以增长率\(g\)永久增长，并以折现率\(k\)进行折现。数学上，我们将价值\(V\)定义为：</p>
+$$V = \frac{c(1+g)}{k-g}. \tag{8.4}$$
+<p>现在，假设我们最初假定永续增长率为4%，权益成本为10%。在此情景下，我们得到的价值为1733美元[=100美元×(1+4%)/(10%-4%)]。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt;c &lt;- 100
+2 &gt; g = 0.04
+3 &gt; k = 0.10
+4 &gt;( V &lt;- c * (1 + g) / (k - g))
+5 [1] 1733.333</code></pre>
+</div>
+<p>现在，假设我们想测试当\(g\)为3%或5%以及折现率为8%或12%时估值的敏感性。下面我们展示如何进行这种敏感性分析。</p>
+<p><strong>步骤1：设定\(k\)和\(g\)的范围</strong>我们将构建一个3×3的敏感性表格。这意味着总共有9个值，它们是我们假定的各种折现率和增长率的组合。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; (k.range &lt;- seq(0.08, 0.12, 0.02))
+2 [1] 0.08 0.10 0.12
+3 &gt; (g.range &lt;- seq(0.03, 0.05, 0.01))
+4 [1] 0.03 0.04 0.05</code></pre>
+</div>
+<p><strong>步骤2：构造价值函数</strong>在这个例子中，我们计算的是增长年金的现值。因此，价值函数很简单。然而，我们...</p>
+</section>
+<section class="book-page" data-pdf-page="266">
+<h2>8.5 敏感性分析</h2>
+<p>无论我们拥有的是简单还是复杂的价值函数，只要允许我们改变的价值函数的驱动因素是折现率和增长率，我们都可以轻松扩展此分析。</p>
+<p>步骤1：定义折现率和增长率范围</p>
+<div class="r-code-block" id="r1">
+  <pre><code class="language-r">&gt; c = 100
+&gt; k.range = c(0.08, 0.10, 0.12)
+&gt; g.range = c(0.03, 0.04, 0.05)</code></pre>
+</div>
+<p>步骤2：定义价值函数</p>
+<div class="r-code-block" id="r2">
+  <pre><code class="language-r">&gt; val.fx &lt;- function(c, k, g) {
++   value &lt;- c * (1 + g) / (k - g)
++ }</code></pre>
+</div>
+<p>步骤3：创建临时矩阵 我们需要创建一个3×3的矩阵来存储将要计算的九个值。我们使用<code>matrix()</code>函数来完成。第一个参数为999，这个值有些随意，但有助于确保程序正常运行，因为这个数字非常特殊，不太可能是正确计算的敏感度值。</p>
+<div class="r-code-block" id="r3">
+  <pre><code class="language-r">&gt; (val.table &lt;- matrix(999, ncol = 3, nrow = 3))
+     [,1] [,2] [,3]
+[1,]  999  999  999
+[2,]  999  999  999
+[3,]  999  999  999</code></pre>
+</div>
+<p>步骤4：计算敏感度值 我们使用两个for循环来计算敏感度中的值。第一个循环遍历三个折现率值，第二个循环遍历三个永续增长率值。在九次运行中，我们用上述指定的价值函数计算出的值替换3×3矩阵<code>val.table</code>中的值。然后，我们在第22和23行清理表格，以便列和行标题有意义。</p>
+<div class="r-code-block" id="r4">
+  <pre><code class="language-r">&gt; for (i in 1:3) {
++   k = k.range[i]
++   for (j in 1:3) {
++     g = g.range[j]
++     val.table[i, j] = val.fx(c, k, g)
++   }
++ }
+&gt; val.table
+       [,1]   [,2] [,3]
+[1,] 2060.000 2600.000 3500
+[2,] 1471.429 1733.333 2100
+[3,] 1144.444 1300.000 1500
+&gt;
+&gt; colnames(val.table) &lt;- c(&quot;3%&quot;, &quot;4%&quot;, &quot;5%&quot;)
+&gt; rownames(val.table) &lt;- c(&quot;8%&quot;, &quot;10%&quot;, &quot;12%&quot;)
+&gt; val.table
+        3%     4%   5%
+8%  2060.000 2600.000 3500
+10% 1471.429 1733.333 2100
+12% 1144.444 1300.000 1500</code></pre>
+</div>
+<p>从输出中可以看出，中间值<em>k</em> = 10% 和 <em>g</em> = 4% 对应 $1733，与我们之前计算的基本情景一致。然后，我们可以看到当我们改变折现率或永续增长率时价值如何变化。</p>
+</section>
+<section class="book-page" data-pdf-page="267">
+  <h2 id="section-8-6">8.6 使用回归分析的相对估值</h2>
+<p>相对估值是一种基于可比公司价值来估计目标公司价值的估值方法。分析通常从识别可比公司开始。这些公司是受与目标公司相同经济力量影响的公司。因此，我们通常从同一行业的公司入手，但通常需要做出调整以确保拥有合理可比的公司。例如，许多与目标公司竞争的公司可能在规模、盈利能力和风险等因素上并不具有可比性。</p>
+<p>一旦确定了可比公司，我们将选择最能反映这些特征的倍数。例如，常用的一个倍数是市盈率（Price-to-Earnings, P-E Ratio）。市盈率等于市场价格除以每股收益。我们可以计算每家可比公司的市盈率，并决定目标公司在可比公司倍数范围中所处的百分位数。理论上，如果我们恰当地选择了可比公司，目标公司的倍数将大约等于可比公司倍数的中位数或平均值，因为横截面平均化将消除可能影响个别同行倍数的公司特定因素。</p>
+<p>然后，我们使用选定的市盈率乘以目标公司的收益，得出目标公司的价值。这种方法被称为相对估值，因为由此得出的价值是相对于可比公司估值的“相对”值。如果这些公司被高估，那么得出的倍数和目标公司的估值也会被高估。相反，如果这些公司被低估，那么得出的倍数和目标公司的估值也会被低估。</p>
+<p>在可比公司倍数范围内选择百分位数通常需要定性和定量分析的结合。定量部分分析各种指标，例如可能代表规模、盈利能力、杠杆率、增长等的代理变量。然后，基于某些评估，我们可以判断目标公司是更接近中位数还是</p>
+</section>
+<section class="book-page" data-pdf-page="268">
+  <h3>8.6 使用回归分析的相对估值</h3>
+<p>平均可比公司，或者它更类似于第25百分位或第75百分位的可比公司或其他百分位。</p>
+<p>上述方法的替代方案是使用回归分析，根据倍数的已知决定因素来选择倍数。在下面的例子中，我们将市盈率（P-E Ratio）对每股收益增长率（EPS growth rate）、股利支付率（dividend payout ratio）和Beta进行回归。</p>
+<p><strong>步骤1：获取可比公司的数据</strong> 我们假设亚马逊（Amazon）有以下互联网同行：苹果（Apple, AAPL）、阿里巴巴（Alibaba, BABA）、百度（Baidu, BIDU）、Booking.com（BKNG）、eBay（EBAY）、Expedia（EXPE）、Facebook（FB）、Groupon（GRPN）、Alphabet（GOOG）、Netflix（NFLX）、Tripadvisor（TRIP）和Twitter（TWTR）。我们访问雅虎财经（Yahoo Finance）并获取这些公司的市盈率、长期每股收益增长率、股利支付率和Beta数据。您需要手动输入以下数据，因为如果我们现在查看雅虎财经，无法获得这些历史值。</p>
+<div class="r-code-block" id="r_268_1">
+  <pre><code class="language-r">1 &gt; aapl &lt;- c(19.43, 0.0986, 0.2523, 1.23)
+2 &gt; baba &lt;- c(24.59, .0366, 0, 2.25)
+3 &gt; bidu &lt;- c(18.02, -0.0123, 0, 1.77)
+4 &gt; bkng &lt;- c(18.09, 0.12, 0, 1.1)
+5 &gt; ebay &lt;- c(12.50, 0.1284, 0.19, 1.26)
+6 &gt; expe &lt;- c(15.63, 0.0880, 0.3881, 0.99)
+7 &gt; f b &lt;- c(22.71, 0.1146, 0, 1.06)
+8 &gt; grpn &lt;- c(10.22, 0.0948, 0, 1.35)
+9 &gt; goog &lt;- c(25.07, 0.1291, 0, 1.02)
+10 &gt; nflx &lt;- c(60.70, 0.4168, 0, 1.30)
+11 &gt; trip &lt;- c(16.14, 0.1102, 0, 1.30)
+12 &gt; twtr &lt;- c(36.26, 0.1390, 0, 0.56)
+13 &gt;
+14 &gt; reg.data&lt;- rbind(aapl, baba, bidu, bkng, ebay, expe, fb,
+15 + grpn, goog, nflx, trip, twtr)
+16 &gt; reg.data&lt;- data.frame(reg.data)
+17 &gt; names(reg.data)&lt;- c(&quot;P.E&quot;, &quot;Growth&quot;, &quot;Div.Pay&quot;, &quot;Beta&quot;)
+18 &gt; reg.data
+19   P.E  Growth Div.Pay Beta
+20 aapl 19.43  0.0986  0.2523 1.23
+21 baba 24.59  0.0366  0.0000 2.25
+22 bidu 18.02 -0.0123  0.0000 1.77
+23 bkng 18.09  0.1200  0.0000 1.10
+24 ebay 12.50  0.1284  0.1900 1.26
+25 expe 15.63  0.0880  0.3881 0.99
+26 fb   22.71  0.1146  0.0000 1.06
+27 grpn 10.22  0.0948  0.0000 1.35
+28 goog 25.07  0.1291  0.0000 1.02
+29 nflx 60.70  0.4168  0.0000 1.30
+30 trip 16.14  0.1102  0.0000 1.30
+31 twtr 36.26  0.1390  0.0000 0.56</code></pre>
+</div>
+<p><strong>步骤2：对同行数据进行回归</strong> 我们对市盈率（P-E Ratio）关于每股收益增长率、股利支付率和Beta进行回归。我们使用lm()进行回归。</p>
+</section>
+<section class="book-page" data-pdf-page="269">
+  <p>并确保将结果保存在 <code>reg.results</code> 中，因为下一步构建预测时需要该数据集。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; reg.result&lt;− lm(P.E~ Growth + Div.Pay +Beta ,
+2 + data = reg.data)
+3 &gt; summary(reg.result)
+5 Call:
+6 lm(formula = P.E~ Growth + Div.Pay +Beta ,data = reg.data)
+8 Residuals:
+9 Min 1Q Median 3Q Max
+10 −11.634 −6.126 1.392 4.170 12.043
+12 Coefficients:
+13 Estimate Std. Error tvalue Pr(&gt;|t|)
+14 (Intercept) 7.091 10.560 0.671 0.52084
+15 Growth 110.382 26.428 4.177 0.00309 ∗∗
+16 Div.Pay −18.883 19.794 −0.954 0.36803
+17 Beta 3.185 6.519 0.489 0.63830
+18 −−−
+19 Signif. codes: 0 ‘∗∗∗’ 0.001 ‘∗∗’ 0.01 ‘∗’ 0.05 ‘.’ 0.1 ‘ ’ 1
+21 Residual standard error: 8.374on 8 degrees of freedom
+22 Multiple R−squared: 0.7249,Adjusted R−squared: 0.6218
+23 F−statistic:7.028 on 3 and 8 DF, p −value: 0.01244</code></pre>
+</div>
+<p><strong>步骤 3：使用回归结果预测亚马逊市盈率</strong> 我们从雅虎财经获取亚马逊的市盈率（69.19倍）、长期每股收益增长率（28%）、股息支付率（0%）和贝塔值（1.52）。然后使用 <code>predict()</code> 基于存储在 <code>reg.result</code> 中的回归结果来预测亚马逊的市盈率。基于同行的回归结果以及亚马逊的长期每股收益增长率、股息支付率和贝塔值，预测亚马逊的市盈率为 42.84 倍，比亚马逊实际的 69.19 倍市盈率低 38%。这一结果表明，根据所选同行的分析，亚马逊股票可能被高估。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; amzn &lt;− c(69.19, 0.28, 0,1.52)
+2 &gt; predicted&lt;− data.frame(t(amzn))
+3 &gt; names(predicted)&lt;− c(&quot;P.E&quot;, &quot;Growth&quot;, &quot;Div.Pay&quot;, &quot;Beta&quot;)
+4 &gt; predicted
+5 P.E Growth Div.Pay Beta
+6 1 69.19 0.28 0 1.52
+7 &gt;
+8 &gt; rhat &lt;− predict(reg.result ,predicted)
+9 &gt; rhat
+10 1
+11 42.8383</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="270">
+<h2 id="section-8-7">8.7 识别股票收益率的显著变化</h2>
+<p>有时我们想要确定某只股票的特征在特定时期之间是否发生了变化。例如，我们可能想知道在两个时期之间，公司的收益率是否显著提高或降低。我们也可能想知道，在收购或剥离之后，公司股票收益率与某些因子之间的关系是否发生了变化。下面，我们讨论几种有助于做出判断的统计工具。</p>
+<h3>8.7.1 t检验：检验平均收益率的差异</h3>
+<p>t检验可用于检验两个时期平均收益率的差异。这里，我们对AMZN股票收益率使用<code>t.test()</code>。</p>
+<p><strong>步骤1：计算收益率</strong> 首先，我们使用<code>load.data()</code>导入AMZN股票价格数据。然后，我们通过对AMZN调整收盘价取对数（<code>log()</code>）再差分（<code>diff()</code>）来计算对数收益率。接着，我们移除第一个观测值（2014年12月31日），该值仅用于计算2015年第一个交易日的收益率。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; data.amzn &lt;- load.data(&quot;AMZN Yahoo.csv&quot;, &quot;AMZN&quot;)
+&gt; rets &lt;- diff(log(data.amzn$AMZN.Adjusted))
+&gt; rets &lt;- rets[-1, ]
+&gt; names(rets) &lt;- &quot;AMZN&quot;
+&gt; head.tail(rets)
+          AMZN
+2015-01-02 -0.005914077
+2015-01-05 -0.020730670
+2015-01-06 -0.023098010
+          AMZN
+2019-12-27  0.0005510283
+2019-12-30 -0.0123283480
+2019-12-31  0.0005142195</code></pre>
+</div>
+<p><strong>步骤2：将数据分为两个时期</strong> 由于我们检验两个时期平均收益率的差异，必须确定这两个时期。在本练习中，我们比较2015年至2017年的平均收益率与2018年至2019年的平均收益率。我们可以通过使用xts风格的日期子集和<code>as.numeric()</code>创建两个数值向量。注意，在xts风格子集中，如果希望R保留截止到斜杠后定义日期之前（含该日期）的所有日期，可以忽略斜杠左侧的日期。类似地，如果斜杠右侧没有日期而只有左侧日期，则R保留该日期左侧定义日期之前（含该日期）的所有日期。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; rets.A &lt;- as.numeric(rets[&quot;/2017-12-31&quot;])
+&gt; head.tail(rets.A)
+[1] -0.005914077 -0.020730670 -0.023098010</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="271">
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">4 [1] 0.004662962 0.003242724−0.014119964
+5 &gt;
+6 &gt; rets.B&lt;− as.numeric(rets[&quot;2018−01−01/&quot;])
+7 &gt; head.tail(rets.B)
+8 [1] 0.016570407 0.012694369 0.004466026
+9 [1] 0.0005510283−0.01232834800.0005142195</code></pre>
+</div>
+<p><strong>步骤3：运行 t 检验</strong> 我们对 rets.A 和 rets.B 运行 t.test()。我们检验两个收益率之间的差异 mu 是否等于零。因此，备择假设是双尾的（即平均收益率可能为正或为负）。我们还假设样本中的方差不相等，并且这不是配对 t 检验，因为我们假设两个样本是独立的。最后，我们使用 95% 的置信水平进行检验。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">1 &gt; (diff.mean&lt;− t.test(rets.A, rets.B,
+2 +m u = 0 ,
+3 + alternative = &quot;two .sided&quot;,
+4 + var.equal = FALSE ,
+5 + paired = FALSE ,
+6 + conf.level = 0.95))
+7
+8 Welch Two Sample t−test
+9
+10 data: rets.A and rets.B
+11 t = 0.79525, df = 1021.6, p−value = 0.4267
+12 alternative hypothesis:truedifference inmeans is not equal to 0
+13 95 percent confidence interval:
+14 −0.0012438930.002939126
+15 sample estimates:
+16 mean of x mean of y
+17 0.0017570930 0.0009094766</code></pre>
+</div>
+<p>如上输出所示，p 值为 43%，这意味着我们不能拒绝原假设，即两个时期 AMZN 的平均收益率没有差异。</p>
+<h3>8.7.2 识别断点</h3>
+<p>收益率时间序列可能因为公司的结构性变化而出现断点。因此，能够确定我们所使用的数据中是否存在断点对我们来说是有帮助的。从实践角度看，断点的存在可能意味着我们不能使用混合回归（即在整个时期上的一个回归），但如果根据断点将数据分成多个时期，则能更好地捕捉数据中的关系。有时，我们可能通过目测数据来识别断点。然而，通常情况下并非如此，我们可能需要借助一些定量标准的方法来识别断点。本节我们讨论两种这样的方法：使用 F 统计量和使用贝叶斯信息准则（BIC）。</p>
+</section>
+<section class="book-page" data-pdf-page="272">
+<h2>8.7 识别股票收益率的显著转变</h2>
+<p>第一步：合并收益率数据 我们将识别AMZN和SPY之间关系中的突变点，因此我们首先需要计算两个证券的对数收益率。由于我们已经计算了AMZN的对数收益率并存储在rets中，我们只需要计算SPY的对数收益率。为此，我们首先使用load.data()导入SPY数据。然后，我们通过先使用log()对SPY调整后收盘价取对数，再使用diff()对这些对数收益率取差分来计算对数收益率。然后我们移除第一个观测值（2014年12月31日），它仅用于计算2015年第一个交易日的收益率。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; data.spy &lt;- load.data(&quot;SPY Yahoo.csv&quot;, &quot;SPY&quot;)
+&gt; MKT &lt;- diff(log(data.spy$SPY.Adjusted))
+&gt; MKT &lt;- MKT[-1, ]
+&gt; names(MKT) &lt;- &quot;MKT&quot;
+&gt; head.tail(MKT)
+                   MKT
+2015-01-02 -0.0005354247
+2015-01-05 -0.0182246098
+2015-01-06 -0.0094636586
+                   MKT
+2019-12-27 -0.0002478074
+2019-12-30 -0.0055284735
+2019-12-31  0.0024263490
+&gt;
+&gt; returns &lt;- cbind(rets, MKT)
+&gt; head.tail(returns)
+                 AMZN         MKT
+2015-01-02 -0.005914077 -0.0005354247
+2015-01-05 -0.020730670 -0.0182246098
+2015-01-06 -0.023098010 -0.0094636586
+                 AMZN         MKT
+2019-12-27  0.0005510283 -0.0002478074
+2019-12-30 -0.0123283480 -0.0055284735
+2019-12-31  0.0005142195  0.0024263490</code></pre>
+</div>
+<p>第二步：运行AMZN对SPY的回归 我们通过使用lm()建立AMZN收益率对SPY收益率的线性回归模型，从而确定整个时期的关系。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; returns.df &lt;- data.frame(returns)
+&gt; reg.amzn &lt;- lm(AMZN ~ MKT, data = returns.df)</code></pre>
+</div>
+<p>第三步：使用F统计量识别突变点 为了使用F统计量识别突变点，我们使用strucchange包中的Fstats()和breakpoints()函数。输出显示突变点位于观测编号811，即2018年3月22日。从图8.6中可以直观地看到突变点的位置。该图使用了相对时间，因此很难确定具体日期，但我们通过手动识别观测编号811知道突变点的日期。</p>
+</section>
+<section class="book-page" data-pdf-page="273">
+  <h3>使用F统计量选择断点</h3>
+<figure class="book-figure" id="fig-8.6"><img src="/assets/img/analyzing-financial-data-r-cn/figure-c935abf8420f.png" alt="图8.6 基于F统计量的AMZN与SPY关系（2015-2019）的断点">
+    <figcaption>图8.6 基于F统计量的AMZN与SPY关系（2015-2019）的断点。垂线表示观测序号811处的断点，即2018年3月22日。数据来源：价格数据经 CSI ©2020 授权转载。www.csidata.com</figcaption>
+  </figure>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; library(strucchange)
+2 &gt; fs.amzn&lt;− Fstats(returns.df$AMZN ~ returns.df$MKT)
+3 &gt; breakpoints(fs.amzn)
+5 Optimal 2−segment partition:
+7 Call:
+8 breakpoints.Fstats(obj = fs.amzn)
+10 Breakpoints at observationnumber:
+11 811
+13 Corresponding to breakdates:
+14 0.6438792
+15 &gt; returns.df[811, ]
+16 AMZN MKT
+17 2018−03−22−0.0236292−0.02531506
+18 &gt; plot(fs.amzn ,
+19 + col = &quot;blue&quot;,</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="274">
+<h2>8.7 识别股票收益率中的显著变化</h2>
+<h3>步骤4：使用BIC识别断点</h3>
+<p>作为替代方案，我们可以使用贝叶斯信息准则（BIC）来识别断点。如输出所示，使用BIC也将观测编号811识别为断点。</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">1 &gt; bp.amzn&lt;− breakpoints(returns.df$AMZN ~ returns.df$MKT)
+2 &gt; breakpoints(bp.amzn)
+4 Optimal 2−segment partition:
+6 Call:
+7 breakpoints.breakpointsfull(obj = bp.amzn)
+9 Breakpoints at observationnumber:
+10 811
+12 Corresponding to breakdates:
+13 0.6446741</code></pre>
+</div>
+<h3>8.7.3 邹检验</h3>
+<p>一旦我们识别出断点，就可以检验线性回归系数在断点前后是否不同。进行此检验的正式方法称为邹检验（Chow Test）。由上述可知，收益率数据中的断点位于观测编号811处。然后我们可以使用strucchange包中的<code>sctest()</code>函数来运行邹检验。如果邹检验中的F统计量大于临界值，则拒绝数据中无断点的原假设。如下所示，F统计量10对应的p值非常小，因此我们拒绝观测编号811不是断点的原假设。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">1 &gt; sctest(AMZN~ MKT, data = returns.df,
+2 + type = &quot;Chow &quot;, points = 811)
+4 Chow test
+6 data: AMZN ~ MKT
+7 F = 10.031, p−value = 4.765e−05</code></pre>
+</div>
+<p>这意味着，为了在此期间更好地对AMZN和SPY的关系建模，我们应考虑将数据划分为2018年3月22日之前和2018年3月22日之后两个时期。</p>
+</section>
+<section class="book-page" data-pdf-page="275">
+<h3 id="8-7-4-test-equality-of-two-betas">8.7.4 检验两个贝塔系数的相等性</h3>
+<p>上述Chow检验用于检验在两个时期之间系数（即截距和beta）是否发生变化。在某些情况下，我们可能只想检验两个时期的beta（即回归线的斜率）是否相同。为此，我们使用标准的z检验。</p>
+<p><strong>步骤1：计算时期A中beta的值和标准误</strong>
+使用<code>lm()</code>，我们对2015年至2017年期间AMZN收益率对MKT收益率进行回归。然后从summary结果中提取beta的估计值和beta的标准误。这些值在系数列表中分别是第2和第4个元素。</p>
+<div class="r-code-block" id="1">
+  <pre><code class="language-r">1 &gt; reg.A &lt;− lm(AMZN~ MKT, data = returns[&quot;/2017−12−31&quot;])
+2 &gt; summary(reg.A)
+4 Call:
+5 lm(formula = AMZN~ MKT, data = returns[&quot;/2017−12−31&quot;])
+7 Residuals:
+8 Min 1Q Median 3Q Max
+9 −0.107743−0.006844−0.000577 0.005784 0.141576
+11 Coefficients:
+12 Estimate Std. Error tvalue Pr(&gt;|t|)
+13 (Intercept) 0.00127330.0005605 2.272 0.0234 ∗
+14 MKT 1.1342683 0.0721784 15.715 &lt;2e −16 ∗∗∗
+15 −−−
+16 Signif. codes: 0 ‘’∗∗∗’ 0.001 ‘∗∗’ 0.01 ‘∗’ 0.05 ‘.’ 0.1 ‘ ‘ 1
+18 Residual standarderror: 0.01538 on 753 degrees of freedom
+19 Multiple R−squared: 0.247,Adjusted R−squared: 0.246
+20 F−statistic: 247 on 1 and 753 DF, p −value: &lt; 2.2e−16
+22 &gt; (beta.A&lt;− summary(reg.A)$coefficients[2])
+23 [1] 1.134268
+24 &gt;( s e . A&lt;− summary(reg.A)$coefficients[4])
+25 [1] 0.07217837</code></pre>
+</div>
+<p><strong>步骤2：计算时期B中beta的值和标准误</strong>
+类似地，我们提取第二个时期（2018年至2019年）beta的估计值和标准误。为了节省空间，我们没有像上面那样输出回归summary结果，但知道系数列表中的第2和第4个元素是我们想要的值。</p>
+<div class="r-code-block" id="2">
+  <pre><code class="language-r">1 &gt; reg.B &lt;− lm(AMZN~ MKT, data = returns[&quot;2018−01−01/&quot;])
+2 &gt; (beta.B&lt;− summary(reg.B)$coefficients[2])
+3 [1] 1.506851
+4 &gt;( s e . B&lt;− summary(reg.B)$coefficients[4])
+5 [1] 0.05982215</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="276">
+<h2 id="section-8-8">8.8 延伸阅读</h2>
+<p><strong>第三步：计算 Beta 差异</strong> 第一期的 Beta 为 1.13，第二期的 Beta 为 1.51，原始差异为 0.37，第二期的 Beta 高于第一期。然而，与许多估计值一样，差异是否大到具有统计显著性取决于标准误差。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; (diff.beta &lt;- beta.A - beta.B)
+[1] -0.3725827</code></pre>
+</div>
+<p><strong>第四步：对 Beta 差异执行 z 检验</strong> z 检验的计算公式为</p>
+\[z = \frac{\beta_1 - \beta_2}{\sqrt{\sigma_1^2 + \sigma_2^2}}, \tag{8.5}\]
+<p>其中 \(\beta\) 是该期的 Beta，\(\sigma\) 是该期的标准误差。z 检验的输出显示，两个时期的 Beta 差异的 z 得分为 -3.97，p 值非常小。换句话说，该 Beta 差异显著不为零。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; (z &lt;- diff.beta / sqrt(se.A^2 + se.B^2))
+[1] -3.974363
+&gt; options(scipen = 999)
+&gt; (p.value &lt;- 2 * pnorm(-abs(z)))
+[1] 0.00007056775
+&gt; options(scipen = 0)</code></pre>
+</div>
+<p>两本优秀的估值书籍是 [6] 和 [10]。除了提供许多估值主题的一般性讨论外，[10] 对如何制定预测有出色的论述，[6] 则讨论了倍数及其决定因素。</p>
+<p>在 DCF 中，终值通常占公司估值的很大一部分。然而，我们经常观察到，当折现率和永续增长率发生变化时，许多终值会发生大幅变动。在 [3] 中，我解释了这种情况不应出现，因为终值、折现率和永续增长率应该是相互关联的。</p>
+<p>关于去杠杆化 Beta，Hamada 公式的原始论文是 [8]。请注意，上述 Brealey 和 Myers 的公式（参见例如 [5]）假设债务 Beta 不为零。还有其他去杠杆化股权 Beta 的公式，考虑了非零债务 Beta，例如 [11]、[9] 和 [7] 的公式。</p>
+<p>在 [2] 中，我展示了为什么在实务中应考虑现金调整 Beta，尤其是当公司持有大量超额现金时。原因是，持有大量超额现金的公司的观测 Beta 会低估经营 Beta。</p>
+</section>
+<section class="book-page" data-pdf-page="277">
+<h2 id="references-6">参考文献</h2>
+<p>1. Ang, C. (2017). Estimating debt betas and beta unlevering formulas. <em>NACVA QuickRead</em>. http://quickreadbuzz.com/2017/02/08/estimating-debt-betas-beta-unlevering-formulas/<br>
+2. Ang, C. (2018). Why you may want to consider cash-adjusting CAPM betas. <em>Bloomberg CFA Blog</em>. https://www.bloombergprep.com/blog-posts/2018/6/8/why-you-may-want-to-consider-cash-adjusting-capm-betas-1<br>
+3. Ang, C. (2019). Terminal values and runaway valuations. <em>NACVA QuickRead</em>. https://quickreadbuzz.com/2019/11/20/business-valuation-clifford-ang-terminal-values-in-dcfs/<br>
+4. Ang, C., Lin, A. (2020). The valuation impact of using the wrong leverage ratio to unlever betas. <em>NACVA QuickRead</em>. http://quickreadbuzz.com/2020/04/29/business-valuation-ang-lin-the-valuation-impact-of-using-the-wrong-leverage-ratio-to-unlever-betas/<br>
+5. Brealey, R., Myers, S., Allen, F. (2011). <em>Principles of Corporate Finance</em> (10th ed.). New York: McGraw-Hill.<br>
+6. Damodaran, A. (2013). <em>Investment Valuation</em> (3rd ed.). Hoboken: Wiley.<br>
+7. Fernandez, P. (2004). The value of tax shields is NOT equal to the present value of tax shields. <em>Journal of Financial Economics</em>, 73, 145–165.<br>
+8. Hamada, R. (1972). The effect of the firm's capital structure on the systematic risk of common stock. <em>Journal of Finance</em>, 37, 435–452.<br>
+9. Harris, R., Pringle, J. (1985). Risk-adjusted discount rates extensions from the average-risk case. <em>Journal of Financial Research</em>, 8, 237–244.<br>
+10. Koller, T., Goedhart, M., & Wessels, D. (2020). <em>Valuation: Measuring and Managing the Value of Companies</em> (7th ed.). Hoboken: Wiley.<br>
+11. Miles, J., Ezzell, J. (1980). The weighted average cost of capital, perfect capital markets and project life: a clarification. <em>Journal of Financial and Quantitative Analysis</em>, 15, 719–730.</p>
+</section>
+<nav class="chapter-nav"><a href="/analyzing-financial-data-r-cn/chapter-7/">上一节：第7章 Markowitz均值-方差优化</a><a href="/analyzing-financial-data-r-cn/chapter-9/">下一节：第9章 固定收益</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=638ea974b0aa"></script>
+</body>
+</html>

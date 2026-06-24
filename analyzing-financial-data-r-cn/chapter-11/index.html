@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="第11章 模拟 | 《使用 R 分析金融数据并实现金融模型》">
+  <title>第11章 模拟 | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=163efa3dc728">
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <div class="sidebar-heading">
+    <h2>书籍目录</h2>
+    <div class="sidebar-actions" aria-label="二级目录控制">
+      <button type="button" data-sidebar-action="expand">全部展开</button>
+      <button type="button" data-sidebar-action="collapse">全部收起</button>
+    </div>
+  </div>
+  <nav class="sidebar-list"><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/">首页</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/dedication/">献辞</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/preface/">前言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/acknowledgments/">致谢</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-1/">第1章 价格</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-1" aria-label="展开第1章 价格二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-1" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-1">1.1 价格与价值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-2">1.2 从 Yahoo Finance 导入价格数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-3">1.3 检查数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-4">1.4 基本数据处理技巧</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-5">1.5 比较不同证券之间的资本利得</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-6">1.6 简单移动平均线和指数移动平均线</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-7">1.7 成交量加权平均价格（VWAP）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-8">1.8 绘制K线图</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-9">1.9 双轴价格与成交量图</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-10">1.10 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#references">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-2/">第2章 单个证券收益率</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-2" aria-label="展开第2章 单个证券收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-2" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-1">2.1 价格收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-2">2.2 总收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-3">2.3 对数总收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-4">2.4 缩尾处理与截尾处理</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-5">2.5 累积多日收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-6">2.6 周收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-7">2.7 月度收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-2/#section-2-8">2.8 比较多种证券的表现</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-3/">第3章 投资组合收益率</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-3" aria-label="展开第3章 投资组合收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-3" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-1">3.1 投资组合收益率：长方法</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-2">3.2 使用矩阵代数的投资组合收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-3">3.3 构建基准投资组合收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-4">3.4 时间加权收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-5">3.5 资金加权收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-6">3.6 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#reference">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-4/">第4章 风险</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-4" aria-label="展开第4章 风险二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-4" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-1">4.1 风险-收益权衡</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-2">4.2 单个证券风险</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-3">4.3 投资组合风险</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-4">4.4 风险价值 (Value-at-Risk)</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-5">4.5 期望损失</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-6">4.6 替代风险度量</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-7">4.7 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#references-2">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-5/">第5章 因子模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-5" aria-label="展开第5章 因子模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-5" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-1">5.1 资本资产定价模型（CAPM）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-2">5.2 市场模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-3">5.3 滚动窗口回归</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-4">5.4 不同参考日的Beta</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-5">5.5 Fama–French 三因子模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-6">5.6 异方差性检验</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-7">5.7 检验非正态性</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-8">5.8 自相关检验</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-9">5.9 事件研究</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-10">5.10 选择最佳回归变量</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-11">5.11 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#references-3">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-6/">第6章 风险调整后的投资组合绩效度量</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-6" aria-label="展开第6章 风险调整后的投资组合绩效度量二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-6" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-1">6.1 投资组合与基准数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-2">6.2 夏普比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-3">6.3 Roy 的安全第一比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-4">6.4 特雷诺比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-5">6.5 索提诺比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-6">6.6 信息比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-7">6.7 合并结果</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-8">6.8 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#references-4">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-7/">第7章 Markowitz均值-方差优化</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-7" aria-label="展开第7章 Markowitz均值-方差优化二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-7" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-1">7.1 两个资产：手动方法</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-2">7.2 使用二次规划的两个资产情况</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-3">7.3 使用二次规划的多资产优化</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-4">7.4 允许卖空的影响</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-5">7.5 扩展阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#references-5">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-8/">第8章 股票</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-8" aria-label="展开第8章 股票二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-8" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-1">8.1 公司财务</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-2">8.2 预测（Projections）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-3">8.3 股权风险溢价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-4">8.4 去杠杆化 Beta</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-5">8.5 敏感性分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-6">8.6 使用回归分析的相对估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-7">8.7 识别股票收益率的显著变化</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-8">8.8 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#references-6">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-9/">第9章 固定收益</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-9" aria-label="展开第9章 固定收益二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-9" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-1">9.1 经济分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-2">9.2 美国国债</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-3">9.3 主成分分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-4">9.4 投资级债券利差</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-5">9.5 债券估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-6">9.6 久期与凸性</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-7">9.7 短期利率模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-8">9.8 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#references-7">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-10/">第10章 期权</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-10" aria-label="展开第10章 期权二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-10" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-1">10.1 获取期权链数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-2">10.2 Black–Scholes–Merton 期权定价模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-3">10.3 隐含波动率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-4">10.4 Cox, Ross, and Rubinstein 二叉树期权定价模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-5">10.5 美式期权定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-6">10.6 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#references-8">参考文献</a></div></div><div class="sidebar-item is-current is-open"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-11/" aria-current="page">第11章 模拟</a><button class="sidebar-toggle" type="button" aria-expanded="true" aria-controls="sidebar-sections-chapter-11" aria-label="收起第11章 模拟二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-11"><a class="section-link" href="#section-11-1">11.1 使用几何布朗运动模拟股票价格</a><a class="section-link" href="#section-11-2">11.2 模拟含股息和不含股息的股票价格</a><a class="section-link" href="#section-11-3">11.3 模拟具有相关价格的股票</a><a class="section-link" href="#section-11-4">11.4 使用模拟计算风险价值</a><a class="section-link" href="#section-11-5">11.5 欧式期权的蒙特卡洛定价</a><a class="section-link" href="#section-11-6">11.6 使用对偶变量法的蒙特卡洛期权定价</a><a class="section-link" href="#section-11-7">11.7 奇异期权估值</a><a class="section-link" href="#section-11-8">11.8 扩展阅读</a><a class="section-link" href="#references-9">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-12/">第12章 交易策略</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-12" aria-label="展开第12章 交易策略二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-12" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-1">12.1 有效市场假说</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-2">12.2 技术分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-3">12.3 构建简单交易策略</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-4">12.4 机器学习技术</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-5">12.5 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#references-10">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-a/">附录A R入门</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-appendix-a" aria-label="展开附录A R入门二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-appendix-a" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-1-installing-r">A.1 安装 R</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-2-the-r-working-directory">A.2 R 工作目录</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-3-r-console-output">A.3 R 控制台输出</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-4-r-editor">A.4 R 编辑器</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-5-packages">A.5 包</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-6-basic-commands">A.6 基本命令</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-7-the-r-workspace">A.7 R 工作空间</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-8-vectors">A.8 向量</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-9-combining-vectors">A.9 组合向量</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-10-matrices">A.10 矩阵</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-11-data-frame">A.11 data.frame</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-12-date-formats">A.12 日期格式</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-b/">附录B 预加载代码</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-c/">附录C 构建假设投资组合（月度收益率）</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-d/">附录D 构建假设投资组合（日收益率）</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/index/">索引</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <h1>第11章 模拟</h1>
+<section class="book-page" data-pdf-page="375">
+<h1 id="chapter-11">第11章 模拟</h1>
+<p>如果驱动资产价值的各种杠杆的输入值能够相对精确地确定，并且这些输入与资产价值之间的关系可以解析推导，那么我们就可以使用闭式公式（例如，Black-Scholes-Merton 模型用于欧式期权）来为资产估值。然而，在许多情况下，存在更高程度的不确定性影响资产的价值或驱动这些资产价值的输入。在这种情况下，我们可以借助数值方法来帮助解决问题。上一章讨论的 Cox、Ross 和 Rubinstein 模型就是一个例子。在许多情况下，我们会依赖一种称为模拟的通用方法，在该方法中，我们生成许多可能的结果，以反映基于每个输入的不确定性未来可能出现的不同情况。在本章中，我们演示如何在模拟股票和期权时应用模拟。</p>
+<p>在第11.1节中，我们首先展示如何使用几何布朗运动（Geometric Brownian Motion，GBM）生成股票价格路径。GBM 是模拟股票价格的常用过程。接下来，在第11.2节中，我们展示当股票支付股息时如何模拟股票价格。在某些情况下，我们需要对共同变动的证券（即相互相关的证券）进行建模。我们在第11.3节中展示如何执行此操作。然后，在第11.4节中，我们展示如何在风险价值（Value-at-Risk，VaR）的背景下应用模拟。接着，我们在第11.5节中讨论如何使用蒙特卡洛模拟来定价欧式期权，并在第11.6节中讨论使用对偶变量（antithetic variables）提高蒙特卡洛估计精度的方��。最后，在第11.7节中，我们展示如何使用模拟来为几种奇异期权（exotic options）估值。具体来说，我们实现了对亚式期权（Asian options）、回溯期权（lookback options）和障碍期权（barrier options）估值的模型。</p>
+</section>
+<section class="book-page" data-pdf-page="376">
+<h2 id="section-11-1">11.1 使用几何布朗运动模拟股票价格</h2>
+<p>在模拟股票价格之前，我们首先需要考虑股票价格的一些性质。这将帮助我们思考应该期望什么，以及如何进行模拟。如果我们看图11.1，可以看到标普500 ETF的收盘价看起来像一条弯曲的线，似乎有随机的上下波动。这条线也是连续的，从实际角度看，这意味着我们可以不抬起笔来画这条线。</p>
+<div class="r-code-block" id="code-376-1">
+  <pre><code class="language-r">plot(y = data.spy$SPY.Close,
+     x = index(data.spy),
+     xlab = &quot;&quot;,
+     ylab = &quot;Close Price&quot;,
+     type = &quot;l&quot;,
+     col = &quot;blue&quot;,
+     main = &quot;SPY Close Prices\nDecember 31, 2014− December 31, 2019&quot;)</code></pre>
+</div>
+<figure class="book-figure" id="fig-11.1"><img src="/assets/img/analyzing-financial-data-r-cn/figure-9da8f48aa09c.png" alt="图11.1 标普500 ETF收盘价，2014年12月31日–2019年12月31日">
+<figcaption>图11.1 标普500 ETF收盘价，2014年12月31日–2019年12月31日。数据来源：经CSI ©2020许可复制的价格数据。www.csidata.com</figcaption>
+</figure>
+</section>
+<section class="book-page" data-pdf-page="377">
+<h2 id="simulating-stock-prices-using-geometric-brownian-motion">11.1 使用几何布朗运动模拟股票价格</h2>
+<p>此外，股票价格永远不会跌破零。由于股票代表公司的股权，且公司承担有限责任，当公司资产不足以偿还负债时，股东无需额外掏钱。换句话说，股东最多只损失他们在公司中的投资。因此，从经济角度看，公司股票价格的最低值为零。</p>
+<p>模拟股票价格路径最常用的过程之一是几何布朗运动（Geometric Brownian Motion, GBM），因为它与我们上面讨论的股票价格特性一致。在GBM中，明天的股票价格 \(S_{t+1}\) 为：</p>
+\[S_{t+1} = S_t \cdot \exp\left((r_f - 0.5\sigma^2)dt + \sigma z \sqrt{dt}\right), \tag{11.1}\]
+<p>其中 \(r_f\) 是无风险利率，\(\sigma\) 是股票的波动率，且 \(z \sim N(0,1)\)（即一个随机正态变量）。现在我们通过以下示例来了解如何在R中生成模拟股票价格。</p>
+<p><strong>步骤1：设定输入参数</strong> 在本例中，我们假设起始股票价格 \(S_0\) 为100美元。我们将模拟一年期（即 \(T=1\)）的日股票价格。无风险收益率 \(r_f\) 设为1.55%，股票的标准差 \(\sigma\) 设为40%。由于我们的增量是每日，且一年大约有252个交易日，我们创建一个时间增量变量 \(dt\)，等于1/252即0.00397。</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">1 &gt;S _0 &lt;− 100
+2 &gt;T &lt;− 1
+3 &gt;r f &lt;− 0.0155
+4 &gt; sigma &lt;− 0.40
+5 &gt;( d t &lt;− 1 / 252)
+6 [1] 0.003968254
+7 &gt;( n &lt;− T / dt)
+8 [1] 252</code></pre>
+</div>
+<p>第7行和第8行给出了我们需要生成的价格数量。在此情况下，我们需要模拟一个日历年的价格，这意味着我们需要252个模拟价格，因为我们只计算一年的交易日数。如果我们要模拟2年的价格，则需要模拟504个价格。</p>
+<p><strong>步骤2：创建存储模拟股票价格的数据集</strong> 在运行模拟之前，我们需要创建一个包含临时值的数据集。这将是一个占位符，稍后我们将用模拟生成的价格替换它。在第1行中，我们通过将起始股票价格 \(S_0\) 与252个零连接来创建一个数据框。我们使用 <code>rep()</code> 函数，它告诉我们将零重复 \(n\) 次，其中 \(n=252\)。第2行将列名重命名为 <code>Price</code>。如我们所见，第一个观测值等于今天的股票价格100美元，后面跟着252个零。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">1 &gt;s &lt;− data.frame(c(S_0, rep(0,n)))
+2 &gt; names(s)&lt;− &quot;Price&quot;
+3 &gt; head.tail(s)</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="378"><h3>步骤 3：模拟 252 个股票价格</h3>
+<p>我们使用一个 for 循环来填充 <code>s</code> 中剩余的 252 个元素。由于我们将使用随机数生成器，我们在第 1 行添加 <code>set.seed(1)</code> 以确保结果可重现。具体来说，我们应该能在 R 控制台中看到如下输出。否则，如果我们不设定种子，将生成另一组随机价格。然而在实际应用中，我们通常不会包含 <code>set.seed()</code>。</p>
+<div class="r-code-block" id="code-11-1">
+  <pre><code class="language-r">&gt; set.seed(1)
+&gt; for (i in 1:n){
++ s[i+1,] &lt;- s[i,] * exp(((rf - 0.5 * sigma^2) * dt +
++ sigma * rnorm(1, 0, 1) * sqrt(dt)))
++}</code></pre>
+</div>
+<p>第 2 行循环遍历变量 <code>i</code>，其取值从 1 到 252（记住，<code>n = 252</code>）。在第 3 行中，我们看到时刻 <code>t + 1</code> 的股票价格等于时刻 <code>t</code> 的股票价格按照几何布朗运动的上述方程所描述的收益率增长。式 (11.1) 中的 <code>z</code> 由 <code>rnorm()</code> 表示，它生成一个标准正态随机变量。回想一下，标准正态变量的均值为零，方差为 1。<code>rnorm()</code> 的第一个参数告诉 R 生成多少个随机变量，本例中每次循环生成一个随机变量。第二个参数是均值（即 0），第三个参数是标准差（即 1）。注意标准差是方差的正平方根，因此 1 的平方根也等于 1。从输出中可以看到，年初价格为 100 美元，年末价格为 109.29 美元。</p>
+<h3>步骤 4：绘制模拟价格</h3>
+<p>尽管上面的代码可以显示部分模拟的股票价格，但我们可以通过绘制股票价格数据集 <code>S</code> 的简单图形来直观地观察生成的结果。模拟股票价格的图形如图 11.2 所示。</p>
+<div class="r-code-block" id="code-11-2">
+  <pre><code class="language-r">&gt; plot(x = s$Price,
++ xlab = &quot;Trading Days&quot;,</code></pre>
+</div></section>
+<section class="book-page" data-pdf-page="379">
+<h2>11.1 使用几何布朗运动模拟股票价格</h2>
+<figure class="book-figure" id="fig-11.2"><img src="/assets/img/analyzing-financial-data-r-cn/figure-3a2d7e7ada39.png" alt="图11.2 使用几何布朗运动模拟的价格路径。模拟252个交易日的股票价格，基于初始股价$100，平均收益率10%，标准差40%。">
+<figcaption>图11.2 使用几何布朗运动模拟的价格路径。模拟252个交易日的股票价格，基于初始股价$100，平均收益率10%，标准差40%。</figcaption>
+</figure>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">3 + ylab = &quot;Price&quot;,
+4 + type = &quot;l&quot;,
+5 + col = &quot;blue&quot;,
+6 + main = &quot; SimulatedStock Price&quot;)
+7 &gt; abline(h = 100)</code></pre>
+</div>
+<p>在此，我们使用<code>plot()</code>创建一个折线图（即<code>type = "l"</code>）。为了便于理解，我们还添加了简单的轴标签。<code>abline(h = 100)</code>创建一条水平线，为股票价格的起始点（即S<sub>0</sub> = $100）提供参考。这样，我们就能更容易地观察股票价格是高于还是低于起始价格$100。从图中可以看到，我们的模拟股票价格仅在开始时短暂跌破初始价格$100，然后在150个交易日后再次跌破。</p>
+</section>
+<section class="book-page" data-pdf-page="380">
+<h2 id="chapter-11">11 模拟</h2>
+<h3>11.1.1 模拟多个期末股票价格路径</h3>
+<p>我们在上面模拟了一条股票价格路径。我们可以重复这一过程多次，以模拟多条股票价格路径。有时我们不需要看到股票价格的日常演变，只关心模拟期结束时的价格。因此，如果我们只需要期末日期（例如，对欧式期权定价），那么这种方法可以加快计算速度。</p>
+<p><strong>步骤1：创建存储模拟期末价格的数据集</strong> 在本例中，我们将模拟10,000个期末价格。然后我们创建一个临时期末价格数据集 <code>p</code>，它是一个包含10,000个零的向量。运行模拟时，我们将用模拟的期末价格替换该向量中的元素。我们还创建一个临时价格路径数据集 <code>s</code>，它以起始价格100美元和252个零开始。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; sim &lt;− 10000
+&gt;p &lt;− c(rep(0, sim))
+&gt;s &lt;− c(100, rep(0, n))</code></pre>
+</div>
+<p><strong>步骤2：模拟股票价格</strong> 第1行到第4行是我们在模拟中使用的输入和假设。我们的起始股票价格为100美元，无风险利率为1.55%，我们假设一年有252个交易日，时间增量为0.00397。接下来，我们运行与上述类似的模拟，只是我们生成252个标准正态随机变量。我们运行两个for循环。第二个for循环生成一条模拟的股票价格路径，然后将期末价格保存为 <code>p</code> 的一个元素。第一个for循环将其运行10,000次，因此我们得到10,000个期末价格。模拟得到的平均期末价格为101.40美元。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt;S _0 &lt;− 100
+&gt;r f &lt;− 0.0155
+&gt;n &lt;− 252
+&gt;( d t &lt;− 1 / n)
+[1] 0.003968254
+&gt;
+&gt; set.seed(1)
+&gt; for (i in 1:sim){
++ for (j in 1:n) {
++s [ j + 1 ] &lt;− s[j]∗ exp((rf− 0.5 ∗ sigma^2)∗ dt +
++ sigma ∗ rnorm(1, 0, 1)∗ sqrt(dt))
++}
++ p[i] &lt;− s[length(s)]
++}
+&gt; mean(p)
+[1] 101.4021
+&gt; min(p)
+[1] 20.0268
+&gt; max(p)
+[1] 559.653</code></pre>
+</div>
+<p><strong>步骤3：绘制期末价格直方图</strong> 我们可以使用 <code>hist()</code> 来绘制期末价格的频率分布。我们可以指定断点数量，这样...</p>
+</section>
+<section class="book-page" data-pdf-page="381">
+<h2>11.1 使用几何布朗运动模拟股票价格</h2>
+<p>像这样。在此示例中，我们将断点设置为60。直方图如图11.3所示。</p>
+<figure class="book-figure" id="fig-11.3"><img src="/assets/img/analyzing-financial-data-r-cn/figure-93b17d078087.png" alt="图11.3 基于几何布朗运动的10,000次模拟期末股票价格直方图">
+<figcaption>图11.3 基于几何布朗运动的10,000次模拟期末股票价格直方图</figcaption>
+</figure>
+<div class="r-code-block" id="r-code-1">
+  <pre><code class="language-r">1 &gt; hist(p,
+2 + breaks = 100,
+3 + col = &quot;blue&quot;,
+4 + border = 0,
+5 + xlab = &quot;End of Year Price&quot;,
+6 + main = &quot;10,000 Simulated EndingPrices&quot;)</code></pre>
+</div>
+<h3>11.1.2 比较理论分布与经验分布</h3>
+<p>尽管上述经验分布基于某种股票价格理论模型，但该分布可能不会产生与理论分布完全一致的结果。我们可以考虑使用以下方法计算损失概率的示例：</p>
+</section>
+<section class="book-page" data-pdf-page="382">
+  <h2 id="section-11-2">11.2 模拟含股息和不含股息的股票价格</h2>
+<p>
+    370 11 模拟
+  </p>
+<p>
+    \[ d = -\frac{(\mu - 0.5\sigma^2)T}{\sigma\sqrt{T}}, \qquad (11.2) \]
+  </p>
+<p>
+    亏损概率通过 \(pnorm(d)\) 计算。在上述例子中，亏损意味着期末股价低于起始值 100 美元。如下所示，理论亏损概率为 56.4%。在第 6 行，我们通过统计模拟中低于 100 美元的期末价格数量来计算经验亏损概率。我们使用 \(sum()\) 并在求和时施加条件。如果直接写 \(sum(p)\)，R 会求和所有 10,000 个价格。但通过施加 \(p < 100\) 的条件，R 统计满足该条件的观测数。应用此条件得到 5,657 个观测值低于 100 美元。然后除以模拟的期末价格总数 10,000。因此，经验亏损概率为 5,657 / 10,000 = 56.6%。这表明我们的模拟生成的亏损概率与理论预测非常接近。
+  </p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">d &lt;−− (r f− 0.5 ∗ sigma^2)∗ T / (sigma∗ sqrt(T))
+[1] 0.16125
+pr.loss&lt;− pnorm(d)
+[1] 0.5640517
+sum(p &lt; 100) / sim
+[1] 0.5657</code></pre>
+</div>
+<p>
+    当股票派发股息时，其价格会在除息日（ex-date）前下降相当于预期股息金额的幅度。这是因为除息日前一天是股票附带股息交易的最后一天。直观理解这一现象的方法是从市场价值资产负债表的视角思考。为简化，假设一家公司每股持有现金 10 美元，负债每股 1 美元。那么公司股权为每股 9 美元（= 10 美元现金 – 1 美元负债）。回想股东拥有对公司股权的索取权，因此股价也为每股 9 美元。现在，假设同一家公司决定在 T 日向股东支付每股 0.50 美元现金股息。因此，在 T+1 日买入股票的股东不再拥有对每股 9 美元现金的索取权，而只拥有对 8.50 美元股权的索取权，因为 0.50 美元将以股息形式支付。因此，股价跌至 8.50 美元，因为这些股东只拥有对每股 8.50 美元股权的索取权（即 10 美元现金减去 0.50 美元股息再减去 1 美元负债）。
+  </p>
+<p>
+    上述分析表明，如果我们有两家完全相同的公司，但一家支付股息而另一家保留这些现金流，那么支付股息公司的股价应低于不支付股息公司的股价。这可能意味着投资者在持有支付股息的股票时会亏损。
+  </p>
+</section>
+<section class="book-page" data-pdf-page="383"><h3 id="simulating-stock-prices-with-and-without-dividends">11.2 模拟考虑与不考虑股息的股票价格</h3>
+<p>如果选择不支付股息的股票，那么该股票的价格会低于支付股息的股票，但实际情况并非如此。尽管股价下跌，但股息支付的现金会流向投资者，抵消股价的下跌。这一点可以通过计算两只股票的总收益率看出。回顾一下，总收益率为 \(R_t = (P_t + D_t)/P_{t-1} - 1\)，其中 \(P\) 是股票价格，\(D\) 是股息支付。继续我们上面的例子，不支付股息的股票的总收益率为 0% [= (9 美元之后 + 0 美元股息)/9 美元之前 - 1]。另一方面，股息支付后，支付股息的股票的总收益率也是 0% [= (8.50 美元之后 + 0.50 美元股息)/9 美元之前 - 1]。由于投资者获得了股息，他们的财富既没有增加也没有减少。直觉上，情况应该如此，因为你只是在资本利得和股息之间进行权衡。因此，在其他条件相同的情况下，投资者在除息日从支付股息的股票和不支付股息的股票上获得的收益率应该相同。</p>
+<p>除了可能对不同投资者产生不同的税收效应外，股息还可能对某些衍生品的估值产生影响。例如，如果你正在评估一种基于实际股票价格（如最近5天的平均值）触发的证券，那么我们需要对股票价格建模，以考虑股票价格会因预期支付的股息金额而下跌的事实。在本节中，我们展示了一个如何在模拟股票价格中纳入股息支付的示例。</p>
+<p>在下面的例子中，我们考虑一只当前价格为100美元的股票，每季度支付每股2.50美元的股息。我们希望模拟2年的每日价格，该股票的平均收益率为10%，标准差为40%。我们假设无风险利率为2%。</p>
+<p><strong>步骤1：输入参数</strong> 我们为示例中的关键输入创建变量。我们还添加了两个额外变量。第一个是 \(dt\)，即时间增量。在此示例中，我们采用每日时间增量。但是，我们只计算一年中的交易日数。通常，假设一年大约有252个交易日。因此，\(dt\) 等于 1/252。在最后一步，我们还要创建要模拟的时间步数。由于我们模拟的是2年时期，每年有252个交易日，我们创建一个等于504的变量 \(n\)。</p>
+<div class="r-code-block" id="code-11-2-1">
+  <pre><code class="language-r">div &lt;- 2.50
+S0 &lt;- 100
+T &lt;- 2
+rf &lt;- 0.02
+sigma &lt;- 0.40
+(dt &lt;- 1/252)
+(n &lt;- T/dt)</code></pre>
+</div>
+[1] 0.003968254
+[1] 504
+<p><strong>步骤2：创建向量以存储模拟价格和收益率</strong> 我们创建向量 \(s\) 用于股票价格，\(r\) 用于收益率。每个向量有505个元素。第一个</p></section>
+<section class="book-page" data-pdf-page="384">
+  <p>372 第11章 模拟</p>
+<p>s 的第一个元素是起始股票价格 $100，后面跟着 504 个零。r 的所有 505 个元素均为零。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt;s &lt;− c(S_0, rep(0, n))
+2 &gt; head.tail(s)
+3 [1] 100 0 0
+4 [1] 0 0 0
+5 &gt; length(s)
+6 [1] 505
+7 &gt;
+8 &gt;r &lt;− c(0, rep(0, n))
+9 &gt; head.tail(r)
+10 [1] 0 0 0
+11 [1] 0 0 0
+12 &gt; length(r)
+13 [1] 505</code></pre>
+</div>
+<p>步骤 3：模拟两年期内的收益率。r 的第一个元素为零。元素 2 到 505 随后基于几何布朗运动填充收益率。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; set.seed(1)
+2 &gt; for (i in 1:n) {
+3 +r [ i + 1 ] &lt;− (rf− 0.5 ∗ sigma^2)∗ dt +
+4 + sigma ∗ rnorm(1, 0, 1)∗ sqrt(dt)
+5 +}
+6 &gt; head.tail(r)
+7 [1] 0.000000000−0.0160232480.004389282
+8 [1]−7.718482e−03−3.005300e−02 4.645376e−05</code></pre>
+</div>
+<p>步骤 4：向价格数据集中添加股息。数据集 s 当前在第一个观测值中包含 $100，后面跟着 504 个零。股息通常按季度支付，因此我们希望创建一个序列，该序列在每季度末有 $2.50 的值，否则为零。假设一年有 252 个交易日，每个季度末大约相隔 63 个交易日。为此，我们首先创建一个可以用作索引的交易天数序列。我们在第 1 行执行此操作。我们从 0 开始，因此当 t 的值为 63 时，实际上是第 64 个交易日，距离起始价格有 63 个交易日。然后，在第 6 行，我们使用 ifelse() 告诉 R：在第 63 个交易日上，我们希望有股息支付 div，否则 div 的值为零。如输出所示，最后一个观测值（即第 504 个交易日）有每股 $2.50 的股息支付。为了更高效地实现这一点，我们使用了 seq() 并告诉 R 从 63 开始，到 63 * 8 或 504，步长为 63。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt;t &lt;− seq(0, n, 1)
+2 &gt; head.tail(t)
+3 [1] 0 1 2
+4 [1] 502 503 504
+5 &gt;
+6 &gt; div &lt;− ifelse(t %in% seq(63, 63∗8, 63), div , 0)
+7 &gt; head.tail(div)</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="385">
+  <h3>11.2 模拟含股息和不含股息的股票价格 373</h3>
+<pre><code class="r">[1] 0 0 0
+[1] 0.0 0.0 2.5
+&gt;
+&gt; s &lt;- cbind(s, t, div)
+&gt; head.tail(s)
+    s t div
+[1,] 100 0 0
+[2,]   0 1 0
+[3,]   0 2 0
+    s t div
+[503,]   0 502 0.0
+[504,]   0 503 0.0
+[505,]   0 504 2.5</code></pre>
+<p><strong>第5步：创建第二个价格序列</strong> 为了确定有无股息时价格序列的区别，我们创建第二个不含股息支付的股票价格序列，记为 <code>s2</code>。起始价格同样为 $100。</p>
+<pre><code class="r">&gt; s2 &lt;- c(S_0, rep(0, n))
+&gt; s &lt;- cbind(s, s2)
+&gt; head.tail(s)
+    s t div  s2
+[1,] 100 0 0 100
+[2,]   0 1 0   0
+[3,]   0 2 0   0
+    s t div  s2
+[503,]   0 502 0.0 0
+[504,]   0 503 0.0 0
+[505,]   0 504 2.5 0</code></pre>
+<p><strong>第6步：模拟价格序列</strong> 首先使用 <code>data.frame()</code> 将 <code>s</code> 转换为数据框对象。然后，使用 <code>for</code> 循环计算股票价格。我们对第3步模拟生成的对数收益率取指数。对于 <code>s</code>，我们减去 <code>div</code> 列的值。因此，在除息日，股票价格下降，随后的收益率基于较低的价格生成。因此，到两年期末，我们会看到 <code>s</code> 列的股票价格较低，为 $95.44。相比之下，非股息支付股票的 <code>s2</code> 列价格最终为 $113.91。</p>
+<pre><code class="r">&gt; s &lt;- data.frame(s)
+&gt; for (i in 1:n) {
++   s[i+1, 1] &lt;- (s[i, 1] * exp(r[i+1])) - s[i+1, 3]
++   s[i+1, 4] &lt;- (s[i, 4] * exp(r[i+1]))
++ }
+&gt; head.tail(s)
+    s t div       s2
+1 100.00000 0 0 100.00000
+2  98.41044 1 0  98.41044
+3  98.84334 2 0  98.84334
+    s t div       s2
+503 100.92774 502 0.0 117.3784</code></pre>
+</section>
+<section class="book-page" data-pdf-page="386">
+<h2>第11章 模拟</h2>
+<pre>13 504 97.93969 503 0.0 113.9033
+14 505 95.44424 504 2.5 113.9086</pre>
+<p><strong>第7步：绘制两条价格序列。</strong>使用简单的折线图可能更容易可视化两条价格序列的差异。图11.4显示了下面代码的输出。红线表示支付股息的股票价格，低于蓝线。蓝线表示不支付股息的股票价格。我们可以看到，红线和蓝线在交易日0到100的中段开始出现分歧，因为第一次股息支付发生在第63个交易日。然后，在每个除息日（我们假设每63个交易日发生一次），差距进一步扩大。仅从股息支付股票的价格收益率来看，投资者可能会认为他们亏损了，因为红线最终低于表示100美元的水平线。以上表明，最终价格的差异……</p>
+<figure class="book-figure" id="fig-11.4"><img src="/assets/img/analyzing-financial-data-r-cn/figure-e101fba232e4.png" alt="图11.4 有股息和无股息的模拟股票价格比较" />
+<figcaption>图11.4 有股息和无股息的模拟股票价格比较。股息支付股票和非股息支付股票的起始价格均为100美元。应用于两只股票的日收益率相同。股息支付股票在2年期间每季度获得2.50美元的股息。</figcaption>
+</figure>
+</section>
+<section class="book-page" data-pdf-page="387">
+  <h2 id="section-11-3">11.3 模拟具有相关价格的股票</h2>
+<p>由于所有股票可能受到相似因素的影响，我们或许需要考虑模拟两个或更多资产价格在多大程度上共同变动。例如，同一行业内的股票会受到某些相似力量的影响。比如，轻型汽车的供需可能影响福特（Ford）和通用汽车（GM）的销量。因此，如果我们想对这两家公司的股价进行建模，更有意义的是进行一个考虑福特股票与通用汽车股票之间相关性的模拟，而不是将两只股票的价格视为相互独立。在本节中，我们将通过一个例子来演示如何对两只相关资产的价格进行建模。</p>
+<p>考虑两只股票，在第一年它们不相关，但在第二年预期相关性会高得多。这个情景虽然高度简化，但会使我们阐述的观点更加清晰。站在第一年末，如果我们假设两只股票现在具有0.7的相关性，我们想知道未来应如何对两家公司的股价进行建模。我们首先在以下假设下模拟两只股票在第一年的价格：第一只股票价格为10美元，平均收益率为10%，标准差为40%；第二只股票价格为10美元，平均收益率为12%，标准差为50%。我们假设无风险利率为1.55%。然后，我们假设两只股票的相关性为0.7，并据此模拟第二年的价格。</p>
+<p><strong>步骤1：输入第一年模拟的参数</strong> 模拟需要无风险利率（截至2019年12月31日为1.55%）、两只股票的初始价格</p>
+<p>蓝线（113.91美元）和红线（95.44美元）的价格差为18.46美元。然而，在此示例中，投资者在两年期间名义上获得了20美元的股息。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; (y.range&lt;- range(s$s, s$s2))
+2 [1] 83.61193 152.30753
+3 &gt; plot(y = s$s2 ,
+4 +x = s $t,
+5 + xlab = &quot; Trading Days&quot;,
+6 + ylim = y.range ,
+7 + ylab = &quot;Price&quot;,
+8 + type = &quot;l&quot;,
+9 + col = &quot;blue&quot;,
+10 + main = &quot; SimulatedStock PriceWith and WithoutDividends&quot;)
+11 &gt; lines(y = s$s ,x=s $t, col = &quot;red&quot;)
+12 &gt; abline(h = 100)
+13 &gt; legend(&quot;bottomleft&quot;,
+14 + legend = c(&quot;Price (no div)&quot;, &quot;Price (with div)&quot;),
+15 + col = c(&quot;blue&quot;, &quot;red&quot;),
+16 + lty = 1,
+17 + cex = 0.75)</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="388">
+
+<p>假设两只证券，每只初始价格为10美元，证券1的波动率为40%，证券2的波动率为50%。我们假设一年有252个交易日，因此时间增量dt等于1/252即0.00397，因为我们在模拟日度价格。</p>
+<h2>步骤1：设置参数</h2>
+<div class="r-code-block" id="step1">
+  <pre><code class="language-r">rf &lt;- 0.0155
+s1 &lt;- 10
+sigma1 &lt;- 0.40
+s2 &lt;- 10
+sigma2 &lt;- 0.50
+T &lt;- 1
+n &lt;- 252
+(dt &lt;- 1 / n)</code></pre>
+</div>
+<pre class="output">[1] 0.003968254</pre>
+<h2>步骤2：创建两个向量来存储股票价格</h2>
+<p>我们创建两个包含253个元素的向量。第一个元素等于股票价格，均为10美元。然后我们暂时为剩余的252个观测值使用0。由于我们将以相同方式生成path2，我们可以简单地将path1赋值给path2。</p>
+<div class="r-code-block" id="step2">
+  <pre><code class="language-r">path1 &lt;- c(s1, rep(0, n))
+head.tail(path1)
+length(path1)
+path2 &lt;- path1</code></pre>
+</div>
+<pre class="output">[1] 10 0 0
+[1] 0 0 0
+[1] 253</pre>
+<h2>步骤3：模拟股票价格</h2>
+<p>注意这里我们使用set.seed(12345)而不是set.seed(1)。这个数字并非完全随机选择。我们通过试错法选择了这个值，目的是在我们的示例中生成两只低相关性的资产。</p>
+<div class="r-code-block" id="step3">
+  <pre><code class="language-r">set.seed(12345)
+for (i in 1:n){
+  path1[i+1] &lt;- path1[i] * exp((rf - 0.5 * sigma1^2) * dt + sigma1 * rnorm(1, 0, 1) * sqrt(dt))
+  path2[i+1] &lt;- path2[i] * exp((rf - 0.5 * sigma2^2) * dt + sigma2 * rnorm(1, 0, 1) * sqrt(dt))
+}
+head.tail(path1)
+head.tail(path2)</code></pre>
+</div>
+<pre class="output">[1] 10.00000 10.05662 10.04297
+[1] 12.17861 12.00244 12.05814
+[1] 10.00000 10.10796 10.03167
+[1] 11.41955 10.97963 10.81394</pre>
+<h2>步骤4：计算股票收益率</h2>
+<p>我们通过价格的对数差分计算对数收益率。</p>
+<div class="r-code-block" id="step4">
+  <pre><code class="language-r">return1 &lt;- diff(log(path1))
+head.tail(return1)</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="389">
+<h3>11.3 模拟具有相关价格的股票</h3>
+<p><strong>步骤5：计算收益率的相关系数</strong></p>
+<p>使用 <code>cor()</code>，我们计算 <code>return1</code> 和 <code>return2</code> 中两只股票收益率的相关系数。我们发现两只股票的相关系数为 0.007。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; cor(return1, return2)
+[1] 0.007064377</code></pre>
+</div>
+<p><strong>步骤6：计算平均收益率、波动率和价格向量</strong></p>
+<p>我们创建一个向量 <code>mu.port</code> 用于两只资产的平均收益率，另一个向量 <code>sigma.port</code> 用于两只资产的标准差。我们还创建一个向量 <code>price.port</code> 用于两只资产的最新价格。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; (mu.port&lt;- as.matrix(c(mean(return1), mean(return2))))
+         [,1]
+[1,] 0.0007426764
+[2,] 0.0003105187
+&gt; (sigma.port&lt;- as.matrix(c(sd(return1), sd(return2))))
+         [,1]
+[1,] 0.009995675
+[2,] 0.015777745
+&gt; (price.port&lt;- as.matrix(c(path1[length(path1)],
++   path2[length(path2)])))
+         [,1]
+[1,] 12.05814
+[2,] 10.81394</code></pre>
+</div>
+<p><strong>步骤7：创建收益率矩阵</strong></p>
+<p>使用 <code>as.matrix()</code>，我们从两只资产的收益率序列创建一个收益率矩阵。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">&gt; return.mat&lt;- as.matrix(cbind(return1 ,return2))
+&gt; head.tail(return.mat)
+         return1     return2
+[1,]  0.005645623  0.010738516
+[2,] -0.001357626 -0.007576433
+[3,]  0.005850819 -0.029064639
+         return1     return2
+[250,] -0.001379352 -0.005341789
+[251,] -0.014571471 -0.039285156
+[252,]  0.004629524 -0.015206199</code></pre>
+</div>
+<p><strong>步骤8：计算投资组合的实际相关系数</strong></p>
+<p>使用 <code>cor()</code>，我们计算两只资产收益率的相关系数。如输出所示，两只资产之间的相关系数（即非对角元素的值）很低，为 0.007。</p>
+</section>
+<section class="book-page" data-pdf-page="390"><div class="r-code-block" id="0">
+  <pre><code class="language-r">&gt; (corr.port &lt;- cor(return.mat))
+return1 return2
+return1 1.0000000000.007064377
+return2 0.0070643771.000000000</code></pre>
+</div>
+<p><strong>第9步：假设相关系数为0.7</strong> 尽管历史相关性较低，但我们假设这两个资产的相关性在接下来的一年中将增加到0.7。我们将两个非对角元素替换为0.7。我们将在第12步中使用这个相关矩阵。</p>
+<div class="r-code-block" id="1">
+  <pre><code class="language-r">&gt; corr.port[1, 2] &lt;- 0.7
+&gt; corr.port[2, 1] &lt;- 0.7
+&gt; corr.port
+return1 return2
+return1 1.0 0.7
+return2 0.7 1.0</code></pre>
+</div>
+<p><strong>第10步：创建存储模拟价格的矩阵</strong> 我们创建一个具有252行和2列的矩阵。</p>
+<div class="r-code-block" id="2">
+  <pre><code class="language-r">&gt; paths &lt;- matrix(nrow = n, ncol = nrow(mu.port))
+&gt; head.tail(paths)
+     [,1] [,2]
+[1,] NA   NA
+[2,] NA   NA
+[3,] NA   NA
+     [,1] [,2]
+[250,] NA  NA
+[251,] NA  NA
+[252,] NA  NA</code></pre>
+</div>
+<p><strong>第11步：生成随机数</strong> 我们创建一个具有两列和252行的矩阵。该矩阵中的每个元素将是一个均值为0、方差为1的随机正态变量。然后，我们将每天的数值累加到前一天的累积值中。</p>
+<div class="r-code-block" id="3">
+  <pre><code class="language-r">&gt; set.seed(12345)
+&gt; p &lt;- matrix(rnorm(n * nrow(mu.port), 0, 1), ncol = nrow(mu.port))
+&gt; p &lt;- apply(p, 2, cumsum)
+&gt; head.tail(p)
+         [,1]       [,2]
+[1,] 0.5855288  0.4560525
+[2,] 1.2949948 -0.9781978
+[3,] 1.1856915 -1.2435026
+         [,1]     [,2]
+[250,] 31.84898 5.301701
+[251,] 31.04030 5.786417
+[252,] 32.04142 4.848444</code></pre>
+</div>
+<p><strong>第12步：将p与Cholesky矩阵相乘</strong> 我们实现Cholesky分解来分解相关矩阵。这是一个高度技术性的步骤，但就我们当前的目的而言，唯一需要注意的是，这一步是为了生成</p></section>
+<section class="book-page" data-pdf-page="391">
+<h3>11.3 模拟具有相关价格的股票</h3>
+<p>本质上，我们使用 Cholesky 分解通过将其乘以标准正态变量矩阵来生成相关随机变量。</p>
+<div class="r-code-block" id="code_1">
+  <pre><code class="language-r">1 &gt; (chol_mat &lt;− chol(corr.port))
+2 return1 return2
+3 return1 1 0.7000000
+4 return2 0 0.7141428
+5 &gt;
+6 &gt;p &lt;− p% ∗% chol_mat
+7 &gt; head.tail(p)
+8 return1 return2
+9 [1,] 0.5855288 0.73555680
+10 [2,] 1.2949948 0.20792342
+11 [3,] 1.1856915−0.05805443
+12 return1 return2
+13 [250,]31.84898 26.08046
+14 [251,]31.04030 25.86054
+15 [252,]32.04142 25.89148</code></pre>
+</div>
+<p><strong>步骤 13：模拟价格</strong> 我们通过两步模拟价格。首先，我们创建一个函数 <code>gbm()</code>，以便基于几何布朗运动模拟价格。然后，我们使用 for 循环将模拟的价格替换掉我们在步骤 10 中创建的临时价格矩阵 <code>paths</code>。</p>
+<div class="r-code-block" id="code_2">
+  <pre><code class="language-r">1 &gt; gbm &lt;− function(N,sigma , rf, S_0, Wt) {
+2 +t &lt;− (1:N)/ n
+3 +S _t=S _0 ∗ exp((rf− 0.5 ∗ sigma^2)∗ t + sigma ∗ Wt)
+4 + return(S _t)
+5 +}</code></pre>
+</div>
+<div class="r-code-block" id="code_3">
+  <pre><code class="language-r">1 &gt; for (i in 1:nrow(mu.port)) {
+2 + paths[, i] &lt;− gbm(n, sigma.port[i], mu.port[i],
+3 + price.port[i], p[, i])
+4 +}
+5 &gt; head.tail(paths)
+6 [,1] [,2]
+7 [1,] 12.12895 10.94018
+8 [2,] 12.21530 10.84949
+9 [3,] 12.20200 10.80406
+10 [,1] [,2]
+11 [250,]16.58965 16.32196
+12 [251,]16.45613 16.26543
+13 [252,]16.62168 16.27339</code></pre>
+</div>
+<p><strong>步骤 14：检查模拟价格收益率的相关系数</strong> 在本案例中，我们使用了 <code>ROC()</code> 函数，这是 R 中计算对数收益率的一种替代方法。这与取对数价格之差相同。然后我们移除向量的第一个元素，该元素为 NA。我们可以看到，该序列的相关系数为 0.74，远高于历史数据中几乎为零的相关系数，且更接近我们假设的 0.70 相关系数。</p>
+<div class="r-code-block" id="code_4">
+  <pre><code class="language-r">1 &gt; rets1 &lt;− ROC(paths[, 1])
+2 &gt; rets1 &lt;− rets1 [−1]</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="392"><p class="page-header">380 第11章 模拟</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; head.tail(rets1)
+[1] 0.007094340−0.001089812−0.004530261
+[1] 0.007528105−0.0080804950.010009617
+&gt;
+&gt; rets2 &lt;- ROC(paths[, 2])
+&gt; rets2 &lt;- rets2[-1]
+&gt; head.tail(rets2)
+[1]−0.008324127−0.0041957930.002223299
+[1]−0.0194807336−0.00346903310.0004888651
+&gt;
+&gt; cor(rets1 ,rets2)
+[1] 0.7424496</code></pre>
+</div>
+<p><strong>步骤15：绘制模拟价格</strong> 我们可以使用折线图绘制相关价格。图11.5显示了以下代码的输出。两只资产的起始点不同，因为第1年收盘价不同。一只资产价格为12.06美元，另一只为10.81美元。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; (y.range&lt;- c(min(paths), max(paths)))
+[1] 10.38606 19.31994</code></pre>
+</div>
+<figure class="book-figure" id="fig-11.5"><img src="/assets/img/analyzing-financial-data-r-cn/figure-3a7f9191b672.png" alt="图11.5 模拟的两只相关资产价格，假设相关系数为0.7"><figcaption>图11.5 模拟的两只相关资产价格，假设相关系数为0.7</figcaption></figure></section>
+<section class="book-page" data-pdf-page="393">
+<h2 id="section-11-4">11.4 使用模拟计算风险价值</h2>
+<p>在本节中，我们将比较历史风险价值（VaR）计算的结果与基于证券特征的模拟结果。在分析中，我们将使用苹果公司（Apple）的股票，因此将AAPL的数据导入R，并使用2016年至2019年的日收益率。最后一步是将对象从xts转换为数据框。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; aapl &lt;- load.data(&quot;AAPL Yahoo.csv.&quot;, &quot;AAPL&quot;)
+&gt; rets &lt;- diff(log(aapl$AAPL.Adjusted))
+&gt; rets &lt;- rets[-1, ]
+&gt; names(rets) &lt;- &quot;return&quot;
+&gt; rets &lt;- rets[&quot;2016-01-01/2019-12-31&quot;]
+&gt; rets &lt;- data.frame(rets)
+&gt; head.tail(rets)
+           return
+2016-01-04  0.000854462
+2016-01-05 -0.025378378
+2016-01-06 -0.019763664
+           return
+2019-12-27 -0.0003795553
+2019-12-30  0.0059175879
+2019-12-31  0.0072799852</code></pre>
+</div>
+<p>对于历史VaR，我们希望将收益率数据从最小（最负值）到最大（最大的正值）排序。我们使用<code>order()</code>函数来实现。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; rets.sorted &lt;- rets[order(rets$return), ]
+&gt; head.tail(rets.sorted)
+[1] -0.10492433 -0.06863306 -0.06796461
+[1]  0.06294017  0.06610106  0.06805252</code></pre>
+</div>
+<p>接着，我们基于95%的VaR（即α = 0.05）计算截断点。将其应用于数据集中的收益率数量（即1006个），结果截断点等于第50个最小的收益率，在本例中为−2.39%。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">&gt; length(rets.sorted)
+[1] 1006
+&gt; alpha &lt;- 0.05</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="394">
+<h2>11 模拟</h2>
+<p>因此，将该临界值应用于2019年12月31日AAPL的收盘价293.65美元，得到5%的历史风险价值（VaR）为7.03美元。注意，我们遵循惯例将VaR报告为正数。</p>
+<div class="r-code-block" id="1">
+  <pre><code class="language-r">1 &gt; (cut.off&lt;- length(rets.sorted)∗ alpha)
+2 [1] 50.3
+3 &gt; (cut.off&lt;- round(cut.off))
+4 [1] 50
+5 &gt; (critical.value&lt;- (rets.sorted[cut.off]))
+6 [1]−0.02394501
+7 &gt; (last.price&lt;- as.numeric(aapl$AAPL.Close[nrow(aapl)]))
+8 [1] 293.65
+9 &gt; (VaR.historical&lt;- abs(last.price∗ critical.value))
+10 [1] 7.031451</code></pre>
+</div>
+<p>现在，我们转向使用蒙特卡洛模拟VaR。首先，我们计算历史收益率的平均值和标准差，作为预期收益率和预期标准差的代理值。这给出了日平均收益率为0.11%，日标准差为1.54%。</p>
+<div class="r-code-block" id="2">
+  <pre><code class="language-r">1 &gt; (mean.rets&lt;- mean(rets$return))
+2 [1] 0.001087205
+3 &gt; (sd.rets&lt;- sd(rets$return))
+4 [1] 0.015357</code></pre>
+</div>
+<p>接下来，在运行模拟之前，还需要两个变量。首先，由于我们基于日频率模拟价格，需要定义时间增量，等于1/252。其次，无风险利率假设为1.55%。</p>
+<div class="r-code-block" id="3">
+  <pre><code class="language-r">1 &gt;d t &lt;- 1 / 252
+2 &gt;r &lt;- 0.0155</code></pre>
+</div>
+<p>然后，我们运行10,000次下一日价格的模拟。使用<code>set.seed(1)</code>以保证结果可重现。在实践中，可以去掉这行代码。</p>
+<div class="r-code-block" id="4">
+  <pre><code class="language-r">1 &gt; sim &lt;- 10000
+2 &gt; prc &lt;- data.frame(c(rep(0, sim)))
+3 &gt; names(prc)&lt;- &quot;End.Price&quot;
+4 &gt; set.seed(1)
+5 &gt; for (t in 1 : sim) {
+6 + prc[t, ] &lt;- last.price∗ exp(((r- 0.5∗ sigma^2)∗ dt +
+7 + sigma ∗ sqrt(dt)∗ rnorm(1, mean = 0, sd = 1)))
+8 +}
+9 &gt; simprc.sorted&lt;- prc[order(prc$End.Price), ]
+10 &gt; head.tail(simprc.sorted)
+11 [1] 277.5364 278.0983 278.4790
+12 [1] 310.4403 310.5128 311.3279</code></pre>
+</div>
+<p>对于10,000次观测，假设显著性水平为5%，临界值为第500小的价格，本例中为286.13美元。从2019年12月31日的价格293.65美元中减去该价格，得到1日VaR为7.52美元。换句话说，模拟VaR方法下，95%置信水平下的最大1日损失为7.52美元。这一结果接近历史VaR方法下95%置信水平的最大1日损失7.03美元。</p>
+</section>
+<section class="book-page" data-pdf-page="395">
+
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; length(simprc.sorted)
+2 [1] 10000
+3 &gt; (sim.cut.off&lt;− length(simprc.sorted)∗ alpha)
+4 [1] 500
+5 &gt; simprc.sorted[sim.cut.off]
+6 [1] 286.1348
+7 &gt; (VaR.simulation&lt;− abs(simprc.sorted[sim.cut.off]− last.price))
+8 [1] 7.515213</code></pre>
+</div>
+<h2 id="section-11-5">11.5 欧式期权的蒙特卡洛定价</h2>
+<p>在第十章中，我们使用Black-Scholes-Merton模型和二叉树模型对欧式期权进行估值。本节中，我们将使用蒙特卡洛模拟来对欧式期权进行估值。模拟也可用于更复杂的期权，正如我们将在本章后面估值奇异期权时看到的那样。</p>
+<p><strong>步骤1：输入和假设</strong> 我们设定标的正股的基本特征。在此例中，我们假设标的资产是不支付股息的股票（q=0），当前价格为100美元，波动率为40%。期权执行价格为110美元，到期时间为1年。无风险利率为2%。在模拟中，我们假设10万次运行。我们还创建了 <code>opt.val</code>，它是一个向量，初始值为股票价格100，重复10万次。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt;S &lt;− 100
+2 &gt;K &lt;− 110
+3 &gt;v &lt;− 0.40
+4 &gt;T &lt;− 1
+5 &gt;r &lt;− 0.02
+6 &gt;q &lt;− 0.00
+7 &gt;
+8 &gt; sim &lt;− 100000
+9 &gt; opt.val&lt;− c(S, rep(S, sim))</code></pre>
+</div>
+<p><strong>步骤2：运行模拟</strong> 我们使用 <code>set.seed(1)</code> 以保证输出的可重复性。在实际操作中，我们不需要输入代码的第1行。<code>for</code> 循环告诉R计算期权的价值，即到期时期权内在价值与零之间的较大值。第5行最后包含指数项的部分将到期时的内在价值折现到当前时刻。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; set.seed(1)
+2 &gt; for (i in 1 : sim) {
+3 + opt.val[i] &lt;− max(0,
+4 +( S ∗ exp((rf− q − 0.5 ∗ v^2)∗ T+
+5 +v ∗ sqrt(T)∗ rnorm(1,0,1)))− K) ∗ exp (−rf ∗ T)
+6 +}
+7 &gt; head.tail(opt.val)
+8 [1] 0 0 0
+9 [1] 21.91808 14.89727 100.00000</code></pre>
+</div>
+
+</section>
+<section class="book-page" data-pdf-page="396">
+<h2 id="section-11-6">11.6 使用对偶变量法的蒙特卡洛期权定价</h2>
+<p>在上述步骤3中，输出的第4行显示了蒙特卡洛期权价值的标准误差为0.09美元。提高蒙特卡洛期权价值估计精度的一种方法是使用<strong>对偶变量法</strong>。该方法背后的思想是使用负相关的随机数对来生成负相关的模拟结果对。然后我们对每对结果取平均，再对这些平均值取平均，从而得到期权价值。让我们通过以下示例来了解如何实现该方法，以及它是否确实能降低期权价值的波动性。</p>
+<p><strong>步骤1：创建临时矩阵</strong> 该矩阵将存储100,000对模拟期权价值。</p>
+<div class="r-code-block" id="r1">
+  <pre><code class="language-r">&gt; opt.val&lt;− c(S, rep(S, sim))
+&gt; opt.val2&lt;− cbind(opt.val, opt.val)
+&gt; head.tail(opt.val2)
+  opt.val opt.val
+[1,]    100    100
+[2,]    100    100
+[3,]    100    100
+  opt.val opt.val
+[99999,]    100    100
+[100000,]    100    100
+[100001,]    100    100
+&gt; class(opt.val2)
+[1] &quot;matrix&quot;</code></pre>
+</div>
+<p><strong>步骤2：运行模拟</strong> 对于 opt.val2 中的每一行，我们生成一对期权价值。这些期权价值是通过每次运行两个独立的模拟生成的。然后我们计算看涨期权在到期时的内在价值，并将其折现回当前。</p>
+<div class="r-code-block" id="r2">
+  <pre><code class="language-r">&gt; set.seed(1)
+&gt; for (i in 1 : sim) {
++   opt.val2[i, 1] &lt;− max(0,
++     ( S ∗ exp((r− q − 0.5 ∗ v^2)∗ T +
++        v ∗ sqrt(T)∗ rnorm(1,0,1)))− K) ∗ exp(−r ∗ T)</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="397">
+<div class="r-code-block" id="code-397-1">
+  <pre><code class="language-r">6 + opt.val2[i, 2] &lt;− max(0,
+7 +( S ∗ exp((r− q − 0.5 ∗ v^2)∗ T −
+8 +v ∗ sqrt(T)∗ rnorm(1,0,1)))− K) ∗ exp(−r ∗ T)
+9 +}
+10 &gt; head.tail(opt.val2)
+11 opt.val opt.val
+12 [1,] 0 0.00000
+13 [2,] 0 0.00000
+14 [3,] 0 20.34815
+15 opt.val opt.val
+16 [99999,] 46.85377 45.11314
+17 [100000,] 0.00000 0.00000
+18 [100001,]100.00000 100.00000</code></pre>
+</div>
+<p>步骤 3：计算期权价值 我们分两步计算期权价值。首先，使用 <code>rowMeans()</code> 计算每对期权价值的平均值。我们有 100,000 对。其次，对这些结果值取平均值。得到的期权价值为 $12.82$，接近我们在上一节使用蒙特卡洛模拟估计的 $12.85$。该计算的标准误差为 $0.06$，比不使用对偶变量时产生的 $0.09$ 低三分之一。</p>
+<div class="r-code-block" id="code-397-2">
+  <pre><code class="language-r">1 &gt; avg &lt;− rowMeans(opt.val2[−1, ] )
+2 &gt; head.tail(avg)
+3 [1] 0.000000 10.174075 2.181153
+4 [1] 45.98345 0.00000 100.00000
+5 &gt; length(avg)
+6 [1] 100000
+7 &gt;
+8 &gt; mean(avg)
+9 [1] 12.82193
+10 &gt; sd(avg)/ sqrt(sim)
+11 [1] 0.06104794</code></pre>
+</div>
+<h2 id="section-11-7">11.7 奇异期权估值</h2>
+<p>在上一节和前面的期权章节中，我们处理了欧式和美式期权。这类期权被称为香草期权，因为它们具有明确特征。一些香草期权的价格和隐含波动率可以通过查看这些工具的市场报价获得，因此，如果只想了解这些期权的价值，可能不需要对它们建模。然而，还有一类期权并不标准化，而是在场外交易（OTC）市场而非交易所进行交易。这些产品被称为奇异期权。在本节中，我们将查看三个奇异期权的例子，并实现模型对这些奇异期权进行估值。</p>
+</section>
+<section class="book-page" data-pdf-page="398">
+    <h3>11.7.1 亚式期权</h3>
+<p>亚式期权（Asian option）的收益取决于期权存续期内标的资产价格的算术平均值。换句话说，亚式看涨期权的内在价值为 \(\max(S_{avg} - K, 0)\)，亚式看跌期权的内在价值为 \(\max(K - S_{avg}, 0)\)。</p>
+<p>我们可以通过模拟标的股票价格并计算期权存续期内的平均股价来对这些期权进行估值。然后将其与执行价格进行比较，以确定亚式看涨或看跌期权的内在价值。</p>
+<p>在深入探讨亚式期权估值之前，我们首先设置模拟的股票价格。这个模拟股票价格不仅用于亚式期权估值，还将用于回望期权和障碍期权的估值。</p>
+<p><strong>步骤1: 输入和假设</strong> 我们设置标的股票的基本特征以及模拟参数，用于后续的模拟和估值练习。在此示例中，我们假设标的资产是一只股票，当前价格为100美元，预期收益率为10%，标准差为40%。期权的执行价格 \(K\) 为110美元，到期时间为1年。无风险利率假设为2%。我们还假设一年有252个交易日，因此时间增量 \(dt\) 等于 \(1/252\)。对于模拟，我们将使用100,000次运行。</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">1 &gt;S _0 &lt;− 100
+2 &gt; sigma &lt;− 0.40
+3 &gt;K &lt;− 110
+4 &gt;T &lt;− 1
+5 &gt;r &lt;− 0.02
+6 &gt;( d t &lt;− 1 / 252)
+7 [1] 0.003968254
+8 &gt; sim &lt;− 100000</code></pre>
+</div>
+<p><strong>步骤2: 创建临时股票价格矩阵</strong> 我们首先确定股票价格矩阵的列数。这是期权到期时间（1年）和时间增量（252个交易日）的函数。然后我们加1，因为我们需要额外的观测值来表示起始股票价格 \(S_0\) 为100美元。因此，该矩阵有253列。这将存储标的资产的模拟价格路径。行数等于我们运行的模拟次数，本例中为100,000次。因此，每一行是标的资产的一条价格路径。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">1 &gt;( t &lt;− T / d t+1 )
+2 [1] 253
+3 &gt;s &lt;− matrix(rep(0, t∗ sim), nrow = sim)
+4 &gt; dim(s)
+5 [1] 100000 253</code></pre>
+</div>
+<p><strong>步骤3: 生成价格</strong> 我们首先将股票价格矩阵第一列的值改为当前股票价格100美元。第一个 for 循环模拟...</p>
+</section>
+<section class="book-page" data-pdf-page="399">
+<h3>11.7 奇异期权估值</h3>
+<p>对于后续的 252 个交易日，我们模拟每个交易日的股价，第二个 for 循环模拟所有 100,000 条路径的股价。与之前的模拟一样，我们使用几何布朗运动（GBM）模拟股价。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; s[, 1] &lt;− S_0
+2 &gt; set.seed(1)
+3 &gt; for (i in 2:t){
+4 + for (j in 1:sim){
+5 +s [ j , i ] &lt;− s[j, i− 1] ∗ exp (((rf− 0.5 ∗ sigma^2)∗ dt +
+6 + sigma ∗ rnorm(1, 0, 1)∗ sqrt(dt)))
+7 +}
+8 +}
+9 &gt; s[1, 1:10]
+10 [1] 100.00000 98.40869 100.36520 99.77477 101.25174 99.89696 97.19071
+11 [8] 97.42005 96.37471 95.14623
+12 &gt; s[1, 243:253]
+13 [1] 87.02607 89.41397 87.77481 87.08010 86.27813 88.03872 88.57250 89.54893
+14 [9] 88.94516 89.32014 90.38505</code></pre>
+</div>
+<p>现在我们已经获得了所有 100,000 条路径的底层股票价格，接下来可以对亚洲期权进行估值。</p>
+<h4>步骤 4：创建临时矩阵</h4>
+<p>我们设置三个临时矩阵来存储平均价格、看涨期权价值和看跌期权价值。这些矩阵非常大，初始时所有元素均为零。矩阵将有 \(t = 253\) 列和 \(sim = 100,000\) 行。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; asian.avg&lt;− matrix(0, ncol = t, nrow = sim)
+2 &gt; asian.call&lt;− matrix(0, ncol = t, nrow = sim)
+3 &gt; asian.put&lt;− matrix(0, ncol = t, nrow = sim)</code></pre>
+</div>
+<h4>步骤 5：计算并填充数组</h4>
+<p>我们运行一个 for 循环来填充上面创建的三个数组。\(\text{asian.avg}\) 等于每条价格路径的均值（共 100,000 条路径）。换句话说，它有 100,000 个值，每个值表示一次模拟中的平均价格。亚洲看涨期权的价值等于平均股价与执行价格之差与零之间的最大值。亚洲看跌期权的价值等于执行价格与平均股价之差与零之间的最大值。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; for (i in 1:sim) {
+2 + asian.avg[i] &lt;− mean(s[i, ])
+3 + asian.call[i] &lt;− exp(−rf ∗ T) ∗ (max((asian.avg[i]− K), 0))
+4 + asian.put[i] &lt;− exp (−rf ∗ T) ∗ (max((K− asian.avg[i]), 0))
+5 +}</code></pre>
+</div>
+<h4>步骤 6：计算亚洲期权的价值</h4>
+<p>为了计算亚洲期权的价值，我们取在 100,000 次模拟下计算出的美式期权当前价值（即第一列）的平均值。如输出所示，我们的例子得出亚洲看涨期权价值为 5.77 美元，亚洲看跌期权价值为 14.81 美元。</p>
+</section>
+<section class="book-page" data-pdf-page="400">
+<h2>11 模拟</h2>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; (asian.call.value&lt;− mean(asian.call[, 1]))
+2 [1] 5.766807
+3 &gt; (asian.put.value&lt;− mean(asian.put[, 1]))
+4 [1] 14.80564</code></pre>
+</div>
+<h3>11.7.2 回溯期权</h3>
+<p>回溯期权的收益取决于期权有效期内标的资产的最大或最小价格。具体而言，回溯看涨期权的收益为最终资产价格超过最低资产价格的部分，而回溯看跌期权的收益为期权有效期内最高资产价格超过最终资产价格的部分。现在我们继续前面的例子，实现一个模型来为回溯期权定价。</p>
+<h4>步骤1：创建临时矩阵</h4>
+<p>我们设置四个临时矩阵，分别存储最低价格、最高价格、看涨期权价值和看跌期权价值。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; lookback.min&lt;− matrix(0, ncol = t, nrow = sim)
+2 &gt; lookback.max&lt;− matrix(0, ncol = t, nrow = sim)
+3 &gt; lookback.call&lt;− matrix(0, ncol = t, nrow = sim)
+4 &gt; lookback.put&lt;− matrix(0, ncol = t, nrow = sim)</code></pre>
+</div>
+<h4>步骤2：计算填充数组的值</h4>
+<p>我们运行一个for循环来填充上面创建的四个数组。lookback.min 等于每个价格路径的股票最低价格。lookback.max 等于每个价格路径的股票最高价格。lookback.call 存储看涨期权价值，lookback.put 存储看跌期权价值。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; for (i in 1:sim) {
+2 + lookback.min[i]&lt;− min(s[i, ])
+3 + lookback.max[i]&lt;− max(s[i, ])
+4 + lookback. call[i]&lt;− exp (−r ∗ T) ∗ (max((s[i, t]− lookback.min[i]), 0))
+5 + lookback.put[i]&lt;− exp(−r ∗ T) ∗ (max(lookback.max[i]− s[i, t], 0))
+6 +}</code></pre>
+</div>
+<h4>步骤3：计算回溯期权的价值</h4>
+<p>为了计算回溯期权的价值，我们取在100,000次模拟下计算得到的回溯期权今日价值（即第一列）的平均值。如输出所示，我们的例子得到回溯看涨期权价值为27.67美元，回溯看跌期权价值为33.18美元。</p>
+<div class="r-code-block" id="code-4">
+  <pre><code class="language-r">1 &gt; (lookback.call.value&lt;− mean(lookback.call[, 1]))
+2 [1] 27.66831
+3 &gt; (lookback.put.value&lt;− mean(lookback.put[, 1]))
+4 [1] 33.17716</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="401">
+<h2>11.7 奇异期权估值</h2>
+<h3>11.7.3 障碍期权</h3>
+<p>障碍期权的收益取决于标的资产价格在特定时间段内是否达到某一水平。存在不同类型的障碍期权。下面，我们将对两种类型进行估值：向上敲入看涨期权和向下敲入看涨期权。这两种都属于敲入期权，只有在标的资产价格触及障碍时才存在。向上敲入看涨期权是一种常规看涨期权，只有当标的资产价格触及障碍时才存在，且该障碍设置在初始资产价格之上。向下敲入看涨期权是一种常规看涨期权，只有当标的资产价格触及障碍时才存在，且该障碍设置在初始资产价格或以下。我们首先从向上敲入看涨期权开始。</p>
+<p><strong>步骤1：创建存储收益的矩阵</strong> 我们设置一个临时矩阵来保存向上敲入看涨期权的收益值。这里，矩阵只需要一列，因为在下一步中，我们计算每次模拟的内在价值，并且仅将该内在价值存储在此收益矩阵中。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; payoff1&lt;− matrix(0, ncol = 1, nrow = sim)</code></pre>
+</div>
+<p><strong>步骤2：计算填充数组的值</strong> 初始股票价格为100美元。在此示例中，我们假设看涨期权存在前的障碍为150美元。然后，我们使用之前奇异期权计算中的一些输入。我们使用一个for循环，对100,000次运行中的每一次进行模拟。对于每一次运行，我们检查最大股票价格是否超过150美元的障碍。如果超过，则我们知道向上敲入看涨期权已存在。然后，我们确定期权生命周期结束时的看涨期权内在价值。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; barrier1&lt;− 150
+2 &gt; for (i in 1:sim) {
+3 + if(lookback.max[i] &gt; barrier1){
+4 + payoff1[i] &lt;− max(s[i, t]− K, 0)
+5 + } else {
+6 + payoff1[i] &lt;− 0
+7 +}
+8 +}</code></pre>
+</div>
+<p><strong>步骤3：计算向上敲入看涨期权的价值</strong> 为了计算向上敲入看涨期权的价值，我们取期权到期时100,000个向上敲入看涨期权内在价值的平均值。在我们的示例中，该平均值为11.22美元。然后，我们将该平均值折现到当前，得到向上敲入看涨期权的价值为11.05美元。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; (payoff1.avg&lt;− mean(payoff1))
+2 [1] 11.21817
+3 &gt; (barrier.upin.value&lt;− exp(−rf ∗ T) ∗ payoff1.avg)
+4 [1] 11.04563</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="402">
+  <h2 id="section-11-8">11.8 扩展阅读</h2>
+<p>我们上面构建的模拟应该为您学习更高级的模拟方法打下了良好的基础。有几本将蒙特卡洛应用于金融领域的趣书值得考虑。这些书包括 [1] 和 [4]。此外，Christian Robert 和 George Casella 也撰写了两本关于蒙特卡洛模拟的优秀著作。第一本侧重于蒙特卡洛方法 [2]，另一本侧重于使用 R 进行蒙特卡洛 [3]。这些书籍深入探讨了理论以及更高级的模拟方法。</p>
+<div class="r-code-block" id="1">
+  <pre><code class="language-r">1 &gt; payoff2&amp;lt;- matrix(0, ncol = 1, nrow = sim)
+2 &gt;
+3 &gt; barrier2&amp;lt;- 70
+4 &gt; for (i in 1:sim) {
+5 + if(lookback.min[i] &amp;lt;= barrier2){
+6 + payoff2[i] &amp;lt;- max(s[i, t]- K, 0)
+7 + } else {
+8 + payoff2[i] &amp;lt;- 0
+9 +}
+10 +}
+11 &gt;
+12 &gt; (payoff2.avg&amp;lt;- mean(payoff2))
+13 [1] 0.2865829
+14 &gt; (barrier.downin.value&amp;lt;- exp(-rf * T) * payoff2.avg)
+15 [1] 0.2821751</code></pre>
+</div>
+<h2 id="references-9">参考文献</h2>
+<ol>
+    <li>Glasserman, P. (2003). <em>Monte Carlo methods in financial engineering</em>. Berlin: Springer.</li>
+<li>Robert, C., & Casella, G. (2004). <em>Monte Carlo statistical methods</em> (2nd ed.). Berlin: Springer.</li>
+<li>Robert, C., & Casella, G. (2010). <em>Introducing Monte Carlo methods with R</em>. Berlin: Springer.</li>
+<li>Shonkwiler, R. (2010). <em>Finance with Monte Carlo</em>. Berlin: Springer.</li>
+  </ol>
+</section>
+<nav class="chapter-nav"><a href="/analyzing-financial-data-r-cn/chapter-10/">上一节：第10章 期权</a><a href="/analyzing-financial-data-r-cn/chapter-12/">下一节：第12章 交易策略</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=638ea974b0aa"></script>
+</body>
+</html>

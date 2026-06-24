@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="第2章 单个证券收益率 | 《使用 R 分析金融数据并实现金融模型》">
+  <title>第2章 单个证券收益率 | Chandler&#x27;s AI Productivity Notes</title>
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=163efa3dc728">
+
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [["$", "$"], ["\\(", "\\)"]],
+        displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+        processEscapes: true
+      },
+      svg: { fontCache: "global" }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到正文</a>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Chandler&#x27;s AI Productivity Notes 首页">
+      <span class="brand-mark">C</span>
+      <span class="brand-name">Chandler&#x27;s AI Productivity Notes</span>
+    </a>
+    <nav class="site-nav" aria-label="主导航">
+      <a href="/">首页</a>
+<a href="/posts/" aria-current="page">最新文章</a>
+<a href="/tags/">主题</a>
+<a href="/about/">关于</a>
+    </nav>
+  </header>
+  <main id="content" class="tutorial-page">
+    <div class="tutorial-layout">
+
+<aside class="tutorial-sidebar">
+  <div class="sidebar-heading">
+    <h2>书籍目录</h2>
+    <div class="sidebar-actions" aria-label="二级目录控制">
+      <button type="button" data-sidebar-action="expand">全部展开</button>
+      <button type="button" data-sidebar-action="collapse">全部收起</button>
+    </div>
+  </div>
+  <nav class="sidebar-list"><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/">首页</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/dedication/">献辞</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/preface/">前言</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/acknowledgments/">致谢</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-1/">第1章 价格</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-1" aria-label="展开第1章 价格二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-1" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-1">1.1 价格与价值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-2">1.2 从 Yahoo Finance 导入价格数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-3">1.3 检查数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-4">1.4 基本数据处理技巧</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-5">1.5 比较不同证券之间的资本利得</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-6">1.6 简单移动平均线和指数移动平均线</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-7">1.7 成交量加权平均价格（VWAP）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-8">1.8 绘制K线图</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-9">1.9 双轴价格与成交量图</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#section-1-10">1.10 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-1/#references">参考文献</a></div></div><div class="sidebar-item is-current is-open"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-2/" aria-current="page">第2章 单个证券收益率</a><button class="sidebar-toggle" type="button" aria-expanded="true" aria-controls="sidebar-sections-chapter-2" aria-label="收起第2章 单个证券收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-2"><a class="section-link" href="#section-2-1">2.1 价格收益率</a><a class="section-link" href="#section-2-2">2.2 总收益率</a><a class="section-link" href="#section-2-3">2.3 对数总收益率</a><a class="section-link" href="#section-2-4">2.4 缩尾处理与截尾处理</a><a class="section-link" href="#section-2-5">2.5 累积多日收益率</a><a class="section-link" href="#section-2-6">2.6 周收益率</a><a class="section-link" href="#section-2-7">2.7 月度收益率</a><a class="section-link" href="#section-2-8">2.8 比较多种证券的表现</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-3/">第3章 投资组合收益率</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-3" aria-label="展开第3章 投资组合收益率二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-3" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-1">3.1 投资组合收益率：长方法</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-2">3.2 使用矩阵代数的投资组合收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-3">3.3 构建基准投资组合收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-4">3.4 时间加权收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-5">3.5 资金加权收益率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#section-3-6">3.6 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-3/#reference">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-4/">第4章 风险</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-4" aria-label="展开第4章 风险二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-4" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-1">4.1 风险-收益权衡</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-2">4.2 单个证券风险</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-3">4.3 投资组合风险</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-4">4.4 风险价值 (Value-at-Risk)</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-5">4.5 期望损失</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-6">4.6 替代风险度量</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#section-4-7">4.7 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-4/#references-2">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-5/">第5章 因子模型</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-5" aria-label="展开第5章 因子模型二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-5" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-1">5.1 资本资产定价模型（CAPM）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-2">5.2 市场模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-3">5.3 滚动窗口回归</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-4">5.4 不同参考日的Beta</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-5">5.5 Fama–French 三因子模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-6">5.6 异方差性检验</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-7">5.7 检验非正态性</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-8">5.8 自相关检验</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-9">5.9 事件研究</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-10">5.10 选择最佳回归变量</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#section-5-11">5.11 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-5/#references-3">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-6/">第6章 风险调整后的投资组合绩效度量</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-6" aria-label="展开第6章 风险调整后的投资组合绩效度量二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-6" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-1">6.1 投资组合与基准数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-2">6.2 夏普比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-3">6.3 Roy 的安全第一比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-4">6.4 特雷诺比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-5">6.5 索提诺比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-6">6.6 信息比率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-7">6.7 合并结果</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#section-6-8">6.8 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-6/#references-4">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-7/">第7章 Markowitz均值-方差优化</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-7" aria-label="展开第7章 Markowitz均值-方差优化二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-7" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-1">7.1 两个资产：手动方法</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-2">7.2 使用二次规划的两个资产情况</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-3">7.3 使用二次规划的多资产优化</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-4">7.4 允许卖空的影响</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#section-7-5">7.5 扩展阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-7/#references-5">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-8/">第8章 股票</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-8" aria-label="展开第8章 股票二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-8" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-1">8.1 公司财务</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-2">8.2 预测（Projections）</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-3">8.3 股权风险溢价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-4">8.4 去杠杆化 Beta</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-5">8.5 敏感性分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-6">8.6 使用回归分析的相对估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-7">8.7 识别股票收益率的显著变化</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#section-8-8">8.8 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-8/#references-6">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-9/">第9章 固定收益</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-9" aria-label="展开第9章 固定收益二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-9" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-1">9.1 经济分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-2">9.2 美国国债</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-3">9.3 主成分分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-4">9.4 投资级债券利差</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-5">9.5 债券估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-6">9.6 久期与凸性</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-7">9.7 短期利率模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#section-9-8">9.8 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-9/#references-7">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-10/">第10章 期权</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-10" aria-label="展开第10章 期权二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-10" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-1">10.1 获取期权链数据</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-2">10.2 Black–Scholes–Merton 期权定价模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-3">10.3 隐含波动率</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-4">10.4 Cox, Ross, and Rubinstein 二叉树期权定价模型</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-5">10.5 美式期权定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#section-10-6">10.6 进一步阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-10/#references-8">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-11/">第11章 模拟</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-11" aria-label="展开第11章 模拟二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-11" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-1">11.1 使用几何布朗运动模拟股票价格</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-2">11.2 模拟含股息和不含股息的股票价格</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-3">11.3 模拟具有相关价格的股票</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-4">11.4 使用模拟计算风险价值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-5">11.5 欧式期权的蒙特卡洛定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-6">11.6 使用对偶变量法的蒙特卡洛期权定价</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-7">11.7 奇异期权估值</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#section-11-8">11.8 扩展阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-11/#references-9">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/chapter-12/">第12章 交易策略</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-chapter-12" aria-label="展开第12章 交易策略二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-chapter-12" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-1">12.1 有效市场假说</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-2">12.2 技术分析</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-3">12.3 构建简单交易策略</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-4">12.4 机器学习技术</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#section-12-5">12.5 延伸阅读</a><a class="section-link" href="/analyzing-financial-data-r-cn/chapter-12/#references-10">参考文献</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-a/">附录A R入门</a><button class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebar-sections-appendix-a" aria-label="展开附录A R入门二级目录"><span aria-hidden="true">›</span></button></div><div class="sidebar-subsections" id="sidebar-sections-appendix-a" hidden><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-1-installing-r">A.1 安装 R</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-2-the-r-working-directory">A.2 R 工作目录</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-3-r-console-output">A.3 R 控制台输出</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-4-r-editor">A.4 R 编辑器</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-5-packages">A.5 包</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-6-basic-commands">A.6 基本命令</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-7-the-r-workspace">A.7 R 工作空间</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-8-vectors">A.8 向量</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-9-combining-vectors">A.9 组合向量</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-10-matrices">A.10 矩阵</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-11-data-frame">A.11 data.frame</a><a class="section-link" href="/analyzing-financial-data-r-cn/appendix-a/#a-12-date-formats">A.12 日期格式</a></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-b/">附录B 预加载代码</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-c/">附录C 构建假设投资组合（月度收益率）</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/appendix-d/">附录D 构建假设投资组合（日收益率）</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div><div class="sidebar-item"><div class="sidebar-page-row"><a class="sidebar-page-link" href="/analyzing-financial-data-r-cn/index/">索引</a><span class="sidebar-toggle-placeholder" aria-hidden="true"></span></div></div></nav>
+</aside>
+
+      <article class="tutorial-content">
+        <h1>第2章 单个证券收益率</h1>
+<section class="book-page" data-pdf-page="68">
+<h1 id="chapter-2">第2章 单个证券收益率</h1>
+<p>在本章中，我们关注证券价格的百分比变化，这被称为证券的收益率。从投资的角度来看，证券的收益率有时比我们投资金额的美元变化更为重要。为了说明原因，假设有人告诉你他们通过投资某只股票在1年内赚了500美元。仅凭这一信息并不能告诉我们500美元是否是一个良好的投资回报，因为我们还需要知道这个人投入了多少资金来赚取这500美元。如果初始投资是1000美元，那么赚500美元是非常出色的，因为这相当于1年内50%的收益率。然而，如果初始投资是100,000美元，那么赚500美元仅相当于0.5%的收益率。作为对比，2019年底的1年期美国国债收益率大约为1.5%。如果无风险投资的收益率为1.5%，那么风险投资仅获得0.5%的收益率就不那么令人印象深刻了。</p>
+<p>当我们把收益率描述为价格的百分比变化时，实际上并未描述全貌。许多证券会提供中间现金流，例如股票的股息和债券的息票。这些中间现金流可以再投资回该证券或其他投资。在实践中，对于某些证券，一些经纪商（例如Schwab）允许投资者勾选一个选项，以便将股息再投资。因此，中间现金流的再投资并不仅仅是一个理论概念。假设中间现金流再投资的收益率称为总收益率。由于总收益率衡量的是我们在持有证券的整个期间内获得的回报，因此这种收益率也称为持有期收益率。当需要加以区分时，我们将不包含中间现金流再投资的收益率称为价格收益率。</p>
+<p>我们首先在2.1节和2.2节中说明如何计算价格收益率和总收益率。然后，出于统计和编程方面的考虑，我们在2.3节中说明如何计算对数总收益率。接着在2.4节中，我们介绍处理数据中异常值的两种可能方法：缩尾处理和截尾处理。在2.5节中，我们考察较长持有期内的收益率，并展示如何使用算术收益率和对数收益率将日收益率累积为多日收益率。</p>
+</section>
+<section class="book-page" data-pdf-page="69">
+<h2 id="section-2-1">2.1 价格收益率</h2>
+<p>仅基于证券收盘价的美元变动称为资本利得，而证券收盘价的百分比变动则是其价格收益率。价格收益率是在某个投资期限（例如1天、1个月、1年等）内衡量的。期限的长度取决于应用场景，但收益率计算应保持一致，使得一年内所有日收益率的累计值等于年收益率。</p>
+<p>日价格收益率是今日证券价格相对于昨日价格的百分比变化，即：</p>
+\[ R^{price}_t = \frac{P_t - P_{t-1}}{P_{t-1}} = \frac{P_t}{P_{t-1}} - 1, \tag{2.1} \]
+<p>其中，\(R^{price}_t\) 是第 t 天的价格收益率，\(P_t\) 是第 t 天的证券价格，\(P_{t-1}\) 是前一个交易日证券的价格。</p>
+<p>在本节中，我们将以 AAPL 为例，因为 AAPL 派发股息，这样我们可以比较价格收益率和总收益率的结果。下面展示如何计算 AAPL 从 2015 年至 2019 年的日价格收益率。</p>
+<p><strong>步骤 1: 导入 AAPL 收盘价数据</strong> 使用 <code>load.data()</code> 函数导入 AAPL Yahoo.csv。请确保我们运行了附录 B 中的预加载代码。创建一个数据集 <code>rets</code>，仅包含 <code>AAPL.Close</code>。</p>
+<div class="r-code-block" id="code-0">
+  <pre><code class="language-r">data.aapl &lt;- load.data(&quot;AAPL Yahoo.csv&quot;, &quot;AAPL&quot;)
+rets &lt;- data.aapl$AAPL.Close
+head.tail(rets)</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="70">
+<h3>2.1 价格收益率</h3>
+<p>步骤2：创建等于收盘价滞后一期的变量 出于美观考虑，我们将 <code>AAPL.Close</code> 重命名为 <code>price</code>。然后使用 <code>lag()</code> 函数，设置 k=1 来创建一个等于前一个交易日收盘价的变量。</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">1 &gt; names(rets)&lt;- &quot;price&quot;
+2 &gt; rets$lag.price&lt;- lag(rets$price , k = 1)
+3 &gt; head.tail(rets)
+4 price lag.price
+5 2014-12-31 110.38 NA
+6 2015-01-02 109.33 110.38
+7 2015-01-05 106.25 109.33
+8 price lag.price
+9 2019-12-27 289.80 289.91
+10 2019-12-30 291.52 289.80
+11 2019-12-31 293.65 291.52</code></pre>
+</div>
+<p>步骤3：计算价格收益率 使用式(2.1)，我们可以计算 AAPL 的价格收益率。具体地，将价格除以其滞后一期值再减1。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">1 &gt; rets$price.ret&lt;- rets$price/ rets$lag.price- 1
+2 &gt; head.tail(rets)
+3 price lag.price price.ret
+4 2014-12-31 110.38 NA NA
+5 2015-01-02 109.33 110.38 -0.009512548
+6 2015-01-05 106.25 109.33 -0.028171608
+7 price lag.price price.ret
+8 2019-12-27 289.80 289.91 -0.0003794833
+9 2019-12-30 291.52 289.80 0.0059351314
+10 2019-12-31 293.65 291.52 0.0073065487</code></pre>
+</div>
+<p>或者，我们也可以使用 <code>Delt()</code> 函数计算收益率，该函数位于 <code>quantmod</code> 包中。如下所示，<code>Delt()</code> 的输出与上面计算的 <code>price.ret</code> 完全相同。鉴于使用 <code>Delt()</code> 的便捷性，后续我们将使用 <code>Delt()</code>。</p>
+<div class="r-code-block" id="code3">
+  <pre><code class="language-r">1 &gt; rets2 &lt;- Delt(rets$price)
+2 &gt; head.tail(rets2)
+3 Delt.1.arithmetic
+4 2014-12-31 NA
+5 2015-01-02 -0.009512548
+6 2015-01-05 -0.028171608
+7 Delt.1.arithmetic
+8 2019-12-27 -0.0003794833
+9 2019-12-30 0.0059351314
+10 2019-12-31 0.0073065487</code></pre>
+</div>
+<p>步骤4：清理收益率数据 上述输出显示，2014年12月31日的收益率为 NA。我们需要2014年12月31日的价格来计算2015年1月2日的收益率。既然不再需要2014年12月31日的价格，我们可以将其删除。为此，在方括号内逗号的左侧输入 -1（即删除第一行）。接下来，我们只想保留 <code>rets</code> 数据集中的 <code>price.ret</code> 列。为此，在方括号内逗号的右侧输入 3（即第三列）。</p>
+</section>
+<section class="book-page" data-pdf-page="71">
+<p>56 第2章 单个证券收益率</p>
+<pre><code>1 > rets &lt;- rets[-1, 3]
+2 > options(scipen = 999)
+3 > head.tail(rets)
+4 price.ret
+5 2015-01-02 -0.00951254782
+6 2015-01-05 -0.02817160838
+7 2015-01-06  0.00009413647
+8 price.ret
+9 2019-12-27 -0.0003794833
+10 2019-12-30  0.0059351314
+11 2019-12-31  0.0073065487
+12 > options(scipen = 0)</code></pre>
+<p>在第2行，我们使用 <code>scipen = 999</code> 来提高R将输出转换为科学记数法之前的阈值。这使得结果更易读。在最后一行，我们将此选项恢复为其默认值 <code>scipen = 0</code>。</p>
+<h3>关于Yahoo Finance股票拆分与收盘价的说明</h3>
+<p>使用现实世界数据的问题在于它会变化。在本书的第1版中，Yahoo Finance的收盘价未进行拆股调整。然而，在撰写第2版时，Yahoo Finance的收盘价现已针对拆股进行了调整。因此，之前使用Yahoo Finance收盘价计算收益率的问题已不复存在。但是，使用拆股调整后的收盘价可能会带来其他问题。例如，如果我们想计算公司的市值，使用的流通股数应与使用的价格一致。否则，我们会计算出完全错误的市值。</p>
+<p>以Netflix (NFLX) 2015年7月15日的7:1股票拆分为例。Yahoo Finance目前报告拆股前一日（2015年7月14日）的（拆股调整后）收盘价为$100.37。拆股前价格超过$700。更令人困惑的是，NFLX截至2015年6月30日（即拆股后）的10-Q报告显示，截至2015年6月30日，NFLX有4.26亿流通股。然而，进一步深究，我们知道NFLX拆股前约有6000万流通股。因此，使用拆股前数据计算NFLX市值为每股拆股前价格$700乘以6000万拆股前流通股。另一方面，使用拆股后数据，NFLX市值为拆股后价格$100乘以约4.2亿拆股后流通股。混合使用拆股前后数字会导致截然不同且错误的结果。</p>
+</section>
+<section class="book-page" data-pdf-page="72">
+<h2 id="section-2-2">2.2 总收益率</h2>
+<p>投资者持有股票所获得的收益并不局限于证券价格的变化。对于支付股息的公司，在除息日之前持有股票的股东会收到现金支付，并能够将其再投资。因此，股东从支付股息的股票中获得的总收益率包括她所持股票价格的变化，以及股息产生的任何收入以及在除息日这些股息的再投资。包含股息再投资的收益率称为持有期收益率或总收益率。</p>
+<p>持有证券的总收益率计算如下：</p>
+\[ R_t = \frac{P_t + CF_t - P_{t-1}}{P_{t-1}} = \left[ \frac{P_t}{P_{t-1}} - 1 \right]_{\text{资本增值}} + \frac{CF_t}{P_{t-1}}_{\text{现金流收益率}}, \qquad (2.2) \]
+<p>其中 \(CF_t\) 是日期 \(t\) 的现金流（例如股息），所有其他项的定义与式 (2.1) 相同。第一项代表资本增值，第二项代表股息收益率。式 (2.2) 中的分解也有助于识别收益率的来源，因此偏好资本利得或股息（例如出于税收目的）的投资者可以更好地评估该投资对其特定投资目标的吸引力。由于我们通常会使用总收益率，因此我们不添加上标来标记总收益率的计算。</p>
+<p>对于日总收益率计算，股息收益率在非除息日为零。这有两个含义。首先，在大多数日子中，价格收益率和总收益率相同，因为在这些日期我们只有资本增值的变化。其次，对于不支付股息的股票，价格收益率和总收益率相同。</p>
+<p>继续我们上面的例子，我们使用 AAPL。AAPL 在 2015–2019 年期间的除息日和每股股息金额如表 2.1 所示。在除息日，我们预期价格收益率和总收益率会出现偏离。在我们的投资期限内，除息日越多，累积价格收益率和累积总收益率之间的偏离就越大。幸运的是，雅虎财经已经报告了一个包含股息调整的变量。这个变量称为调整后收盘价，它是证券的收盘价，针对股票拆分和股息进行了调整。</p>
+<p>为了查看收盘价和调整后收盘价的差异，我们可以查看 AAPL 在 2019 年 11 月 7 日（该股票在 2019 年的最后一个除息日）前后的数据。如下所示，AAPL 收盘价（第 4 列）和调整后收盘价（第 6 列）从 2019 年 11 月 7 日开始相同。但是，在该日期之前（即 2019 年 11 月 6 日及更早），收盘价高于调整后收盘价。这意味着使用调整后收盘价计算的总收益率</p>
+</section>
+<section class="book-page" data-pdf-page="73">
+
+<h2 id="chapter-2">第2章 单个证券收益率</h2>
+<table>
+<caption>表2.1 AAPL 除息日及每股股息，2015-2019年</caption>
+<thead>
+<tr>
+<th colspan="4">2015</th>
+<th colspan="4">2016</th>
+<th colspan="4">2017</th>
+</tr>
+<tr>
+<th>除息日</th>
+<th>每股股息</th>
+<th>除息日</th>
+<th>每股股息</th>
+<th>除息日</th>
+<th>每股股息</th>
+</tr>
+</thead>
+<tbody>
+<tr><td>02/07</td>
+<td>$0.47</td>
+<td>02/04</td>
+<td>$0.52</td>
+<td>02/09</td>
+<td>$0.57</td></tr>
+<tr><td>05/07</td>
+<td>$0.52</td>
+<td>05/05</td>
+<td>$0.57</td>
+<td>05/11</td>
+<td>$0.63</td></tr>
+<tr><td>08/06</td>
+<td>$0.52</td>
+<td>08/04</td>
+<td>$0.57</td>
+<td>08/10</td>
+<td>$0.63</td></tr>
+<tr><td>11/05</td>
+<td>$0.52</td>
+<td>11/03</td>
+<td>$0.57</td>
+<td>11/10</td>
+<td>$0.63</td></tr>
+</tbody>
+<tbody>
+<tr><th colspan="4">2018</th>
+<th colspan="4">2019</th></tr>
+<tr><th>除息日</th>
+<th>每股股息</th>
+<th>除息日</th>
+<th>每股股息</th></tr>
+<tr><td>02/09</td>
+<td>$0.63</td>
+<td>02/08</td>
+<td>$0.73</td></tr>
+<tr><td>05/11</td>
+<td>$0.73</td>
+<td>05/10</td>
+<td>$0.77</td></tr>
+<tr><td>08/10</td>
+<td>$0.73</td>
+<td>08/09</td>
+<td>$0.77</td></tr>
+<tr><td>11/08</td>
+<td>$0.73</td>
+<td>11/07</td>
+<td>$0.77</td></tr>
+</tbody>
+</table>
+<p>调整后的收盘价必须高于使用收盘价计算的价格收益率，这是我们所预期的。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; data.aapl[&quot;2019-11-04/2019-11-12&quot;]
+AAPL.Open AAPL.High AAPL.Low AAPL.Close AAPL.Volume AAPL.Adjusted
+2019-11-04 257.33 257.85 255.38 257.50 25818000 256.7292
+2019-11-05 257.05 258.19 256.32 257.13 19974400 256.3604
+2019-11-06 256.77 257.49 255.37 257.24 18966100 256.4700
+2019-11-07 258.74 260.35 258.11 259.43 23735100 259.4300
+2019-11-08 258.69 260.44 256.85 260.14 17496600 260.1400
+2019-11-11 258.30 262.47 258.28 262.20 20455300 262.2000
+2019-11-12 261.55 262.79 260.92 261.96 21847200 261.9600</code></pre>
+</div>
+<p>除息日很重要，因为它是股票不带股息交易的日子。换句话说，任何在2019年11月7日购买股票的人都无权获得股息。由于2019年11月7日的资产价值减少了所支付股息的数量（即一美元现金的市场价值为一美元），我们应该观察到AAPL的股权价值相应下降相同的金额。在其他条件不变的情况下，AAPL股权价值的减少将转化为AAPL股票价格的下跌。</p>
+<p>现在我们继续上一节中的AAPL示例。这次我们计算AAPL从2015年到2019年的总收益率。</p>
+<p><strong>步骤1：导入AAPL调整后收盘价数据</strong> 由于我们已经导入了AAPL数据，我们可以简单地从<code>data.amzn</code>数据集中获取AAPL调整后收盘价数据来创建一个名为<code>tot.rets</code>的数据集。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; tot.rets &lt;- data.aapl$AAPL.Adjusted
+&gt; head.tail(tot.rets)
+AAPL.Adjusted
+2014-12-31 101.41906
+2015-01-02 100.45430
+2015-01-05 97.62434</code></pre>
+</div>
+
+</section>
+<section class="book-page" data-pdf-page="74">
+<h2>2.2 总收益率 59</h2>
+<p>步骤 2：创建等于调整收盘价滞后值的变量 为了计算总收益率，我们需要将今天的调整收盘价除以前一个交易日的调整收盘价。因此，使用 <code>lag()</code> 函数，<code>k = 1</code>，我们创建一个等于前一个交易日调整收盘价的变量。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; names(tot.rets) &lt;- &quot;adj.price&quot;
+&gt; tot.rets$lag.adjprc &lt;- lag(tot.rets$adj.price, k = 1)
+&gt; head.tail(tot.rets)</code></pre>
+</div>
+<pre>    adj.price lag.adjprc
+2014−12−31 101.41906 NA
+2015−01−02 100.45430 101.4191
+2015−01−05 97.62434 100.4543
+    adj.price lag.adjprc
+2019−12−27 289.80 289.91
+2019−12−30 291.52 289.80
+2019−12−31 293.65 291.52</pre>
+<p>步骤 3：计算总收益率 我们通过将今天的调整收盘价除以前一个交易日的调整收盘价来计算总收益率。要计算净总收益率，我们需要从总收益率中减去1。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; tot.rets$tot.ret &lt;- tot.rets$adj.price / tot.rets$lag.adjprc - 1
+&gt; head.tail(tot.rets)</code></pre>
+</div>
+<pre>    adj.price lag.adjprc tot.ret
+2014−12−31 101.41906 NA NA
+2015−01−02 100.45430 101.4191−0.00951261
+2015−01−05 97.62434 100.4543 −0.02817166
+    adj.price lag.adjprc tot.ret
+2019−12−27 289.80 289.91 −0.0003794833
+2019−12−30 291.52 289.80 0.0059351314
+2019−12−31 293.65 291.52 0.0073065487</pre>
+<p>步骤 4：清理总收益率数据 如上所述，2014年12月31日的总收益率是 NA。我们可以删除这一行，因为我们在该日期只需要调整收盘价来计算2015年1月2日的总收益率。因此，在第1行的方括号内，我们在逗号左侧输入 -1。接下来，由于我们只对总收益率变量感兴趣，我们只想保留 <code>tot.rets</code> 数据集的第3列。因此，在第1行的方括号内，我们在逗号右侧输入 3。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">&gt; tot.rets &lt;- tot.rets[-1, 3]
+&gt; head.tail(tot.rets)</code></pre>
+</div>
+<pre>    tot.ret
+2015−01−02−9.512610e−03
+2015−01−05−2.817166e−02
+2015−01−06 9.433099e−05
+    tot.ret</pre>
+</section>
+<section class="book-page" data-pdf-page="75">
+<p>60 第2章 单个证券收益率</p>
+<pre>8 2019−12−27−0.0003794833
+9 2019−12−30 0.0059351314
+10 2019−12−31 0.0073065487</pre>
+<p>我们也可以对 <code>AAPL.Adjusted</code> 应用 <code>Delt()</code> 函数来计算总收益率。</p>
+<h2 id="section-2-3">2.3 对数总收益率</h2>
+<p>在前一节中使用公式(2.2)或<code>Delt()</code>计算的收益率被称为算术收益率（arithmetic returns）或简单收益率（simple returns）。在本节中，我们将展示如何计算对数收益率（logarithmic returns）或对数收益率（log returns）。对数收益率广泛应用于衍生品定价及其他金融领域。此外，当我们稍后在本章中计算多期收益率时，我们将展示使用对数收益率计算累计收益率相对更简单。</p>
+<p>对数收益率 \( r_t \) 的计算公式为：
+\[
+r_t = \ln\left(\frac{P_t}{P_{t-1}}\right) = \ln(1+R_t) = \ln P_t - \ln P_{t-1}, \qquad (2.3)
+\]
+其中 \(\ln\) 为自然对数算子，其余变量的定义与式(2.2)相同。因此，我们可以通过取对数价格的差值来计算对数收益率。此外，由于我们是使用调整收盘价计算对数收益率，因此不会在对数收益率变量 \(r\) 上添加下标。</p>
+<p>我们现在计算AAPL股票从2015年1月至2019年12月的对数总收益率。为应用公式(2.3)，我们对调整收盘价应用 <code>log()</code> 函数，然后使用 <code>diff()</code> 计算差值。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; log.rets&lt;- diff(log(data.aapl$AAPL.Adjusted))
+2 &gt; log.rets&lt;- log.rets[-1, ]
+3 &gt; names(log.rets)&lt;- &quot;log.ret&quot;
+4 &gt; options(scipen = 999)
+5 &gt; head.tail(log.rets)</code></pre>
+</div>
+<pre>6   log.ret
+7   2015-01-02  -0.00955814422
+8   2015-01-05  -0.02857609111
+9   2015-01-06   0.00009432654
+10  log.ret
+11  2019-12-27  -0.0003795553
+12  2019-12-30   0.0059175879
+13  2019-12-31   0.0072799852</pre>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">14 &gt; options(scipen = 0)</code></pre>
+</div>
+<p>或者，我们也可以使用 <code>ROC()</code> 函数，它也能计算对数收益率，但步骤不太直观。然而，如下输出所示，我们得到完全相同的结果。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; roc.rets&lt;- ROC(data.aapl$AAPL.Adjusted)</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="76"><h2 id="section-2-4">2.4 缩尾处理与截尾处理</h2>
+<p>金融数据有时会包含极端值或异常值。如果我们判定这些异常值更多的是噪声而非信息，那么将异常值保留在数据中可能会不当地影响分析结果和/或给结果解读造成问题。有一些技术用于处理异常值，但实证金融文献中常用的两种方法是缩尾处理（winsorization）或截尾处理（truncation）。</p>
+<p>缩尾处理将大于第 \(i\) 百分位数和小于第 \((1-i)\) 百分位数的值替换为该百分位数水平上的值。例如，若要在 0.5% 水平上进行缩尾处理，可以使用 <code>quantile()</code> 确定截断值，然后将高于上截断值（即 99.5%）的值设为上截断值，低于下截断值（即 0.5%）的值设为下截断值。下面我们使用上述 <code>tot.rets</code> 数据集中的 <code>tot.ret</code> 展示如何实现。</p>
+<p><strong>步骤 1：计算上下截断值</strong> 使用 <code>quantile()</code> 确定上下截断值，然后使用 <code>as.numeric()</code> 将其转换为数值。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; roc.rets&lt;- roc.rets[-1, ]
+&gt; names(roc.rets)&lt;- &quot;roc.ret&quot;
+&gt; options(scipen = 999)
+&gt; head.tail(roc.rets)
+  roc.ret
+2015-01-02 -0.00955814422
+2015-01-05 -0.02857609111
+2015-01-06  0.00009432654
+  roc.ret
+2019-12-27 -0.0003795553
+2019-12-30  0.0059175879
+2019-12-31  0.0072799852
+&gt; options(scipen = 0)</code></pre>
+</div>
+<p>我们现在可以比较算术收益率和对数收益率。如下输出所示，在日度数据上两者的差异通常很小。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; options(scipen = 999)
+&gt; head.tail(cbind(tot.rets$tot.ret , log.rets$log.ret))
+   tot.ret      log.ret
+2015-01-02 -0.00951261035 -0.00955814422
+2015-01-05 -0.02817165617 -0.02857609111
+2015-01-06  0.00009433099  0.00009432654
+   tot.ret      log.ret
+2019-12-27 -0.0003794833 -0.0003795553
+2019-12-30  0.0059351314  0.0059175879
+2019-12-31  0.0073065487  0.0072799852
+&gt; options(scipen = 0)</code></pre>
+</div>
+<p><strong>步骤 1：计算上下截断值</strong> 我们使用 <code>quantile()</code> 确定上下截断值，然后使用 <code>as.numeric()</code> 将其转换为数值。</p></section>
+<section class="book-page" data-pdf-page="77">
+  <h2>62 第2章 单个证券收益率</h2>
+<p>结果数值。如下所示，上截断值为5.6%，下截断值为-5.2%。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">(upper&lt;- as.numeric(quantile(tot.rets ,0.995)))
+(lower&lt;- as.numeric(quantile(tot.rets ,0.005)))</code></pre>
+</div>
+<pre><samp>[1] 0.05557369
+[1] -0.05225957</samp></pre>
+<p><strong>步骤2：对数据进行缩尾处理</strong> 我们使用嵌套的ifelse()函数来实现。第一个ifelse()将小于或等于下截断值的总收益率设定为下截断值（-5.2%）。第二个ifelse()将大于或等于上截断值的总收益率设定为上截断值（5.6%）。如果数值介于下截断值和上截断值之间，则保留原始值。如我们在对winsorize应用summary()时所看到的，最小值和最大值分别等于下截断值和上截断值。我们可以将其与对tot.ret应用summary()的输出进行比较，后者的最小值为-0.100，最大值为0.070。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">winsorize&lt;- ifelse(tot.rets &lt;=lower , lower ,
++ ifelse(tot.rets &gt;= upper , upper ,tot.rets))
+summary(winsorize)
+summary(tot.rets$tot.ret)</code></pre>
+</div>
+<pre><samp>Index tot.ret
+Min. :2015-01-02 Min. : -0.0522596
+1st Qu.:2016-04-04 1st Qu.: -0.0058585
+Median:2017-07-01 Median : 0.0008921
+Mean :2017-07-01 Mean : 0.0010090
+3rd Qu.:2018-09-30 3rd Qu.: 0.0089108
+Max. :2019-12-31 Max. : 0.0555737
+
+Index tot.ret
+Min. :2015-01-02 Min. : -0.0996073
+1st Qu.:2016-04-04 1st Qu.: -0.0058585
+Median:2017-07-01 Median : 0.0008921
+Mean :2017-07-01 Mean : 0.0009680
+3rd Qu.:2018-09-30 3rd Qu.: 0.0089108
+Max. :2019-12-31 Max. : 0.0704215</samp></pre>
+<p>缩尾处理的替代方法是截尾处理。截尾处理删除低于下截断值和高于上截断值的数值。截尾处理是一种更系统的删除观测值的方法，而不是凭直观判断删除看起来像异常值的观测值。</p>
+<p><strong>步骤3：截尾数据</strong> 使用subset()，我们可以保留介于上截断值和下截断值之间的任意tot.ret值。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">truncate&lt;- subset(tot.rets ,
++ tot.rets &lt;= upper &amp;
++ tot.rets &gt;= lower)
+summary(truncate)</code></pre>
+</div>
+<pre><samp>Index tot.ret
+Min. :2015-01-02 Min. : -0.0520380
+1st Qu.:2016-04-04 1st Qu.: -0.0057517</samp></pre>
+</section>
+<section class="book-page" data-pdf-page="78">
+<h2 id="section-2-5">2.5 累积多日收益率</h2>
+<pre>
+8 Median:2017−07−01 Median : 0.0008921
+9 Mean :2017−07−01 Mean : 0.0010017
+10 3rd Qu.:2018−09−26 3rd Qu.: 0.0088604
+11 Max. :2019 −12−31 Max. : 0.0531672
+</pre>
+<p>何时应使用缩尾处理（winsorization）而不是截尾处理（truncation），或反之，并没有固定的规则。选择取决于我们要进行的分析。有时人们更倾向于缩尾处理，因为这样仍能保留观测数量，但这样做等于承认我们不相信这些值应该如此高或如此低。然而，如果缩尾处理或截尾处理的选择导致结果发生实质性变化，那么我们应该确保理解差异的来源，并且确信我们所做的选择不会影响结果的可靠性。</p>
+<p>在评估投资时，我们通常关心投资在特定时间范围内的表现。换句话说，我们感兴趣的是累积多日收益率（cumulative multi-day returns）。我们可能想知道投资在过去一周、过去一个月或过去一年的收益率。为了充分捕捉股息再投资的效果，我们应该计算每日收益率，并将这些收益率串联成更长的周期。否则，如果我们仅使用投资期初和期末的价格并加上股息来应用式（2.2），那么我们就假设股息是在期末收到的，并且这些股息没有获得额外收益。如果假设股息未再投资而是放在床垫下，那么这种计算可能是合适的。然而，我们认为更合理的做法是将股息再投资于与初始投资具有类似风险-收益特征（risk-return profile）的证券，而满足这一条件的证券正是产生这些股息的同一只证券。换句话说，当我们收到股息时，我们会将该金额再投资于该股票。该股票未来的收益率决定了再投资的股息是获得了正收益还是负收益。</p>
+<p>现在让我们通过一个例子来了解如何累积多日收益率。假设我们想知道，如果在2014年12月31日以收盘价买入AMZN股票，到2019年底，这笔投资会带来多少收益。我们将展示如何使用算术收益率（arithmetic returns）和对数收益率（logarithmic returns）实现这一计算，并说明当一致地实施时，两种类型的收益率会得出相同的结果。然而，有些人可能会发现对数收益率的编程稍微简单一些。</p>
+</section>
+<section class="book-page" data-pdf-page="79">
+<h2 id="cumulating-arithmetic-returns">2.5.1 累积算术收益率</h2>
+<p>为了将多日的算术收益率连接起来，我们需要计算日总收益率的乘积。若 \(R_t\) 为第 \(t\) 天的净收益率，则第 \(t\) 天的总收益率等于 \(1 + R_t\)。换句话说，对于 2 天累积收益率，我们有 \(R_{1,2} = (1 + R_1) \times (1 + R_2)\)。对于 3 天累积收益率，我们取 \(R_{1,3} = (1 + R_1) \times (1 + R_2) \times (1 + R_3)\)。因此，我们可以将这一计算推广到 \(T\) 天的投资期限：</p>
+\[ R_{1,T} = (1 + R_1) \times (1 + R_2) \times \cdots \times (1 + R_T) = \prod_{t=1}^{T} (1 + R_t). \qquad (2.4) \]
+
+<p><strong>步骤 1：计算总收益率</strong> 由于我们已经在上文中计算了每日算术总收益率，因此我们可以直接使用 <code>tot.ret</code> 数据集进行此步骤。我们首先通过将 <code>tot.ret</code> 中的值加 1 来计算总收益率。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; gross.ret&lt;- 1 + tot.rets$tot.ret
+&gt; head.tail(gross.ret)
+tot.ret
+2015-01-02 0.9904874
+2015-01-05 0.9718283
+2015-01-06 1.0000943
+tot.ret
+2019-12-27 0.9996205
+2019-12-30 1.0059351
+2019-12-31 1.0073065</code></pre>
+</div>
+<p><strong>步骤 2：每日累积总收益率</strong> 我们可以在 R 中使用 <code>cumprod()</code> 来实现公式 (2.4)，它能更高效地计算该公式。实质上，该函数每天累积总收益率。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt; cum.arith&lt;- cumprod(gross.ret)
+&gt; head.tail(cum.arith)
+tot.ret
+2015-01-02 0.9904874
+2015-01-05 0.9625837
+2015-01-06 0.9626745
+tot.ret
+2019-12-27 2.857451
+2019-12-30 2.874410
+2019-12-31 2.895412</code></pre>
+</div>
+<p><strong>步骤 3：提取终止值</strong> <code>cum.arith</code> 的最后一个值即为 AAPL 从 2015 年到 2019 年的累积总收益率。要得到净累积算术收益率，我们从中减去 1。这样得到 AAPL 在 2015 年 1 月至 2019 年 12 月的 5 年期间累积算术收益率为 189.5%。</p>
+</section>
+<section class="book-page" data-pdf-page="80">
+<h2>2.5 累积多日收益率</h2>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">as.numeric(cum.arith[nrow(cum.arith)]) - 1</code></pre>
+</div>
+<code>[1] 1.895412</code>
+<h3>2.5.2 累积对数收益率</h3>
+<p>计算多期收益率的另一种方法是取每日对数收益率之和。即</p>
+\[
+r_{1,T} = \ln\left((1+R_1)(1+R_2)\cdots(1+R_T)\right) = r_1 + r_2 + \cdots + r_T = \sum_{t=1}^T r_t. \tag{2.5}
+\]
+<p>由于我们已经在 <code>log.rets</code> 中计算了 AMZN 的对数收益率，计算累积对数收益率仅需一步。我们只需对这段时间内的每日对数收益率求和。使用 <code>sum()</code> 得到 AMZN 在 2015 年 1 月至 2019 年 12 月期间的累积对数收益率为 106.3%。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">cum.log &lt;- sum(log.rets)</code></pre>
+</div>
+<code>[1] 1.063128</code>
+<p>作为对计算的验证，可以通过取指数将累积对数收益率转换为累积算术收益率。如下面输出所示，结果与我们之前计算的 189.5% 的累积算术收益率一致。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">exp(cum.log) - 1</code></pre>
+</div>
+<code>[1] 1.895412</code>
+<p>尽管从编程角度来看，对数收益率实现起来更简单，但算术收益率具有直观的优势。当我们说算术收益率为 189.5% 时，我们知道如果在期初投资 1000 美元，期末将得到 2895 美元。累积对数收益率 106.3% 则没有类似的直观解释。</p>
+<h3>2.5.3 比较价格收益率与总收益率</h3>
+<p>以 AAPL 为例，并采用第1章中创建标准化价格的技术，创建 AAPL 收盘价和调整收盘价的标准化值。这有助于比较算术收益率与总收益率的绩效。</p>
+<p>步骤 1: 计算标准化收盘价 在第1行中，确定 AAPL 在 2014 年 12 月 31 日的收盘价。然后将每个 AAPL 收盘价除以该值，</p>
+</section>
+<section class="book-page" data-pdf-page="81">
+<p>66 第2章 单个证券收益率</p>
+<p>计算归一化价格收益率。如图所示，在2019年末，投资1美元于AAPL收盘价的结果是2.66美元。这表明AAPL的价格收益率为166%。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt; (first.close&lt;- as.numeric(data.aapl$AAPL.Close[1]))
+2 [1] 110.38
+3 &gt; prc.ret&lt;- data.aapl$AAPL.Close/ first.close
+4 &gt; names(prc.ret)&lt;- &quot;Price.Ret&quot;
+5 &gt; head.tail(prc.ret)
+6 Price.Ret
+7 2014-12-31 1.0000000
+8 2015-01-02 0.9904875
+9 2015-01-05 0.9625838
+10 Price.Ret
+11 2019-12-27 2.625476
+12 2019-12-30 2.641058
+13 2019-12-31 2.660355</code></pre>
+</div>
+<p>步骤2：计算归一化调整收盘价 我们对调整收盘价应用相同的方法。这表明，在调整收盘价上投资1美元，2019年末价值为2.90美元。这表明AAPL的总收益率为190%。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt; (first.total&lt;- as.numeric(data.aapl$AAPL.Adjusted[1]))
+2 [1] 101.4191
+3 &gt; tot.ret&lt;- data.aapl$AAPL.Adjusted/ first.total
+4 &gt; names(tot.ret)&lt;- &quot;Total.Ret&quot;
+5 &gt; head.tail(tot.ret)
+6 Total.Ret
+7 2014-12-31 1.0000000
+8 2015-01-02 0.9904874
+9 2015-01-05 0.9625837
+10 Total.Ret
+11 2019-12-27 2.857451
+12 2019-12-30 2.874410
+13 2019-12-31 2.895412</code></pre>
+</div>
+<p>步骤3：绘制价格收益率和总收益率 我们使用plot()创建线图，比较AAPL的总收益率和价格收益率。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt;d t &lt;- index(prc.ret)
+2 &gt; (y.range&lt;- range(prc.ret, tot.ret))
+3 [1] 0.8184454 2.8954123
+4 &gt; plot(x = dt,
+5 + y = tot.ret ,
+6 + xlab = &quot;Date&quot;,
+7 + ylab = &quot; NormalizedPrice&quot;,
+8 + type = &quot;l&quot;,
+9 + col = &quot;blue&quot;,
+10 + main = &quot; ComparingAAPL Price and Total Return&quot;)
+11 &gt; lines(x = dt, y = prc .ret, col = &quot;darkgreen&quot;)
+12 &gt; abline(h = 1)
+13 &gt; legend(&quot;topleft&quot;,</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="82">
+  <h3>2.5 累积多日收益率</h3>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">14 + c(&quot;Total Return&quot;, &quot;Price Return&quot;),
+15 + col = c(&quot;blue&quot;, &quot; darkgreen&quot;),
+16 + lwd = c(1, 1))</code></pre>
+</div>
+<p>如图 2.1 所示，总收益率高于价格收益率。原因是股息的再投资。价格收益率与总收益率之间的差异在每个除息日扩大。AAPL 每季度支付股息，因此在 5 年期间有 20 个除息日。这些股息的再投资导致了总收益率与价格收益率之间 24% 的差异。</p>
+<figure class="book-figure" id="fig-2.1"><img src="/assets/img/analyzing-financial-data-r-cn/figure-7ccf0ccfad39.png" alt="图 2.1 比较 AAPL 累积价格收益率与总收益率，2015-2019">
+    <figcaption>图 2.1 比较 AAPL 累积价格收益率与总收益率，2015-2019。数据来源：价格数据经 CSI ©2020 许可转载。www.csidata.com</figcaption>
+  </figure>
+</section>
+<section class="book-page" data-pdf-page="83"><p>68 第2章 单个证券收益率</p>
+<h2 id="section-2-6">2.6 周收益率</h2>
+<p>在前几节中，我们使用了日收益率。然而，在某些应用中，我们可能需要使用较低频率的收益率，例如周收益率。周收益率的一个常见应用是计算 Beta。</p>
+<p><strong>步骤1：将日价格转换为周价格</strong><br>
+使用 <code>xts</code> 包（通过 <code>quantmod</code> 包加载）中的 <code>to.weekly()</code> 函数，我们可以轻松计算周价格。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">1 &gt;w k &lt;− data.aapl
+2 &gt;w k &lt;− to.weekly(wk)
+3 &gt; head.tail(wk)
+4 wk.Open wk.High wk.Lowwk.Close wk.Volume wk.Adjusted
+5 2015−01−02 112.82 113.13 107.35 109.33 94608000 100.45430
+6 2015−01−09 108.29 113.25 104.63 112.01 283252500 102.91672
+7 2015−01−16 112.60 112.80 105.20 105.99 304226600 97.38545
+8 wk.Open wk.High wk.Lowwk.Close wk.Volume wk.Adjusted
+9 2019−12−20 277.00 282.65 276.98 279.44 183180000 279.44
+10 2019−12−27 280.53 293.97 280.37 289.80 96609500 289.80
+11 2019−12−31 289.46 293.68 285.22 293.65 61230000 293.65</code></pre>
+</div>
+<p><strong>步骤2：计算周总收益率</strong><br>
+由于我们关心的是计算周总收益率，我们将保留周调整收盘价列（第6列）。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">1 &gt;w k &lt;− wk[, 6]
+2 &gt; names(wk)&lt;− &quot;price&quot;
+3 &gt; head.tail(wk)
+4 price
+5 2015−01−02 100.45430
+6 2015−01−09 102.91672
+7 2015−01−16 97.38545
+8 price
+9 2019−12−20 279.44
+10 2019−12−27 289.80
+11 2019−12−31 293.65</code></pre>
+</div>
+<p><strong>步骤3：清理周收益率数据集</strong><br>
+我们使用 <code>quantmod</code> 包中的 <code>Delt()</code> 函数计算周收益率。接下来，我们通过删除2014-12-31的值（因为该收益率为 <code>NA</code>）并重命名列标题为 <code>AAPL</code> 来清理数据集。数据集 <code>rets.weekly</code> 包含周度 AAPL 收益率。注意，由于 2019-12-31 是星期二，因此下面的最后一个观测值不是完整的周收益率。</p>
+<div class="r-code-block" id="code-3">
+  <pre><code class="language-r">1 &gt; rets.weekly&lt;− Delt(wk)
+2 &gt; rets.weekly&lt;− rets.weekly[−1, ]
+3 &gt; names(rets.weekly)&lt;− &quot;AAPL&quot;
+4 &gt; head.tail(rets.weekly)
+5 AAPL
+6 2015−01−09 0.02451289
+7 2015−01−16−0.05374520
+8 2015−01−23 0.06594975</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="84">
+<h2 id="section-2-7">2.7 月度收益率</h2>
+<p>验证周收益率计算</p>
+<p>测试我们的计算是一个好习惯，以确保编程没有错误。周收益率是基于周五到周五的收益率。因此，如果要验证2015年1月9日的周收益率，我们需要2015年1月2日（之前的周五）和2015年1月9日的调整收盘价。一旦找出这些日期的调整价格，便可将2015年1月9日的价格除以2015年1月2日的价格，得到周收益率。再减去1，即得到2015年1月9日当周的净周收益率为2.45%，这与我们之前计算的结果一致（除了第8位小数）。</p>
+<div class="r-code-block" id="code-1">
+  <pre><code class="language-r">&gt; data.aapl[&quot;2015−01−02/2015−01−09&quot;, 6]
+AAPL.Adjusted
+2015−01−02 100.45430
+2015−01−05 97.62434
+2015−01−06 97.63354
+2015−01−07 99.00256
+2015−01−08 102.80648
+2015−01−09 102.91672
+&gt; 102.91672/ 100.45430− 1
+[1] 0.02451284</code></pre>
+</div>
+<p>另一种在金融应用中使用广泛的收益率频率是月度收益率。其实现方式与计算周收益率类似。月度收益率的一个常见应用是计算beta。</p>
+<p><strong>步骤1：使用xts包（通过quantmod包加载）中的to.monthly()函数将日价格转换为月度价格。</strong> 我们可以轻松计算月度价格。</p>
+<div class="r-code-block" id="code-2">
+  <pre><code class="language-r">&gt;m o &lt;− data.aapl
+&gt;m o &lt;− to.monthly(mo)
+&gt; head.tail(mo)
+mo.Open mo.High mo.Lowmo.Close mo.Volume mo.Adjusted
+Dec 2014 112.82 113.13 110.21 110.38 41403400 101.4191
+Jan 2015 111.39 120.00 104.63 117.16 1305263400 107.6486</code></pre>
+</div>
+</section>
+<span class="section-anchor" id="section-2-8"></span>
+<section class="book-page" data-pdf-page="85">
+  <h2>2.8 比较多种证券的表现</h2>
+<pre>
+7 Feb 2015 118.05 133.60 116.08 128.46 1136535200 118.4971
+8 mo.Open mo.High mo.Lowmo.Close mo.Volume mo.Adjusted
+9 Oct 2019 225.07 249.75 215.13 248.76 608302700 248.0154
+10 Nov 2019 249.54 268.00 249.16 267.25 448331500 267.2500
+11 Dec 2019 267.27 293.97 256.29 293.65 597198700 293.6500
+  </pre>
+<p><strong>步骤2：计算月度总收益率</strong> 由于我们关心的是计算月度总收益率，因此保留月度调整收盘价列（第6列）。</p>
+<div class="r-code-block" id="code1">
+  <pre><code class="language-r">1 &gt;m o &lt;− mo[, 6]
+2 &gt; names(mo)&lt;− &quot;price&quot;
+3 &gt; head.tail(mo)
+4 price
+5 Dec 2014101.4191
+6 Jan 2015107.6486
+7 Feb 2015118.4971
+8 price
+9 Oct 2019248.0154
+10 Nov 2019267.2500
+11 Dec 2019293.6500</code></pre>
+</div>
+<p><strong>步骤3：清理月度收益率数据集</strong> 我们使用 quantmod 包中的 <code>Delt()</code> 函数计算月度收益率。然后，通过删除 2014 年 12 月的值（因为该收益率值为 NA）来清理数据集，并将列名重命名为 <code>AAPL</code>。数据集 <code>rets.monthly</code> 包含月度 AAPL 收益率。</p>
+<div class="r-code-block" id="code2">
+  <pre><code class="language-r">1 &gt; rets.monthly&lt;− Delt(mo)
+2 &gt; rets.monthly&lt;− rets.monthly[−1, ]
+3 &gt; names(rets.monthly)&lt;− &quot;AAPL&quot;
+4 &gt; head.tail(rets.monthly)
+5 AAPL
+6 Jan 2015 0.06142418
+7 Feb 2015 0.10077668
+8 Mar 2015−0.03137180
+9 AAPL
+10 Oct 20190.11068444
+11 Nov 20190.07755414
+12 Dec 20190.09878389</code></pre>
+</div>
+<p>总收益率同时涵盖资本增值收益和股息收益。因此，它是比价格收益率更好的投资绩效度量。在上一章中，我们展示了如何基于价格收益率创建标准化价格图。此处将使用相同技术。不过，我们还展示了一种通过累积日收益率得到相同结果的不同方法。</p>
+</section>
+<section class="book-page" data-pdf-page="86">
+<h2>2.8 比较多个证券的表现 71</h2>
+<p>data.aapl数据集应该仍然保存在内存中，这是我们之前练习的结果。否则，我们可以使用load.data()导入AAPL价格数据。对于这些图表，我们还需要GOOG、AMZN和SPY的数据。</p>
+<div class="r-code-block" id="code-load-data">
+  <pre><code class="language-r">1 &gt; data.amzn&lt;- load.data(&quot;AMZN Yahoo.csv&quot;, &quot;AMZN&quot;)
+2 &gt; data.goog&lt;- load.data(&quot;GOOG Yahoo.csv&quot;, &quot;GOOG&quot;)
+3 &gt; data.spy&lt;- load.data(&quot;SPY Yahoo.csv&quot;, &quot;SPY&quot;)</code></pre>
+</div>
+<h3>2.8.1 使用标准化价格</h3>
+<p>步骤1：确定投资当日的价格。我们假设投资发生在2014年12月31日。因此，我们创建四个变量来表示我们绘制的四个证券在2014年12月31日的调整收盘价。</p>
+<div class="r-code-block" id="code-first-prices">
+  <pre><code class="language-r">1 &gt; (first.amzn&lt;- as.numeric(data.amzn[1, 6]))
+2 [1] 310.35
+3 &gt; (first.goog&lt;- as.numeric(data.goog[1, 6]))
+4 [1] 524.9587
+5 &gt; (first.aapl&lt;- as.numeric(data.aapl[1, 6]))
+6 [1] 101.4191
+7 &gt; (first.spy&lt;- as.numeric(data.spy[1, 6]))
+8 [1] 186.259</code></pre>
+</div>
+<p>步骤2：创建调整收盘价数据集。然后，我们从每个证券的价格数据中提取调整收盘价（第6列），以创建adj.prc数据集。下面，我们使用列名（例如，AMZN.Adjusted）而不是列号。</p>
+<div class="r-code-block" id="code-adj-prc">
+  <pre><code class="language-r">1 &gt; adj.prc&lt;- cbind(data.amzn$AMZN.Adjusted , data.goog$GOOG.Adjusted ,
+2 + data.aapl $AAPL.Adjusted , data.spy$SPY.Adjusted)
+3 &gt; names(adj.prc)&lt;- c(&quot;AMZN&quot;, &quot;GOOG&quot;, &quot;AAPL&quot;, &quot;SPY&quot;)
+4 &gt; head.tail(adj.prc)
+5 AMZN GOOG AAPL SPY
+6 2014-12-31 310.35 524.9587 101.41906 186.2590
+7 2015-01-02 308.52 523.3731 100.45430 186.1593
+8 2015-01-05 302.19 512.4630 97.62434 182.7974
+9 AMZN GOOG AAPL SPY
+10 2019-12-27 1869.80 1351.89 289.80 322.86
+11 2019-12-30 1846.89 1336.14 291.52 321.08
+12 2019-12-31 1847.84 1337.02 293.65 321.86</code></pre>
+</div>
+<p>步骤3：创建标准化价格数据集。然后，我们将每天的价格除以投资当日的价格（即2014年12月31日的价格）。norm.prc数据集包含四个证券从2014年12月31日至2019年12月31日期间的标准化价格。</p>
+<div class="r-code-block" id="code-norm-prc">
+  <pre><code class="language-r">1 &gt; norm.prc&lt;- adj.prc
+2 &gt; norm.prc$AMZN&lt;- norm.prc$AMZN / first.amzn</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="87">
+
+<p>（前页继续）</p>
+<div class="r-code-block" id="code-block-1">
+  <pre><code class="language-r">&gt; norm.prc$GOOG&lt;- norm.prc$GOOG / first.goog
+&gt; norm.prc$AAPL&lt;- norm.prc$AAPL / first.aapl
+&gt; norm.prc$SPY &lt;- norm.prc$SPY / first.spy
+&gt; head.tail(norm.prc)</code></pre>
+</div>
+<pre>AMZN GOOG AAPL SPY
+2014−12−31 1.0000000 1.0000000 1.0000000 1.0000000
+2015−01−02 0.9941034 0.9969795 0.9904874 0.9994647
+2015−01−05 0.9737071 0.9761967 0.9625837 0.9814148
+AMZN GOOG AAPL SPY
+2019−12−27 6.024811 2.575231 2.857451 1.733392
+2019−12−30 5.950991 2.545229 2.874410 1.723836
+2019−12−31 5.954052 2.546905 2.895412 1.728023</pre>
+<h3>2.8.2 使用累计收益率</h3>
+<p><strong>步骤1：创建毛总收益率数据集</strong></p>
+<p>我们对每个证券的调整后价格使用 <code>Delt()</code> 计算净总收益率（net total return）。然后，在净总收益率上加1得到毛总收益率（gross total return）（第1–4行）。接着使用 <code>cbind()</code> 创建一个标记为 <code>rets</code> 的单一数据集，其中包含每个证券的毛总收益率。</p>
+<div class="r-code-block" id="code-block-2">
+  <pre><code class="language-r">&gt; rets.amzn&lt;- 1 + Delt(data.amzn$AMZN.Adjusted)
+&gt; rets.goog&lt;- 1 + Delt(data.goog$GOOG.Adjusted)
+&gt; rets.aapl&lt;- 1 + Delt(data.aapl$AAPL.Adjusted)
+&gt; rets.spy&lt;- 1 + Delt(data.spy$SPY.Adjusted)
+&gt; rets &lt;- cbind(rets.amzn ,rets.goog ,rets.aapl ,rets.spy)
+&gt; names(rets)&lt;- c(&quot;AMZN&quot;, &quot;GOOG&quot;, &quot;AAPL&quot;, &quot;SPY&quot;)
+&gt; head.tail(rets)</code></pre>
+</div>
+<pre>AMZN GOOG AAPL SPY
+2014−12−31 NA NA NA NA
+2015−01−02 0.9941034 0.9969795 0.9904874 0.9994647
+2015−01−05 0.9794827 0.9791543 0.9718283 0.9819405
+AMZN GOOG AAPL SPY
+2019−12−27 1.0005512 0.9937445 0.9996205 0.9997522
+2019−12−30 0.9877473 0.9883496 1.0059351 0.9944868
+2019−12−31 1.0005144 1.0006586 1.0073065 1.0024293</pre>
+<p><strong>步骤2：将2014年12月31日的值替换为$1</strong></p>
+<p>从上面的输出可以看出，2014年12月31日的值均为<code>NA</code>。在之前的练习中，我们通常在计算归一化价格后删除2014年12月31日的观测值。然而，在本分析中，2014年12月31日是我们进行$1投资的那一天，因此我们可以简单地将这一天的<code>NA</code>值覆盖为$1。这样，2015年1月2日的值将应用2015年1月2日的收益率到初始$1投资上。</p>
+<div class="r-code-block" id="code-block-3">
+  <pre><code class="language-r">&gt; rets[1, ] &lt;- c(1, 1, 1, 1)
+&gt; head.tail(rets)</code></pre>
+</div>
+<pre>AMZN GOOG AAPL SPY
+2014−12−31 1.0000000 1.0000000 1.0000000 1.0000000
+2015−01−02 0.9941034 0.9969795 0.9904874 0.9994647
+2015−01−05 0.9794827 0.9791543 0.9718283 0.9819405
+AMZN GOOG AAPL SPY</pre>
+
+</section>
+<section class="book-page" data-pdf-page="88">
+<h2>2.8 比较多个证券的表现</h2>
+<p>步骤3：累积每个证券的收益率。我们以1美元开始，每天将前一日投资价值乘以总收益率来增长投资价值。这个过程可以使用R中的<code>cumprod()</code>函数自动化。数据集<code>cum.rets</code>包含了四个证券从2014年12月31日至2019年12月31日期间每日的投资价值。</p>
+<div class="r-code-block" id="code01">
+  <pre><code class="language-r">1 &gt; cum.rets&lt;- cumprod(rets)
+2 &gt; head.tail(cum.rets)
+3 AMZN GOOG AAPL SPY
+4 2014-12-31 1.0000000 1.0000000 1.0000000 1.0000000
+5 2015-01-02 0.9941034 0.9969795 0.9904874 0.9994647
+6 2015-01-05 0.9737071 0.9761967 0.9625837 0.9814148
+7 AMZN GOOG AAPL SPY
+8 2019-12-27 6.024811 2.575231 2.857451 1.733392
+9 2019-12-30 5.950991 2.545229 2.874410 1.723836
+10 2019-12-31 5.954052 2.546905 2.895412 1.728023</code></pre>
+</div>
+<p>为了验证我们得到了与上述价格标准化相同的结果，我们可以比较两种方法在2019年12月31日的值。为了方便，我们输出价格标准化方法下的2019年12月31日值。如下方输出所示，无论我们是标准化价格还是累积收益率，最终都得到相同的结果。</p>
+<div class="r-code-block" id="code02">
+  <pre><code class="language-r">1 &gt; norm.prc[nrow(norm.prc), ]
+2 AMZN GOOG AAPL SPY
+3 2019-12-31 5.954052 2.546905 2.895412 1.728023</code></pre>
+</div>
+<p>步骤4：绘制累积收益率图。我们可以使用折线图观察每个证券相对于其他证券的表现。AMZN的表现远优于其他证券。<code>plot()</code>的输出如图2.2所示。</p>
+<div class="r-code-block" id="code03">
+  <pre><code class="language-r">1 &gt; plot(x = index(cum.rets),
+2 + y = cum.rets$AMZN,
+3 + ylim = y.range,
+4 + xlab = &quot;Date&quot;,
+5 + ylab = &quot;Value of Investment&quot;,
+6 + type = &quot;l&quot;,
+7 + lwd = 3,
+8 + main = &quot;Value of $1 Investment in AMZN, GOOG, AAPL, and SPY&quot;)
+9 &gt; lines(x = index(cum.rets), y = cum.rets$GOOG, col = &quot;blue&quot;)
+10 &gt; lines(x = index(cum.rets), y = cum.rets$AAPL, col = &quot;red&quot;)
+11 &gt; lines(x = index(cum.rets), y = cum.rets$SPY, col = &quot;darkgreen&quot;)
+12 &gt; abline(h = 1)
+13 &gt; legend(&quot;topleft&quot;,
+14 + c(&quot;Amazon&quot;, &quot;Google&quot;, &quot;Apple&quot;, &quot;S&amp;P 500&quot;),
+15 + col = c(&quot;black&quot;, &quot;blue&quot;, &quot;red&quot;, &quot;darkgreen&quot;),
+16 + lwd = c(3, 2, 2, 1))</code></pre>
+</div>
+</section>
+<section class="book-page" data-pdf-page="89"><h2>第2章 单个证券收益率</h2>
+<figure class="book-figure" id="fig-2.2"><img src="/assets/img/analyzing-financial-data-r-cn/figure-7fd13cfd7641.png" alt="图2.2 AMZN、YHOO、IBM和SPY基于总收益率的表现，2014年12月31日至2019年12月31日。"><figcaption>图2.2 AMZN、YHOO、IBM和SPY基于总收益率的表现，2014年12月31日至2019年12月31日。数据来源：CSI ©2020许可复制的价格数据。www.csidata.com</figcaption></figure></section>
+<nav class="chapter-nav"><a href="/analyzing-financial-data-r-cn/chapter-1/">上一节：第1章 价格</a><a href="/analyzing-financial-data-r-cn/chapter-3/">下一节：第3章 投资组合收益率</a></nav>
+      </article>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <div>
+      <strong>AI 提效研究笔记</strong>
+      <p>把阶段性沉淀整理成可以公开分享、持续复用的文章。</p>
+    </div>
+    <div class="footer-links">
+      <a href="/feed.xml">RSS</a>
+      <a href="https://github.com/ChandlerBBT/ChandlerBBT.github.io">GitHub</a>
+    </div>
+  </footer>
+  <script src="/assets/js/site.js?v=638ea974b0aa"></script>
+</body>
+</html>
