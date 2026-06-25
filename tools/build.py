@@ -515,6 +515,7 @@ def render_sitemap(posts: list[dict], tags: list[str]) -> str:
     urls.extend(f"/tags/{slugify(tag)}/" for tag in tags)
     tutorial_slugs = [
         "bayes-rules-python-cn",
+        "analyzing-financial-data-r-cn",
         "investing-with-volume-analysis-cn",
         "financial-reporting-statement-analysis-valuation-cn",
         "statistics-data-analysis-financial-engineering-cn",
